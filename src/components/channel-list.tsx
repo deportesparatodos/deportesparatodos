@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card"; // CardContent was removed from imports as it's no longer used here
+import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Copy, CheckCircle2, ListVideo, List } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -121,10 +121,8 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Win Sports + (Op2)', url: 'https://streamtp4.com/global1.php?stream=winplus2' },
 ];
 
-
 const channels: Channel[] = [...new Map(channelsData.map(item => [item.url, item])).values()]
   .sort((a, b) => a.name.localeCompare(b.name));
-
 
 interface CopiedStates {
   [key: string]: boolean;
@@ -138,13 +136,13 @@ export const ChannelListComponent: FC = () => {
     setActiveAccordionItems(value);
   };
 
-  const handleCopy = async (url: string, channelName: string) => {
+  const handleCopy = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url);
       setCopiedStates(prev => ({ ...prev, [url]: true }));
       setTimeout(() => {
         setCopiedStates(prev => ({ ...prev, [url]: false }));
-      }, 1000); 
+      }, 1000);
     } catch (err) {
       console.error("Error al copiar: ", err);
     }
@@ -152,10 +150,10 @@ export const ChannelListComponent: FC = () => {
 
   return (
     <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
-      <Accordion 
-        type="multiple" 
-        value={activeAccordionItems} 
-        onValueChange={handleAccordionChange} 
+      <Accordion
+        type="multiple"
+        value={activeAccordionItems}
+        onValueChange={handleAccordionChange}
         className="w-full flex flex-col flex-grow"
       >
         <AccordionItem value="channel-list-content">
@@ -165,17 +163,17 @@ export const ChannelListComponent: FC = () => {
               Lista de Canales
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-6 pt-2">
+          <AccordionContent className="pt-0"> {/* Eliminado padding superior por defecto */}
             {channels.length > 0 ? (
-              <ul className="space-y-3 max-h-96 overflow-y-auto">
+              <ul className="space-y-3 px-6 pb-4 max-h-96 overflow-y-auto"> {/* Padding y scroll aquí */}
                 {channels.map((channel) => (
                   <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
                     <span className="text-foreground mr-2 flex-1 truncate" title={channel.name}>{channel.name}</span>
                     <Button
                       size="sm"
-                      onClick={() => handleCopy(channel.url, channel.name)}
+                      onClick={() => handleCopy(channel.url)}
                       className={cn(
-                        "transition-colors duration-300 w-[140px]", 
+                        "transition-colors duration-300 w-[140px]",
                         copiedStates[channel.url]
                           ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
                           : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
@@ -188,7 +186,7 @@ export const ChannelListComponent: FC = () => {
                 ))}
               </ul>
             ) : (
-              <p className="text-muted-foreground">No hay canales disponibles.</p>
+              <p className="text-muted-foreground px-6 pb-4">No hay canales disponibles.</p>
             )}
           </AccordionContent>
         </AccordionItem>
@@ -200,14 +198,16 @@ export const ChannelListComponent: FC = () => {
               Lista de Eventos
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-6">
-            <div className="h-[500px] w-full rounded-md overflow-hidden border border-border shadow">
-              <iframe
-                  src={EVENT_LIST_URL}
-                  title="Lista de Eventos"
-                  className="w-full h-full border-0"
-                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-              />
+          <AccordionContent className="pt-0"> {/* Eliminado padding superior por defecto */}
+            <div className="px-6 pb-4"> {/* Padding aquí para el contenedor del iframe */}
+              <div className="h-[500px] w-full rounded-md overflow-hidden border border-border shadow">
+                <iframe
+                    src={EVENT_LIST_URL}
+                    title="Lista de Eventos"
+                    className="w-full h-full border-0"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                />
+              </div>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -215,5 +215,4 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
-
     
