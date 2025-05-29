@@ -121,8 +121,16 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Win Sports + (Op2)', url: 'https://streamtp4.com/global1.php?stream=winplus2' },
 ];
 
-const channels: Channel[] = [...new Map(channelsData.map(item => [item.url, item])).values()]
+// Deduplicate channels based on URL and sort alphabetically by name
+const uniqueChannelsMap = new Map<string, Channel>();
+channelsData.forEach(channel => {
+  if (!uniqueChannelsMap.has(channel.url)) {
+    uniqueChannelsMap.set(channel.url, channel);
+  }
+});
+const channels: Channel[] = Array.from(uniqueChannelsMap.values())
   .sort((a, b) => a.name.localeCompare(b.name));
+
 
 interface CopiedStates {
   [key: string]: boolean;
@@ -163,43 +171,45 @@ export const ChannelListComponent: FC = () => {
               Lista de Canales
             </div>
           </AccordionTrigger>
-          <AccordionContent className="pt-0"> {/* Eliminado padding superior por defecto */}
-            {channels.length > 0 ? (
-              <ul className="space-y-3 px-6 pb-4 max-h-96 overflow-y-auto"> {/* Padding y scroll aquí */}
-                {channels.map((channel) => (
-                  <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                    <span className="text-foreground mr-2 flex-1 truncate" title={channel.name}>{channel.name}</span>
-                    <Button
-                      size="sm"
-                      onClick={() => handleCopy(channel.url)}
-                      className={cn(
-                        "transition-colors duration-300 w-[140px]",
-                        copiedStates[channel.url]
-                          ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
-                          : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
-                      )}
-                    >
-                      {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                      {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted-foreground px-6 pb-4">No hay canales disponibles.</p>
-            )}
+          <AccordionContent className="pt-0 min-h-0">
+            <div className="max-h-96 overflow-y-auto px-6 pb-4">
+              {channels.length > 0 ? (
+                <ul className="space-y-3">
+                  {channels.map((channel) => (
+                    <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                      <span className="text-foreground mr-2 flex-1 truncate" title={channel.name}>{channel.name}</span>
+                      <Button
+                        size="sm"
+                        onClick={() => handleCopy(channel.url)}
+                        className={cn(
+                          "transition-colors duration-300 w-[140px]", // Fixed width for the button
+                          copiedStates[channel.url]
+                            ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
+                            : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
+                        )}
+                      >
+                        {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                        {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground">No hay canales disponibles.</p>
+              )}
+            </div>
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="event-list">
+        <AccordionItem value="event-list" className="border-b-0">
           <AccordionTrigger className="px-6 py-4 text-xl font-semibold text-primary hover:no-underline">
             <div className="flex items-center">
               <ListVideo className="mr-2 h-5 w-5" />
               Lista de Eventos
             </div>
           </AccordionTrigger>
-          <AccordionContent className="pt-0"> {/* Eliminado padding superior por defecto */}
-            <div className="px-6 pb-4"> {/* Padding aquí para el contenedor del iframe */}
+          <AccordionContent className="pt-0 min-h-0">
+            <div className="px-6 pb-4">
               <div className="h-[500px] w-full rounded-md overflow-hidden border border-border shadow">
                 <iframe
                     src={EVENT_LIST_URL}
