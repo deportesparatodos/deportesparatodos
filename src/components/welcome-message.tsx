@@ -4,9 +4,9 @@ export function WelcomeMessage() {
   return (
     <Card className="mb-6 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-3xl font-bold text-center text-primary">MultiViewer for Sport</CardTitle>
+        <CardTitle className="text-3xl font-bold text-center text-primary">MultiViewer para Deporte</CardTitle>
         <CardDescription className="text-center text-muted-foreground pt-2">
-          Paste the links of the streams you want to watch below. Configure the number of views and enjoy!
+          Pega los enlaces de las transmisiones que quieres ver a continuación. Configura la cantidad de vistas y ¡a disfrutar!
         </CardDescription>
       </CardHeader>
     </Card>

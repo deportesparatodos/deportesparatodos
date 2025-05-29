@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({ // Corrected usage
 });
 
 export const metadata: Metadata = {
-  title: 'MultiViewSport Reimagined', // Updated title
-  description: 'Visualize multiple sports streams simultaneously.', // Updated description
+  title: 'MultiViewSport Reimaginado', // Updated title
+  description: 'Visualiza múltiples transmisiones deportivas simultáneamente.', // Updated description
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <Toaster />

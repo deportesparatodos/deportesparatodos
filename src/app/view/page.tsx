@@ -21,7 +21,7 @@ export default function ViewPage() {
     // Optional: render a loading state or null
     return (
         <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
-            <p>Loading views...</p>
+            <p>Cargando vistas...</p>
         </div>
     );
   }
@@ -29,10 +29,10 @@ export default function ViewPage() {
   if (urls.length === 0) {
     return (
       <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
-        <p className="mb-4">No stream URLs provided.</p>
+        <p className="mb-4">No se proporcionaron URLs de transmisión.</p>
         <Link href="/" passHref legacyBehavior>
           <Button variant="outline">
-            <XCircle className="mr-2 h-4 w-4" /> Go Back
+            <XCircle className="mr-2 h-4 w-4" /> Volver Atrás
           </Button>
         </Link>
       </div>
@@ -53,10 +53,10 @@ export default function ViewPage() {
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
       <header className="p-4 border-b border-border flex justify-between items-center sticky top-0 bg-background z-10">
-        <h1 className="text-xl font-semibold text-primary">Multi-Stream View</h1>
+        <h1 className="text-xl font-semibold text-primary">Vista Multi-Stream</h1>
         <Link href="/" passHref legacyBehavior>
           <Button variant="outline" size="sm">
-            <XCircle className="mr-2 h-4 w-4" /> Close View
+            <XCircle className="mr-2 h-4 w-4" /> Cerrar Vista
           </Button>
         </Link>
       </header>

@@ -40,7 +40,7 @@ export default function HomePage() {
     const allUrlsFilled = activeUrls.every(url => url && url.trim() !== '');
 
     if (!allUrlsFilled) {
-      setErrorMessage(`Please enter URLs for all ${numCameras} selected view(s).`);
+      setErrorMessage(`Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.`);
       return;
     }
 

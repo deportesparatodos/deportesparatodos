@@ -4,10 +4,15 @@ import type { Dispatch, FC, SetStateAction } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertTriangle, Tv } from 'lucide-react';
-import Link from 'next/link';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -47,30 +52,30 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   return (
     <Card className="mb-6 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold text-primary">Configure Views</CardTitle>
+        <CardTitle className="text-xl font-semibold text-primary">Configurar Vistas</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
-          <Label className="text-base font-medium text-foreground mb-2 block">Number of Views:</Label>
-          <RadioGroup
-            value={numCameras.toString()}
-            onValueChange={handleNumCamerasChange}
-            className="flex space-x-4"
-          >
-            {cameraOptions.map((option) => (
-              <div key={option} className="flex items-center space-x-2">
-                <RadioGroupItem value={option.toString()} id={`views-${option}`} />
-                <Label htmlFor={`views-${option}`} className="text-foreground">{option}</Label>
-              </div>
-            ))}
-          </RadioGroup>
+          <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Cámaras:</Label>
+          <Select value={numCameras.toString()} onValueChange={handleNumCamerasChange}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-background">
+              <SelectValue placeholder="Seleccionar cantidad" />
+            </SelectTrigger>
+            <SelectContent>
+              {cameraOptions.map((option) => (
+                <SelectItem key={option} value={option.toString()}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-4">
           {Array.from({ length: numCameras }).map((_, index) => (
             <div key={index}>
               <Label htmlFor={`url-${index}`} className="text-base font-medium text-foreground">
-                Stream URL for View {index + 1}:
+                URL del Stream para Vista {index + 1}:
               </Label>
               <Input
                 id={`url-${index}`}
@@ -91,29 +96,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6">
-        <Link href="/events" passHref legacyBehavior>
-            <Button variant="outline" className="w-full sm:w-auto">
-              <List className="mr-2 h-4 w-4" /> Event List
-            </Button>
-        </Link>
+      <CardFooter className="flex justify-end items-center pt-6">
         <Button onClick={handleStartView} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Tv className="mr-2 h-4 w-4" /> Start View
+          <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
         </Button>
       </CardFooter>
     </Card>
   );
 };
-
-// Stub for List icon if not available or to avoid lucide-react dependency if minimal
-const List = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <line x1="8" y1="6" x2="21" y2="6"/>
-    <line x1="8" y1="12" x2="21" y2="12"/>
-    <line x1="8" y1="18" x2="21" y2="18"/>
-    <line x1="3" y1="6" x2="3.01" y2="6"/>
-    <line x1="3" y1="12" x2="3.01" y2="12"/>
-    <line x1="3" y1="18" x2="3.01" y2="18"/>
-  </svg>
-);
-
