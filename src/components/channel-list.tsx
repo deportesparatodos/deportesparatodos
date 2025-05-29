@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"; // CardHeader and CardContent might not be strictly needed if we remove padding from them
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Copy, CheckCircle2, ListVideo, List } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -164,7 +164,7 @@ export const ChannelListComponent: FC = () => {
         onValueChange={handleAccordionChange}
         className="w-full flex flex-col flex-grow"
       >
-        <AccordionItem value="channel-list-content">
+        <AccordionItem value="channel-list-content" className="border-b-0">
           <AccordionTrigger className="px-6 py-4 text-xl font-semibold text-primary hover:no-underline">
             <div className="flex items-center">
               <List className="mr-2 h-5 w-5" />
@@ -172,7 +172,7 @@ export const ChannelListComponent: FC = () => {
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-0 min-h-0">
-            <div className="max-h-96 overflow-y-auto px-6 pb-4">
+            <div className="max-h-96 overflow-y-auto px-6 pb-4"> {/* Adjusted max-h for better fit */}
               {channels.length > 0 ? (
                 <ul className="space-y-3">
                   {channels.map((channel) => (
@@ -182,7 +182,7 @@ export const ChannelListComponent: FC = () => {
                         size="sm"
                         onClick={() => handleCopy(channel.url)}
                         className={cn(
-                          "transition-colors duration-300 w-[140px]", // Fixed width for the button
+                          "transition-colors duration-300 w-[140px]",
                           copiedStates[channel.url]
                             ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
                             : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
@@ -195,7 +195,7 @@ export const ChannelListComponent: FC = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-muted-foreground">No hay canales disponibles.</p>
+                <p className="text-muted-foreground px-6">No hay canales disponibles.</p>
               )}
             </div>
           </AccordionContent>
