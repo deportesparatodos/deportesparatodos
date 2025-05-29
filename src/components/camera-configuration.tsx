@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, X } from 'lucide-react'; // Added X icon
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -23,6 +23,11 @@ interface CameraConfigurationProps {
   errorMessage: string;
   setErrorMessage: Dispatch<SetStateAction<string>>;
   handleStartView: () => void;
+}
+
+interface CameraOption {
+  value: number;
+  label: string;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -63,7 +68,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return;
     }
     
-    // Ensure all array elements up to numCameras are defined before swapping
     for (let i = 0; i < numCameras; i++) {
         if (newUrls[i] === undefined) newUrls[i] = '';
     }
@@ -73,7 +77,12 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setErrorMessage("");
   };
 
-  const cameraOptions = [1, 2, 3, 4];
+  const cameraOptions: CameraOption[] = [
+    { value: 1, label: "Uno" },
+    { value: 2, label: "Dos" },
+    { value: 3, label: "Tres" },
+    { value: 4, label: "Cuatro" },
+  ];
 
   return (
     <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
@@ -82,15 +91,18 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       </CardHeader>
       <CardContent className="space-y-6 flex-grow">
         <div>
-          <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Cámaras:</Label>
-          <Select value={numCameras.toString()} onValueChange={handleNumCamerasChange}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-background">
+          <Label htmlFor="numCamerasSelect" className="text-base font-medium text-foreground mb-2 block">Cantidad de Cámaras:</Label>
+          <Select 
+            value={numCameras.toString()} 
+            onValueChange={handleNumCamerasChange}
+          >
+            <SelectTrigger id="numCamerasSelect" className="w-full sm:w-[180px] bg-background">
               <SelectValue placeholder="Seleccionar cantidad" />
             </SelectTrigger>
             <SelectContent>
               {cameraOptions.map((option) => (
-                <SelectItem key={option} value={option.toString()}>
-                  {option}
+                <SelectItem key={option.value} value={option.value.toString()}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
