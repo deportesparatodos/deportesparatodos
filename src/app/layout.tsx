@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({ // Corrected usage
 });
 
 export const metadata: Metadata = {
-  title: 'MultiViewSport Reimaginado', // Updated title
-  description: 'Visualiza múltiples transmisiones deportivas simultáneamente.', // Updated description
+  title: 'MultiViewer for Sports.', // Updated title
+  description: 'Visualiza múltiples transmisiones deportivas simultáneamente.', 
 };
 
 export default function RootLayout({
