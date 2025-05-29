@@ -7,13 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertTriangle, Tv, ArrowUp, ArrowDown, X } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -25,11 +18,6 @@ interface CameraConfigurationProps {
   handleStartView: () => void;
 }
 
-interface CameraOption {
-  value: number;
-  label: string;
-}
-
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   numCameras,
   setNumCameras,
@@ -39,9 +27,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setErrorMessage,
   handleStartView,
 }) => {
-  const handleNumCamerasChange = (value: string) => {
-    setNumCameras(parseInt(value, 10));
-    setErrorMessage(""); 
+  const handleNumCamerasChange = (value: number) => {
+    setNumCameras(value);
+    setErrorMessage("");
   };
 
   const handleUrlChange = (index: number, value: string) => {
@@ -49,7 +37,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     newUrls[index] = value;
     setCameraUrls(newUrls);
     if (value.trim() !== "") {
-       setErrorMessage(""); 
+       setErrorMessage("");
     }
   };
 
@@ -67,7 +55,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     if (targetIndex < 0 || targetIndex >= numCameras) {
       return;
     }
-    
+
     for (let i = 0; i < numCameras; i++) {
         if (newUrls[i] === undefined) newUrls[i] = '';
     }
@@ -77,11 +65,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setErrorMessage("");
   };
 
-  const cameraOptions: CameraOption[] = [
-    { value: 1, label: "Uno" },
-    { value: 2, label: "Dos" },
-    { value: 3, label: "Tres" },
-    { value: 4, label: "Cuatro" },
+  const viewOptions = [
+    { value: 1, display: "1" },
+    { value: 2, display: "2" },
+    { value: 3, display: "3" },
+    { value: 4, display: "4" },
   ];
 
   return (
@@ -91,24 +79,22 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       </CardHeader>
       <CardContent className="space-y-6 flex-grow">
         <div>
-          <Label htmlFor="numCamerasSelect" className="text-base font-medium text-foreground mb-2 block">Cantidad de Cámaras:</Label>
-          <Select 
-            value={numCameras.toString()} 
-            onValueChange={handleNumCamerasChange}
-          >
-            <SelectTrigger id="numCamerasSelect" className="w-full sm:w-[180px] bg-background">
-              <SelectValue placeholder="Seleccionar cantidad" />
-            </SelectTrigger>
-            <SelectContent>
-              {cameraOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value.toString()}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Ventanas:</Label>
+          <div className="flex space-x-2 mt-2">
+            {viewOptions.map((option) => (
+              <Button
+                key={option.value}
+                variant={numCameras === option.value ? "default" : "outline"}
+                onClick={() => handleNumCamerasChange(option.value)}
+                className="h-12 w-12 text-lg"
+                aria-label={`Seleccionar ${option.value} ventana${option.value > 1 ? 's' : ''}`}
+              >
+                {option.display}
+              </Button>
+            ))}
+          </div>
         </div>
-        
+
         <div>
             <Label className="text-base font-medium text-foreground mb-2 block pt-4">
                 URLs de las Vistas:
