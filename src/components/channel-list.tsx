@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card"; // CardContent was removed from imports as it's no longer used here
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Copy, CheckCircle2, ListVideo, List } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -144,7 +144,7 @@ export const ChannelListComponent: FC = () => {
       setCopiedStates(prev => ({ ...prev, [url]: true }));
       setTimeout(() => {
         setCopiedStates(prev => ({ ...prev, [url]: false }));
-      }, 1000); // Iluminar por 1 segundo
+      }, 1000); 
     } catch (err) {
       console.error("Error al copiar: ", err);
     }
@@ -165,33 +165,31 @@ export const ChannelListComponent: FC = () => {
               Lista de Canales
             </div>
           </AccordionTrigger>
-          <AccordionContent>
-            <CardContent className="pt-2 pb-4 px-6">
-              {channels.length > 0 ? (
-                <ul className="space-y-3 max-h-96 overflow-y-auto">
-                  {channels.map((channel) => (
-                    <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                      <span className="text-foreground mr-2 flex-1 truncate" title={channel.name}>{channel.name}</span>
-                      <Button
-                        size="sm"
-                        onClick={() => handleCopy(channel.url, channel.name)}
-                        className={cn(
-                          "transition-colors duration-300 w-[140px]", 
-                          copiedStates[channel.url]
-                            ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
-                            : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
-                        )}
-                      >
-                        {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                        {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground">No hay canales disponibles.</p>
-              )}
-            </CardContent>
+          <AccordionContent className="px-6 pt-2">
+            {channels.length > 0 ? (
+              <ul className="space-y-3 max-h-96 overflow-y-auto">
+                {channels.map((channel) => (
+                  <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                    <span className="text-foreground mr-2 flex-1 truncate" title={channel.name}>{channel.name}</span>
+                    <Button
+                      size="sm"
+                      onClick={() => handleCopy(channel.url, channel.name)}
+                      className={cn(
+                        "transition-colors duration-300 w-[140px]", 
+                        copiedStates[channel.url]
+                          ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
+                          : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
+                      )}
+                    >
+                      {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                      {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground">No hay canales disponibles.</p>
+            )}
           </AccordionContent>
         </AccordionItem>
 
@@ -202,16 +200,14 @@ export const ChannelListComponent: FC = () => {
               Lista de Eventos
             </div>
           </AccordionTrigger>
-          <AccordionContent>
-            <div className="px-6 pb-4 pt-0">
-                <div className="h-[500px] w-full rounded-md overflow-hidden border border-border shadow">
-                <iframe
-                    src={EVENT_LIST_URL}
-                    title="Lista de Eventos"
-                    className="w-full h-full border-0"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                />
-                </div>
+          <AccordionContent className="px-6">
+            <div className="h-[500px] w-full rounded-md overflow-hidden border border-border shadow">
+              <iframe
+                  src={EVENT_LIST_URL}
+                  title="Lista de Eventos"
+                  className="w-full h-full border-0"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              />
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -219,3 +215,5 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
+
+    
