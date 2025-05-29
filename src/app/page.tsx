@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { AppShell } from '@/components/app-shell';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { ChannelListComponent } from '@/components/channel-list';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
-import { Separator } from '@/components/ui/separator';
+// Eliminamos el import de Separator ya que no se usará en este layout
 
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(1);
@@ -57,17 +58,27 @@ export default function HomePage() {
   return (
     <AppShell>
       <WelcomeMessage />
-      <ChannelListComponent />
-      <Separator className="my-8" />
-      <CameraConfigurationComponent
-        numCameras={numCameras}
-        setNumCameras={setNumCameras}
-        cameraUrls={cameraUrls}
-        setCameraUrls={setCameraUrls}
-        errorMessage={errorMessage}
-        setErrorMessage={setErrorMessage}
-        handleStartView={handleStartView}
-      />
+      
+      {/* Contenedor principal para el diseño de dos columnas */}
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        {/* Columna izquierda: Lista de Canales */}
+        <div>
+          <ChannelListComponent />
+        </div>
+        
+        {/* Columna derecha: Configuración de Vistas */}
+        <div>
+          <CameraConfigurationComponent
+            numCameras={numCameras}
+            setNumCameras={setNumCameras}
+            cameraUrls={cameraUrls}
+            setCameraUrls={setCameraUrls}
+            errorMessage={errorMessage}
+            setErrorMessage={setErrorMessage}
+            handleStartView={handleStartView}
+          />
+        </div>
+      </div>
     </AppShell>
   );
 }
