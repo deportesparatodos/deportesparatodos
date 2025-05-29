@@ -87,7 +87,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   return (
     <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas</CardTitle>
+        <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas:</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 flex-grow">
         <div>
