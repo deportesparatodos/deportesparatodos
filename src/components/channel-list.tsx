@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card"; // CardHeader and CardContent might not be strictly needed if we remove padding from them
+import { Card, CardContent, CardHeader } from "@/components/ui/card"; 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Copy, CheckCircle2, ListVideo, List } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -121,7 +121,6 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Win Sports + (Op2)', url: 'https://streamtp4.com/global1.php?stream=winplus2' },
 ];
 
-// Deduplicate channels based on URL and sort alphabetically by name
 const uniqueChannelsMap = new Map<string, Channel>();
 channelsData.forEach(channel => {
   if (!uniqueChannelsMap.has(channel.url)) {
@@ -138,7 +137,7 @@ interface CopiedStates {
 
 export const ChannelListComponent: FC = () => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
-  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>(["channel-list-content"]);
+  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]); // Changed initial state to []
 
   const handleAccordionChange = (value: string[]) => {
     setActiveAccordionItems(value);
@@ -172,7 +171,7 @@ export const ChannelListComponent: FC = () => {
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-0 min-h-0">
-            <div className="max-h-96 overflow-y-auto px-6 pb-4"> {/* Adjusted max-h for better fit */}
+            <div className="max-h-96 overflow-y-auto px-6 pb-4">
               {channels.length > 0 ? (
                 <ul className="space-y-3">
                   {channels.map((channel) => (
