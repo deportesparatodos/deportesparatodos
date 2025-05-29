@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown } from 'lucide-react'; // Added ArrowUp, ArrowDown
+import { AlertTriangle, Tv, ArrowUp, ArrowDown } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -52,12 +52,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     const newUrls = [...cameraUrls];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
 
-    if (targetIndex < 0 || targetIndex >= numCameras) { // Ensure target is within bounds of displayed inputs
+    if (targetIndex < 0 || targetIndex >= numCameras) {
       return;
     }
     
-    // Ensure array elements exist up to numCameras before swapping
-    // This might be needed if cameraUrls is not perfectly synced with numCameras in all scenarios
     for (let i = 0; i < numCameras; i++) {
         if (newUrls[i] === undefined) newUrls[i] = '';
     }
@@ -70,11 +68,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   const cameraOptions = [1, 2, 3, 4];
 
   return (
-    <Card className="mb-6 shadow-lg">
+    <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 flex-grow">
         <div>
           <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Cámaras:</Label>
           <Select value={numCameras.toString()} onValueChange={handleNumCamerasChange}>
@@ -146,5 +144,3 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </Card>
   );
 };
-
-    

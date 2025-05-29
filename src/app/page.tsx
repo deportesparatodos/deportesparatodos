@@ -7,7 +7,6 @@ import { AppShell } from '@/components/app-shell';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { ChannelListComponent } from '@/components/channel-list';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
-// Eliminamos el import de Separator ya que no se usará en este layout
 
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(1);
@@ -62,12 +61,12 @@ export default function HomePage() {
       {/* Contenedor principal para el diseño de dos columnas */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
         {/* Columna izquierda: Lista de Canales */}
-        <div>
+        <div className="flex">
           <ChannelListComponent />
         </div>
         
         {/* Columna derecha: Configuración de Vistas */}
-        <div>
+        <div className="flex">
           <CameraConfigurationComponent
             numCameras={numCameras}
             setNumCameras={setNumCameras}

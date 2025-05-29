@@ -147,13 +147,17 @@ export const ChannelListComponent: FC = () => {
       }, 1000); // Iluminar por 1 segundo
     } catch (err) {
       console.error("Error al copiar: ", err);
-      // No toast notification for errors as per request
     }
   };
 
   return (
-    <Card className="mb-6 shadow-lg">
-      <Accordion type="multiple" value={activeAccordionItems} onValueChange={handleAccordionChange} className="w-full">
+    <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
+      <Accordion 
+        type="multiple" 
+        value={activeAccordionItems} 
+        onValueChange={handleAccordionChange} 
+        className="w-full flex flex-col flex-grow"
+      >
         <AccordionItem value="channel-list-content">
           <AccordionTrigger className="px-6 py-4 text-xl font-semibold text-primary hover:no-underline">
             <div className="flex items-center">
@@ -172,10 +176,10 @@ export const ChannelListComponent: FC = () => {
                         size="sm"
                         onClick={() => handleCopy(channel.url, channel.name)}
                         className={cn(
-                          "transition-colors duration-300 w-[140px]", // Ancho fijo
+                          "transition-colors duration-300 w-[140px]", 
                           copiedStates[channel.url]
-                            ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600" // Estado copiado: verde
-                            : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground" // Estado normal: outline
+                            ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
+                            : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
                         )}
                       >
                         {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
@@ -205,7 +209,7 @@ export const ChannelListComponent: FC = () => {
                     src={EVENT_LIST_URL}
                     title="Lista de Eventos"
                     className="w-full h-full border-0"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms" // Sandbox attribute remains as per original requirements for this iframe
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                 />
                 </div>
             </div>
