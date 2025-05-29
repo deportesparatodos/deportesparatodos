@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, X } from 'lucide-react'; // Added X icon
 import {
   Select,
   SelectContent,
@@ -48,6 +48,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     }
   };
 
+  const handleClearUrl = (index: number) => {
+    const newUrls = [...cameraUrls];
+    newUrls[index] = '';
+    setCameraUrls(newUrls);
+    setErrorMessage("");
+  };
+
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
     const newUrls = [...cameraUrls];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -56,6 +63,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return;
     }
     
+    // Ensure all array elements up to numCameras are defined before swapping
     for (let i = 0; i < numCameras; i++) {
         if (newUrls[i] === undefined) newUrls[i] = '';
     }
@@ -114,6 +122,17 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     onChange={(e) => handleUrlChange(index, e.target.value)}
                     className="bg-background flex-grow"
                 />
+                {cameraUrls[index] && (
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleClearUrl(index)}
+                      aria-label="Limpiar URL"
+                      className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  >
+                      <X className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button
                     variant="outline"
                     size="icon"
