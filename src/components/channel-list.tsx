@@ -1,12 +1,13 @@
+
 "use client";
 
 import { useState } from 'react';
 import type { FC } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card"; // Removed CardHeader, CardTitle
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, CheckCircle2, ListVideo } from "lucide-react";
+import { Copy, CheckCircle2, ListVideo, List } from "lucide-react"; // Added List icon
 
 interface Channel {
   name: string;
@@ -51,6 +52,7 @@ const channelsData: { name: string; url: string }[] = [
   { name: 'Eleven Sports 3 PT', url: 'https://streamtp4.com/global1.php?stream=eleven3_pt' },
   { name: 'Eleven Sports 4 PT', url: 'https://streamtp4.com/global1.php?stream=eleven4_pt' },
   { name: 'Eleven Sports 5 PT', url: 'https://streamtp4.com/global1.php?stream=eleven5_pt' },
+  { name: 'FUTV (EV)', url: 'https://streamtp4.com/global1.php?stream=futv' },
   { name: 'Fox Deportes TUBI', url: 'https://streamtp4.com/global1.php?stream=tubitv1' },
   { name: 'Fox Deportes USA', url: 'https://streamtp4.com/global1.php?stream=fox_deportes_usa' },
   { name: 'Fox Sports 1 (Argentina)', url: 'https://streamtp4.com/global1.php?stream=fox1ar' },
@@ -62,7 +64,6 @@ const channelsData: { name: string; url: string }[] = [
   { name: 'Fox Sports 3 (Argentina)', url: 'https://streamtp4.com/global1.php?stream=fox3ar' },
   { name: 'Fox Sports 3 MX', url: 'https://streamtp4.com/global1.php?stream=foxsports3mx' },
   { name: 'Fox Sports Premium', url: 'https://streamtp4.com/global1.php?stream=foxsportspremium' },
-  { name: 'FUTV (EV)', url: 'https://streamtp4.com/global1.php?stream=futv' },
   { name: 'GolPeru', url: 'https://streamtp4.com/global1.php?stream=golperu' },
   { name: 'GolTV', url: 'https://streamtp4.com/global1.php?stream=goltv' },
   { name: 'Gran Hermano CAM 1', url: 'https://streamtp4.com/global1.php?stream=grahermanocam1' },
@@ -120,6 +121,7 @@ const channelsData: { name: string; url: string }[] = [
   { name: 'Win Sports + (Op2)', url: 'https://streamtp4.com/global1.php?stream=winplus2' },
 ];
 
+
 const channels: Channel[] = [...new Map(channelsData.map(item => [item.url, item])).values()]
   .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -138,6 +140,7 @@ export const ChannelListComponent: FC = () => {
       toast({
         title: "¡Enlace Copiado!",
         description: `El enlace de ${channelName} está listo para ser pegado.`,
+        variant: "default" 
       });
       setCopiedStates(prev => ({ ...prev, [url]: true }));
       setTimeout(() => {
@@ -155,47 +158,57 @@ export const ChannelListComponent: FC = () => {
 
   return (
     <Card className="mb-6 shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold text-primary">Lista de Canales</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {channels.length > 0 ? (
-          <ul className="space-y-3 max-h-96 overflow-y-auto">
-            {channels.map((channel) => (
-              <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                <span className="text-foreground mr-2 flex-1 truncate" title={channel.name}>{channel.name}</span>
-                <Button
-                  variant={copiedStates[channel.url] ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleCopy(channel.url, channel.name)}
-                  className="transition-colors duration-300"
-                >
-                  {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                  {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-muted-foreground">No hay canales disponibles.</p>
-        )}
-      </CardContent>
-      <Accordion type="single" collapsible className="w-full px-6 pb-6 pt-0">
+      <Accordion type="multiple" defaultValue={["channel-list-content"]} className="w-full">
+        <AccordionItem value="channel-list-content">
+          <AccordionTrigger className="px-6 py-4 text-xl font-semibold text-primary hover:no-underline">
+            <div className="flex items-center">
+              <List className="mr-2 h-5 w-5" />
+              Lista de Canales
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <CardContent className="pt-2 pb-4 px-6">
+              {channels.length > 0 ? (
+                <ul className="space-y-3 max-h-96 overflow-y-auto">
+                  {channels.map((channel) => (
+                    <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                      <span className="text-foreground mr-2 flex-1 truncate" title={channel.name}>{channel.name}</span>
+                      <Button
+                        variant={copiedStates[channel.url] ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleCopy(channel.url, channel.name)}
+                        className={`transition-colors duration-300 ${copiedStates[channel.url] ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'}`}
+                      >
+                        {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                        {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground">No hay canales disponibles.</p>
+              )}
+            </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="event-list">
-          <AccordionTrigger>
+          <AccordionTrigger className="px-6 py-4 text-xl font-semibold text-primary hover:no-underline">
             <div className="flex items-center">
               <ListVideo className="mr-2 h-5 w-5" />
               Lista de Eventos
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <div className="h-[500px] w-full mt-2 rounded-md overflow-hidden border border-border shadow">
-              <iframe
-                src={EVENT_LIST_URL}
-                title="Lista de Eventos"
-                className="w-full h-full border-0"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-              />
+            <div className="px-6 pb-4 pt-0">
+                <div className="h-[500px] w-full rounded-md overflow-hidden border border-border shadow">
+                <iframe
+                    src={EVENT_LIST_URL}
+                    title="Lista de Eventos"
+                    className="w-full h-full border-0"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                />
+                </div>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -203,3 +216,5 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
+
+    

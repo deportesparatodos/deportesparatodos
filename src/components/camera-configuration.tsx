@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Dispatch, FC, SetStateAction } from 'react';
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Tv } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown } from 'lucide-react'; // Added ArrowUp, ArrowDown
 import {
   Select,
   SelectContent,
@@ -35,7 +36,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 }) => {
   const handleNumCamerasChange = (value: string) => {
     setNumCameras(parseInt(value, 10));
-    setErrorMessage(""); // Clear error on change
+    setErrorMessage(""); 
   };
 
   const handleUrlChange = (index: number, value: string) => {
@@ -43,8 +44,27 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     newUrls[index] = value;
     setCameraUrls(newUrls);
     if (value.trim() !== "") {
-       setErrorMessage(""); // Clear error if user starts typing
+       setErrorMessage(""); 
     }
+  };
+
+  const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
+    const newUrls = [...cameraUrls];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (targetIndex < 0 || targetIndex >= numCameras) { // Ensure target is within bounds of displayed inputs
+      return;
+    }
+    
+    // Ensure array elements exist up to numCameras before swapping
+    // This might be needed if cameraUrls is not perfectly synced with numCameras in all scenarios
+    for (let i = 0; i < numCameras; i++) {
+        if (newUrls[i] === undefined) newUrls[i] = '';
+    }
+
+    [newUrls[index], newUrls[targetIndex]] = [newUrls[targetIndex], newUrls[index]];
+    setCameraUrls(newUrls);
+    setErrorMessage("");
   };
 
   const cameraOptions = [1, 2, 3, 4];
@@ -52,7 +72,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   return (
     <Card className="mb-6 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold text-primary">Configurar Vistas</CardTitle>
+        <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
@@ -70,23 +90,45 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             </SelectContent>
           </Select>
         </div>
-
-        <div className="space-y-4">
-          {Array.from({ length: numCameras }).map((_, index) => (
-            <div key={index}>
-              <Label htmlFor={`url-${index}`} className="text-base font-medium text-foreground">
-                URL del Stream para Vista {index + 1}:
-              </Label>
-              <Input
-                id={`url-${index}`}
-                type="url"
-                placeholder="https://example.com/stream.m3u8"
-                value={cameraUrls[index] || ''}
-                onChange={(e) => handleUrlChange(index, e.target.value)}
-                className="mt-1 bg-background"
-              />
+        
+        <div>
+            <Label className="text-base font-medium text-foreground mb-2 block pt-4">
+                URLs de las Vistas:
+            </Label>
+            <div className="space-y-2">
+            {Array.from({ length: numCameras }).map((_, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleMoveUrl(index, 'up')}
+                    disabled={index === 0}
+                    aria-label="Mover URL hacia arriba"
+                    className="bg-background hover:bg-accent/50"
+                >
+                    <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Input
+                    id={`url-${index}`}
+                    type="url"
+                    placeholder={`URL Vista ${index + 1}`}
+                    value={cameraUrls[index] || ''}
+                    onChange={(e) => handleUrlChange(index, e.target.value)}
+                    className="bg-background flex-grow"
+                />
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleMoveUrl(index, 'down')}
+                    disabled={index === numCameras - 1}
+                    aria-label="Mover URL hacia abajo"
+                    className="bg-background hover:bg-accent/50"
+                >
+                    <ArrowDown className="h-4 w-4" />
+                </Button>
+                </div>
+            ))}
             </div>
-          ))}
         </div>
 
         {errorMessage && (
@@ -104,3 +146,5 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </Card>
   );
 };
+
+    
