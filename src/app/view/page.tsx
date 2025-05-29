@@ -1,9 +1,9 @@
+
 "use client"; // For useRouter and useSearchParams
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Button } from "@/components/ui/button";
-import { XCircle } from "lucide-react";
+import { X } from "lucide-react"; // Changed from XCircle to X
 import { useEffect, useState } from 'react';
 
 export default function ViewPage() {
@@ -18,7 +18,6 @@ export default function ViewPage() {
   }, [searchParams]);
   
   if (!isMounted) {
-    // Optional: render a loading state or null
     return (
         <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
             <p>Cargando vistas...</p>
@@ -31,40 +30,41 @@ export default function ViewPage() {
       <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
         <p className="mb-4">No se proporcionaron URLs de transmisión.</p>
         <Link href="/" passHref legacyBehavior>
-          <Button variant="outline">
-            <XCircle className="mr-2 h-4 w-4" /> Volver Atrás
-          </Button>
+          <button className="flex items-center justify-center px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium">
+            <X className="mr-2 h-4 w-4" /> Volver Atrás
+          </button>
         </Link>
       </div>
     );
   }
 
   const numIframes = urls.length;
-  let gridContainerClasses = "grid gap-1 p-1 flex-grow w-full h-full";
+  let gridContainerClasses = "grid gap-0 flex-grow w-full h-full"; // Removed p-1 and set gap-0
 
   if (numIframes === 1) {
     gridContainerClasses += " grid-cols-1 grid-rows-1";
   } else if (numIframes === 2) {
     gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
   } else { // For 3 or 4 iframes
-    gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-auto"; // Creates a 2xN layout
+    gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-auto"; 
   }
   
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
-      <header className="p-4 border-b border-border flex justify-between items-center sticky top-0 bg-background z-10">
-        <h1 className="text-xl font-semibold text-primary">Vista Multi-Stream</h1>
-        <Link href="/" passHref legacyBehavior>
-          <Button variant="outline" size="sm">
-            <XCircle className="mr-2 h-4 w-4" /> Cerrar Vista
-          </Button>
-        </Link>
-      </header>
+    <div className="relative flex flex-col h-screen bg-background text-foreground">
+      <Link 
+        href="/" 
+        passHref 
+        className="absolute top-2 right-2 z-20 p-2 rounded-md text-foreground hover:bg-accent/70 hover:text-accent-foreground transition-colors"
+        aria-label="Cerrar Vista"
+      >
+        <X className="h-6 w-6" />
+      </Link>
+      
       <main className={gridContainerClasses}>
         {urls.map((url, index) => (
           <div
             key={index}
-            className={`bg-muted/50 rounded shadow-inner overflow-hidden
+            className={`bg-muted/50 overflow-hidden
               ${numIframes === 3 && index === 0 ? 'md:col-span-2' : ''} 
               ${numIframes === 3 && index > 0 ? 'md:col-span-1' : ''}
             `}
@@ -72,14 +72,14 @@ export default function ViewPage() {
             <iframe
               src={url}
               title={`Stream ${index + 1}`}
-              className="w-full h-full border-0 aspect-video min-h-[200px]"
+              className="w-full h-full border-0 aspect-video min-h-[150px]" // min-h reduced slightly
               allowFullScreen
-              sandbox="allow-scripts allow-same-origin allow-presentation" // Recommended for security
+              // sandbox attribute entirely removed
             ></iframe>
           </div>
         ))}
          {/* Placeholder for 3 streams in 2x2 grid */}
-         {numIframes === 3 && <div className="hidden md:block"></div>}
+         {numIframes === 3 && <div className="hidden md:block bg-muted/50"></div>}
       </main>
     </div>
   );
