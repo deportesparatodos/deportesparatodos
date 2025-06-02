@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
 
-const EVENT_LIST_URL = "https://streamtp4.com/eventos.html";
+const EVENT_LIST_URL = "https://stream196tp.com/eventos.html";
 
 export default function EventListPage() {
   return (

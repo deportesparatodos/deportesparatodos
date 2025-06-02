@@ -14,7 +14,7 @@ interface Channel {
   url: string;
 }
 
-const EVENT_LIST_URL = "https://streamtp4.com/eventos.html";
+const EVENT_LIST_URL = "https://stream196tp.com/eventos.html";
 
 const channelsData: { name: string; url: string }[] = [
     { name: 'Azteca Deportes MX', url: 'https://streamtp4.com/global1.php?stream=azteca_deportes' },
@@ -137,7 +137,7 @@ interface CopiedStates {
 
 export const ChannelListComponent: FC = () => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
-  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]); // Changed initial state to []
+  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]); 
 
   const handleAccordionChange = (value: string[]) => {
     setActiveAccordionItems(value);
