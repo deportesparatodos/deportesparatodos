@@ -5,9 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { X } from "lucide-react";
 import { Suspense } from 'react';
 import { Button } from "@/components/ui/button";
-import type { FCWithChildren } from '@/types';
 
-const ViewPageContent: FCWithChildren = () => {
+function ViewPageContent() {
   const searchParams = useSearchParams();
   const urls: string[] = searchParams.getAll('urls').map((url: string) => decodeURIComponent(url));
 
@@ -68,7 +67,7 @@ const ViewPageContent: FCWithChildren = () => {
   );
 }
 
-const Loading: FCWithChildren = () => {
+function Loading() {
   return (
     <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
       <p>Cargando vistas...</p>
@@ -76,12 +75,10 @@ const Loading: FCWithChildren = () => {
   );
 }
 
-const ViewPage: FCWithChildren = () => {
+export default function Page() {
   return (
     <Suspense fallback={<Loading />}>
       <ViewPageContent />
     </Suspense>
   );
 }
-
-export default ViewPage;
