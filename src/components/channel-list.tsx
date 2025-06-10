@@ -44,6 +44,7 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'ESPN 5', url: 'https://streamtp4.com/global1.php?stream=espn5' },
     { name: 'ESPN 6', url: 'https://streamtp4.com/global1.php?stream=espn6' },
     { name: 'ESPN 7', url: 'https://streamtp4.com/global1.php?stream=espn7' },
+    { name: 'ESPN ARGENTINA', url: 'https://stream196tp.com/global1.php?stream=eventos8' },
     { name: 'ESPN Deportes USA', url: 'https://streamtp4.com/global1.php?stream=espndeportes' },
     { name: 'ESPN MX', url: 'https://streamtp4.com/global1.php?stream=espnmx' },
     { name: 'ESPN Premium Argentina', url: 'https://streamtp4.com/global1.php?stream=espnpremium' },
@@ -92,6 +93,7 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Sport TV 4 PT', url: 'https://streamtp4.com/global1.php?stream=sportv_4pt' },
     { name: 'Sport TV 5 PT', url: 'https://streamtp4.com/global1.php?stream=sporttv5' },
     { name: 'Sport TV 6 PT', url: 'https://streamtp4.com/global1.php?stream=sporttv6' },
+    { name: 'TN', url: 'https://www.youtube.com/embed/cb12KmMMDJA?si=CsUytnnQFJxMs8fL' },
     { name: 'TNT 1 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_1_gb' },
     { name: 'TNT 2 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_2_gb' },
     { name: 'TNT 3 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_3_gb' },
@@ -224,4 +226,6 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
+    
+
     
