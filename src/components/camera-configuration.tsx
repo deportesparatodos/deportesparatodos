@@ -72,92 +72,103 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     { value: 4, display: "4" },
   ];
 
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    handleStartView();
+  };
+
   return (
     <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas:</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6 flex-grow">
-        <div>
-          <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Ventanas:</Label>
-          <div className="flex space-x-2 mt-2">
-            {viewOptions.map((option) => (
-              <Button
-                key={option.value}
-                variant={numCameras === option.value ? "default" : "outline"}
-                onClick={() => handleNumCamerasChange(option.value)}
-                className="h-12 w-12 text-lg"
-                aria-label={`Seleccionar ${option.value} ventana${option.value > 1 ? 's' : ''}`}
-              >
-                {option.display}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-            <Label className="text-base font-medium text-foreground mb-2 block pt-4">
-                URLs de las Vistas:
-            </Label>
-            <div className="space-y-2">
-            {Array.from({ length: numCameras }).map((_, index) => (
-                <div key={index} className="flex items-center space-x-2">
+      <form onSubmit={handleFormSubmit}>
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas:</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6 flex-grow">
+          <div>
+            <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Ventanas:</Label>
+            <div className="flex space-x-2 mt-2">
+              {viewOptions.map((option) => (
                 <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleMoveUrl(index, 'up')}
-                    disabled={index === 0}
-                    aria-label="Mover URL hacia arriba"
-                    className="bg-background hover:bg-accent/50"
+                  key={option.value}
+                  variant={numCameras === option.value ? "default" : "outline"}
+                  onClick={() => handleNumCamerasChange(option.value)}
+                  className="h-12 w-12 text-lg"
+                  aria-label={`Seleccionar ${option.display} ventana${option.value > 1 ? 's' : ''}`}
+                  type="button" // Prevent this button from submitting the form
                 >
-                    <ArrowUp className="h-4 w-4" />
+                  {option.display}
                 </Button>
-                <Input
-                    id={`url-${index}`}
-                    type="url"
-                    placeholder={`URL Vista ${index + 1}`}
-                    value={cameraUrls[index] || ''}
-                    onChange={(e) => handleUrlChange(index, e.target.value)}
-                    className="bg-background flex-grow"
-                />
-                {cameraUrls[index] && (
-                  <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleClearUrl(index)}
-                      aria-label="Limpiar URL"
-                      className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  >
-                      <X className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleMoveUrl(index, 'down')}
-                    disabled={index === numCameras - 1}
-                    aria-label="Mover URL hacia abajo"
-                    className="bg-background hover:bg-accent/50"
-                >
-                    <ArrowDown className="h-4 w-4" />
-                </Button>
-                </div>
-            ))}
+              ))}
             </div>
-        </div>
-
-        {errorMessage && (
-          <div className="flex items-center p-3 text-sm rounded-md bg-destructive/10 text-destructive border border-destructive/30">
-            <AlertTriangle className="h-5 w-5 mr-2" />
-            <p>{errorMessage}</p>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-end items-center pt-6">
-        <Button onClick={handleStartView} className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
-        </Button>
-      </CardFooter>
+
+          <div>
+              <Label className="text-base font-medium text-foreground mb-2 block pt-4">
+                  URLs de las Vistas:
+              </Label>
+              <div className="space-y-2">
+              {Array.from({ length: numCameras }).map((_, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                  <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleMoveUrl(index, 'up')}
+                      disabled={index === 0}
+                      aria-label="Mover URL hacia arriba"
+                      className="bg-background hover:bg-accent/50"
+                      type="button" 
+                  >
+                      <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Input
+                      id={`url-${index}`}
+                      type="url"
+                      placeholder={`URL Vista ${index + 1}`}
+                      value={cameraUrls[index] || ''}
+                      onChange={(e) => handleUrlChange(index, e.target.value)}
+                      className="bg-background flex-grow"
+                  />
+                  {cameraUrls[index] && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleClearUrl(index)}
+                        aria-label="Limpiar URL"
+                        className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                        type="button"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleMoveUrl(index, 'down')}
+                      disabled={index === numCameras - 1}
+                      aria-label="Mover URL hacia abajo"
+                      className="bg-background hover:bg-accent/50"
+                      type="button"
+                  >
+                      <ArrowDown className="h-4 w-4" />
+                  </Button>
+                  </div>
+              ))}
+              </div>
+          </div>
+
+          {errorMessage && (
+            <div className="flex items-center p-3 text-sm rounded-md bg-destructive/10 text-destructive border border-destructive/30">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              <p>{errorMessage}</p>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-end items-center pt-6">
+          <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   );
 };
