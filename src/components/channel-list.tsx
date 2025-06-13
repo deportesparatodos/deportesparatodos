@@ -1,12 +1,13 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card"; 
+import { Card } from "@/components/ui/card"; 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Copy, CheckCircle2, ListVideo, List } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Copy, CheckCircle2, ListVideo, List, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Channel {
@@ -140,8 +141,12 @@ interface CopiedStates {
 export const ChannelListComponent: FC = () => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]); 
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   const handleAccordionChange = (value: string[]) => {
+    if (!value.includes('channel-list-content')) {
+      setSearchTerm(''); 
+    }
     setActiveAccordionItems(value);
   };
 
@@ -157,6 +162,10 @@ export const ChannelListComponent: FC = () => {
     }
   };
 
+  const filteredChannels = channels.filter(channel =>
+    channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
       <Accordion
@@ -166,17 +175,45 @@ export const ChannelListComponent: FC = () => {
         className="w-full flex flex-col flex-grow"
       >
         <AccordionItem value="channel-list-content" className="border-b-0">
-          <AccordionTrigger className="px-6 py-4 text-xl font-semibold text-primary hover:no-underline">
-            <div className="flex items-center">
-              <List className="mr-2 h-5 w-5" />
-              Lista de Canales
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex w-full items-center justify-between gap-4">
+              <div className="flex items-center text-xl font-semibold text-primary">
+                <List className="mr-2 h-5 w-5 flex-shrink-0" />
+                <span className="truncate">Lista de Canales</span>
+              </div>
+              {activeAccordionItems.includes('channel-list-content') && (
+                <div className="relative flex items-center">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar canal..."
+                    className="h-9 pl-10 pr-8 sm:w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onClick={(e) => e.stopPropagation()} 
+                  />
+                  {searchTerm && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSearchTerm('');
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-0 min-h-0">
             <div className="max-h-96 overflow-y-auto px-6 pb-4">
-              {channels.length > 0 ? (
+              {filteredChannels.length > 0 ? (
                 <ul className="space-y-3">
-                  {channels.map((channel) => (
+                  {filteredChannels.map((channel) => (
                     <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
                       <span className="text-foreground mr-2 flex-1 truncate" title={channel.name}>{channel.name}</span>
                       <Button
@@ -196,7 +233,9 @@ export const ChannelListComponent: FC = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-muted-foreground px-6">No hay canales disponibles.</p>
+                <p className="text-muted-foreground px-6">
+                  {searchTerm ? `No se encontraron canales para "${searchTerm}".` : "No hay canales disponibles."}
+                </p>
               )}
             </div>
           </AccordionContent>
@@ -226,6 +265,8 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
+    
+
     
 
     
