@@ -176,42 +176,37 @@ export const ChannelListComponent: FC = () => {
       >
         <AccordionItem value="channel-list-content" className="border-b-0">
           <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex w-full items-center justify-between gap-2 md:gap-4">
+            <div className="flex w-full items-center justify-between">
               <div className="flex items-center text-xl font-semibold text-primary">
                 <List className="mr-2 h-5 w-5 flex-shrink-0" />
                 <span className="truncate">Lista de Canales</span>
               </div>
-              {activeAccordionItems.includes('channel-list-content') && (
-                <div className="relative flex flex-1 items-center min-w-[150px] sm:min-w-[200px] max-w-xs sm:max-w-sm md:max-w-md">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Buscar canal..."
-                    className="h-9 w-full pl-10 pr-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()} 
-                  />
-                  {searchTerm && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSearchTerm('');
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              )}
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-0 min-h-0">
-            <div className="max-h-96 overflow-y-auto px-6 pb-4">
+            <div className="px-6 pb-4"> {/* Contenedor para la barra de búsqueda */}
+              <div className="relative flex flex-1 items-center w-full">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Buscar canal..."
+                  className="h-9 w-full pl-10 pr-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="max-h-96 overflow-y-auto px-6 pb-4"> {/* Contenedor para la lista de canales */}
               {filteredChannels.length > 0 ? (
                 <ul className="space-y-3">
                   {filteredChannels.map((channel) => (
@@ -234,7 +229,7 @@ export const ChannelListComponent: FC = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-muted-foreground px-6">
+                <p className="text-muted-foreground">
                   {searchTerm ? `No se encontraron canales para "${searchTerm}".` : "No hay canales disponibles."}
                 </p>
               )}
@@ -266,3 +261,4 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
+
