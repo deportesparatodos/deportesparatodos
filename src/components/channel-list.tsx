@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card"; 
+import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Copy, CheckCircle2, ListVideo, List, Search, X } from "lucide-react";
@@ -140,12 +140,12 @@ interface CopiedStates {
 
 export const ChannelListComponent: FC = () => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
-  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]); 
+  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   const handleAccordionChange = (value: string[]) => {
     if (!value.includes('channel-list-content')) {
-      setSearchTerm(''); 
+      setSearchTerm('');
     }
     setActiveAccordionItems(value);
   };
@@ -176,21 +176,22 @@ export const ChannelListComponent: FC = () => {
       >
         <AccordionItem value="channel-list-content" className="border-b-0">
           <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex w-full items-center justify-between gap-4">
+            <div className="flex w-full items-center justify-between gap-2 md:gap-4">
               <div className="flex items-center text-xl font-semibold text-primary">
                 <List className="mr-2 h-5 w-5 flex-shrink-0" />
                 <span className="truncate">Lista de Canales</span>
               </div>
               {activeAccordionItems.includes('channel-list-content') && (
-                <div className="relative flex items-center">
+                <div className="relative flex flex-1 items-center min-w-[150px] sm:min-w-[200px] max-w-xs sm:max-w-sm md:max-w-md">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="text"
                     placeholder="Buscar canal..."
-                    className="h-9 pl-10 pr-8 sm:w-64"
+                    className="h-9 w-full pl-10 pr-8"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    onClick={(e) => e.stopPropagation()} 
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()} 
                   />
                   {searchTerm && (
                     <Button
@@ -265,10 +266,3 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
-    
-
-    
-
-    
-
-    
