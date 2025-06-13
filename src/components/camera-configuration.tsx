@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide-react';
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -56,6 +56,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return;
     }
 
+    // Ensure all array elements up to numCameras are defined before swapping
     for (let i = 0; i < numCameras; i++) {
         if (newUrls[i] === undefined) newUrls[i] = '';
     }
@@ -63,6 +64,21 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     [newUrls[index], newUrls[targetIndex]] = [newUrls[targetIndex], newUrls[index]];
     setCameraUrls(newUrls);
     setErrorMessage("");
+  };
+
+  const handlePasteUrl = async (index: number) => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        const newUrls = [...cameraUrls];
+        newUrls[index] = text;
+        setCameraUrls(newUrls);
+        setErrorMessage(""); 
+      }
+    } catch (err) {
+      console.error("Error al pegar desde el portapapeles: ", err);
+      setErrorMessage("No se pudo pegar. Verifica los permisos del portapapeles.");
+    }
   };
 
   const viewOptions = [
@@ -94,7 +110,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   onClick={() => handleNumCamerasChange(option.value)}
                   className="h-12 w-12 text-lg"
                   aria-label={`Seleccionar ${option.display} ventana${option.value > 1 ? 's' : ''}`}
-                  type="button" // Prevent this button from submitting the form
+                  type="button"
                 >
                   {option.display}
                 </Button>
@@ -106,51 +122,61 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
               <Label className="text-base font-medium text-foreground mb-2 block pt-4">
                   URLs de las Vistas:
               </Label>
-              <div className="space-y-2">
+              <div className="space-y-3">
               {Array.from({ length: numCameras }).map((_, index) => (
                   <div key={index} className="flex items-center space-x-2">
-                  <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleMoveUrl(index, 'up')}
-                      disabled={index === 0}
-                      aria-label="Mover URL hacia arriba"
-                      className="bg-background hover:bg-accent/50"
-                      type="button" 
-                  >
-                      <ArrowUp className="h-4 w-4" />
-                  </Button>
-                  <Input
-                      id={`url-${index}`}
-                      type="url"
-                      placeholder={`URL Vista ${index + 1}`}
-                      value={cameraUrls[index] || ''}
-                      onChange={(e) => handleUrlChange(index, e.target.value)}
-                      className="bg-background flex-grow"
-                  />
-                  {cameraUrls[index] && (
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
-                        onClick={() => handleClearUrl(index)}
-                        aria-label="Limpiar URL"
-                        className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                        onClick={() => handleMoveUrl(index, 'up')}
+                        disabled={index === 0}
+                        aria-label="Mover URL hacia arriba"
+                        className="bg-background hover:bg-accent/50"
+                        type="button" 
+                    >
+                        <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Input
+                        id={`url-${index}`}
+                        type="url"
+                        placeholder={`URL Vista ${index + 1}`}
+                        value={cameraUrls[index] || ''}
+                        onChange={(e) => handleUrlChange(index, e.target.value)}
+                        className="bg-background flex-grow"
+                    />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handlePasteUrl(index)}
+                        aria-label="Pegar URL desde portapapeles"
+                        className="bg-background hover:bg-accent/50"
                         type="button"
                     >
-                        <X className="h-4 w-4" />
+                        <ClipboardPaste className="h-4 w-4" />
                     </Button>
-                  )}
-                  <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleMoveUrl(index, 'down')}
-                      disabled={index === numCameras - 1}
-                      aria-label="Mover URL hacia abajo"
-                      className="bg-background hover:bg-accent/50"
-                      type="button"
-                  >
-                      <ArrowDown className="h-4 w-4" />
-                  </Button>
+                    {cameraUrls[index] && (
+                      <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleClearUrl(index)}
+                          aria-label="Limpiar URL"
+                          className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                          type="button"
+                      >
+                          <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleMoveUrl(index, 'down')}
+                        disabled={index === numCameras - 1}
+                        aria-label="Mover URL hacia abajo"
+                        className="bg-background hover:bg-accent/50"
+                        type="button"
+                    >
+                        <ArrowDown className="h-4 w-4" />
+                    </Button>
                   </div>
               ))}
               </div>
