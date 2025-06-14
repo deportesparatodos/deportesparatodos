@@ -78,6 +78,8 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'LaLiga Hypermotion', url: 'https://streamtp4.com/global1.php?stream=laligahypermotion' },
     { name: 'Liga 1 MAX', url: 'https://streamtp4.com/global1.php?stream=liga1max' },
     { name: 'Movistar Liga de Campeones', url: 'https://streamtp4.com/global1.php?stream=movistarligadecampeones' },
+    { name: 'OnBoard Colapinto (SI HAY F1)', url: 'https://stream196tp.com/global1.php?stream=disney16' },
+    { name: 'OnBoard General (SI HAY F1)', url: 'https://stream196tp.com/global1.php?stream=disney18' },
     { name: 'Premiere 1 BR', url: 'https://streamtp4.com/global1.php?stream=premiere1' },
     { name: 'Premiere 2 BR', url: 'https://streamtp4.com/global1.php?stream=premiere2' },
     { name: 'Premiere 3 BR', url: 'https://streamtp4.com/global1.php?stream=premiere3' },
@@ -113,6 +115,7 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'TUDN MX', url: 'https://streamtp4.com/global1.php?stream=TUDNMX' },
     { name: 'TUDN USA', url: 'https://streamtp4.com/global1.php?stream=tudn_usa' },
     { name: 'Telefe', url: 'https://streamtp4.com/global1.php?stream=telefe' },
+    { name: 'Telemetria F1 (SI HAY F1)', url: 'https://alangulo-dashboard-f1.vercel.app' },
     { name: 'TyC Sports', url: 'https://streamtp4.com/global1.php?stream=tycsports' },
     { name: 'TyC Sports Internacional', url: 'https://streamtp4.com/global1.php?stream=tycinternacional' },
     { name: 'USA Network', url: 'https://streamtp4.com/global1.php?stream=usa_network' },
@@ -144,6 +147,7 @@ export const ChannelListComponent: FC = () => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleAccordionChange = (value: string[]) => {
     if (!value.includes('channel-list-content')) {
@@ -190,12 +194,12 @@ export const ChannelListComponent: FC = () => {
               <div className="relative flex flex-1 items-center w-full">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
+                  ref={searchInputRef}
                   type="text"
                   placeholder="Buscar canal..."
                   className="h-9 w-full pl-10 pr-8"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
                 />
                 {searchTerm && (
                   <Button
@@ -265,4 +269,5 @@ export const ChannelListComponent: FC = () => {
   );
 };
 
+    
     
