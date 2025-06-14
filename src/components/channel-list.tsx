@@ -54,7 +54,11 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Eleven Sports 3 PT', url: 'https://streamtp4.com/global1.php?stream=eleven3_pt' },
     { name: 'Eleven Sports 4 PT', url: 'https://streamtp4.com/global1.php?stream=eleven4_pt' },
     { name: 'Eleven Sports 5 PT', url: 'https://streamtp4.com/global1.php?stream=eleven5_pt' },
+<<<<<<< HEAD
     { name: '24HS Le Mans', url: 'https://channel-2fda09b0aaa4c584.live.sportall.media/684b2a28bf7c77c89bc5c065-channel-2fda09b0aaa4c584-6846b087b862ec3ffff2f9e4-9x3v4Qnq6Jb2.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjIwMjMwOTI4XzE4YzA5NjAwODRiY2FlZGIzZDY2In0.eyJpcCI6ZmFsc2UsImNvIjpmYWxzZSwiY3R5IjpmYWxzZSwicmVnIjpmYWxzZSwic3NuIjp0cnVlLCJleHAiOjE3NTAwNzkwMTksImhlYWRlcnMiOltdLCJxcyI6W10sImludHNpZyI6IjFBaVd6b2F2dlhldm44VzQzMUZLVVYtSXRuR2hDdDQ0VGRTUERyZldsYUUiLCJwYXRocyI6WyIvb3V0L3YxLzA3NDY3MjY1NzFmODQ2NDNiMDdkMzJlMDU4YTE0NGQ5LyJdLCJleGMiOlsiL3RtLyJdLCJuYmYiOjE2NDUwMDAwMDAsImlhdCI6MTc0OTkwNjIxOX0.CX0mS9yy0FqJjCOOAqoKI3b72ejDVfUha9TIb6WWoq0/out/v1/0746726571f84643b07d32e058a144d9/index.m3u8?token=23029034&start=1749905860' },
+=======
+    { name: 'FIA TV', url: 'chrome-extension://opmeopcambhfimffbomjgemehjkbbmji/pages/player.html#https://channel-2fda09b0aaa4c584.live.sportall.media/684b2a28bf7c77c89bc5c065-channel-2fda09b0aaa4c584-6846b087b862ec3ffff2f9e4-9x3v4Qnq6Jb2.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjIwMjMwOTI4XzE4YzA5NjAwODRiY2FlZGIzZDY2In0.eyJpcCI6ZmFsc2UsImNvIjpmYWxzZSwiY3R5IjpmYWxzZSwicmVnIjpmYWxzZSwic3NuIjp0cnVlLCJleHAiOjE3NTAwNzkwMTksImhlYWRlcnMiOltdLCJxcyI6W10sImludHNpZyI6IjFBaVd6b2F2dlhldm44VzQzMUZLVVYtSXRuR2hDdDQ0VGRTUERyZldsYUUiLCJwYXRocyI6WyIvb3V0L3YxLzA3NDY3MjY1NzFmODQ2NDNiMDdkMzJlMDU4YTE0NGQ5LyJdLCJleGMiOlsiL3RtLyJdLCJuYmYiOjE2NDUwMDAwMDAsImlhdCI6MTc0OTkwNjIxOX0.CX0mS9yy0FqJjCOOAqoKI3b72ejDVfUha9TIb6WWoq0/out/v1/0746726571f84643b07d32e058a144d9/index_3.m3u8?start=1749905860' },
+>>>>>>> 698ed6e93d3cdb65218dae14cef95db8faed8fcc
     { name: 'FUTV (EV)', url: 'https://streamtp4.com/global1.php?stream=futv' },
     { name: 'Fox Deportes TUBI', url: 'https://streamtp4.com/global1.php?stream=tubitv1' },
     { name: 'Fox Deportes USA', url: 'https://streamtp4.com/global1.php?stream=fox_deportes_usa' },
@@ -100,7 +104,11 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'TN', url: 'https://www.youtube.com/embed/cb12KmMMDJA?si=CsUytnnQFJxMs8fL' },
     { name: 'TNT 1 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_1_gb' },
     { name: 'TNT 2 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_2_gb' },
+<<<<<<< HEAD
     { name: 'TNT UK 2', url: 'https://alangulotv2.com/?channel=tntuk2'},
+=======
+    { name: 'TNT UK 2', url: 'chrome-extension://opmeopcambhfimffbomjgemehjkbbmji/pages/player.html#https://doc1.crackstreamslivehd.com/tnt_2_gb/tracks-v1a1/mono.m3u8?ip=152.169.163.119&token=23d628da4d478736cbf4e5b12120db961176931e-6c-1749951282-1749918882' },
+>>>>>>> 698ed6e93d3cdb65218dae14cef95db8faed8fcc
     { name: 'TNT 3 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_3_gb' },
     { name: 'TNT 4 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_4_gb' },
     { name: 'TNT Sports Argentina', url: 'https://streamtp4.com/global1.php?stream=tntsports' },
@@ -151,7 +159,11 @@ export const ChannelListComponent: FC = () => {
 
   const handleAccordionChange = (value: string[]) => {
     if (!value.includes('channel-list-content')) {
+<<<<<<< HEAD
       setSearchTerm(''); 
+=======
+      setSearchTerm(''); // Limpia la búsqueda si el acordeón de canales se cierra
+>>>>>>> 698ed6e93d3cdb65218dae14cef95db8faed8fcc
     }
     setActiveAccordionItems(value);
   };
