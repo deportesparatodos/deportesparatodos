@@ -54,6 +54,8 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Eleven Sports 3 PT', url: 'https://streamtp4.com/global1.php?stream=eleven3_pt' },
     { name: 'Eleven Sports 4 PT', url: 'https://streamtp4.com/global1.php?stream=eleven4_pt' },
     { name: 'Eleven Sports 5 PT', url: 'https://streamtp4.com/global1.php?stream=eleven5_pt' },
+    { name: 'FIA TV', url: 'chrome-extension://opmeopcambhfimffbomjgemehjkbbmji/pages/player.html#https://channel-2fda09b0aaa4c584.live.sportall.media/684b2a28bf7c77c89bc5c065-channel-2fda09b0aaa4c584-6846b087b862ec3ffff2f9e4-9x3v4Qnq6Jb2.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjIwMjMwOTI4XzE4YzA5NjAwODRiY2FlZGIzZDY2In0.eyJpcCI6ZmFsc2UsImNvIjpmYWxzZSwiY3R5IjpmYWxzZSwicmVnIjpmYWxzZSwic3NuIjp0cnVlLCJleHAiOjE3NTAwNzkwMTksImhlYWRlcnMiOltdLCJxcyI6W10sImludHNpZyI6IjFBaVd6b2F2dlhldm44VzQzMUZLVVYtSXRuR2hDdDQ0VGRTUERyZldsYUUiLCJwYXRocyI6WyIvb3V0L3YxLzA3NDY3MjY1NzFmODQ2NDNiMDdkMzJlMDU4YTE0NGQ5LyJdLCJleGMiOlsiL3RtLyJdLCJuYmYiOjE2NDUwMDAwMDAsImlhdCI6MTc0OTkwNjIxOX0.CX0mS9yy0FqJjCOOAqoKI3b72ejDVfUha9TIb6WWoq0/out/v1/0746726571f84643b07d32e058a144d9/index_3.m3u8?start=1749905860' },
+    { name: 'FIA TV', url: 'https://alangulotv2.com/?channel=stream2' },
     { name: 'FUTV (EV)', url: 'https://streamtp4.com/global1.php?stream=futv' },
     { name: 'Fox Deportes TUBI', url: 'https://streamtp4.com/global1.php?stream=tubitv1' },
     { name: 'Fox Deportes USA', url: 'https://streamtp4.com/global1.php?stream=fox_deportes_usa' },
@@ -97,6 +99,7 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'TN', url: 'https://www.youtube.com/embed/cb12KmMMDJA?si=CsUytnnQFJxMs8fL' },
     { name: 'TNT 1 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_1_gb' },
     { name: 'TNT 2 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_2_gb' },
+    { name: 'TNT UK 2', url: 'https://alangulotv2.com/?channel=tntuk2'},
     { name: 'TNT 3 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_3_gb' },
     { name: 'TNT 4 GB', url: 'https://streamtp4.com/global1.php?stream=tnt_4_gb' },
     { name: 'TNT Sports Argentina', url: 'https://streamtp4.com/global1.php?stream=tntsports' },
@@ -145,7 +148,7 @@ export const ChannelListComponent: FC = () => {
 
   const handleAccordionChange = (value: string[]) => {
     if (!value.includes('channel-list-content')) {
-      setSearchTerm('');
+      setSearchTerm(''); // Clear search term when channel list accordion is closed
     }
     setActiveAccordionItems(value);
   };
@@ -184,7 +187,7 @@ export const ChannelListComponent: FC = () => {
             </div>
           </AccordionTrigger>
           <AccordionContent className="pt-0 min-h-0">
-            <div className="px-6 pb-4"> {/* Contenedor para la barra de búsqueda */}
+            <div className="px-6 pb-4">
               <div className="relative flex flex-1 items-center w-full">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -206,7 +209,7 @@ export const ChannelListComponent: FC = () => {
                 )}
               </div>
             </div>
-            <div className="max-h-96 overflow-y-auto px-6 pb-4"> {/* Contenedor para la lista de canales */}
+            <div className="max-h-96 overflow-y-auto px-6 pb-4">
               {filteredChannels.length > 0 ? (
                 <ul className="space-y-3">
                   {filteredChannels.map((channel) => (
