@@ -54,7 +54,7 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Eleven Sports 3 PT', url: 'https://streamtp4.com/global1.php?stream=eleven3_pt' },
     { name: 'Eleven Sports 4 PT', url: 'https://streamtp4.com/global1.php?stream=eleven4_pt' },
     { name: 'Eleven Sports 5 PT', url: 'https://streamtp4.com/global1.php?stream=eleven5_pt' },
-    { name: '24HS Le Mans', url: 'https://alangulotv2.com/?channel=stream2' },
+    { name: '24HS Le Mans', url: 'https://channel-2fda09b0aaa4c584.live.sportall.media/684b2a28bf7c77c89bc5c065-channel-2fda09b0aaa4c584-6846b087b862ec3ffff2f9e4-9x3v4Qnq6Jb2.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjIwMjMwOTI4XzE4YzA5NjAwODRiY2FlZGIzZDY2In0.eyJpcCI6ZmFsc2UsImNvIjpmYWxzZSwiY3R5IjpmYWxzZSwicmVnIjpmYWxzZSwic3NuIjp0cnVlLCJleHAiOjE3NTAwNzkwMTksImhlYWRlcnMiOltdLCJxcyI6W10sImludHNpZyI6IjFBaVd6b2F2dlhldm44VzQzMUZLVVYtSXRuR2hDdDQ0VGRTUERyZldsYUUiLCJwYXRocyI6WyIvb3V0L3YxLzA3NDY3MjY1NzFmODQ2NDNiMDdkMzJlMDU4YTE0NGQ5LyJdLCJleGMiOlsiL3RtLyJdLCJuYmYiOjE2NDUwMDAwMDAsImlhdCI6MTc0OTkwNjIxOX0.CX0mS9yy0FqJjCOOAqoKI3b72ejDVfUha9TIb6WWoq0/out/v1/0746726571f84643b07d32e058a144d9/index.m3u8?token=23029034&start=1749905860' },
     { name: 'FUTV (EV)', url: 'https://streamtp4.com/global1.php?stream=futv' },
     { name: 'Fox Deportes TUBI', url: 'https://streamtp4.com/global1.php?stream=tubitv1' },
     { name: 'Fox Deportes USA', url: 'https://streamtp4.com/global1.php?stream=fox_deportes_usa' },
@@ -168,8 +168,6 @@ export const ChannelListComponent: FC = () => {
     channel.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const isChannelListOpen = activeAccordionItems.includes('channel-list-content');
-
   return (
     <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
       <Accordion
@@ -197,6 +195,7 @@ export const ChannelListComponent: FC = () => {
                   className="h-9 w-full pl-10 pr-8"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
                 />
                 {searchTerm && (
                   <Button
@@ -265,3 +264,5 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
+
+    
