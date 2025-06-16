@@ -141,6 +141,21 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'SSC EXTRA 2', url: 'https://elcanaldeportivo.com/sscextra2.php' },
     { name: 'AZTECA 7', url: 'https://elcanaldeportivo.com/azteca7.php' },
     { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php' },
+    { name: 'History 1', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeUhE' },
+    { name: 'History 2', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeV8y' },
+    { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0' },
+    { name: 'National Geographic', url: 'https://tvlibreonline.org/html/fl/?get=TmF0R2VvSEQ=' },
+    { name: 'TLC', url: 'https://tvlibreonline.org/html/fl/?get=VExD' },
+    { name: 'Comedy Central', url: 'https://tvlibreonline.org/html/fl/?get=Q29tZWR5Q2VudHJhbA' },
+    { name: 'Telemundo', url: 'https://tvlibreonline.org/html/fl/?get=VGVsZW11bmRvX0hE' },
+    { name: 'TNT', url: 'https://tvlibreonline.org/html/fl/?get=VE5UX0hEX0FyZw==' },
+    { name: 'Garage TV', url: 'https://tvlibreonline.org/html/fl/?get=RWxfR2FyYWdl' },
+    { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==' },
+    { name: 'MTV', url: 'https://tvlibreonline.org/html/fl/?get=TVRWX0hE' },
+    { name: 'Flow Music', url: 'https://tvlibreonline.org/html/fl/?get=Rmxvd19NdXNpY19YUA==' },
+    { name: 'VENUS (+18)', url: 'https://tvlibreonline.org/html/fl/?get=VmVudXM=' },
+    { name: 'Playboy (+18)', url: 'https://tvlibreonline.org/html/fl/?get=UGxheWJveQ' },
+    { name: 'Sextreme (+18)', url: 'https://tvlibreonline.org/html/fl/?get=U2V4dHJlbWU' },
 ];
 
 const uniqueChannelsMap = new Map<string, Channel>();
