@@ -18,7 +18,10 @@ interface Channel {
 const EVENT_LIST_URL = "https://stream196tp.com/eventos.html";
 
 const channelsData: { name: string; url: string }[] = [
+    { name: 'A24', url: 'https://www.youtube.com/embed/QGpHLgRnrx4?si=NBFgu_PSRDMaOdr1' },
     { name: 'Azteca Deportes MX', url: 'https://streamtp4.com/global1.php?stream=azteca_deportes' },
+    { name: 'C5N', url: 'https://www.youtube.com/embed/jTDk5CswBVk?si=1j2k7zbPW2d1wPRs' },
+    { name: 'CRONICA', url: 'https://www.youtube.com/embed/avly0uwZzOE?si=QoqQYotYxpJxAZyO' },
     { name: 'Caliente TV', url: 'https://streamtp4.com/global1.php?stream=calientetvmx' },
     { name: 'Canal 11 PT', url: 'https://streamtp4.com/global1.php?stream=canal11_pt' },
     { name: 'Canal 5 MX', url: 'https://streamtp4.com/global1.php?stream=canal5mx' },
@@ -75,6 +78,7 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Gran Hermano CAM 24H', url: 'https://streamtp4.com/global1.php?stream=granhermanocamara24horas' },
     { name: 'Gran Hermano MultiCAM', url: 'https://streamtp4.com/global1.php?stream=granhermanomulticam' },
     { name: 'HI! Sports MX', url: 'https://streamtp4.com/global1.php?stream=hisports' },
+    { name: 'LN+', url: 'https://www.youtube.com/embed/OR9MH16MKrg?si=DIfW0Kw81r6pmy3s' },
     { name: 'LaLiga Hypermotion', url: 'https://streamtp4.com/global1.php?stream=laligahypermotion' },
     { name: 'Liga 1 MAX', url: 'https://streamtp4.com/global1.php?stream=liga1max' },
     { name: 'Movistar Liga de Campeones', url: 'https://streamtp4.com/global1.php?stream=movistarligadecampeones' },
@@ -150,7 +154,7 @@ export const ChannelListComponent: FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleAccordionChange = (value: string[]) => {
-    if (!value.includes('channel-list-content')) {
+    if (!value.includes('channel-list-content') && activeAccordionItems.includes('channel-list-content')) {
       setSearchTerm(''); 
     }
     setActiveAccordionItems(value);
