@@ -130,6 +130,17 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'Win Sports', url: 'https://streamtp4.com/global1.php?stream=winsports' },
     { name: 'Win Sports +', url: 'https://streamtp4.com/global1.php?stream=winplus' },
     { name: 'Win Sports + (Op2)', url: 'https://streamtp4.com/global1.php?stream=winplus2' },
+    { name: 'Eurosport 1', url: 'https://elcanaldeportivo.com/eurosports1.php' },
+    { name: 'Eurosport 2', url: 'https://elcanaldeportivo.com/eurosports2.php' },
+    { name: 'El canal del Futbol', url: 'https://elcanaldeportivo.com/ecfutbol.php' },
+    { name: 'DAZN F1', url: 'https://elcanaldeportivo.com/daznf1.php' },
+    { name: 'SSC 1', url: 'https://elcanaldeportivo.com/ssc1.php' },
+    { name: 'SSC 2', url: 'https://elcanaldeportivo.com/ssc2.php' },
+    { name: 'SSC NEWS', url: 'https://elcanaldeportivo.com/sscnews.php' },
+    { name: 'SSC EXTRA 1', url: 'https://elcanaldeportivo.com/sscextra1.php' },
+    { name: 'SSC EXTRA 2', url: 'https://elcanaldeportivo.com/sscextra2.php' },
+    { name: 'AZTECA 7', url: 'https://elcanaldeportivo.com/azteca7.php' },
+    { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php' },
 ];
 
 const uniqueChannelsMap = new Map<string, Channel>();
@@ -154,7 +165,7 @@ export const ChannelListComponent: FC = () => {
 
   const handleAccordionChange = (value: string[]) => {
     if (!value.includes('channel-list-content') && activeAccordionItems.includes('channel-list-content')) {
-      setSearchTerm('');
+       setSearchTerm('');
     }
     setActiveAccordionItems(value);
   };
