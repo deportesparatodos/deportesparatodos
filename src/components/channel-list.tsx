@@ -119,7 +119,7 @@ const channelsData: { name: string; url: string }[] = [
     { name: 'TUDN MX', url: 'https://streamtp4.com/global1.php?stream=TUDNMX' },
     { name: 'TUDN USA', url: 'https://streamtp4.com/global1.php?stream=tudn_usa' },
     { name: 'Telefe', url: 'https://streamtp4.com/global1.php?stream=telefe' },
-    { name: 'Telemetria F1 (SI HAY F1)', url: 'https://f1-dash.com/dashboard' },
+    { name: 'Telemetria F1 (SI HAY F1)', url: 'https://alangulo-dashboard-f1.vercel.app' },
     { name: 'TyC Sports', url: 'https://streamtp4.com/global1.php?stream=tycsports' },
     { name: 'TyC Sports Internacional', url: 'https://streamtp4.com/global1.php?stream=tycinternacional' },
     { name: 'USA Network', url: 'https://streamtp4.com/global1.php?stream=usa_network' },
@@ -155,7 +155,7 @@ export const ChannelListComponent: FC = () => {
 
   const handleAccordionChange = (value: string[]) => {
     if (!value.includes('channel-list-content') && activeAccordionItems.includes('channel-list-content')) {
-      setSearchTerm(''); 
+      setSearchTerm('');
     }
     setActiveAccordionItems(value);
   };
