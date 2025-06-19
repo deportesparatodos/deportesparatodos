@@ -287,7 +287,7 @@ export const ChannelListComponent: FC = () => {
                     src={EVENT_LIST_URL}
                     title="Lista de Eventos"
                     className="w-full h-full border-0"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
                 />
               </div>
             </div>

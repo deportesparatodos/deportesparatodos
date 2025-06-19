@@ -21,7 +21,7 @@ export default function EventListPage() {
           src={EVENT_LIST_URL}
           title="Lista de Eventos"
           className="w-full h-full border-0 rounded shadow"
-          sandbox="allow-scripts allow-same-origin allow-popups allow-forms" // Adjust sandbox as needed
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
         ></iframe>
       </main>
     </div>
