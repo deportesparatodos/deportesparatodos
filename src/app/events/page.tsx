@@ -22,6 +22,7 @@ export default function EventListPage() {
           title="Lista de Eventos"
           className="w-full h-full border-0 rounded shadow"
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
+          allow="clipboard-write"
         ></iframe>
       </main>
     </div>

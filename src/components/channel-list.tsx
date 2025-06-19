@@ -19,10 +19,10 @@ const EVENT_LIST_URL = "https://agendadeportiva-alpha.vercel.app/";
 
 const channelsData: { name: string; url: string }[] = [
     { name: 'A24', url: 'https://www.youtube.com/embed/QGpHLgRnrx4?si=NBFgu_PSRDMaOdr1' },
-    { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==' },
-    { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0' },
     { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php' },
     { name: 'AZTECA 7', url: 'https://elcanaldeportivo.com/azteca7.php' },
+    { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==' },
+    { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0' },
     { name: 'Azteca Deportes MX', url: 'https://streamtp4.com/global1.php?stream=azteca_deportes' },
     { name: 'C5N', url: 'https://www.youtube.com/embed/jTDk5CswBVk?si=1j2k7zbPW2d1wPRs' },
     { name: 'CRONICA', url: 'https://www.youtube.com/embed/avly0uwZzOE?si=QoqQYotYxpJxAZyO' },
@@ -288,6 +288,7 @@ export const ChannelListComponent: FC = () => {
                     title="Lista de Eventos"
                     className="w-full h-full border-0"
                     sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
+                    allow="clipboard-write"
                 />
               </div>
             </div>
