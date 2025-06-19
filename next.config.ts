@@ -30,6 +30,30 @@ const nextConfig: NextConfig = {
         hostname: '1000marcas.net',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.wikia.nocookie.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'themenschonabench.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'r2.thesportsdb.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img2.sport-tv-guide.live',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
