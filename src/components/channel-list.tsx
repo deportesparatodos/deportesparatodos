@@ -15,7 +15,7 @@ interface Channel {
   url: string;
 }
 
-const EVENT_LIST_URL = "https://la14hd.com/eventos/";
+const EVENT_LIST_URL = "https://agendadeportiva-alpha.vercel.app/";
 
 const channelsData: { name: string; url: string }[] = [
     { name: 'A24', url: 'https://www.youtube.com/embed/QGpHLgRnrx4?si=NBFgu_PSRDMaOdr1' },
@@ -297,4 +297,3 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
-

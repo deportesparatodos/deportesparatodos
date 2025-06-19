@@ -1,8 +1,9 @@
+
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
 
-const EVENT_LIST_URL = "https://la14hd.com/eventos/";
+const EVENT_LIST_URL = "https://agendadeportiva-alpha.vercel.app/";
 
 export default function EventListPage() {
   return (
