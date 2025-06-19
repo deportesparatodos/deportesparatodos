@@ -28,18 +28,18 @@ const getAiHintForChannel = (channelName: string): string => {
 
 const channelsData: Channel[] = [
     { name: 'A24', url: 'https://www.youtube.com/embed/QGpHLgRnrx4?si=NBFgu_PSRDMaOdr1', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
-    { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AZTECA 7', url: 'https://elcanaldeportivo.com/azteca7.php', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Azteca Deportes MX', url: 'https://streamtpglobal.com/global1.php?stream=azteca_deportes', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'C5N', url: 'https://www.youtube.com/embed/jTDk5CswBVk?si=1j2k7zbPW2d1wPRs', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'CRONICA', url: 'https://www.youtube.com/embed/avly0uwZzOE?si=QoqQYotYxpJxAZyO', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Caliente TV', url: 'https://streamtpglobal.com/global1.php?stream=calientetvmx', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Canal 11 PT', url: 'https://streamtpglobal.com/global1.php?stream=canal11_pt', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Canal 5 MX', url: 'https://streamtpglobal.com/global1.php?stream=canal5mx', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Caracol TV', url: 'https://streamtpglobal.com/global1.php?stream=caracoltv', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Comedy Central', url: 'https://tvlibreonline.org/html/fl/?get=Q29tZWR5Q2VudHJhbA', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/ATV_logo_2020.png' },
+    { name: 'AZTECA 7', url: 'https://elcanaldeportivo.com/azteca7.php', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Logo_Azteca_7_2011.svg/1930px-Logo_Azteca_7_2011.svg.png' },
+    { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Adult_Swim_2003_logo.svg/2560px-Adult_Swim_2003_logo.svg.png' },
+    { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg' },
+    { name: 'Azteca Deportes MX', url: 'https://streamtpglobal.com/global1.php?stream=azteca_deportes', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aztecadeporteslogo.png/500px-Aztecadeporteslogo.png' },
+    { name: 'C5N', url: 'https://www.youtube.com/embed/jTDk5CswBVk?si=1j2k7zbPW2d1wPRs', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/C5N_Logo_2015.PNG/640px-C5N_Logo_2015.PNG' },
+    { name: 'CRONICA', url: 'https://www.youtube.com/embed/avly0uwZzOE?si=QoqQYotYxpJxAZyO', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Crónica_TV_logotipo_%282016%29.png' },
+    { name: 'Caliente TV', url: 'https://streamtpglobal.com/global1.php?stream=calientetvmx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Caliente_TV_Logo.png' },
+    { name: 'Canal 11 PT', url: 'https://streamtpglobal.com/global1.php?stream=canal11_pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Logo_Canal_11_FPF.svg/1053px-Logo_Canal_11_FPF.svg.png' },
+    { name: 'Canal 5 MX', url: 'https://streamtpglobal.com/global1.php?stream=canal5mx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Canal_5_Mexico_logo_2014.svg' },
+    { name: 'Caracol TV', url: 'https://streamtpglobal.com/global1.php?stream=caracoltv', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/65/Logotipo_de_Caracol_Televisi%C3%B3n_Corporativo.png' },
+    { name: 'Comedy Central', url: 'https://tvlibreonline.org/html/fl/?get=Q29tZWR5Q2VudHJhbA', logoUrl: 'https://1000marcas.net/wp-content/uploads/2022/01/Comedy-Central-Productions-Logo.png' },
     { name: 'DAZN 1 ES', url: 'https://streamtpglobal.com/global1.php?stream=dazn1', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'DAZN 2 ES', url: 'https://streamtpglobal.com/global1.php?stream=dazn2', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'DAZN F1', url: 'https://elcanaldeportivo.com/daznf1.php', logoUrl: 'https://placehold.co/24x24.png' },
@@ -265,7 +265,7 @@ export const ChannelListComponent: FC = () => {
                             height={24}
                             data-ai-hint={getAiHintForChannel(channel.name)}
                             className="mr-2 rounded-sm object-contain flex-shrink-0"
-                            unoptimized // Añadir si las URLs de los logos no están en next.config.js
+                            unoptimized 
                           />
                         )}
                         <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
@@ -320,8 +320,3 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
-
-
-    
-
-    

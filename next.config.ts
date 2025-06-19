@@ -18,6 +18,18 @@ const nextConfig: NextConfig = {
         hostname: 'encrypted-tbn0.gstatic.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '1000marcas.net',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
@@ -30,5 +42,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-    
