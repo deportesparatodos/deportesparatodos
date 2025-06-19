@@ -54,7 +54,74 @@ const nextConfig: NextConfig = {
         hostname: 'img2.sport-tv-guide.live',
         port: '',
         pathname: '/**',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.pinimg.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'resizer.glanacion.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.mtv.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'brandfetch.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'asset.brandfetch.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'logosandtypes.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'forounivers.com',
+        port: '',
+        pathname: '/**',
+      },
+      // Wikipedia subdomains that might serve direct images (though often it's upload.wikimedia.org)
+      {
+        protocol: 'https',
+        hostname: 'en.wikipedia.org',
+        port: '',
+        pathname: '/**',
+      },
+       {
+        protocol: 'https',
+        hostname: 'ar.wikipedia.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'de.wikipedia.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'es.wikipedia.org',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   typescript: {
