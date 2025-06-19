@@ -1,10 +1,11 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export', // Enable static exports
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '', // For GitHub Pages
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true, // Required for static export, or configure remotePatterns
     remotePatterns: [
       {
         protocol: 'https',
@@ -12,6 +13,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'encrypted-tbn0.gstatic.com',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
   typescript: {
@@ -23,3 +30,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+    

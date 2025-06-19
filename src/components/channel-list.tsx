@@ -27,7 +27,7 @@ const getAiHintForChannel = (channelName: string): string => {
 };
 
 const channelsData: Channel[] = [
-    { name: 'A24', url: 'https://www.youtube.com/embed/QGpHLgRnrx4?si=NBFgu_PSRDMaOdr1', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'A24', url: 'https://www.youtube.com/embed/QGpHLgRnrx4?si=NBFgu_PSRDMaOdr1', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
     { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'AZTECA 7', url: 'https://elcanaldeportivo.com/azteca7.php', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==', logoUrl: 'https://placehold.co/24x24.png' },
@@ -265,6 +265,7 @@ export const ChannelListComponent: FC = () => {
                             height={24}
                             data-ai-hint={getAiHintForChannel(channel.name)}
                             className="mr-2 rounded-sm object-contain flex-shrink-0"
+                            unoptimized // Añadir si las URLs de los logos no están en next.config.js
                           />
                         )}
                         <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
@@ -320,5 +321,7 @@ export const ChannelListComponent: FC = () => {
   );
 };
 
+
+    
 
     
