@@ -106,8 +106,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas:</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 flex-grow">
+        <CardContent className="p-6">
+          {/* Contenedor para Cantidad y Agenda, se vuelve grid en MD */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            {/* Item 1: Cantidad de Ventanas */}
             <div>
               <Label className="text-base font-medium text-foreground block">Cantidad de Ventanas:</Label>
               <div className="flex space-x-2 mt-1">
@@ -125,6 +127,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 ))}
               </div>
             </div>
+            
+            {/* Item 2: Agenda Deportiva (se apila debajo del Item 1 en pantallas pequeñas) */}
             <div>
               <Label className="text-base font-medium text-foreground block">Agenda Deportiva:</Label>
               <Button asChild variant="default" className="mt-1 w-full md:w-auto h-12">
@@ -136,11 +140,12 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             </div>
           </div>
 
-          <div>
-              <Label className="text-base font-medium text-foreground mb-2 block pt-4">
+          {/* Sección URLs (Debajo del grid anterior) */}
+          <div className="mt-6"> 
+              <Label className="text-base font-medium text-foreground block">
                   URLs de las Vistas:
               </Label>
-              <div className="space-y-3">
+              <div className="space-y-3 mt-1">
               {Array.from({ length: numCameras }).map((_, index) => {
                 const hasUrl = cameraUrls[index] && cameraUrls[index].trim() !== '';
                 const isFocused = focusedInput === index;
@@ -252,7 +257,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
           </div>
 
           {errorMessage && (
-            <div className="flex items-center p-3 text-sm rounded-md bg-destructive/10 text-destructive border border-destructive/30">
+            <div className="mt-4 flex items-center p-3 text-sm rounded-md bg-destructive/10 text-destructive border border-destructive/30">
               <AlertTriangle className="h-5 w-5 mr-2" />
               <p>{errorMessage}</p>
             </div>
@@ -270,3 +275,4 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     
 
     
+
