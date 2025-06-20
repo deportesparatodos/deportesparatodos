@@ -3,12 +3,12 @@
 
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState } from 'react';
-import Link from 'next/link'; // Importar Link
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste, CalendarDays } from 'lucide-react'; // Importar CalendarDays
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste, CalendarDays } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 interface CameraConfigurationProps {
@@ -127,7 +127,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             </div>
             <div>
               <Label className="text-base font-medium text-foreground mb-2 block">Agenda Deportiva:</Label>
-              <Button asChild variant="outline" className="mt-2 w-full md:w-auto">
+              <Button asChild variant="outline" className="mt-2 w-full md:w-auto h-12">
                 <Link href={AGENDA_URL} target="_blank" rel="noopener noreferrer">
                   <CalendarDays className="mr-2 h-4 w-4" />
                   Agenda
