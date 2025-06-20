@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Copy, CheckCircle2, ListVideo, List, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Channel {
+export interface Channel {
   name: string;
   url: string;
   logoUrl?: string;
@@ -174,7 +173,7 @@ channelsData.forEach(channel => {
     uniqueChannelsMap.set(channel.url, { ...channel, logoUrl: channel.logoUrl || 'https://placehold.co/24x24.png' });
   }
 });
-const channels: Channel[] = Array.from(uniqueChannelsMap.values())
+export const channels: Channel[] = Array.from(uniqueChannelsMap.values())
   .sort((a, b) => a.name.localeCompare(b.name));
 
 
@@ -321,4 +320,3 @@ export const ChannelListComponent: FC = () => {
     </Card>
   );
 };
-

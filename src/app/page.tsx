@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { WelcomeMessage } from '@/components/welcome-message';
-import { ChannelListComponent } from '@/components/channel-list';
+import { ChannelListComponent, channels } from '@/components/channel-list';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 
 export default function HomePage() {
@@ -75,6 +74,7 @@ export default function HomePage() {
             errorMessage={errorMessage}
             setErrorMessage={setErrorMessage}
             handleStartView={handleStartView}
+            channels={channels}
           />
         </div>
       </div>

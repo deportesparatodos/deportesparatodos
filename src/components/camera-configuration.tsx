@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Dispatch, FC, SetStateAction } from 'react';
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste, CalendarDays } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import type { Channel } from './channel-list';
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -19,6 +19,7 @@ interface CameraConfigurationProps {
   errorMessage: string;
   setErrorMessage: Dispatch<SetStateAction<string>>;
   handleStartView: () => void;
+  channels: Channel[];
 }
 
 const AGENDA_URL = "https://agendadeportiva-alpha.vercel.app/";
@@ -31,9 +32,36 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   errorMessage,
   setErrorMessage,
   handleStartView,
+  channels,
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
+
+  const getChannelDisplayName = (url: string): string => {
+    if (!url || url.trim() === '') {
+      return "Enlace sin Copiar";
+    }
+
+    const foundChannel = channels.find(channel => channel.url === url);
+    if (foundChannel) {
+      return foundChannel.name.toUpperCase();
+    }
+    
+    try {
+      const urlObject = new URL(url);
+      const streamParam = urlObject.searchParams.get('stream');
+      if (streamParam) {
+        return streamParam.toUpperCase();
+      }
+    } catch (e) {
+      const match = url.match(/[?&]stream=([^&]+)/);
+      if (match && match[1]) {
+          return match[1].toUpperCase();
+      }
+    }
+
+    return "Enlace Pegado";
+  };
 
   const handleNumCamerasChange = (value: number) => {
     setNumCameras(value);
@@ -143,7 +171,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
               </Label>
               <div className="space-y-3 mt-1">
               {Array.from({ length: numCameras }).map((_, index) => {
-                const hasUrl: boolean = cameraUrls[index].trim() !== '';
+                const hasUrl = cameraUrls[index].trim() !== '';
                 const isFocused = focusedInput === index;
                 const isHovered = hoveredInputIndex === index;
                 const isActive = isFocused || isHovered;
@@ -208,7 +236,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                               : "bg-destructive text-destructive-foreground"
                           )}
                         >
-                          {hasUrl ? "Enlace Pegado" : "Enlace sin Copiar"}
+                          {getChannelDisplayName(cameraUrls[index])}
                         </div>
                       )}
                     </div>
@@ -268,9 +296,3 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </Card>
   );
 };
-    
-
-    
-
-
-
