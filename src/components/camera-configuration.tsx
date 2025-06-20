@@ -2,13 +2,14 @@
 "use client";
 
 import type { Dispatch, FC, SetStateAction } from 'react';
-import { useState } from 'react'; // Importar useState
+import { useState } from 'react';
+import Link from 'next/link'; // Importar Link
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide-react';
-import { cn } from "@/lib/utils"; // Importar cn
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste, CalendarDays } from 'lucide-react'; // Importar CalendarDays
+import { cn } from "@/lib/utils";
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -19,6 +20,8 @@ interface CameraConfigurationProps {
   setErrorMessage: Dispatch<SetStateAction<string>>;
   handleStartView: () => void;
 }
+
+const AGENDA_URL = "https://agendadeportiva-alpha.vercel.app/";
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   numCameras,
@@ -104,21 +107,32 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
           <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas:</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 flex-grow">
-          <div>
-            <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Ventanas:</Label>
-            <div className="flex space-x-2 mt-2">
-              {viewOptions.map((option) => (
-                <Button
-                  key={option.value}
-                  variant={numCameras === option.value ? "default" : "outline"}
-                  onClick={() => handleNumCamerasChange(option.value)}
-                  className="h-12 w-12 text-lg"
-                  aria-label={`Seleccionar ${option.display} ventana${option.value > 1 ? 's' : ''}`}
-                  type="button"
-                >
-                  {option.display}
-                </Button>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <div>
+              <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Ventanas:</Label>
+              <div className="flex space-x-2 mt-2">
+                {viewOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={numCameras === option.value ? "default" : "outline"}
+                    onClick={() => handleNumCamerasChange(option.value)}
+                    className="h-12 w-12 text-lg"
+                    aria-label={`Seleccionar ${option.display} ventana${option.value > 1 ? 's' : ''}`}
+                    type="button"
+                  >
+                    {option.display}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="text-base font-medium text-foreground mb-2 block">Agenda Deportiva:</Label>
+              <Button asChild variant="outline" className="mt-2 w-full md:w-auto">
+                <Link href={AGENDA_URL} target="_blank" rel="noopener noreferrer">
+                  <CalendarDays className="mr-2 h-4 w-4" />
+                  Agenda
+                </Link>
+              </Button>
             </div>
           </div>
 
@@ -147,11 +161,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         <ArrowUp className="h-4 w-4" />
                     </Button>
                     
-                    <div // Contenedor para la lógica de hover y posicionamiento
+                    <div
                       className="relative flex-grow"
                       onMouseEnter={() => {
                         setHoveredInputIndex(index);
-                        if (errorMessage && !cameraUrls[index] && !isFocused) { // Limpiar error si se hace hover sobre campo vacío y no está enfocado
+                        if (errorMessage && !cameraUrls[index] && !isFocused) {
                             setErrorMessage('');
                         }
                       }}
@@ -165,24 +179,22 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         onChange={(e) => handleUrlChange(index, e.target.value)}
                         onFocus={() => {
                           setFocusedInput(index);
-                          if (errorMessage && !cameraUrls[index]) { // Limpiar error si se enfoca un campo vacío
+                          if (errorMessage && !cameraUrls[index]) {
                               setErrorMessage('');
                           }
                         }}
                         onBlur={() => setFocusedInput(null)}
                         className={cn(
                           "w-full",
-                          // Estilos de fondo y borde siempre aplicados basados en hasUrl
                           hasUrl
                             ? "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600"
                             : "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
-                          // Estilos de texto y placeholder basados en isActive Y hasUrl
                           isActive
                             ? (hasUrl 
                                 ? "text-green-800 dark:text-green-300" 
                                 : "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80"
                               ) 
-                            : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent" // Ocultar todo si no está activo
+                            : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent"
                         )}
                         readOnly={!isActive && hasUrl}
                       />
@@ -191,8 +203,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                           className={cn(
                             "absolute inset-0 flex items-center justify-center px-3 py-2 text-sm rounded-md pointer-events-none select-none",
                             hasUrl
-                              ? "bg-green-600 text-white" // Usar un verde más oscuro para el overlay
-                              : "bg-destructive text-destructive-foreground" // Usar colores de destructive para el overlay rojo
+                              ? "bg-green-600 text-white" 
+                              : "bg-destructive text-destructive-foreground"
                           )}
                         >
                           {hasUrl ? "Enlace Pegado" : "Enlace sin Copiar"}
@@ -210,7 +222,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     >
                         <ClipboardPaste className="h-4 w-4" />
                     </Button>
-                    {cameraUrls[index] && ( // Mostrar botón X solo si hay URL, independientemente de si está activo o no
+                    {cameraUrls[index] && (
                       <Button
                           variant="ghost"
                           size="icon"
@@ -255,4 +267,3 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </Card>
   );
 };
-
