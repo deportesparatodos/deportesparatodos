@@ -109,8 +109,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         <CardContent className="space-y-6 flex-grow">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             <div>
-              <Label className="text-base font-medium text-foreground mb-2 block">Cantidad de Ventanas:</Label>
-              <div className="flex space-x-2 mt-2">
+              <Label className="text-base font-medium text-foreground mb-1 block">Cantidad de Ventanas:</Label>
+              <div className="flex space-x-2 mt-1">
                 {viewOptions.map((option) => (
                   <Button
                     key={option.value}
@@ -126,8 +126,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
               </div>
             </div>
             <div>
-              <Label className="text-base font-medium text-foreground mb-2 block">Agenda Deportiva:</Label>
-              <Button asChild variant="default" className="mt-2 w-full md:w-auto h-12">
+              <Label className="text-base font-medium text-foreground mb-1 block">Agenda Deportiva:</Label>
+              <Button asChild variant="default" className="mt-1 w-full md:w-auto h-12">
                 <Link href={AGENDA_URL} target="_blank" rel="noopener noreferrer">
                   <CalendarDays className="mr-2 h-4 w-4" />
                   Agenda
@@ -267,5 +267,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </Card>
   );
 };
+    
 
     
