@@ -53,9 +53,11 @@ export default function HomePage() {
     return null; 
   }
 
+  const areUrlsComplete = cameraUrls.slice(0, numCameras).every(url => url && url.trim() !== '');
+
   return (
     <AppShell>
-      <WelcomeMessage />
+      <WelcomeMessage areUrlsComplete={areUrlsComplete} />
       
       {/* Contenedor principal para el diseño de dos columnas */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
