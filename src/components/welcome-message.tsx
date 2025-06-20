@@ -4,8 +4,17 @@ export function WelcomeMessage() {
   return (
     <Card className="mb-6 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-3xl font-bold text-center uppercase bg-gradient-to-r from-red-500 via-orange-500 via-yellow-500 via-green-500 via-blue-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent">
-          DEPORTES PARA TODOS
+        <CardTitle className="text-3xl font-bold text-center uppercase">
+          <span className="text-red-500">DE</span>
+          <span className="text-orange-500">PO</span>
+          <span className="text-yellow-500">RT</span>
+          <span className="text-green-500">ES</span>
+          <span> </span>
+          <span className="text-blue-500">PA</span>
+          <span className="text-purple-500">RA</span>
+          <span> </span>
+          <span className="text-red-500">TO</span>
+          <span className="text-orange-500">DOS</span>
         </CardTitle>
         <CardDescription className="text-center text-muted-foreground pt-2">
           Pega los enlaces de las transmisiones que quieres ver a continuación. Configura la cantidad de vistas y ¡a disfrutar!
