@@ -194,6 +194,24 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.claro.com.co',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.mitvstatic.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'd18o29lhcg4kda.cloudfront.net',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   typescript: {
