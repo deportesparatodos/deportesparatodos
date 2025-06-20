@@ -127,7 +127,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             </div>
             <div>
               <Label className="text-base font-medium text-foreground mb-2 block">Agenda Deportiva:</Label>
-              <Button asChild variant="outline" className="mt-2 w-full md:w-auto h-12">
+              <Button asChild variant="default" className="mt-2 w-full md:w-auto h-12">
                 <Link href={AGENDA_URL} target="_blank" rel="noopener noreferrer">
                   <CalendarDays className="mr-2 h-4 w-4" />
                   Agenda
@@ -267,3 +267,5 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </Card>
   );
 };
+
+    
