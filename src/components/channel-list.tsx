@@ -161,10 +161,10 @@ const channelsData: Channel[] = [
     { name: 'VENUS (+18)', url: 'https://tvlibreonline.org/html/fl/?get=VmVudXM=', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Canal_Venus_logo_%282%29.svg/800px-Canal_Venus_logo_%282%29.svg.png' },
     { name: 'VTV +', url: 'https://streamtpglobal.com/global1.php?stream=vtvplus', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/16/Logo_VTV_nuevo.png' },
     { name: 'Vamos ES', url: 'https://streamtpglobal.com/global1.php?stream=vamoses', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Vamos_por_Movistar_Plus%2B_2023_Logo.svg/800px-Vamos_por_Movistar_Plus%2B_2023_Logo.svg.png' },
-    { name: 'Win Play +', url: 'https://streamtpglobal.com/global1.php?stream=winplusonline1', logoUrl: 'https://www.claro.com.co/portal/co/recursos_contenido/1721425781050-card-01-win.webp' },
-    { name: 'Win Sports', url: 'https://streamtpglobal.com/global1.php?stream=winsports', logoUrl: 'https://www.claro.com.co/portal/co/recursos_contenido/1721425781050-card-01-win.webp' },
-    { name: 'Win Sports +', url: 'https://streamtpglobal.com/global1.php?stream=winplus', logoUrl: 'https://www.claro.com.co/portal/co/recursos_contenido/1721425781050-card-01-win.webp' },
-    { name: 'Win Sports + (Op2)', url: 'https://streamtpglobal.com/global1.php?stream=winplus2', logoUrl: 'https://www.claro.com.co/portal/co/recursos_contenido/1721425781050-card-01-win.webp' },
+    { name: 'Win Play +', url: 'https://streamtpglobal.com/global1.php?stream=winplusonline1', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
+    { name: 'Win Sports', url: 'https://streamtpglobal.com/global1.php?stream=winsports', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
+    { name: 'Win Sports +', url: 'https://streamtpglobal.com/global1.php?stream=winplus', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
+    { name: 'Win Sports + (Op2)', url: 'https://streamtpglobal.com/global1.php?stream=winplus2', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
 ];
 
 const uniqueChannelsMap = new Map<string, Channel>();
