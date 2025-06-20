@@ -170,7 +170,7 @@ const uniqueChannelsMap = new Map<string, Channel>();
 channelsData.forEach(channel => {
   if (!uniqueChannelsMap.has(channel.url)) {
     // Ensure logoUrl has a default if not provided
-    uniqueChannelsMap.set(channel.url, { ...channel, logoUrl: channel.logoUrl || 'https://placehold.co/24x24.png' });
+    uniqueChannelsMap.set(channel.url, { ...channel, name: channel.name.toUpperCase(), logoUrl: channel.logoUrl || 'https://placehold.co/24x24.png' });
   }
 });
 export const channels: Channel[] = Array.from(uniqueChannelsMap.values())
