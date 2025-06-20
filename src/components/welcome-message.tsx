@@ -4,7 +4,7 @@ export function WelcomeMessage() {
   return (
     <Card className="mb-6 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-3xl font-bold text-center uppercase bg-clip-text text-transparent bg-[linear-gradient(to_right,theme(colors.red.500),theme(colors.orange.500),theme(colors.yellow.500),theme(colors.green.500),theme(colors.blue.500),theme(colors.indigo.500),theme(colors.violet.500)))]">
+        <CardTitle className="text-3xl font-bold text-center uppercase bg-gradient-to-r from-red-500 via-orange-500 via-yellow-500 via-green-500 via-blue-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent">
           DEPORTES PARA TODOS
         </CardTitle>
         <CardDescription className="text-center text-muted-foreground pt-2">
