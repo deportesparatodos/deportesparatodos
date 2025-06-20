@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({ // Corrected usage
 });
 
 export const metadata: Metadata = {
-  title: 'MultiViewer for Sports.', // Updated title
+  title: 'Deportes para Todos', // Updated title
   description: 'Visualiza múltiples transmisiones deportivas simultáneamente.', 
 };
 
