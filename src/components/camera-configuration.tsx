@@ -107,8 +107,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
           <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas:</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          {/* Contenedor para Cantidad y Agenda, se vuelve grid en MD */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+          {/* Contenedor para Cantidad y Agenda, se vuelve grid en LG */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
             {/* Item 1: Cantidad de Ventanas */}
             <div>
               <Label className="text-base font-medium text-foreground block">Cantidad de Ventanas:</Label>
@@ -128,10 +128,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
               </div>
             </div>
             
-            {/* Item 2: Agenda Deportiva (se apila debajo del Item 1 en pantallas pequeñas) */}
+            {/* Item 2: Agenda Deportiva */}
             <div>
               <Label className="text-base font-medium text-foreground block">Agenda Deportiva:</Label>
-              <Button asChild variant="default" className="mt-1 w-full md:w-auto h-12">
+              <Button asChild variant="default" className="mt-1 w-full lg:w-auto h-12">
                 <Link href={AGENDA_URL} target="_blank" rel="noopener noreferrer">
                   <CalendarDays className="mr-2 h-4 w-4" />
                   Agenda
@@ -275,4 +275,5 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     
 
     
+
 
