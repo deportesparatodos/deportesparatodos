@@ -2,11 +2,13 @@
 "use client";
 
 import type { Dispatch, FC, SetStateAction } from 'react';
+import { useState } from 'react'; // Importar useState
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide-react';
+import { cn } from "@/lib/utils"; // Importar cn
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -27,6 +29,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setErrorMessage,
   handleStartView,
 }) => {
+  const [focusedInput, setFocusedInput] = useState<number | null>(null);
+  const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
+
   const handleNumCamerasChange = (value: number) => {
     setNumCameras(value);
     setErrorMessage("");
@@ -56,7 +61,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return;
     }
 
-    // Ensure all array elements up to numCameras are defined before swapping
     for (let i = 0; i < numCameras; i++) {
         if (newUrls[i] === undefined) newUrls[i] = '';
     }
@@ -123,7 +127,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   URLs de las Vistas:
               </Label>
               <div className="space-y-3">
-              {Array.from({ length: numCameras }).map((_, index) => (
+              {Array.from({ length: numCameras }).map((_, index) => {
+                const hasUrl = cameraUrls[index] && cameraUrls[index].trim() !== '';
+                const isFocused = focusedInput === index;
+                const isHovered = hoveredInputIndex === index;
+                const isActive = isFocused || isHovered;
+
+                return (
                   <div key={index} className="flex items-center space-x-2">
                     <Button
                         variant="outline"
@@ -136,14 +146,60 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     >
                         <ArrowUp className="h-4 w-4" />
                     </Button>
-                    <Input
+                    
+                    <div // Contenedor para la lógica de hover y posicionamiento
+                      className="relative flex-grow"
+                      onMouseEnter={() => {
+                        setHoveredInputIndex(index);
+                        if (errorMessage && !cameraUrls[index] && !isFocused) { // Limpiar error si se hace hover sobre campo vacío y no está enfocado
+                            setErrorMessage('');
+                        }
+                      }}
+                      onMouseLeave={() => setHoveredInputIndex(null)}
+                    >
+                      <Input
                         id={`url-${index}`}
                         type="url"
-                        placeholder={`URL Vista ${index + 1}`}
+                        placeholder={isActive && !hasUrl ? `URL Vista ${index + 1}` : ""}
                         value={cameraUrls[index] || ''}
                         onChange={(e) => handleUrlChange(index, e.target.value)}
-                        className="bg-background flex-grow"
-                    />
+                        onFocus={() => {
+                          setFocusedInput(index);
+                          if (errorMessage && !cameraUrls[index]) { // Limpiar error si se enfoca un campo vacío
+                              setErrorMessage('');
+                          }
+                        }}
+                        onBlur={() => setFocusedInput(null)}
+                        className={cn(
+                          "w-full",
+                          // Estilos de fondo y borde siempre aplicados basados en hasUrl
+                          hasUrl
+                            ? "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600"
+                            : "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
+                          // Estilos de texto y placeholder basados en isActive Y hasUrl
+                          isActive
+                            ? (hasUrl 
+                                ? "text-green-800 dark:text-green-300" 
+                                : "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80"
+                              ) 
+                            : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent" // Ocultar todo si no está activo
+                        )}
+                        readOnly={!isActive && hasUrl}
+                      />
+                      {!isActive && (
+                        <div
+                          className={cn(
+                            "absolute inset-0 flex items-center justify-center px-3 py-2 text-sm rounded-md pointer-events-none select-none",
+                            hasUrl
+                              ? "bg-green-600 text-white" // Usar un verde más oscuro para el overlay
+                              : "bg-destructive text-destructive-foreground" // Usar colores de destructive para el overlay rojo
+                          )}
+                        >
+                          {hasUrl ? "Enlace Pegado" : "Enlace sin Copiar"}
+                        </div>
+                      )}
+                    </div>
+
                     <Button
                         variant="outline"
                         size="icon"
@@ -154,7 +210,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     >
                         <ClipboardPaste className="h-4 w-4" />
                     </Button>
-                    {cameraUrls[index] && (
+                    {cameraUrls[index] && ( // Mostrar botón X solo si hay URL, independientemente de si está activo o no
                       <Button
                           variant="ghost"
                           size="icon"
@@ -178,7 +234,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         <ArrowDown className="h-4 w-4" />
                     </Button>
                   </div>
-              ))}
+                )
+              })}
               </div>
           </div>
 
@@ -198,3 +255,4 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </Card>
   );
 };
+
