@@ -154,12 +154,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
               
               <div
                 className="relative flex-grow"
-                onMouseEnter={() => {
-                  setHoveredInputIndex(index);
-                  if (errorMessage && !cameraUrls[index] && !isFocused) {
-                      setErrorMessage('');
-                  }
-                }}
+                onMouseEnter={() => setHoveredInputIndex(index)}
                 onMouseLeave={() => setHoveredInputIndex(null)}
               >
                 <Input
@@ -168,12 +163,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   placeholder={isActive && !hasUrl ? `URL Vista ${index + 1}` : ""}
                   value={cameraUrls[index] || ''}
                   onChange={(e) => handleUrlChange(index, e.target.value)}
-                  onFocus={() => {
-                    setFocusedInput(index);
-                    if (errorMessage && !cameraUrls[index]) {
-                        setErrorMessage('');
-                    }
-                  }}
+                  onFocus={() => setFocusedInput(index)}
                   onBlur={() => setFocusedInput(null)}
                   className={cn(
                     "w-full",
