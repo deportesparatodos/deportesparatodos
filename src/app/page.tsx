@@ -50,6 +50,8 @@ export default function HomePage() {
     const storedNumCameras = localStorage.getItem('numCameras');
     if (storedNumCameras) {
       setNumCameras(parseInt(storedNumCameras, 10));
+    } else {
+      setNumCameras(4);
     }
   }, []);
 
@@ -74,7 +76,7 @@ export default function HomePage() {
     }
 
     if (hasUnknownUrls && !userAcknowledgedWarning) {
-      setMessage({ type: 'warning', text: "Hay un link o texto desconocido que no puede ser procesado, desea seguir de todas formas?" });
+      setMessage({ type: 'warning', text: "Hay un link o texto desconocido que puede no ser procesado, desea seguir de todas formas?" });
       setUserAcknowledgedWarning(true);
       return;
     }
@@ -129,7 +131,7 @@ export default function HomePage() {
         
         <div className="w-full flex-grow flex flex-col relative">
           <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-          <div className="flex-grow flex flex-col items-center justify-center gap-8">
+          <div className="flex-grow flex flex-col items-center justify-center gap-8 p-4">
              <WelcomeMessage />
               <div className="w-full max-w-lg px-4">
                 <CameraConfigurationComponent

@@ -41,7 +41,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
   const getDisplayStatus = (url: string): { text: string; status: CameraStatus } => {
     if (!url || url.trim() === '') {
-      return { text: "Enlace sin Copiar", status: 'empty' };
+      return { text: "VACIO", status: 'empty' };
     }
 
     const foundChannel = channels.find(channel => channel.url === url);
