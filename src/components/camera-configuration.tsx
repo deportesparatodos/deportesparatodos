@@ -1,13 +1,15 @@
 "use client";
 
 import type { Dispatch, FC, SetStateAction } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import type { Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+export type CameraStatus = 'empty' | 'valid' | 'unknown';
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -18,6 +20,7 @@ interface CameraConfigurationProps {
   setErrorMessage: Dispatch<SetStateAction<string>>;
   handleStartView: () => void;
   channels: Channel[];
+  setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -29,35 +32,44 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setErrorMessage,
   handleStartView,
   channels,
+  setCameraStatuses,
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
 
-  const getChannelDisplayName = (url: string): string => {
+  const getDisplayStatus = (url: string): { text: string; status: CameraStatus } => {
     if (!url || url.trim() === '') {
-      return "Enlace sin Copiar";
+      return { text: "Enlace sin Copiar", status: 'empty' };
     }
 
     const foundChannel = channels.find(channel => channel.url === url);
     if (foundChannel) {
-      return foundChannel.name.toUpperCase();
+      return { text: foundChannel.name.toUpperCase(), status: 'valid' };
     }
     
     try {
       const urlObject = new URL(url);
       const streamParam = urlObject.searchParams.get('stream');
       if (streamParam) {
-        return streamParam.toUpperCase();
+        return { text: streamParam.toUpperCase(), status: 'valid' };
       }
     } catch (e) {
       const match = url.match(/[?&]stream=([^&]+)/);
       if (match && match[1]) {
-          return match[1].toUpperCase();
+          return { text: match[1].toUpperCase(), status: 'valid' };
       }
     }
 
-    return "Enlace Pegado";
+    return { text: "DESCONOCIDO", status: 'unknown' };
   };
+
+  useEffect(() => {
+    const statuses = Array.from({ length: numCameras }).map((_, index) => {
+        return getDisplayStatus(cameraUrls[index] || '').status;
+    });
+    setCameraStatuses(statuses);
+  }, [cameraUrls, numCameras, setCameraStatuses]);
+
 
   const handleNumCamerasChange = (value: string) => {
     setNumCameras(parseInt(value, 10));
@@ -133,7 +145,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
         <div className="space-y-3">
         {Array.from({ length: numCameras }).map((_, index) => {
-          const hasUrl = cameraUrls[index].trim() !== '';
+          const displayStatus = getDisplayStatus(cameraUrls[index] || '');
           const isFocused = focusedInput === index;
           const isHovered = hoveredInputIndex === index;
           const isActive = isFocused || isHovered;
@@ -160,35 +172,38 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 <Input
                   id={`url-${index}`}
                   type="url"
-                  placeholder={isActive && !hasUrl ? `URL Vista ${index + 1}` : ""}
+                  placeholder={isActive && displayStatus.status === 'empty' ? `URL Vista ${index + 1}` : ""}
                   value={cameraUrls[index] || ''}
                   onChange={(e) => handleUrlChange(index, e.target.value)}
                   onFocus={() => setFocusedInput(index)}
                   onBlur={() => setFocusedInput(null)}
                   className={cn(
                     "w-full",
-                    hasUrl
-                      ? "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600"
-                      : "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
+                    displayStatus.status === 'valid' && "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600",
+                    displayStatus.status === 'empty' && "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
+                    displayStatus.status === 'unknown' && "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-700 focus:ring-yellow-500 dark:focus:ring-yellow-600",
                     isActive
-                      ? (hasUrl 
-                          ? "text-green-800 dark:text-green-300" 
-                          : "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80"
-                        ) 
+                      ? {
+                          'valid': "text-green-800 dark:text-green-300",
+                          'empty': "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80",
+                          'unknown': "text-yellow-800 dark:text-yellow-300 placeholder-yellow-500 dark:placeholder-yellow-400/80",
+                        }[displayStatus.status]
                       : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent"
                   )}
-                  readOnly={!isActive && hasUrl}
+                  readOnly={!isActive && displayStatus.status !== 'empty'}
                 />
                 {!isActive && (
                   <div
                     className={cn(
                       "absolute inset-0 flex items-center justify-center px-3 py-2 text-sm rounded-md pointer-events-none select-none",
-                      hasUrl
-                        ? "bg-green-600 text-white" 
-                        : "bg-destructive text-destructive-foreground"
+                      {
+                        'valid': "bg-green-600 text-white",
+                        'empty': "bg-destructive text-destructive-foreground",
+                        'unknown': "bg-yellow-500 text-black",
+                      }[displayStatus.status]
                     )}
                   >
-                    {getChannelDisplayName(cameraUrls[index])}
+                    {displayStatus.text}
                   </div>
                 )}
               </div>

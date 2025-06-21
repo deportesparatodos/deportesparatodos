@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { WelcomeMessage } from '@/components/welcome-message';
-import { ChannelListComponent } from '@/components/channel-list';
-import { CameraConfigurationComponent } from '@/components/camera-configuration';
+import { CameraConfigurationComponent, type CameraStatus } from '@/components/camera-configuration';
 import { cn } from "@/lib/utils";
 import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
+import { ChannelListComponent } from '@/components/channel-list';
 
 export default function HomePage() {
-  const [numCameras, setNumCameras] = useState<number>(4); // Default to 4
+  const [numCameras, setNumCameras] = useState<number>(4);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(4).fill(''));
+  const [cameraStatuses, setCameraStatuses] = useState<CameraStatus[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
@@ -23,10 +24,8 @@ export default function HomePage() {
   useEffect(() => {
     setIsMounted(true);
     const storedUrls = localStorage.getItem('cameraUrls');
-    // Do not load stored numCameras to always default to 4
     if (storedUrls) {
       const parsedUrls = JSON.parse(storedUrls);
-      // Ensure the array has at least 4 elements for the default view
       const newUrls = Array(4).fill('');
       parsedUrls.slice(0, 4).forEach((url: string, i: number) => {
         newUrls[i] = url;
@@ -61,25 +60,16 @@ export default function HomePage() {
     return null; 
   }
 
-  const areUrlsComplete = cameraUrls.slice(0, numCameras).every(url => url && url.trim() !== '');
-
-  const configurationComponent = (
-    <>
-      <WelcomeMessage />
-      <div className="w-full max-w-lg mt-4">
-        <CameraConfigurationComponent
-          numCameras={numCameras}
-          setNumCameras={setNumCameras}
-          cameraUrls={cameraUrls}
-          setCameraUrls={setCameraUrls}
-          errorMessage={errorMessage}
-          setErrorMessage={setErrorMessage}
-          handleStartView={handleStartView}
-          channels={channels}
-        />
-      </div>
-    </>
-  );
+  const topBarColorClass = useMemo(() => {
+    const activeStatuses = cameraStatuses.slice(0, numCameras);
+    if (activeStatuses.includes('unknown')) {
+      return 'bg-yellow-500';
+    }
+    if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'valid')) {
+      return 'bg-green-500';
+    }
+    return 'bg-red-500';
+  }, [cameraStatuses, numCameras]);
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
@@ -120,9 +110,22 @@ export default function HomePage() {
           </div>
           
           <div className="w-full flex-grow flex flex-col relative">
-            <div className={cn( "h-2 w-full absolute top-0 left-0", areUrlsComplete ? "bg-green-500" : "bg-red-500" )} />
+            <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
             <div className="flex-grow flex flex-col items-center p-4 overflow-y-auto pt-8">
-              {configurationComponent}
+               <WelcomeMessage />
+                <div className="w-full max-w-lg mt-4">
+                  <CameraConfigurationComponent
+                    numCameras={numCameras}
+                    setNumCameras={setNumCameras}
+                    cameraUrls={cameraUrls}
+                    setCameraUrls={setCameraUrls}
+                    errorMessage={errorMessage}
+                    setErrorMessage={setErrorMessage}
+                    handleStartView={handleStartView}
+                    channels={channels}
+                    setCameraStatuses={setCameraStatuses}
+                  />
+                </div>
             </div>
           </div>
         </div>
