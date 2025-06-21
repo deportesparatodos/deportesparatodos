@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -10,8 +9,8 @@ import { cn } from "@/lib/utils";
 import { channels } from '@/components/channel-list';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Menu, X } from 'lucide-react';
 
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(1);
@@ -93,11 +92,16 @@ export default function HomePage() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0">
+              <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0" hideClose>
                 <div className="p-4 border-b border-border">
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
                     <Button onClick={() => setMobileView('eventos')} variant={mobileView === 'eventos' ? 'secondary' : 'ghost'} className="flex-1">Lista de Eventos</Button>
+                    <SheetClose asChild>
+                       <Button variant="destructive" size="icon">
+                         <X className="h-4 w-4" />
+                       </Button>
+                    </SheetClose>
                   </div>
                 </div>
                 <div className="flex-grow overflow-hidden">
