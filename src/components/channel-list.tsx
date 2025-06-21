@@ -14,8 +14,6 @@ export interface Channel {
   logoUrl?: string;
 }
 
-const EVENT_LIST_URL = "https://agendadeportiva-alpha.vercel.app/";
-
 const getAiHintForChannel = (channelName: string): string => {
   const words = channelName.replace(/[^\w\s]/gi, '').split(' ').filter(Boolean);
   if (words.length === 0) return "logo";
@@ -201,85 +199,69 @@ export const ChannelListComponent: FC = () => {
 
   return (
     <div className="flex flex-col h-full w-full bg-card text-card-foreground">
-      {/* Top half: Channel List */}
-      <div className="h-1/2 flex flex-col border-b border-border">
-        <div className="p-4 flex-shrink-0 border-b border-border">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Buscar canal..."
-              className="h-9 w-full pl-10 pr-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                onClick={() => setSearchTerm('')}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-        <div className="overflow-y-auto flex-grow p-4">
-          {filteredChannels.length > 0 ? (
-            <ul className="space-y-3">
-              {filteredChannels.map((channel) => (
-                <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                  <div className="flex items-center flex-1 truncate mr-2">
-                    {channel.logoUrl && (
-                      <Image
-                        src={channel.logoUrl}
-                        alt={`${channel.name} logo`}
-                        width={24}
-                        height={24}
-                        data-ai-hint={getAiHintForChannel(channel.name)}
-                        className="mr-2 rounded-sm object-contain flex-shrink-0"
-                        unoptimized
-                      />
-                    )}
-                    <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleCopy(channel.url)}
-                    className={cn(
-                      "transition-colors duration-300 w-[140px]",
-                      copiedStates[channel.url]
-                        ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
-                        : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
-                    )}
-                  >
-                    {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                    {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted-foreground p-3">
-              {searchTerm ? `No se encontraron canales para "${searchTerm}".` : "No hay canales disponibles."}
-            </p>
+      <div className="p-4 flex-shrink-0 border-b border-border">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Buscar canal..."
+            className="h-9 w-full pl-10 pr-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+              onClick={() => setSearchTerm('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </div>
-
-      {/* Bottom half: Event List */}
-      <div className="h-1/2 flex flex-col">
-        <div className="overflow-hidden flex-grow">
-          <iframe
-              src={EVENT_LIST_URL}
-              title="Lista de Eventos"
-              className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
-              allow="clipboard-write"
-          />
-        </div>
+      <div className="overflow-y-auto flex-grow p-4">
+        {filteredChannels.length > 0 ? (
+          <ul className="space-y-3">
+            {filteredChannels.map((channel) => (
+              <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                <div className="flex items-center flex-1 truncate mr-2">
+                  {channel.logoUrl && (
+                    <Image
+                      src={channel.logoUrl}
+                      alt={`${channel.name} logo`}
+                      width={24}
+                      height={24}
+                      data-ai-hint={getAiHintForChannel(channel.name)}
+                      className="mr-2 rounded-sm object-contain flex-shrink-0"
+                      unoptimized
+                    />
+                  )}
+                  <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => handleCopy(channel.url)}
+                  className={cn(
+                    "transition-colors duration-300 w-[140px]",
+                    copiedStates[channel.url]
+                      ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
+                      : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
+                  )}
+                >
+                  {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                  {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground p-3">
+            {searchTerm ? `No se encontraron canales para "${searchTerm}".` : "No hay canales disponibles."}
+          </p>
+        )}
       </div>
     </div>
   );

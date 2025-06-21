@@ -81,8 +81,8 @@ export default function HomePage() {
       {/* Right Column (1/3) */}
       <div className="w-1/3 border-l border-border">
         <iframe 
-          src="https://bleacherreport.com" 
-          title="Bleacher Report"
+          src="https://agendadeportiva-alpha.vercel.app" 
+          title="Agenda Deportiva"
           className="w-full h-full border-0"
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
         />
