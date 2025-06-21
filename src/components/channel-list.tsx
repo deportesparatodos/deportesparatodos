@@ -2,10 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { FC } from 'react';
-import Image from 'next/image'; // Importar Next Image
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Copy, CheckCircle2, ListVideo, List, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -128,7 +126,7 @@ const channelsData: Channel[] = [
     { name: 'Sport TV 3 BR', url: 'https://streamtpglobal.com/global1.php?stream=sporttvbr3', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 3 PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv_3pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 4 PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv_4pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
-    { name: 'Sport TV 5 PT', url: 'https://streamtpglobal.com/global1.php?stream=sporttv5', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
+    { name: 'Sport TV 5 PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv5', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 6 PT', url: 'https://streamtpglobal.com/global1.php?stream=sporttv6', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'TLC', url: 'https://tvlibreonline.org/html/fl/?get=VExD', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/TLC_logo_%282023%29.svg' },
     { name: 'TN', url: 'https://www.youtube.com/embed/cb12KmMMDJA?si=CsUytnnQFJxMs8fL', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TN_todo_noticias_logo.svg/1200px-TN_todo_noticias_logo.svg.png' },
@@ -169,7 +167,6 @@ const channelsData: Channel[] = [
 const uniqueChannelsMap = new Map<string, Channel>();
 channelsData.forEach(channel => {
   if (!uniqueChannelsMap.has(channel.url)) {
-    // Ensure logoUrl has a default if not provided
     uniqueChannelsMap.set(channel.url, { ...channel, name: channel.name.toUpperCase(), logoUrl: channel.logoUrl || 'https://placehold.co/24x24.png' });
   }
 });
@@ -183,16 +180,8 @@ interface CopiedStates {
 
 export const ChannelListComponent: FC = () => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
-  const [activeAccordionItems, setActiveAccordionItems] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  const handleAccordionChange = (value: string[]) => {
-    if (!value.includes('channel-list-content') && activeAccordionItems.includes('channel-list-content')) {
-       setSearchTerm('');
-    }
-    setActiveAccordionItems(value);
-  };
 
   const handleCopy = async (url: string) => {
     try {
@@ -211,112 +200,97 @@ export const ChannelListComponent: FC = () => {
   );
 
   return (
-    <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
-      <Accordion
-        type="multiple"
-        value={activeAccordionItems}
-        onValueChange={handleAccordionChange}
-        className="w-full flex flex-col flex-grow"
-      >
-        <AccordionItem value="channel-list-content" className="border-b-0">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex w-full items-center justify-between">
-              <div className="flex items-center text-xl font-semibold text-primary">
-                <List className="mr-2 h-5 w-5 flex-shrink-0" />
-                <span className="truncate">Lista de Canales</span>
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pt-0 min-h-0">
-            <div className="px-6 pb-4">
-              <div className="relative flex flex-1 items-center w-full">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Buscar canal..."
-                  className="h-9 w-full pl-10 pr-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                {searchTerm && (
+    <div className="flex flex-col h-full w-full bg-card text-card-foreground">
+      {/* Top half: Channel List */}
+      <div className="h-1/2 flex flex-col border-b border-border">
+        <div className="p-4 flex-shrink-0 border-b border-border">
+          <h2 className="flex items-center text-lg font-semibold text-primary">
+            <List className="mr-2 h-5 w-5" />
+            Lista de Canales
+          </h2>
+          <div className="relative mt-2">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Buscar canal..."
+              className="h-9 w-full pl-10 pr-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                onClick={() => setSearchTerm('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="overflow-y-auto flex-grow p-4">
+          {filteredChannels.length > 0 ? (
+            <ul className="space-y-3">
+              {filteredChannels.map((channel) => (
+                <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                  <div className="flex items-center flex-1 truncate mr-2">
+                    {channel.logoUrl && (
+                      <Image
+                        src={channel.logoUrl}
+                        alt={`${channel.name} logo`}
+                        width={24}
+                        height={24}
+                        data-ai-hint={getAiHintForChannel(channel.name)}
+                        className="mr-2 rounded-sm object-contain flex-shrink-0"
+                        unoptimized
+                      />
+                    )}
+                    <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
+                  </div>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                    onClick={() => setSearchTerm('')}
+                    size="sm"
+                    onClick={() => handleCopy(channel.url)}
+                    className={cn(
+                      "transition-colors duration-300 w-[140px]",
+                      copiedStates[channel.url]
+                        ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
+                        : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
+                    )}
                   >
-                    <X className="h-4 w-4" />
+                    {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                    {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
                   </Button>
-                )}
-              </div>
-            </div>
-            <div className="max-h-96 overflow-y-auto px-6 pb-4">
-              {filteredChannels.length > 0 ? (
-                <ul className="space-y-3">
-                  {filteredChannels.map((channel) => (
-                    <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                      <div className="flex items-center flex-1 truncate mr-2">
-                        {channel.logoUrl && (
-                          <Image
-                            src={channel.logoUrl}
-                            alt={`${channel.name} logo`}
-                            width={24}
-                            height={24}
-                            data-ai-hint={getAiHintForChannel(channel.name)}
-                            className="mr-2 rounded-sm object-contain flex-shrink-0"
-                            unoptimized 
-                          />
-                        )}
-                        <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleCopy(channel.url)}
-                        className={cn(
-                          "transition-colors duration-300 w-[140px]",
-                          copiedStates[channel.url]
-                            ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
-                            : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
-                        )}
-                      >
-                        {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                        {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground">
-                  {searchTerm ? `No se encontraron canales para "${searchTerm}".` : "No hay canales disponibles."}
-                </p>
-              )}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground p-3">
+              {searchTerm ? `No se encontraron canales para "${searchTerm}".` : "No hay canales disponibles."}
+            </p>
+          )}
+        </div>
+      </div>
 
-        <AccordionItem value="event-list" className="border-b-0">
-          <AccordionTrigger className="px-6 py-4 text-xl font-semibold text-primary hover:no-underline">
-            <div className="flex items-center">
-              <ListVideo className="mr-2 h-5 w-5" />
-              Lista de Eventos
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="pt-0 min-h-0">
-            <div className="px-6 pb-4">
-              <div className="h-[500px] w-full rounded-md overflow-hidden border border-border shadow">
-                <iframe
-                    src={EVENT_LIST_URL}
-                    title="Lista de Eventos"
-                    className="w-full h-full border-0"
-                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
-                    allow="clipboard-write"
-                />
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </Card>
+      {/* Bottom half: Event List */}
+      <div className="h-1/2 flex flex-col">
+        <div className="p-4 flex-shrink-0 border-b border-border">
+          <h2 className="flex items-center text-lg font-semibold text-primary">
+            <ListVideo className="mr-2 h-5 w-5" />
+            Lista de Eventos
+          </h2>
+        </div>
+        <div className="overflow-hidden flex-grow p-4">
+          <iframe
+              src={EVENT_LIST_URL}
+              title="Lista de Eventos"
+              className="w-full h-full border-0 rounded-md"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
+              allow="clipboard-write"
+          />
+        </div>
+      </div>
+    </div>
   );
 };

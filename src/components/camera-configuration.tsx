@@ -2,12 +2,11 @@
 
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState } from 'react';
-import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste, CalendarDays } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import type { Channel } from './channel-list';
 
@@ -21,8 +20,6 @@ interface CameraConfigurationProps {
   handleStartView: () => void;
   channels: Channel[];
 }
-
-const AGENDA_URL = "https://agendadeportiva-alpha.vercel.app/";
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   numCameras,
@@ -129,13 +126,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   };
 
   return (
-    <Card className="mb-6 shadow-lg w-full h-full flex flex-col">
+    <Card className="shadow-lg w-full h-full flex flex-col">
       <form onSubmit={handleFormSubmit}>
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas:</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
+          <div className="grid grid-cols-1 gap-y-4">
             <div>
               <Label className="text-base font-medium text-foreground block">Cantidad de Ventanas:</Label>
               <div className="flex space-x-2 mt-1">
@@ -152,16 +149,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   </Button>
                 ))}
               </div>
-            </div>
-            
-            <div>
-              <Label className="text-base font-medium text-foreground block">Agenda Deportiva:</Label>
-              <Button asChild variant="default" className="mt-1 w-full lg:w-auto h-12">
-                <Link href={AGENDA_URL} target="_blank" rel="noopener noreferrer">
-                  <CalendarDays className="mr-2 h-4 w-4" />
-                  Agenda
-                </Link>
-              </Button>
             </div>
           </div>
 

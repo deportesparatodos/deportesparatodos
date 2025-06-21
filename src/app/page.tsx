@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppShell } from '@/components/app-shell';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { ChannelListComponent, channels } from '@/components/channel-list';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
+import Image from 'next/image';
 
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(1);
@@ -49,25 +49,22 @@ export default function HomePage() {
   };
   
   if (!isMounted) {
-    // Optional: render a loading state or null to avoid hydration mismatch issues with localStorage
     return null; 
   }
 
   const areUrlsComplete = cameraUrls.slice(0, numCameras).every(url => url && url.trim() !== '');
 
   return (
-    <AppShell>
-      <WelcomeMessage areUrlsComplete={areUrlsComplete} />
-      
-      {/* Contenedor principal para el diseño de dos columnas */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-        {/* Columna izquierda: Lista de Canales */}
-        <div className="flex">
-          <ChannelListComponent />
-        </div>
-        
-        {/* Columna derecha: Configuración de Vistas */}
-        <div className="flex">
+    <div className="flex h-screen w-screen bg-background text-foreground">
+      {/* Left Column (1/3) */}
+      <div className="w-1/3 flex flex-col border-r border-border">
+        <ChannelListComponent />
+      </div>
+
+      {/* Middle Column (1/3) */}
+      <div className="w-1/3 flex flex-col items-center p-4 overflow-y-auto">
+        <WelcomeMessage areUrlsComplete={areUrlsComplete} />
+        <div className="w-full max-w-lg mt-4">
           <CameraConfigurationComponent
             numCameras={numCameras}
             setNumCameras={setNumCameras}
@@ -80,6 +77,16 @@ export default function HomePage() {
           />
         </div>
       </div>
-    </AppShell>
+
+      {/* Right Column (1/3) */}
+      <div className="w-1/3 border-l border-border">
+        <iframe 
+          src="https://bleacherreport.com" 
+          title="Bleacher Report"
+          className="w-full h-full border-0"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        />
+      </div>
+    </div>
   );
 }
