@@ -7,19 +7,17 @@ import { ChannelListComponent } from '@/components/channel-list';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { cn } from "@/lib/utils";
 import { channels } from '@/components/channel-list';
-import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
 
 export default function HomePage() {
-  const [numCameras, setNumCameras] = useState<number>(1);
+  const [numCameras, setNumCameras] = useState<number>(4);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(4).fill(''));
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   
-  const isMobile = useBreakpoint('(max-width: 1249px)');
   const [mobileView, setMobileView] = useState<'canales' | 'eventos'>('canales');
 
   useEffect(() => {
@@ -82,8 +80,6 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
-      {isMobile ? (
-        // MOBILE LAYOUT
         <div className="w-full flex flex-col">
           <div className="absolute top-4 left-4 z-20">
             <Sheet>
@@ -93,8 +89,8 @@ export default function HomePage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0" hideClose>
-                <div className="p-4 border-b border-border">
-                  <div className="flex items-center gap-2">
+                <div className="border-b border-border">
+                  <div className="flex items-center gap-2 p-4">
                     <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
                     <Button onClick={() => setMobileView('eventos')} variant={mobileView === 'eventos' ? 'secondary' : 'ghost'} className="flex-1">Lista de Eventos</Button>
                     <SheetClose asChild>
@@ -127,29 +123,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      ) : (
-        // DESKTOP LAYOUT
-        <>
-          <div className="w-1/3 flex flex-col border-r border-border relative">
-            <div className={cn("h-2 w-full absolute top-0 left-0", areUrlsComplete ? "bg-green-500" : "bg-red-500")} />
-            <div className="flex-grow flex flex-col items-center p-4 overflow-y-auto pt-8">
-              {configurationComponent}
-            </div>
-          </div>
-          <div className="w-1/3 flex flex-col">
-            <ChannelListComponent />
-          </div>
-          <div className="w-1/3 border-l border-border">
-            <iframe 
-              src="https://agendadeportiva-alpha.vercel.app/" 
-              title="Agenda Deportiva"
-              className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
-              allow="clipboard-write"
-            />
-          </div>
-        </>
-      )}
     </div>
   );
 }
