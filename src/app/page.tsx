@@ -47,10 +47,6 @@ export default function HomePage() {
       });
       setCameraUrls(newUrls);
     }
-    const storedNumCameras = localStorage.getItem('numCameras');
-    if (storedNumCameras) {
-        setNumCameras(parseInt(storedNumCameras, 10));
-    }
   }, []);
 
   useEffect(() => {
@@ -91,66 +87,64 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
-        <div className="w-full flex flex-col">
-          <div className="absolute top-4 left-4 z-20">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0 gap-0" hideClose>
-                <SheetTitle className="sr-only">Menu</SheetTitle>
-                <div className="border-b border-border">
-                  <div className="flex items-center gap-2 p-4">
-                    <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
-                    <Button onClick={() => setMobileView('eventos')} variant={mobileView === 'eventos' ? 'secondary' : 'ghost'} className="flex-1">Lista de Eventos</Button>
-                    <SheetClose asChild>
-                       <Button variant="destructive" size="icon">
-                         <X className="h-4 w-4" />
-                       </Button>
-                    </SheetClose>
-                  </div>
+        <div className="absolute top-4 left-4 z-20">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0 gap-0" hideClose>
+              <SheetTitle className="sr-only">Menu</SheetTitle>
+              <div className="border-b border-border">
+                <div className="flex items-center gap-2 p-4">
+                  <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
+                  <Button onClick={() => setMobileView('eventos')} variant={mobileView === 'eventos' ? 'secondary' : 'ghost'} className="flex-1">Lista de Eventos</Button>
+                  <SheetClose asChild>
+                     <Button variant="destructive" size="icon">
+                       <X className="h-4 w-4" />
+                     </Button>
+                  </SheetClose>
                 </div>
-                <div className="flex-grow overflow-hidden">
-                  {mobileView === 'canales' && <ChannelListComponent />}
-                  {mobileView === 'eventos' && (
-                    <iframe
-                      src="https://agendadeportiva-alpha.vercel.app/"
-                      title="Agenda Deportiva"
-                      className="w-full h-full border-0"
-                      sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
-                      allow="clipboard-write"
-                    />
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-          
-          <div className="w-full flex-grow flex flex-col relative">
-            <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-            <div className="flex-grow flex flex-col items-center p-4 overflow-y-auto pt-8">
-               <WelcomeMessage />
-                <div className="w-full max-w-lg mt-4">
-                  <CameraConfigurationComponent
-                    numCameras={numCameras}
-                    setNumCameras={(num) => {
-                      setNumCameras(num);
-                      setMessage(null);
-                      setUserAcknowledgedWarning(false);
-                    }}
-                    cameraUrls={cameraUrls}
-                    setCameraUrls={setCameraUrls}
-                    message={message}
-                    setMessage={setMessage}
-                    handleStartView={handleStartView}
-                    channels={channels}
-                    setCameraStatuses={setCameraStatuses}
-                    setUserAcknowledgedWarning={setUserAcknowledgedWarning}
+              </div>
+              <div className="flex-grow overflow-hidden">
+                {mobileView === 'canales' && <ChannelListComponent />}
+                {mobileView === 'eventos' && (
+                  <iframe
+                    src="https://agendadeportiva-alpha.vercel.app/"
+                    title="Agenda Deportiva"
+                    className="w-full h-full border-0"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
+                    allow="clipboard-write"
                   />
-                </div>
-            </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+        
+        <div className="w-full flex-grow flex flex-col relative">
+          <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
+          <div className="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto">
+             <WelcomeMessage />
+              <div className="w-full max-w-lg mt-4">
+                <CameraConfigurationComponent
+                  numCameras={numCameras}
+                  setNumCameras={(num) => {
+                    setNumCameras(num);
+                    setMessage(null);
+                    setUserAcknowledgedWarning(false);
+                  }}
+                  cameraUrls={cameraUrls}
+                  setCameraUrls={setCameraUrls}
+                  message={message}
+                  setMessage={setMessage}
+                  handleStartView={handleStartView}
+                  channels={channels}
+                  setCameraStatuses={setCameraStatuses}
+                  setUserAcknowledgedWarning={setUserAcknowledgedWarning}
+                />
+              </div>
           </div>
         </div>
     </div>
