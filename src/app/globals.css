@@ -99,7 +99,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--accent));
+    background-color: #333333;
     border-radius: 10px;
     border: 3px solid hsl(var(--background));
   }
@@ -111,6 +111,6 @@
   /* For Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--accent)) hsl(var(--background));
+    scrollbar-color: #333333 hsl(var(--background));
   }
 }

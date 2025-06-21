@@ -86,7 +86,7 @@ export default function HomePage() {
       {isMobile ? (
         // MOBILE LAYOUT
         <div className="w-full flex flex-col">
-          <div className="absolute top-2 left-2 z-20">
+          <div className="absolute top-4 left-4 z-20">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -94,9 +94,6 @@ export default function HomePage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0">
-                <SheetHeader className="p-4 border-b border-border text-left">
-                  <SheetTitle>Menú</SheetTitle>
-                </SheetHeader>
                 <div className="p-4 border-b border-border">
                   <div className="flex gap-2">
                     <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
