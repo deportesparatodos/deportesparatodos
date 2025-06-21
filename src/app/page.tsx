@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/s
 import { Menu, X } from 'lucide-react';
 
 export default function HomePage() {
-  const [numCameras, setNumCameras] = useState<number>(4);
+  const [numCameras, setNumCameras] = useState<number>(4); // Default to 4
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(4).fill(''));
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isMounted, setIsMounted] = useState(false);
@@ -23,12 +23,15 @@ export default function HomePage() {
   useEffect(() => {
     setIsMounted(true);
     const storedUrls = localStorage.getItem('cameraUrls');
-    const storedNumCameras = localStorage.getItem('numCameras');
+    // Do not load stored numCameras to always default to 4
     if (storedUrls) {
-      setCameraUrls(JSON.parse(storedUrls));
-    }
-    if (storedNumCameras) {
-      setNumCameras(parseInt(storedNumCameras, 10));
+      const parsedUrls = JSON.parse(storedUrls);
+      // Ensure the array has at least 4 elements for the default view
+      const newUrls = Array(4).fill('');
+      parsedUrls.slice(0, 4).forEach((url: string, i: number) => {
+        newUrls[i] = url;
+      });
+      setCameraUrls(newUrls);
     }
   }, []);
 
@@ -88,7 +91,7 @@ export default function HomePage() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0" hideClose>
+              <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0 gap-0" hideClose>
                 <div className="border-b border-border">
                   <div className="flex items-center gap-2 p-4">
                     <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
