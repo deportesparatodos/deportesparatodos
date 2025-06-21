@@ -47,6 +47,10 @@ export default function HomePage() {
       });
       setCameraUrls(newUrls);
     }
+    const storedNumCameras = localStorage.getItem('numCameras');
+    if (storedNumCameras) {
+      setNumCameras(parseInt(storedNumCameras, 10));
+    }
   }, []);
 
   useEffect(() => {
@@ -125,7 +129,7 @@ export default function HomePage() {
         
         <div className="w-full flex-grow flex flex-col relative">
           <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-          <div className="flex-grow flex flex-col items-center justify-center overflow-y-auto gap-4">
+          <div className="flex-grow flex flex-col items-center justify-center gap-8">
              <WelcomeMessage />
               <div className="w-full max-w-lg px-4">
                 <CameraConfigurationComponent
