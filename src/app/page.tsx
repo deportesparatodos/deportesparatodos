@@ -15,11 +15,26 @@ export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(4);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(4).fill(''));
   const [cameraStatuses, setCameraStatuses] = useState<CameraStatus[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [message, setMessage] = useState<{type: 'error' | 'warning', text: string} | null>(null);
+  const [userAcknowledgedWarning, setUserAcknowledgedWarning] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   
   const [mobileView, setMobileView] = useState<'canales' | 'eventos'>('canales');
+
+  const topBarColorClass = useMemo(() => {
+    const activeStatuses = cameraStatuses.slice(0, numCameras);
+    if (activeStatuses.includes('unknown')) {
+      return 'bg-yellow-500';
+    }
+    if (activeStatuses.includes('empty')) {
+        return 'bg-red-500';
+    }
+    if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'valid')) {
+      return 'bg-green-500';
+    }
+    return 'bg-red-500';
+  }, [cameraStatuses, numCameras]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -32,6 +47,10 @@ export default function HomePage() {
       });
       setCameraUrls(newUrls);
     }
+    const storedNumCameras = localStorage.getItem('numCameras');
+    if (storedNumCameras) {
+        setNumCameras(parseInt(storedNumCameras, 10));
+    }
   }, []);
 
   useEffect(() => {
@@ -42,30 +61,29 @@ export default function HomePage() {
   }, [cameraUrls, numCameras, isMounted]);
 
   const handleStartView = () => {
-    setErrorMessage('');
+    setMessage(null);
     const activeUrls = cameraUrls.slice(0, numCameras);
-    const allUrlsFilled = activeUrls.every(url => url && url.trim() !== '');
+    const activeStatuses = cameraStatuses.slice(0, numCameras);
+    const hasEmptyUrls = activeStatuses.includes('empty');
+    const hasUnknownUrls = activeStatuses.includes('unknown');
 
-    if (!allUrlsFilled) {
-      setErrorMessage(`Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.`);
+    if (hasEmptyUrls) {
+      setMessage({ type: 'error', text: `Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.` });
+      setUserAcknowledgedWarning(false);
       return;
     }
 
+    if (hasUnknownUrls && !userAcknowledgedWarning) {
+      setMessage({ type: 'warning', text: "Hay un link o texto desconocido que no puede ser procesado, desea seguir de todas formas?" });
+      setUserAcknowledgedWarning(true);
+      return;
+    }
+
+    setUserAcknowledgedWarning(false);
     const queryParams = new URLSearchParams();
     activeUrls.forEach(url => queryParams.append('urls', encodeURIComponent(url)));
     router.push(`/view?${queryParams.toString()}`);
   };
-
-  const topBarColorClass = useMemo(() => {
-    const activeStatuses = cameraStatuses.slice(0, numCameras);
-    if (activeStatuses.includes('unknown')) {
-      return 'bg-yellow-500';
-    }
-    if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'valid')) {
-      return 'bg-green-500';
-    }
-    return 'bg-red-500';
-  }, [cameraStatuses, numCameras]);
   
   if (!isMounted) {
     return null; 
@@ -116,14 +134,19 @@ export default function HomePage() {
                 <div className="w-full max-w-lg mt-4">
                   <CameraConfigurationComponent
                     numCameras={numCameras}
-                    setNumCameras={setNumCameras}
+                    setNumCameras={(num) => {
+                      setNumCameras(num);
+                      setMessage(null);
+                      setUserAcknowledgedWarning(false);
+                    }}
                     cameraUrls={cameraUrls}
                     setCameraUrls={setCameraUrls}
-                    errorMessage={errorMessage}
-                    setErrorMessage={setErrorMessage}
+                    message={message}
+                    setMessage={setMessage}
                     handleStartView={handleStartView}
                     channels={channels}
                     setCameraStatuses={setCameraStatuses}
+                    setUserAcknowledgedWarning={setUserAcknowledgedWarning}
                   />
                 </div>
             </div>

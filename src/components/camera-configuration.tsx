@@ -13,14 +13,15 @@ export type CameraStatus = 'empty' | 'valid' | 'unknown';
 
 interface CameraConfigurationProps {
   numCameras: number;
-  setNumCameras: Dispatch<SetStateAction<number>>;
+  setNumCameras: (num: number) => void;
   cameraUrls: string[];
   setCameraUrls: Dispatch<SetStateAction<string[]>>;
-  errorMessage: string;
-  setErrorMessage: Dispatch<SetStateAction<string>>;
+  message: { type: 'error' | 'warning'; text: string } | null;
+  setMessage: Dispatch<SetStateAction<{ type: 'error' | 'warning'; text: string } | null>>;
   handleStartView: () => void;
   channels: Channel[];
   setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
+  setUserAcknowledgedWarning: Dispatch<SetStateAction<boolean>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -28,11 +29,12 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setNumCameras,
   cameraUrls,
   setCameraUrls,
-  errorMessage,
-  setErrorMessage,
+  message,
+  setMessage,
   handleStartView,
   channels,
   setCameraStatuses,
+  setUserAcknowledgedWarning,
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
@@ -73,23 +75,22 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
   const handleNumCamerasChange = (value: string) => {
     setNumCameras(parseInt(value, 10));
-    setErrorMessage("");
   };
 
   const handleUrlChange = (index: number, value: string) => {
     const newUrls = [...cameraUrls];
     newUrls[index] = value;
     setCameraUrls(newUrls);
-    if (value.trim() !== "") {
-       setErrorMessage("");
-    }
+    setMessage(null);
+    setUserAcknowledgedWarning(false);
   };
 
   const handleClearUrl = (index: number) => {
     const newUrls = [...cameraUrls];
     newUrls[index] = '';
     setCameraUrls(newUrls);
-    setErrorMessage("");
+    setMessage(null);
+    setUserAcknowledgedWarning(false);
   };
 
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
@@ -106,21 +107,19 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
     [newUrls[index], newUrls[targetIndex]] = [newUrls[targetIndex], newUrls[index]];
     setCameraUrls(newUrls);
-    setErrorMessage("");
+    setMessage(null);
+    setUserAcknowledgedWarning(false);
   };
 
   const handlePasteUrl = async (index: number) => {
     try {
       const text = await navigator.clipboard.readText();
       if (text) {
-        const newUrls = [...cameraUrls];
-        newUrls[index] = text;
-        setCameraUrls(newUrls);
-        setErrorMessage(""); 
+        handleUrlChange(index, text);
       }
     } catch (err) {
       console.error("Error al pegar desde el portapapeles: ", err);
-      setErrorMessage("No se pudo pegar. Verifica los permisos del portapapeles.");
+      setMessage({ type: 'error', text: "No se pudo pegar. Verifica los permisos del portapapeles."});
     }
   };
 
@@ -246,10 +245,14 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         })}
         </div>
 
-        {errorMessage && (
-          <div className="flex items-center p-3 text-sm rounded-md bg-destructive/10 text-destructive border border-destructive/30">
-            <AlertTriangle className="h-5 w-5 mr-2" />
-            <p>{errorMessage}</p>
+        {message && (
+          <div className={cn(
+            "flex items-center p-3 text-sm rounded-md border",
+            message.type === 'error' && "bg-destructive/10 text-destructive border-destructive/30",
+            message.type === 'warning' && "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+          )}>
+            <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
+            <p>{message.text}</p>
           </div>
         )}
       
