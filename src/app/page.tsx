@@ -55,10 +55,6 @@ export default function HomePage() {
     activeUrls.forEach(url => queryParams.append('urls', encodeURIComponent(url)));
     router.push(`/view?${queryParams.toString()}`);
   };
-  
-  if (!isMounted) {
-    return null; 
-  }
 
   const topBarColorClass = useMemo(() => {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
@@ -70,6 +66,10 @@ export default function HomePage() {
     }
     return 'bg-red-500';
   }, [cameraStatuses, numCameras]);
+  
+  if (!isMounted) {
+    return null; 
+  }
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
