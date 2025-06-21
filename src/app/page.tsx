@@ -7,7 +7,7 @@ import { CameraConfigurationComponent, type CameraStatus } from '@/components/ca
 import { cn } from "@/lib/utils";
 import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
 import { ChannelListComponent } from '@/components/channel-list';
 
@@ -100,6 +100,7 @@ export default function HomePage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[85vw] sm:w-96 flex flex-col p-0 gap-0" hideClose>
+                <SheetTitle className="sr-only">Menu</SheetTitle>
                 <div className="border-b border-border">
                   <div className="flex items-center gap-2 p-4">
                     <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
