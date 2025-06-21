@@ -4,11 +4,10 @@ import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import type { Channel } from './channel-list';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -60,8 +59,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     return "Enlace Pegado";
   };
 
-  const handleNumCamerasChange = (value: number) => {
-    setNumCameras(value);
+  const handleNumCamerasChange = (value: string) => {
+    setNumCameras(parseInt(value, 10));
     setErrorMessage("");
   };
 
@@ -113,173 +112,145 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     }
   };
 
-  const viewOptions = [
-    { value: 1, display: "1" },
-    { value: 2, display: "2" },
-    { value: 3, display: "3" },
-    { value: 4, display: "4" },
-  ];
-
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     handleStartView();
   };
 
   return (
-    <Card className="shadow-lg w-full h-full flex flex-col">
-      <form onSubmit={handleFormSubmit}>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-primary">Configuración de Vistas:</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 gap-y-4">
-            <div>
-              <Label className="text-base font-medium text-foreground block">Cantidad de Ventanas:</Label>
-              <div className="flex space-x-2 mt-1">
-                {viewOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={numCameras === option.value ? "default" : "outline"}
-                    onClick={() => handleNumCamerasChange(option.value)}
-                    className="h-12 w-12 text-lg"
-                    aria-label={`Seleccionar ${option.display} ventana${option.value > 1 ? 's' : ''}`}
-                    type="button"
-                  >
-                    {option.display}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
+    <form onSubmit={handleFormSubmit} className="w-full space-y-4">
+        <Select onValueChange={handleNumCamerasChange} value={numCameras.toString()}>
+            <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar cantidad de ventanas" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="1">1 VENTANA</SelectItem>
+                <SelectItem value="2">2 VENTANAS</SelectItem>
+                <SelectItem value="3">3 VENTANAS</SelectItem>
+                <SelectItem value="4">4 VENTANAS</SelectItem>
+            </SelectContent>
+        </Select>
 
-          <div className="mt-6"> 
-              <Label className="text-base font-medium text-foreground block">
-                  URLs de las Vistas:
-              </Label>
-              <div className="space-y-3 mt-1">
-              {Array.from({ length: numCameras }).map((_, index) => {
-                const hasUrl = cameraUrls[index].trim() !== '';
-                const isFocused = focusedInput === index;
-                const isHovered = hoveredInputIndex === index;
-                const isActive = isFocused || isHovered;
+        <div className="space-y-3">
+        {Array.from({ length: numCameras }).map((_, index) => {
+          const hasUrl = cameraUrls[index].trim() !== '';
+          const isFocused = focusedInput === index;
+          const isHovered = hoveredInputIndex === index;
+          const isActive = isFocused || isHovered;
 
-                return (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleMoveUrl(index, 'up')}
-                        disabled={index === 0}
-                        aria-label="Mover URL hacia arriba"
-                        className="bg-background hover:bg-accent/50"
-                        type="button" 
-                    >
-                        <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    
-                    <div
-                      className="relative flex-grow"
-                      onMouseEnter={() => {
-                        setHoveredInputIndex(index);
-                        if (errorMessage && !cameraUrls[index] && !isFocused) {
-                            setErrorMessage('');
-                        }
-                      }}
-                      onMouseLeave={() => setHoveredInputIndex(null)}
-                    >
-                      <Input
-                        id={`url-${index}`}
-                        type="url"
-                        placeholder={isActive && !hasUrl ? `URL Vista ${index + 1}` : ""}
-                        value={cameraUrls[index] || ''}
-                        onChange={(e) => handleUrlChange(index, e.target.value)}
-                        onFocus={() => {
-                          setFocusedInput(index);
-                          if (errorMessage && !cameraUrls[index]) {
-                              setErrorMessage('');
-                          }
-                        }}
-                        onBlur={() => setFocusedInput(null)}
-                        className={cn(
-                          "w-full",
-                          hasUrl
-                            ? "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600"
-                            : "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
-                          isActive
-                            ? (hasUrl 
-                                ? "text-green-800 dark:text-green-300" 
-                                : "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80"
-                              ) 
-                            : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent"
-                        )}
-                        readOnly={!isActive && hasUrl}
-                      />
-                      {!isActive && (
-                        <div
-                          className={cn(
-                            "absolute inset-0 flex items-center justify-center px-3 py-2 text-sm rounded-md pointer-events-none select-none",
-                            hasUrl
-                              ? "bg-green-600 text-white" 
-                              : "bg-destructive text-destructive-foreground"
-                          )}
-                        >
-                          {getChannelDisplayName(cameraUrls[index])}
-                        </div>
-                      )}
-                    </div>
-
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handlePasteUrl(index)}
-                        aria-label="Pegar URL desde portapapeles"
-                        className="bg-background hover:bg-accent/50"
-                        type="button"
-                    >
-                        <ClipboardPaste className="h-4 w-4" />
-                    </Button>
-                    {cameraUrls[index] && (
-                      <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleClearUrl(index)}
-                          aria-label="Limpiar URL"
-                          className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                          type="button"
-                      >
-                          <X className="h-4 w-4" />
-                      </Button>
+          return (
+            <div key={index} className="flex items-center space-x-2">
+              <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleMoveUrl(index, 'up')}
+                  disabled={index === 0}
+                  aria-label="Mover URL hacia arriba"
+                  className="bg-background hover:bg-accent/50"
+                  type="button" 
+              >
+                  <ArrowUp className="h-4 w-4" />
+              </Button>
+              
+              <div
+                className="relative flex-grow"
+                onMouseEnter={() => {
+                  setHoveredInputIndex(index);
+                  if (errorMessage && !cameraUrls[index] && !isFocused) {
+                      setErrorMessage('');
+                  }
+                }}
+                onMouseLeave={() => setHoveredInputIndex(null)}
+              >
+                <Input
+                  id={`url-${index}`}
+                  type="url"
+                  placeholder={isActive && !hasUrl ? `URL Vista ${index + 1}` : ""}
+                  value={cameraUrls[index] || ''}
+                  onChange={(e) => handleUrlChange(index, e.target.value)}
+                  onFocus={() => {
+                    setFocusedInput(index);
+                    if (errorMessage && !cameraUrls[index]) {
+                        setErrorMessage('');
+                    }
+                  }}
+                  onBlur={() => setFocusedInput(null)}
+                  className={cn(
+                    "w-full",
+                    hasUrl
+                      ? "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600"
+                      : "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
+                    isActive
+                      ? (hasUrl 
+                          ? "text-green-800 dark:text-green-300" 
+                          : "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80"
+                        ) 
+                      : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent"
+                  )}
+                  readOnly={!isActive && hasUrl}
+                />
+                {!isActive && (
+                  <div
+                    className={cn(
+                      "absolute inset-0 flex items-center justify-center px-3 py-2 text-sm rounded-md pointer-events-none select-none",
+                      hasUrl
+                        ? "bg-green-600 text-white" 
+                        : "bg-destructive text-destructive-foreground"
                     )}
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleMoveUrl(index, 'down')}
-                        disabled={index === numCameras - 1}
-                        aria-label="Mover URL hacia abajo"
-                        className="bg-background hover:bg-accent/50"
-                        type="button"
-                    >
-                        <ArrowDown className="h-4 w-4" />
-                    </Button>
+                  >
+                    {getChannelDisplayName(cameraUrls[index])}
                   </div>
-                )
-              })}
+                )}
               </div>
-          </div>
 
-          {errorMessage && (
-            <div className="mt-4 flex items-center p-3 text-sm rounded-md bg-destructive/10 text-destructive border border-destructive/30">
-              <AlertTriangle className="h-5 w-5 mr-2" />
-              <p>{errorMessage}</p>
+              <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePasteUrl(index)}
+                  aria-label="Pegar URL desde portapapeles"
+                  className="bg-background hover:bg-accent/50"
+                  type="button"
+              >
+                  <ClipboardPaste className="h-4 w-4" />
+              </Button>
+              {cameraUrls[index] && (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleClearUrl(index)}
+                    aria-label="Limpiar URL"
+                    className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    type="button"
+                >
+                    <X className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleMoveUrl(index, 'down')}
+                  disabled={index === numCameras - 1}
+                  aria-label="Mover URL hacia abajo"
+                  className="bg-background hover:bg-accent/50"
+                  type="button"
+              >
+                  <ArrowDown className="h-4 w-4" />
+              </Button>
             </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-end items-center pt-6">
-          <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+          )
+        })}
+        </div>
+
+        {errorMessage && (
+          <div className="flex items-center p-3 text-sm rounded-md bg-destructive/10 text-destructive border border-destructive/30">
+            <AlertTriangle className="h-5 w-5 mr-2" />
+            <p>{errorMessage}</p>
+          </div>
+        )}
+      
+        <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
+        </Button>
+    </form>
   );
 };

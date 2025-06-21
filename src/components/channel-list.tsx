@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import type { FC } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, CheckCircle2, ListVideo, List, Search, X } from "lucide-react";
+import { Copy, CheckCircle2, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface Channel {
@@ -204,11 +204,7 @@ export const ChannelListComponent: FC = () => {
       {/* Top half: Channel List */}
       <div className="h-1/2 flex flex-col border-b border-border">
         <div className="p-4 flex-shrink-0 border-b border-border">
-          <h2 className="flex items-center text-lg font-semibold text-primary">
-            <List className="mr-2 h-5 w-5" />
-            Lista de Canales
-          </h2>
-          <div className="relative mt-2">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref={searchInputRef}
@@ -275,17 +271,11 @@ export const ChannelListComponent: FC = () => {
 
       {/* Bottom half: Event List */}
       <div className="h-1/2 flex flex-col">
-        <div className="p-4 flex-shrink-0 border-b border-border">
-          <h2 className="flex items-center text-lg font-semibold text-primary">
-            <ListVideo className="mr-2 h-5 w-5" />
-            Lista de Eventos
-          </h2>
-        </div>
-        <div className="overflow-hidden flex-grow p-4">
+        <div className="overflow-hidden flex-grow">
           <iframe
               src={EVENT_LIST_URL}
               title="Lista de Eventos"
-              className="w-full h-full border-0 rounded-md"
+              className="w-full h-full border-0"
               sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
               allow="clipboard-write"
           />
