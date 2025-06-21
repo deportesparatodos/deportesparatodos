@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { ChannelListComponent, channels } from '@/components/channel-list';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
-import Image from 'next/image';
+import { cn } from "@/lib/utils";
 
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(1);
@@ -56,32 +56,38 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
-      {/* Left Column (1/3) */}
+      {/* Left Column (1/3) - Configuration */}
       <div className="w-1/3 flex flex-col border-r border-border">
-        <ChannelListComponent />
-      </div>
-
-      {/* Middle Column (1/3) */}
-      <div className="w-1/3 flex flex-col items-center p-4 overflow-y-auto">
-        <WelcomeMessage areUrlsComplete={areUrlsComplete} />
-        <div className="w-full max-w-lg mt-4">
-          <CameraConfigurationComponent
-            numCameras={numCameras}
-            setNumCameras={setNumCameras}
-            cameraUrls={cameraUrls}
-            setCameraUrls={setCameraUrls}
-            errorMessage={errorMessage}
-            setErrorMessage={setErrorMessage}
-            handleStartView={handleStartView}
-            channels={channels}
-          />
+        <div className={cn(
+          "h-2 w-full flex-shrink-0",
+          areUrlsComplete ? "bg-green-500" : "bg-red-500"
+        )} />
+        <div className="flex-grow flex flex-col items-center p-4 overflow-y-auto">
+          <WelcomeMessage />
+          <div className="w-full max-w-lg mt-4">
+            <CameraConfigurationComponent
+              numCameras={numCameras}
+              setNumCameras={setNumCameras}
+              cameraUrls={cameraUrls}
+              setCameraUrls={setCameraUrls}
+              errorMessage={errorMessage}
+              setErrorMessage={setErrorMessage}
+              handleStartView={handleStartView}
+              channels={channels}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Right Column (1/3) */}
+      {/* Middle Column (1/3) - Channel List */}
+      <div className="w-1/3 flex flex-col">
+        <ChannelListComponent />
+      </div>
+
+      {/* Right Column (1/3) - Agenda */}
       <div className="w-1/3 border-l border-border">
         <iframe 
-          src="https://agendadeportiva-alpha.vercel.app" 
+          src="https://agendadeportiva-alpha.vercel.app/" 
           title="Agenda Deportiva"
           className="w-full h-full border-0"
           sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
