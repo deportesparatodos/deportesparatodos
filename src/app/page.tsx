@@ -101,7 +101,7 @@ export default function HomePage() {
                   <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
                   <Button onClick={() => setMobileView('eventos')} variant={mobileView === 'eventos' ? 'secondary' : 'ghost'} className="flex-1">Lista de Eventos</Button>
                   <SheetClose asChild>
-                     <Button variant="destructive" size="icon">
+                     <Button variant="destructive" size="icon" className="flex-shrink-0">
                        <X className="h-4 w-4" />
                      </Button>
                   </SheetClose>
@@ -125,9 +125,9 @@ export default function HomePage() {
         
         <div className="w-full flex-grow flex flex-col relative">
           <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-          <div className="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto gap-4">
+          <div className="flex-grow flex flex-col items-center justify-center overflow-y-auto gap-4">
              <WelcomeMessage />
-              <div className="w-full max-w-lg">
+              <div className="w-full max-w-lg px-4">
                 <CameraConfigurationComponent
                   numCameras={numCameras}
                   setNumCameras={(num) => {
