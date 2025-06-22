@@ -195,8 +195,8 @@ export const ChannelListComponent: FC = () => {
         }
         const data = await response.json();
         const statuses = data.reduce((acc: Record<string, 'online' | 'offline'>, item: any) => {
-          if (item.name && (item.status === 'online' || item.status === 'offline')) {
-            acc[item.name] = item.status;
+          if (item.Canal) {
+            acc[item.Canal] = item.Estado === 'Activo' ? 'online' : 'offline';
           }
           return acc;
         }, {});
