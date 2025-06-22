@@ -22,6 +22,9 @@ export default function HomePage() {
   
   const [mobileView, setMobileView] = useState<'canales' | 'eventos'>('canales');
 
+  const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
+  const [isLoadingStatuses, setIsLoadingStatuses] = useState<boolean>(true);
+
   const topBarColorClass = useMemo(() => {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
     if (activeStatuses.includes('unknown')) {
@@ -35,6 +38,31 @@ export default function HomePage() {
     }
     return 'bg-red-500';
   }, [cameraStatuses, numCameras]);
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      setIsLoadingStatuses(true);
+      try {
+        const response = await fetch('https://corsproxy.io/?https%3A%2F%2Fstreamtpglobal.com%2Fstatus.json');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        const statuses = data.reduce((acc: Record<string, 'online' | 'offline'>, item: any) => {
+          if (item.Canal) {
+            acc[item.Canal] = item.Estado === 'Activo' ? 'online' : 'offline';
+          }
+          return acc;
+        }, {});
+        setChannelStatuses(statuses);
+      } catch (error) {
+        console.error("Failed to fetch channel statuses:", error);
+      } finally {
+        setIsLoadingStatuses(false);
+      }
+    };
+    fetchStatuses();
+  }, []);
 
   useEffect(() => {
     setIsMounted(true);
@@ -114,7 +142,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex-grow overflow-hidden">
-                {mobileView === 'canales' && <ChannelListComponent />}
+                {mobileView === 'canales' && <ChannelListComponent channelStatuses={channelStatuses} isLoading={isLoadingStatuses} />}
                 {mobileView === 'eventos' && (
                   <iframe
                     src="https://agendadeportiva-alpha.vercel.app/"

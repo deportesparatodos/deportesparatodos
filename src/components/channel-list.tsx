@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import type { FC } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
@@ -178,37 +178,15 @@ interface CopiedStates {
 
 type ChannelStatus = 'active' | 'inactive' | 'unknown';
 
-export const ChannelListComponent: FC = () => {
+interface ChannelListProps {
+  channelStatuses: Record<string, 'online' | 'offline'>;
+  isLoading: boolean;
+}
+
+export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, isLoading }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [searchTerm, setSearchTerm] = useState<string>('');
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      try {
-        const response = await fetch('https://corsproxy.io/?https%3A%2F%2Fstreamtpglobal.com%2Fstatus.json');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        const statuses = data.reduce((acc: Record<string, 'online' | 'offline'>, item: any) => {
-          if (item.Canal) {
-            acc[item.Canal] = item.Estado === 'Activo' ? 'online' : 'offline';
-          }
-          return acc;
-        }, {});
-        setChannelStatuses(statuses);
-      } catch (error) {
-        console.error("Failed to fetch channel statuses:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStatuses();
-  }, []);
 
   const getStreamStatus = (url: string): ChannelStatus => {
     let streamName: string | null = null;
