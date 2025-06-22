@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -189,7 +188,7 @@ export const ChannelListComponent: FC = () => {
   useEffect(() => {
     const fetchStatuses = async () => {
       try {
-        const response = await fetch('https://api.allorigins.win/raw?url=https%3A%2F%2Fstreamtpglobal.com%2Fstatus.json');
+        const response = await fetch('https://corsproxy.io/?https%3A%2F%2Fstreamtpglobal.com%2Fstatus.json');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
