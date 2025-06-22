@@ -27,11 +27,12 @@ export default function HomePage() {
 
   const topBarColorClass = useMemo(() => {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
-    if (activeStatuses.includes('unknown')) {
-      return 'bg-yellow-500';
-    }
+    
     if (activeStatuses.includes('empty')) {
         return 'bg-red-500';
+    }
+    if (activeStatuses.includes('unknown')) {
+      return 'bg-yellow-500';
     }
     if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'valid')) {
       return 'bg-green-500';
@@ -159,7 +160,7 @@ export default function HomePage() {
         
         <div className="w-full flex-grow flex flex-col relative">
           <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-          <div className="flex-grow flex flex-col items-center justify-center gap-8 p-4">
+          <div className="flex-grow flex flex-col items-center justify-center gap-8">
              <WelcomeMessage />
               <div className="w-full max-w-lg px-4">
                 <CameraConfigurationComponent
