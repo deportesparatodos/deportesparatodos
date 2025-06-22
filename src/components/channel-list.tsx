@@ -71,6 +71,8 @@ const channelsData: Channel[] = [
     { name: 'Eurosport 1', url: 'https://elcanaldeportivo.com/eurosports1.php', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRa02LLWr8M_-Yu6Q6vr_TRHRe6Y-h5vJYj7A&s' },
     { name: 'Eurosport 2', url: 'https://elcanaldeportivo.com/eurosports2.php', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Eurosport_2_Logo_2015.svg/2560px-Eurosport_2_Logo_2015.svg.png' },
     { name: 'FUTV (EV)', url: 'https://streamtpglobal.com/global1.php?stream=futv', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgErhsHjLvKGwZd_6Qfkw3iR1lFl9lNC2smA&s' },
+    { name: 'FLOW 1', url: 'https://play.alangulotv.cloud/?channel=flow1', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Flow_2021.jpg' },
+    { name: 'FLOW 2', url: 'https://play.alangulotv.cloud/?channel=flow2', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Flow_2021.jpg' },
     { name: 'Flow Music', url: 'https://tvlibreonline.org/html/fl/?get=Rmxvd19NdXNpY19YUA==', logoUrl: 'https://pbs.twimg.com/profile_images/1445057259780837378/kpDGDIyl_400x400.png' },
     { name: 'Fox Deportes TUBI', url: 'https://streamtpglobal.com/global1.php?stream=tubitv1', logoUrl: 'https://assets.goal.com/images/v3/blt38c232d013be3b9f/unnamed.jpg' },
     { name: 'Fox Deportes USA', url: 'https://streamtpglobal.com/global1.php?stream=fox_deportes_usa', logoUrl: 'https://yt3.googleusercontent.com/ytc/AIdro_kRD_CzEE876U_cVjUDaMF-hFzDQB906eoYWLq1JT0u99Q=s900-c-k-c0x00ffffff-no-rj' },
