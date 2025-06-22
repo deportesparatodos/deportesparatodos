@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { FC } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
@@ -177,10 +176,60 @@ interface CopiedStates {
   [key: string]: boolean;
 }
 
+type ChannelStatus = 'active' | 'inactive' | 'unknown';
+
 export const ChannelListComponent: FC = () => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [searchTerm, setSearchTerm] = useState<string>('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const response = await fetch('https://streamtpglobal.com/status.json');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        const statuses = data.reduce((acc: Record<string, 'online' | 'offline'>, item: any) => {
+          if (item.name && (item.status === 'online' || item.status === 'offline')) {
+            acc[item.name] = item.status;
+          }
+          return acc;
+        }, {});
+        setChannelStatuses(statuses);
+      } catch (error) {
+        console.error("Failed to fetch channel statuses:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStatuses();
+  }, []);
+
+  const getStreamStatus = (url: string): ChannelStatus => {
+    let streamName: string | null = null;
+    try {
+        const urlObject = new URL(url);
+        if (urlObject.hostname.includes('streamtpglobal.com')) {
+            streamName = urlObject.searchParams.get('stream');
+        }
+    } catch (e) {
+        const match = url.match(/[?&]stream=([^&]+)/);
+        if (match && match[1]) {
+            streamName = match[1];
+        }
+    }
+
+    if (streamName && channelStatuses[streamName]) {
+        return channelStatuses[streamName] === 'online' ? 'active' : 'inactive';
+    }
+
+    return 'unknown';
+  };
 
   const handleCopy = async (url: string) => {
     try {
@@ -226,9 +275,21 @@ export const ChannelListComponent: FC = () => {
       <div className="overflow-y-auto flex-grow p-4">
         {filteredChannels.length > 0 ? (
           <ul className="space-y-3">
-            {filteredChannels.map((channel) => (
+            {filteredChannels.map((channel) => {
+              const status = getStreamStatus(channel.url);
+              return (
               <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
                 <div className="flex items-center flex-1 truncate mr-2">
+                  {!isLoading && (
+                    <span
+                      title={status === 'active' ? 'Activo' : status === 'inactive' ? 'Inactivo' : 'Desconocido'}
+                      className={cn("h-2.5 w-2.5 rounded-full mr-3 flex-shrink-0", {
+                        'bg-green-500': status === 'active',
+                        'bg-red-500': status === 'inactive',
+                        'bg-gray-400': status === 'unknown',
+                      })}
+                    />
+                  )}
                   {channel.logoUrl && (
                     <Image
                       src={channel.logoUrl}
@@ -256,7 +317,7 @@ export const ChannelListComponent: FC = () => {
                   {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
                 </Button>
               </li>
-            ))}
+            )})}
           </ul>
         ) : (
           <p className="text-muted-foreground p-3">
