@@ -100,8 +100,6 @@ const channelsData: Channel[] = [
     { name: 'MTV', url: 'https://tvlibreonline.org/html/fl/?get=TVRWX0hE', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/MTV_2021_%28brand_version%29.svg/1200px-MTV_2021_%28brand_version%29.svg.png' },
     { name: 'Movistar Liga de Campeones', url: 'https://streamtpglobal.com/global1.php?stream=movistarligadecampeones', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Movistar_Liga_de_Campeones.svg/2560px-Movistar_Liga_de_Campeones.svg.png' },
     { name: 'National Geographic', url: 'https://tvlibreonline.org/html/fl/?get=TmF0R2VvSEQ=', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Nat_Geo_HD.png' },
-    { name: 'OnBoard Colapinto (SI HAY F1)', url: 'https://streamtpglobal.com/global1.php?stream=disney16', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/F1.svg/1280px-F1.svg.png' },
-    { name: 'OnBoard General (SI HAY F1)', url: 'https://streamtpglobal.com/global1.php?stream=disney18', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/F1.svg/1280px-F1.svg.png' },
     { name: 'Playboy (+18)', url: 'https://tvlibreonline.org/html/fl/?get=UGxheWJveQ', logoUrl: 'https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/118E/production/_98049440_463ebdce-bddb-4485-a0ff-1dccc87b6a22.jpg.webp' },
     { name: 'Premiere 1 BR', url: 'https://streamtpglobal.com/global1.php?stream=premiere1', logoUrl: 'https://s3.glbimg.com/v1/AUTH_36abb2af534644878388f516c38b89ac/prod/home-share-1b75cdaa.png' },
     { name: 'Premiere 2 BR', url: 'https://streamtpglobal.com/global1.php?stream=premiere2', logoUrl: 'https://s3.glbimg.com/v1/AUTH_36abb2af534644878388f516c38b89ac/prod/home-share-1b75cdaa.png' },
