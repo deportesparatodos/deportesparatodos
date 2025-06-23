@@ -160,9 +160,9 @@ export default function HomePage() {
         
         <div className="w-full flex-grow flex flex-col relative">
           <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-          <div className="flex-grow flex flex-col items-center justify-center gap-8">
+          <div className="flex-grow flex flex-col items-center justify-center gap-8 px-4">
              <WelcomeMessage />
-              <div className="w-full max-w-lg px-4">
+              <div className="w-full max-w-lg">
                 <CameraConfigurationComponent
                   numCameras={numCameras}
                   setNumCameras={(num) => {
