@@ -11,6 +11,36 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/com
 import { Menu, X } from 'lucide-react';
 import { ChannelListComponent } from '@/components/channel-list';
 
+const processUrlForView = (inputUrl: string): string => {
+  if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
+
+  try {
+    // Handle standard YouTube watch URLs
+    if (inputUrl.includes('youtube.com/watch')) {
+      const url = new URL(inputUrl);
+      const videoId = url.searchParams.get('v');
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+    }
+    // Handle youtu.be short URLs
+    if (inputUrl.includes('youtu.be/')) {
+      const url = new URL(inputUrl);
+      const videoId = url.pathname.substring(1);
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+    }
+  } catch (e) {
+    // Not a valid URL, or some other parsing error. Fallback to original URL.
+    return inputUrl;
+  }
+  
+  // Return original URL if it's not a convertible YouTube URL
+  return inputUrl;
+};
+
+
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(4);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(4).fill(''));
@@ -111,8 +141,9 @@ export default function HomePage() {
     }
 
     setUserAcknowledgedWarning(false);
+    const processedUrls = activeUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
-    activeUrls.forEach(url => queryParams.append('urls', encodeURIComponent(url)));
+    processedUrls.forEach(url => queryParams.append('urls', encodeURIComponent(url)));
     router.push(`/view?${queryParams.toString()}`);
   };
   
