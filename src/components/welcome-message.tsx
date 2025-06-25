@@ -1,14 +1,18 @@
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import Image from 'next/image';
 
 export function WelcomeMessage() {
   return (
-    <Card className="mb-6 shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-3xl font-bold text-center text-primary">MultiViewer for Sports.</CardTitle>
-        <CardDescription className="text-center text-muted-foreground pt-2">
-          Pega los enlaces de las transmisiones que quieres ver a continuación. Configura la cantidad de vistas y ¡a disfrutar!
-        </CardDescription>
-      </CardHeader>
-    </Card>
+    <div className="w-full max-w-md">
+      <div className="flex justify-center">
+        <Image
+          src="https://i.ibb.co/BVLhxp2k/deportes-para-todos.png"
+          alt="Deportes Para Todos Logo"
+          width={400}
+          height={100}
+          data-ai-hint="logo"
+          priority
+        />
+      </div>
+    </div>
   );
 }

@@ -57,6 +57,7 @@ function ViewPageContent() {
               src={url}
               title={`Stream ${index + 1}`}
               className="w-full h-full border-0 aspect-video min-h-[150px]"
+              allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
             />
           </div>

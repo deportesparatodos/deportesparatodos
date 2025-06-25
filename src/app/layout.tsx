@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import { Geist, Geist_Mono } from 'next/font/google'; // Corrected import
 import './globals.css';
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({ // Corrected usage
 });
 
 export const metadata: Metadata = {
-  title: 'MultiViewer for Sports.', // Updated title
+  title: 'DEPORTES PARA TODOS', // Updated title
   description: 'Visualiza múltiples transmisiones deportivas simultáneamente.', 
 };
 
@@ -25,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
         {children}
         <Toaster />
       </body>
