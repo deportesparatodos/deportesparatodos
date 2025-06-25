@@ -123,13 +123,19 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     }
   };
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Ejecutar popunder solo al click
+    const script = document.createElement('script');
+    script.src = 'https://al5sm.com/tag.min.js';
+    script.setAttribute('data-zone', '9491500');
+    (document.body || document.documentElement).appendChild(script);
+    // Llamar la función original
     handleStartView();
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="w-full space-y-4">
+    <form onSubmit={handleSubmit} className="w-full space-y-4">
         <Select onValueChange={handleNumCamerasChange} value={numCameras.toString()}>
             <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleccionar cantidad de ventanas" />
