@@ -26,12 +26,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <head>
-        <script dangerouslySetInnerHTML={{
-          __html: `(function(s,u,z,p){s.src=u,s.setAttribute('data-zone',z),p.appendChild(s);})(document.createElement('script'),'https://al5sm.com/tag.min.js',9491500,document.body||document.documentElement)`
-        }} />
-        <script dangerouslySetInnerHTML={{
-          __html: `(function(d,z,s){s.src='https://'+d+'/400/'+z;try{(document.body||document.documentElement).appendChild(s)}catch(e){}})('vemtoutcheeg.com',9491632,document.createElement('script'))`
-        }} />
+        <script src="https://pertawee.net/act/files/tag.min.js?z=9492727" data-cfasync="false" async></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
         {children}
