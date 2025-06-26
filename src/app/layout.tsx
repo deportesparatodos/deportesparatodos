@@ -26,7 +26,6 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <head>
-        <script src="https://pertawee.net/act/files/tag.min.js?z=9492727" data-cfasync="false" async></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
         {children}
