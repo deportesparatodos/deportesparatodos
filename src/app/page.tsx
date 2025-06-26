@@ -178,7 +178,7 @@ export default function HomePage() {
                 {mobileView === 'canales' && <ChannelListComponent channelStatuses={channelStatuses} isLoading={isLoadingStatuses} />}
                 {mobileView === 'eventos' && (
                   <iframe
-                    src="https://agenda-dpt.vercel.app/"
+                    src="https://agendadeportiva-alpha.vercel.app/"
                     title="Agenda Deportiva"
                     className="w-full h-full border-0"
                     sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-clipboard-write"
