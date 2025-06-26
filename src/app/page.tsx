@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
 import { ChannelListComponent } from '@/components/channel-list';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const processUrlForView = (inputUrl: string): string => {
   if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
@@ -191,8 +192,31 @@ export default function HomePage() {
         
         <div className="w-full flex-grow flex flex-col relative">
           <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-          <div className="flex-grow flex flex-col items-center justify-center gap-8 px-4">
-             <WelcomeMessage />
+          <div className="flex-grow flex flex-col items-center justify-center gap-6 px-4">
+              <div className="flex flex-col items-center gap-2">
+                <WelcomeMessage />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="text-sm text-muted-foreground hover:text-foreground px-1 py-0 h-auto">Aviso Legal</Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Aviso Legal</DialogTitle>
+                    </DialogHeader>
+                    <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
+                      <p>
+                          DEPORTES PARA TODOS es un proveedor de servicios de Internet que ofrece una plataforma que solo muestra enlaces a contenidos audiovisuales ubicados en servidores de terceros y provistos y/o transmitidos por terceros. Nadie puede responsabilizar a DEPORTES PARA TODOS de alojar contenido con copyright, ya que nosotros no alojamos ningún contenido con derechos de autor ni tampoco transmitimos ningún contenido audiovisual. Por favor: Averigüe bien en qué sitio web están realmente alojados sus archivos o contenido audiovisual antes de culpar a DEPORTES PARA TODOS de infringir derechos de autor.
+                      </p>
+                      <p>
+                          Los enlaces que figuran en esta web han sido encontrados en diferentes webs de streaming online (ustream.tv, justin.tv, yukons.net, mips.tv, dinozap.tv, castalba.tv, sawlive.tv, entre otros...) y desconocemos si los mismos tienen contratos de cesión de derechos sobre estos partidos o eventos de pago para reproducirlos, alojarlos o permitir verlos. Todas las marcas aquí mencionadas y logos están registrados por sus legítimos propietarios y solamente se emplean en referencia a las mismas y con un fin de cita o comentario. No nos hacemos responsables del uso indebido que puedes hacer del contenido de nuestra página. Todo el contenido ha sido exclusivamente sacado de sitios públicos de Internet, por lo que este material es considerado de libre distribución. En ningún artículo legal se menciona la prohibición de material libre, por lo que esta página no infringe en ningún caso la ley. Si alguien tiene alguna duda o problema al respecto, no dude en ponerse en contacto con nosotros.
+                      </p>
+                      <p>
+                          En ningún caso o circunstancia se podrá responsabilizar directa o indirectamente al propietario ni a los colaboradores de DEPORTES PARA TODOS del ilícito uso de la información contenida en rojadirectaenvivo.pl. Asimismo, tampoco se nos podrá responsabilizar directa o indirectamente del incorrecto uso o mala interpretación que se haga de la información y servicios incluidos. Igualmente, quedará fuera de nuestra responsabilidad el material al que usted pueda acceder desde nuestros enlaces.
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
               <div className="w-full max-w-lg">
                 <CameraConfigurationComponent
                   numCameras={numCameras}
