@@ -1,5 +1,7 @@
 "use client";
 
+import React from 'react';
+
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -125,12 +127,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Ejecutar popunder solo al click
-    const script = document.createElement('script');
-    script.src = 'https://al5sm.com/tag.min.js';
-    script.setAttribute('data-zone', '9491500');
-    (document.body || document.documentElement).appendChild(script);
-    // Llamar la función original
+    // Solo llama a la función original, el script popunder va en el layout
     handleStartView();
   };
 
@@ -179,7 +176,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   type="url"
                   placeholder={isActive && displayStatus.status === 'empty' ? `URL Vista ${index + 1}` : ""}
                   value={cameraUrls[index] || ''}
-                  onChange={(e) => handleUrlChange(index, e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleUrlChange(index, e.target.value)}
                   onFocus={() => setFocusedInput(index)}
                   onBlur={() => setFocusedInput(null)}
                   className={cn(
