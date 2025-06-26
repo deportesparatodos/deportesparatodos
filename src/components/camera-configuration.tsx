@@ -8,7 +8,6 @@ import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide
 import { cn } from "@/lib/utils";
 import type { Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown';
 
@@ -268,29 +267,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
           </Button>
       </form>
-      <div className="text-center mt-4">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="link" className="text-sm text-muted-foreground hover:text-foreground px-1 py-0 h-auto">Aviso Legal</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-                <DialogTitle>Aviso Legal</DialogTitle>
-            </DialogHeader>
-            <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
-              <p>
-                  DEPORTES PARA TODOS es un proveedor de servicios de Internet que ofrece una plataforma que solo muestra enlaces a contenidos audiovisuales ubicados en servidores de terceros y provistos y/o transmitidos por terceros. Nadie puede responsabilizar a DEPORTES PARA TODOS de alojar contenido con copyright, ya que nosotros no alojamos ningún contenido con derechos de autor ni tampoco transmitimos ningún contenido audiovisual. Por favor: Averigüe bien en qué sitio web están realmente alojados sus archivos o contenido audiovisual antes de culpar a DEPORTES PARA TODOS de infringir derechos de autor.
-              </p>
-              <p>
-                  Los enlaces que figuran en esta web han sido encontrados en diferentes webs de streaming online (ustream.tv, justin.tv, yukons.net, mips.tv, dinozap.tv, castalba.tv, sawlive.tv, entre otros...) y desconocemos si los mismos tienen contratos de cesión de derechos sobre estos partidos o eventos de pago para reproducirlos, alojarlos o permitir verlos. Todas las marcas aquí mencionadas y logos están registrados por sus legítimos propietarios y solamente se emplean en referencia a las mismas y con un fin de cita o comentario. No nos hacemos responsables del uso indebido que puedes hacer del contenido de nuestra página. Todo el contenido ha sido exclusivamente sacado de sitios públicos de Internet, por lo que este material es considerado de libre distribución. En ningún artículo legal se menciona la prohibición de material libre, por lo que esta página no infringe en ningún caso la ley. Si alguien tiene alguna duda o problema al respecto, no dude en ponerse en contacto con nosotros.
-              </p>
-              <p>
-                  En ningún caso o circunstancia se podrá responsabilizar directa o indirectamente al propietario ni a los colaboradores de DEPORTES PARA TODOS del ilícito uso de la información contenida en rojadirectaenvivo.pl. Asimismo, tampoco se nos podrá responsabilizar directa o indirectamente del incorrecto uso o mala interpretación que se haga de la información y servicios incluidos. Igualmente, quedará fuera de nuestra responsabilidad el material al que usted pueda acceder desde nuestros enlaces.
-              </p>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
     </>
   );
 };
