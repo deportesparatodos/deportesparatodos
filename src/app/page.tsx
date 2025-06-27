@@ -52,6 +52,7 @@ export default function HomePage() {
   const router = useRouter();
   
   const [mobileView, setMobileView] = useState<'canales' | 'eventos'>('canales');
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
   const [isLoadingStatuses, setIsLoadingStatuses] = useState<boolean>(true);
@@ -155,9 +156,9 @@ export default function HomePage() {
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
         <div className="absolute top-4 left-4 z-20">
-          <Sheet>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="ghost" size="icon" className="text-white">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
