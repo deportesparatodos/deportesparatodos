@@ -189,7 +189,14 @@ export default function HomePage() {
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-full sm:w-96 flex flex-col p-0 gap-0" hideClose>
+            <SheetContent 
+              side="left" 
+              className="w-full sm:w-96 flex flex-col p-0 gap-0" 
+              hideClose
+              onInteractOutside={(e) => {
+                e.preventDefault();
+              }}
+            >
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <div className="border-b border-border">
                 <div className="flex items-center gap-2 p-4">
