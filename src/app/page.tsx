@@ -142,7 +142,7 @@ export default function HomePage() {
     }
 
     if (filledUrlCount < numCameras && !userAcknowledgedPartial) {
-        setMessage({ type: 'info', text: `Hay ${filledUrlCount} de ${numCameras} vistas con URL. Presiona "Iniciar Vista" otra vez para continuar solo con esas.` });
+        setMessage({ type: 'warning', text: `Hay ${filledUrlCount} de ${numCameras} vistas con URL. Presiona "Iniciar Vista" otra vez para continuar solo con esas.` });
         setUserAcknowledgedPartial(true);
         setUserAcknowledgedWarning(false);
         setUserAcknowledgedInactive(false);
