@@ -158,7 +158,7 @@ export default function HomePage() {
         <div className="absolute top-4 left-4 z-20">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white">
+              <Button size="icon" className="bg-white text-background hover:bg-white/90">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
