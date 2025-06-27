@@ -24,6 +24,7 @@ interface CameraConfigurationProps {
   setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
   setUserAcknowledgedWarning: Dispatch<SetStateAction<boolean>>;
   setUserAcknowledgedPartial: Dispatch<SetStateAction<boolean>>;
+  setUserAcknowledgedInactive: Dispatch<SetStateAction<boolean>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -39,6 +40,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setCameraStatuses,
   setUserAcknowledgedWarning,
   setUserAcknowledgedPartial,
+  setUserAcknowledgedInactive,
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
@@ -65,7 +67,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     
     const streamName = getStreamNameFromUrl(url);
     if (streamName && channelStatuses && channelStatuses[streamName] === 'offline') {
-        return { text: "CANAL INACTIVO", status: 'inactive' };
+        return { text: `CANAL INACTIVO (${streamName.toUpperCase()})`, status: 'inactive' };
     }
 
     const foundChannel = channels.find(channel => channel.url === url);
@@ -103,6 +105,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setMessage(null);
     setUserAcknowledgedWarning(false);
     setUserAcknowledgedPartial(false);
+    setUserAcknowledgedInactive(false);
   };
 
   const handleClearUrl = (index: number) => {
@@ -112,6 +115,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setMessage(null);
     setUserAcknowledgedWarning(false);
     setUserAcknowledgedPartial(false);
+    setUserAcknowledgedInactive(false);
   };
 
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
@@ -131,6 +135,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setMessage(null);
     setUserAcknowledgedWarning(false);
     setUserAcknowledgedPartial(false);
+    setUserAcknowledgedInactive(false);
   };
 
   const handlePasteUrl = async (index: number) => {

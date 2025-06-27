@@ -49,6 +49,7 @@ export default function HomePage() {
   const [message, setMessage] = useState<{type: 'error' | 'warning' | 'info', text: string} | null>(null);
   const [userAcknowledgedWarning, setUserAcknowledgedWarning] = useState<boolean>(false);
   const [userAcknowledgedPartial, setUserAcknowledgedPartial] = useState<boolean>(false);
+  const [userAcknowledgedInactive, setUserAcknowledgedInactive] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   
@@ -136,6 +137,7 @@ export default function HomePage() {
         setMessage({ type: 'error', text: `Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.` });
         setUserAcknowledgedPartial(false);
         setUserAcknowledgedWarning(false);
+        setUserAcknowledgedInactive(false);
         return;
     }
 
@@ -143,21 +145,30 @@ export default function HomePage() {
         setMessage({ type: 'info', text: `Hay ${filledUrlCount} de ${numCameras} vistas con URL. Presiona "Iniciar Vista" otra vez para continuar solo con esas.` });
         setUserAcknowledgedPartial(true);
         setUserAcknowledgedWarning(false);
+        setUserAcknowledgedInactive(false);
         return;
     }
 
     const statusesOfUrlsToActuallyUse = activeStatuses.filter((status, i) => activeUrls[i] && activeUrls[i].trim() !== '');
     
+    const hasInactiveChannels = statusesOfUrlsToActuallyUse.includes('inactive');
+    if (hasInactiveChannels && !userAcknowledgedInactive) {
+      setMessage({ type: 'warning', text: "Uno o más canales seleccionados están inactivos. Si desea continuar de todas formas presione 'Iniciar Vista'." });
+      setUserAcknowledgedInactive(true);
+      setUserAcknowledgedWarning(false);
+      return;
+    }
+    
     const hasUnknownUrls = statusesOfUrlsToActuallyUse.includes('unknown');
-
     if (hasUnknownUrls && !userAcknowledgedWarning) {
-      setMessage({ type: 'warning', text: "Hay un link o texto desconocido que puede no ser procesado, ¿desea seguir de todas formas?" });
+      setMessage({ type: 'warning', text: "Hay un link o texto desconocido que puede no ser procesado, si desea continuar de todas formas presione 'Iniciar Vista'." });
       setUserAcknowledgedWarning(true);
       return;
     }
 
     setUserAcknowledgedWarning(false);
     setUserAcknowledgedPartial(false);
+    setUserAcknowledgedInactive(false);
 
     const processedUrls = filledUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
@@ -242,6 +253,7 @@ export default function HomePage() {
                     setMessage(null);
                     setUserAcknowledgedWarning(false);
                     setUserAcknowledgedPartial(false);
+                    setUserAcknowledgedInactive(false);
                   }}
                   cameraUrls={cameraUrls}
                   setCameraUrls={setCameraUrls}
@@ -253,6 +265,7 @@ export default function HomePage() {
                   setCameraStatuses={setCameraStatuses}
                   setUserAcknowledgedWarning={setUserAcknowledgedWarning}
                   setUserAcknowledgedPartial={setUserAcknowledgedPartial}
+                  setUserAcknowledgedInactive={setUserAcknowledgedInactive}
                 />
               </div>
           </div>
