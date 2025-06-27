@@ -8,9 +8,8 @@ import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide
 import { cn } from "@/lib/utils";
 import type { Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-export type CameraStatus = 'empty' | 'valid' | 'unknown';
+export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -21,6 +20,7 @@ interface CameraConfigurationProps {
   setMessage: Dispatch<SetStateAction<{ type: 'error' | 'warning' | 'info'; text: string } | null>>;
   handleStartView: () => void;
   channels: Channel[];
+  channelStatuses: Record<string, 'online' | 'offline'>;
   setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
   setUserAcknowledgedWarning: Dispatch<SetStateAction<boolean>>;
   setUserAcknowledgedPartial: Dispatch<SetStateAction<boolean>>;
@@ -35,6 +35,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setMessage,
   handleStartView,
   channels,
+  channelStatuses,
   setCameraStatuses,
   setUserAcknowledgedWarning,
   setUserAcknowledgedPartial,
@@ -47,26 +48,35 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return { text: "VACIO", status: 'empty' };
     }
 
+    const getStreamNameFromUrl = (u: string): string | null => {
+        try {
+            const urlObject = new URL(u);
+            if (urlObject.hostname.includes('streamtpglobal.com')) {
+                return urlObject.searchParams.get('stream');
+            }
+        } catch (e) {
+            const match = u.match(/[?&]stream=([^&]+)/);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+        return null;
+    };
+    
+    const streamName = getStreamNameFromUrl(url);
+    if (streamName && channelStatuses && channelStatuses[streamName] === 'offline') {
+        return { text: "CANAL INACTIVO", status: 'inactive' };
+    }
+
     const foundChannel = channels.find(channel => channel.url === url);
     if (foundChannel) {
       return { text: foundChannel.name.toUpperCase(), status: 'valid' };
     }
     
-    try {
-      const urlObject = new URL(url);
-      const streamParam = urlObject.searchParams.get('stream');
-      if (streamParam) {
-        return { text: streamParam.toUpperCase(), status: 'valid' };
-      }
-    } catch (e) {
-      // Not a valid URL, try regex match for stream param
-      const match = url.match(/[?&]stream=([^&]+)/);
-      if (match && match[1]) {
-          return { text: match[1].toUpperCase(), status: 'valid' };
-      }
+    if(streamName) {
+        return { text: streamName.toUpperCase(), status: 'valid' };
     }
     
-    // Check if it's a known non-streamtpglobal but valid URL (like YouTube)
     if (url.includes('youtube.com/embed/')) {
         return { text: "YOUTUBE", status: 'valid' };
     }
@@ -79,7 +89,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         return getDisplayStatus(cameraUrls[index] || '').status;
     });
     setCameraStatuses(statuses);
-  }, [cameraUrls, numCameras, setCameraStatuses]);
+  }, [cameraUrls, numCameras, setCameraStatuses, channelStatuses]);
 
 
   const handleNumCamerasChange = (value: string) => {
@@ -192,12 +202,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     className={cn(
                       "w-full",
                       displayStatus.status === 'valid' && "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600",
-                      displayStatus.status === 'empty' && "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
+                      (displayStatus.status === 'empty' || displayStatus.status === 'inactive') && "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
                       displayStatus.status === 'unknown' && "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-700 focus:ring-yellow-500 dark:focus:ring-yellow-600",
                       isActive
                         ? {
                             'valid': "text-green-800 dark:text-green-300",
                             'empty': "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80",
+                            'inactive': "text-red-800 dark:text-red-300",
                             'unknown': "text-yellow-800 dark:text-yellow-300 placeholder-yellow-500 dark:placeholder-yellow-400/80",
                           }[displayStatus.status]
                         : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent"
@@ -211,6 +222,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         {
                           'valid': "bg-green-600 text-white",
                           'empty': "bg-destructive text-destructive-foreground",
+                          'inactive': "bg-destructive text-destructive-foreground",
                           'unknown': "bg-yellow-500 text-black",
                         }[displayStatus.status]
                       )}

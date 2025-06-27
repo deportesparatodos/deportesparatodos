@@ -61,7 +61,7 @@ export default function HomePage() {
   const topBarColorClass = useMemo(() => {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
     
-    if (activeStatuses.includes('empty')) {
+    if (activeStatuses.includes('empty') || activeStatuses.includes('inactive')) {
         return 'bg-red-500';
     }
     if (activeStatuses.some((s, i) => s === 'unknown' && cameraUrls[i])) {
@@ -249,6 +249,7 @@ export default function HomePage() {
                   setMessage={setMessage}
                   handleStartView={handleStartView}
                   channels={channels}
+                  channelStatuses={channelStatuses}
                   setCameraStatuses={setCameraStatuses}
                   setUserAcknowledgedWarning={setUserAcknowledgedWarning}
                   setUserAcknowledgedPartial={setUserAcknowledgedPartial}
