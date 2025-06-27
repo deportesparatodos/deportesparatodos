@@ -8,6 +8,7 @@ import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide
 import { cn } from "@/lib/utils";
 import type { Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown';
 
@@ -16,12 +17,13 @@ interface CameraConfigurationProps {
   setNumCameras: (num: number) => void;
   cameraUrls: string[];
   setCameraUrls: Dispatch<SetStateAction<string[]>>;
-  message: { type: 'error' | 'warning'; text: string } | null;
-  setMessage: Dispatch<SetStateAction<{ type: 'error' | 'warning'; text: string } | null>>;
+  message: { type: 'error' | 'warning' | 'info'; text: string } | null;
+  setMessage: Dispatch<SetStateAction<{ type: 'error' | 'warning' | 'info'; text: string } | null>>;
   handleStartView: () => void;
   channels: Channel[];
   setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
   setUserAcknowledgedWarning: Dispatch<SetStateAction<boolean>>;
+  setUserAcknowledgedPartial: Dispatch<SetStateAction<boolean>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -35,6 +37,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   channels,
   setCameraStatuses,
   setUserAcknowledgedWarning,
+  setUserAcknowledgedPartial,
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
@@ -89,6 +92,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setCameraUrls(newUrls);
     setMessage(null);
     setUserAcknowledgedWarning(false);
+    setUserAcknowledgedPartial(false);
   };
 
   const handleClearUrl = (index: number) => {
@@ -97,6 +101,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setCameraUrls(newUrls);
     setMessage(null);
     setUserAcknowledgedWarning(false);
+    setUserAcknowledgedPartial(false);
   };
 
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
@@ -115,6 +120,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setCameraUrls(newUrls);
     setMessage(null);
     setUserAcknowledgedWarning(false);
+    setUserAcknowledgedPartial(false);
   };
 
   const handlePasteUrl = async (index: number) => {
@@ -256,7 +262,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             <div className={cn(
               "flex items-center p-3 text-sm rounded-md border",
               message.type === 'error' && "bg-destructive/10 text-destructive border-destructive/30",
-              message.type === 'warning' && "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+              message.type === 'warning' && "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
+              message.type === 'info' && "bg-muted text-muted-foreground border-border"
             )}>
               <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
               <p>{message.text}</p>
