@@ -46,12 +46,15 @@ export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(4);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(4).fill(''));
   const [cameraStatuses, setCameraStatuses] = useState<CameraStatus[]>([]);
-  const [message, setMessage] = useState<{type: 'error' | 'warning', text: string} | null>(null);
+  const [message, setMessage] = useState<{type: 'error' | 'warning' | 'info', text: string} | null>(null);
   const [userAcknowledgedWarning, setUserAcknowledgedWarning] = useState<boolean>(false);
+  const [userAcknowledgedPartial, setUserAcknowledgedPartial] = useState<boolean>(false);
+  const [userAcknowledgedInactive, setUserAcknowledgedInactive] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   
   const [mobileView, setMobileView] = useState<'canales' | 'eventos'>('canales');
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
   const [isLoadingStatuses, setIsLoadingStatuses] = useState<boolean>(true);
@@ -59,17 +62,17 @@ export default function HomePage() {
   const topBarColorClass = useMemo(() => {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
     
-    if (activeStatuses.includes('empty')) {
+    if (activeStatuses.includes('empty') || activeStatuses.includes('inactive')) {
         return 'bg-red-500';
     }
-    if (activeStatuses.includes('unknown')) {
+    if (activeStatuses.some((s, i) => s === 'unknown' && cameraUrls[i])) {
       return 'bg-yellow-500';
     }
-    if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'valid')) {
+    if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'valid' || !cameraUrls[s.length])) {
       return 'bg-green-500';
     }
     return 'bg-red-500';
-  }, [cameraStatuses, numCameras]);
+  }, [cameraStatuses, numCameras, cameraUrls]);
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -126,23 +129,48 @@ export default function HomePage() {
     setMessage(null);
     const activeUrls = cameraUrls.slice(0, numCameras);
     const activeStatuses = cameraStatuses.slice(0, numCameras);
-    const hasEmptyUrls = activeStatuses.includes('empty');
-    const hasUnknownUrls = activeStatuses.includes('unknown');
+    
+    const filledUrls = activeUrls.filter(u => u && u.trim() !== '');
+    const filledUrlCount = filledUrls.length;
 
-    if (hasEmptyUrls) {
-      setMessage({ type: 'error', text: `Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.` });
+    if (filledUrlCount === 0) {
+        setMessage({ type: 'error', text: `Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.` });
+        setUserAcknowledgedPartial(false);
+        setUserAcknowledgedWarning(false);
+        setUserAcknowledgedInactive(false);
+        return;
+    }
+
+    if (filledUrlCount < numCameras && !userAcknowledgedPartial) {
+        setMessage({ type: 'warning', text: `Hay ${filledUrlCount} de ${numCameras} vistas con URL. Presiona "Iniciar Vista" otra vez para continuar solo con esas.` });
+        setUserAcknowledgedPartial(true);
+        setUserAcknowledgedWarning(false);
+        setUserAcknowledgedInactive(false);
+        return;
+    }
+
+    const statusesOfUrlsToActuallyUse = activeStatuses.filter((status, i) => activeUrls[i] && activeUrls[i].trim() !== '');
+    
+    const hasInactiveChannels = statusesOfUrlsToActuallyUse.includes('inactive');
+    if (hasInactiveChannels && !userAcknowledgedInactive) {
+      setMessage({ type: 'warning', text: "Uno o más canales seleccionados están inactivos. Si desea continuar de todas formas presione 'Iniciar Vista'." });
+      setUserAcknowledgedInactive(true);
       setUserAcknowledgedWarning(false);
       return;
     }
-
+    
+    const hasUnknownUrls = statusesOfUrlsToActuallyUse.includes('unknown');
     if (hasUnknownUrls && !userAcknowledgedWarning) {
-      setMessage({ type: 'warning', text: "Hay un link o texto desconocido que puede no ser procesado, desea seguir de todas formas?" });
+      setMessage({ type: 'warning', text: "Hay un link o texto desconocido que puede no ser procesado, si desea continuar de todas formas presione 'Iniciar Vista'." });
       setUserAcknowledgedWarning(true);
       return;
     }
 
     setUserAcknowledgedWarning(false);
-    const processedUrls = activeUrls.map(processUrlForView);
+    setUserAcknowledgedPartial(false);
+    setUserAcknowledgedInactive(false);
+
+    const processedUrls = filledUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
     processedUrls.forEach(url => queryParams.append('urls', encodeURIComponent(url)));
     router.push(`/view?${queryParams.toString()}`);
@@ -155,9 +183,9 @@ export default function HomePage() {
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
         <div className="absolute top-4 left-4 z-20">
-          <Sheet>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button size="icon" className="bg-white text-background hover:bg-white/90">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
@@ -190,9 +218,9 @@ export default function HomePage() {
           </Sheet>
         </div>
         
-        <div className="w-full flex-grow flex flex-col relative">
+        <div className="w-full flex-grow flex flex-col relative px-4">
           <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-          <div className="flex-grow flex flex-col items-center justify-center gap-6 px-4">
+          <div className="flex-grow flex flex-col items-center justify-center gap-6">
               <div className="flex flex-col items-center gap-2">
                 <WelcomeMessage />
                 <Dialog>
@@ -224,6 +252,8 @@ export default function HomePage() {
                     setNumCameras(num);
                     setMessage(null);
                     setUserAcknowledgedWarning(false);
+                    setUserAcknowledgedPartial(false);
+                    setUserAcknowledgedInactive(false);
                   }}
                   cameraUrls={cameraUrls}
                   setCameraUrls={setCameraUrls}
@@ -231,8 +261,11 @@ export default function HomePage() {
                   setMessage={setMessage}
                   handleStartView={handleStartView}
                   channels={channels}
+                  channelStatuses={channelStatuses}
                   setCameraStatuses={setCameraStatuses}
                   setUserAcknowledgedWarning={setUserAcknowledgedWarning}
+                  setUserAcknowledgedPartial={setUserAcknowledgedPartial}
+                  setUserAcknowledgedInactive={setUserAcknowledgedInactive}
                 />
               </div>
           </div>

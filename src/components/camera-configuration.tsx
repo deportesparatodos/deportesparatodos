@@ -9,19 +9,22 @@ import { cn } from "@/lib/utils";
 import type { Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export type CameraStatus = 'empty' | 'valid' | 'unknown';
+export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
 interface CameraConfigurationProps {
   numCameras: number;
   setNumCameras: (num: number) => void;
   cameraUrls: string[];
   setCameraUrls: Dispatch<SetStateAction<string[]>>;
-  message: { type: 'error' | 'warning'; text: string } | null;
-  setMessage: Dispatch<SetStateAction<{ type: 'error' | 'warning'; text: string } | null>>;
+  message: { type: 'error' | 'warning' | 'info'; text: string } | null;
+  setMessage: Dispatch<SetStateAction<{ type: 'error' | 'warning' | 'info'; text: string } | null>>;
   handleStartView: () => void;
   channels: Channel[];
+  channelStatuses: Record<string, 'online' | 'offline'>;
   setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
   setUserAcknowledgedWarning: Dispatch<SetStateAction<boolean>>;
+  setUserAcknowledgedPartial: Dispatch<SetStateAction<boolean>>;
+  setUserAcknowledgedInactive: Dispatch<SetStateAction<boolean>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -33,8 +36,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setMessage,
   handleStartView,
   channels,
+  channelStatuses,
   setCameraStatuses,
   setUserAcknowledgedWarning,
+  setUserAcknowledgedPartial,
+  setUserAcknowledgedInactive,
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
@@ -44,26 +50,35 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return { text: "VACIO", status: 'empty' };
     }
 
+    const getStreamNameFromUrl = (u: string): string | null => {
+        try {
+            const urlObject = new URL(u);
+            if (urlObject.hostname.includes('streamtpglobal.com')) {
+                return urlObject.searchParams.get('stream');
+            }
+        } catch (e) {
+            const match = u.match(/[?&]stream=([^&]+)/);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+        return null;
+    };
+    
+    const streamName = getStreamNameFromUrl(url);
+    if (streamName && channelStatuses && channelStatuses[streamName] === 'offline') {
+        return { text: `CANAL INACTIVO (${streamName.toUpperCase()})`, status: 'inactive' };
+    }
+
     const foundChannel = channels.find(channel => channel.url === url);
     if (foundChannel) {
       return { text: foundChannel.name.toUpperCase(), status: 'valid' };
     }
     
-    try {
-      const urlObject = new URL(url);
-      const streamParam = urlObject.searchParams.get('stream');
-      if (streamParam) {
-        return { text: streamParam.toUpperCase(), status: 'valid' };
-      }
-    } catch (e) {
-      // Not a valid URL, try regex match for stream param
-      const match = url.match(/[?&]stream=([^&]+)/);
-      if (match && match[1]) {
-          return { text: match[1].toUpperCase(), status: 'valid' };
-      }
+    if(streamName) {
+        return { text: streamName.toUpperCase(), status: 'valid' };
     }
     
-    // Check if it's a known non-streamtpglobal but valid URL (like YouTube)
     if (url.includes('youtube.com/embed/')) {
         return { text: "YOUTUBE", status: 'valid' };
     }
@@ -76,7 +91,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         return getDisplayStatus(cameraUrls[index] || '').status;
     });
     setCameraStatuses(statuses);
-  }, [cameraUrls, numCameras, setCameraStatuses]);
+  }, [cameraUrls, numCameras, setCameraStatuses, channelStatuses]);
 
 
   const handleNumCamerasChange = (value: string) => {
@@ -89,6 +104,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setCameraUrls(newUrls);
     setMessage(null);
     setUserAcknowledgedWarning(false);
+    setUserAcknowledgedPartial(false);
+    setUserAcknowledgedInactive(false);
   };
 
   const handleClearUrl = (index: number) => {
@@ -97,6 +114,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setCameraUrls(newUrls);
     setMessage(null);
     setUserAcknowledgedWarning(false);
+    setUserAcknowledgedPartial(false);
+    setUserAcknowledgedInactive(false);
   };
 
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
@@ -115,6 +134,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setCameraUrls(newUrls);
     setMessage(null);
     setUserAcknowledgedWarning(false);
+    setUserAcknowledgedPartial(false);
+    setUserAcknowledgedInactive(false);
   };
 
   const handlePasteUrl = async (index: number) => {
@@ -186,12 +207,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     className={cn(
                       "w-full",
                       displayStatus.status === 'valid' && "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600",
-                      displayStatus.status === 'empty' && "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
+                      (displayStatus.status === 'empty' || displayStatus.status === 'inactive') && "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
                       displayStatus.status === 'unknown' && "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-700 focus:ring-yellow-500 dark:focus:ring-yellow-600",
                       isActive
                         ? {
                             'valid': "text-green-800 dark:text-green-300",
                             'empty': "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80",
+                            'inactive': "text-red-800 dark:text-red-300",
                             'unknown': "text-yellow-800 dark:text-yellow-300 placeholder-yellow-500 dark:placeholder-yellow-400/80",
                           }[displayStatus.status]
                         : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent"
@@ -205,6 +227,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         {
                           'valid': "bg-green-600 text-white",
                           'empty': "bg-destructive text-destructive-foreground",
+                          'inactive': "bg-destructive text-destructive-foreground",
                           'unknown': "bg-yellow-500 text-black",
                         }[displayStatus.status]
                       )}
@@ -256,7 +279,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             <div className={cn(
               "flex items-center p-3 text-sm rounded-md border",
               message.type === 'error' && "bg-destructive/10 text-destructive border-destructive/30",
-              message.type === 'warning' && "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+              message.type === 'warning' && "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
+              message.type === 'info' && "bg-muted text-muted-foreground border-border"
             )}>
               <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
               <p>{message.text}</p>
