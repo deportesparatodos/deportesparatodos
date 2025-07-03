@@ -266,6 +266,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'claroperupoc.vtexassets.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   typescript: {
