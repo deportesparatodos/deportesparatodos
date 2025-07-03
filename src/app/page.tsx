@@ -13,8 +13,9 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/s
 import { Separator } from '@/components/ui/separator';
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Menu, X, Settings, HelpCircle, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { fromZonedTime } from 'date-fns-tz';
 import { addHours, isAfter } from 'date-fns';
@@ -74,6 +75,7 @@ export default function HomePage() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const [gridGap, setGridGap] = useState<number>(4);
+  const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [currentTutorialSlide, setCurrentTutorialSlide] = useState(0);
 
 
@@ -204,6 +206,10 @@ export default function HomePage() {
     if (storedGap) {
       setGridGap(parseInt(storedGap, 10));
     }
+    const storedBorderColor = localStorage.getItem('borderColor');
+    if (storedBorderColor) {
+      setBorderColor(storedBorderColor);
+    }
   }, []);
 
   useEffect(() => {
@@ -219,6 +225,20 @@ export default function HomePage() {
     localStorage.setItem('gridGap', newGap.toString());
   };
 
+  const handleBorderColorChange = (color: string) => {
+    setBorderColor(color);
+    localStorage.setItem('borderColor', color);
+  };
+  
+  const handleRestoreDefaults = () => {
+    const defaultGap = 0;
+    const defaultColor = '#18181b'; 
+    setGridGap(defaultGap);
+    setBorderColor(defaultColor);
+    localStorage.setItem('gridGap', defaultGap.toString());
+    localStorage.setItem('borderColor', defaultColor);
+  };
+
   const nextTutorialSlide = () => {
     setCurrentTutorialSlide((prev) => (prev === TUTORIAL_IMAGES.length - 1 ? 0 : prev + 1));
   };
@@ -232,7 +252,7 @@ export default function HomePage() {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
     const filledUrls = activeUrls.filter((u) => u && u.trim() !== "");
   
-    setMessages([]); // Clear previous messages
+    setMessages([]); 
   
     const warningMessages: string[] = [];
     let emptyViewCount = 0;
@@ -289,6 +309,7 @@ export default function HomePage() {
     const queryParams = new URLSearchParams();
     processedUrls.forEach((url) => queryParams.append("urls", encodeURIComponent(url)));
     queryParams.append("gap", gridGap.toString());
+    queryParams.append("borderColor", encodeURIComponent(borderColor));
     router.push(`/view?${queryParams.toString()}`);
   };
   
@@ -333,29 +354,57 @@ export default function HomePage() {
                   <DialogHeader>
                     <DialogTitle>Configuración de la Vista</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4 pt-4">
-                    <Label htmlFor="grid-gap-slider">Margen entre ventanas ({gridGap}px)</Label>
-                    <Slider
-                      id="grid-gap-slider"
-                      min={0}
-                      max={32}
-                      step={1}
-                      value={[gridGap]}
-                      onValueChange={handleGridGapChange}
-                    />
-                    <div className="mt-4 space-y-2">
-                       <Label>Vista Previa</Label>
-                       <div 
-                         className="grid h-48 grid-cols-2 grid-rows-2 rounded-md bg-muted p-2 transition-all"
-                         style={{ gap: `${gridGap}px` }}
-                       >
-                         <div className="rounded-md bg-background" />
-                         <div className="rounded-md bg-background" />
-                         <div className="rounded-md bg-background" />
-                         <div className="rounded-md bg-background" />
-                       </div>
+                  <div className="space-y-6 pt-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
+                        <Slider
+                            id="grid-gap-slider"
+                            min={0}
+                            max={32}
+                            step={1}
+                            value={[gridGap]}
+                            onValueChange={handleGridGapChange}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="border-color-input">Color de Bordes</Label>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                id="border-color-input"
+                                value={borderColor}
+                                onChange={(e) => handleBorderColorChange(e.target.value)}
+                                className="flex-grow"
+                            />
+                            <div
+                                className="h-8 w-8 rounded-md border border-input"
+                                style={{ backgroundColor: borderColor }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Vista Previa</Label>
+                        <div
+                            className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all"
+                            style={{
+                                gap: `${gridGap}px`,
+                                padding: `${gridGap}px`,
+                                backgroundColor: borderColor,
+                            }}
+                        >
+                            <div className="rounded-md bg-background" />
+                            <div className="rounded-md bg-background" />
+                            <div className="rounded-md bg-background" />
+                            <div className="rounded-md bg-background" />
+                        </div>
                     </div>
                   </div>
+                  <DialogFooter className="pt-4">
+                    <Button variant="outline" onClick={handleRestoreDefaults}>
+                        Restaurar
+                    </Button>
+                  </DialogFooter>
                 </DialogContent>
               </Dialog>
 
@@ -459,5 +508,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

@@ -12,6 +12,8 @@ function ViewPageContent() {
   const urls: string[] = searchParams.getAll('urls').map((url: string) => decodeURIComponent(url));
   const gapParam = searchParams.get('gap');
   const gap = gapParam ? parseInt(gapParam, 10) : 0;
+  const borderColorParam = searchParams.get('borderColor');
+  const borderColor = borderColorParam ? decodeURIComponent(borderColorParam) : '#18181b';
 
   if (urls.length === 0) {
     return (
@@ -47,7 +49,14 @@ function ViewPageContent() {
         <X className="h-6 w-6" />
       </Link>
       
-      <main className={gridContainerClasses} style={{ gap: `${gap}px` }}>
+      <main 
+        className={gridContainerClasses} 
+        style={{ 
+          gap: `${gap}px`,
+          padding: `${gap}px`,
+          backgroundColor: borderColor
+        }}
+      >
         {urls.map((url: string, index: number) => (
           <div
             key={index}
@@ -86,5 +95,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    
