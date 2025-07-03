@@ -75,6 +75,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return { text: foundChannel.name.toUpperCase(), status: 'valid' };
     }
     
+    if (url.includes('ksdjugfsddeports.fun')) {
+      return { text: 'STREAM VÁLIDO', status: 'valid' };
+    }
+
     if(streamName) {
         return { text: streamName.toUpperCase(), status: 'valid' };
     }

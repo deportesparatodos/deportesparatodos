@@ -27,12 +27,12 @@ const channelsData: Channel[] = [
     { name: 'AZTECA 7', url: 'https://elcanaldeportivo.com/azteca7.php', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Logo_Azteca_7_2011.svg/1930px-Logo_Azteca_7_2011.svg.png' },
     { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Adult_Swim_2003_logo.svg/2560px-Adult_Swim_2003_logo.svg.png' },
     { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg' },
-    { name: 'Azteca Deportes MX', url: 'https://streamtpglobal.com/global1.php?stream=azteca_deportes', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aztecadeporteslogo.png/500px-Aztecadeporteslogo.png' },
+    { name: 'Azteca Deportes', url: 'https://streamtpglobal.com/global1.php?stream=azteca_deportes', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aztecadeporteslogo.png/500px-Aztecadeporteslogo.png' },
     { name: 'C5N', url: 'https://www.youtube.com/embed/jTDk5CswBVk?si=1j2k7zbPW2d1wPRs', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/C5N_Logo_2015.PNG/640px-C5N_Logo_2015.PNG' },
     { name: 'CRONICA', url: 'https://www.youtube.com/embed/avly0uwZzOE?si=QoqQYotYxpJxAZyO', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Crónica_TV_logotipo_%282016%29.png' },
     { name: 'Caliente TV', url: 'https://streamtpglobal.com/global1.php?stream=calientetvmx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Caliente_TV_Logo.png' },
     { name: 'Canal 11 PT', url: 'https://streamtpglobal.com/global1.php?stream=canal11_pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Logo_Canal_11_FPF.svg/1053px-Logo_Canal_11_FPF.svg.png' },
-    { name: 'Canal 5 MX', url: 'https://streamtpglobal.com/global1.php?stream=canal5mx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Canal_5_Mexico_logo_2014.svg' },
+    { name: 'Canal 5', url: 'https://streamtpglobal.com/global1.php?stream=canal5mx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Canal_5_Mexico_logo_2014.svg' },
     { name: 'Caracol TV', url: 'https://streamtpglobal.com/global1.php?stream=caracoltv', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/65/Logotipo_de_Caracol_Televisi%C3%B3n_Corporativo.png' },
     { name: 'Comedy Central', url: 'https://tvlibreonline.org/html/fl/?get=Q29tZWR5Q2VudHJhbA', logoUrl: 'https://1000marcas.net/wp-content/uploads/2022/01/Comedy-Central-Productions-Logo.png' },
     { name: 'DAZN 1 ES', url: 'https://streamtpglobal.com/global1.php?stream=dazn1', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/DAZN_1_Logo.svg' },
@@ -42,9 +42,9 @@ const channelsData: Channel[] = [
     { name: 'DIRECTV SPORTS', url: 'https://streamtpglobal.com/global1.php?stream=dsports', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5a/DSports.png' },
     { name: 'DIRECTV SPORTS +', url: 'https://streamtpglobal.com/global1.php?stream=dsportsplus', logoUrl: 'https://d18o29lhcg4kda.cloudfront.net/fit-in/360x270/Y2gwMTAwMDAwMDAwMTM5X2xpbmVhcl9jaGFubmVsX3NzbGE_11002_LOGO_360x270.png?timestamp=1750317237946' },
     { name: 'DIRECTV SPORTS 2', url: 'https://streamtpglobal.com/global1.php?stream=dsports2', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/83/DSports2.png' },
-    { name: 'ESPN 1', url: 'https://streamtpglobal.com/global1.php?stream=espn', logoUrl: 'https://themenschonabench.com/wp-content/uploads/2014/05/ESPN-Logo.png' },
-    { name: 'ESPN 1 BR', url: 'https://streamtpglobal.com/global1.php?stream=espn1br', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/77/Logo_espnbrasil.png' },
-    { name: 'ESPN 1 NL', url: 'https://streamtpglobal.com/global1.php?stream=espn_nl1', logoUrl: 'https://r2.thesportsdb.com/images/media/channel/logo/wc8dnt1660760493.png' },
+    { name: 'ESPN', url: 'https://streamtpglobal.com/global1.php?stream=espn', logoUrl: 'https://themenschonabench.com/wp-content/uploads/2014/05/ESPN-Logo.png' },
+    { name: 'ESPN BR', url: 'https://streamtpglobal.com/global1.php?stream=espn1br', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/77/Logo_espnbrasil.png' },
+    { name: 'ESPN NL', url: 'https://streamtpglobal.com/global1.php?stream=espn_nl1', logoUrl: 'https://r2.thesportsdb.com/images/media/channel/logo/wc8dnt1660760493.png' },
     { name: 'ESPN 2', url: 'https://streamtpglobal.com/global1.php?stream=espn2', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/ESPN2_logo.svg/1280px-ESPN2_logo.svg.png' },
     { name: 'ESPN 2 BR', url: 'https://streamtpglobal.com/global1.php?stream=espn2br', logoUrl: 'https://r2.thesportsdb.com/images/media/channel/logo/b0n0mh1660763068.png' },
     { name: 'ESPN 2 MX', url: 'https://streamtpglobal.com/global1.php?stream=espn2mx', logoUrl: 'https://r2.thesportsdb.com/images/media/channel/logo/f6gq9s1660760610.png' },
@@ -61,7 +61,7 @@ const channelsData: Channel[] = [
     { name: 'ESPN ARGENTINA', url: 'https://streamtpglobal.com/global1.php?stream=eventos8', logoUrl: 'https://a1.espncdn.com/combiner/i?img=%2Fi%2Fespn%2Fespn_logos%2Fespn_red.png' },
     { name: 'ESPN Deportes USA', url: 'https://streamtpglobal.com/global1.php?stream=espndeportes', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/ESPN_Deportes.svg/1200px-ESPN_Deportes.svg.png' },
     { name: 'ESPN MX', url: 'https://streamtpglobal.com/global1.php?stream=espnmx', logoUrl: 'https://r2.thesportsdb.com/images/media/channel/logo/fysmne1660760631.png' },
-    { name: 'ESPN Premium Argentina', url: 'https://streamtpglobal.com/global1.php?stream=espnpremium', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/ESPN_Premium_logo.svg' },
+    { name: 'ESPN Premium', url: 'https://streamtpglobal.com/global1.php?stream=espnpremium', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/ESPN_Premium_logo.svg' },
     { name: 'El canal del Futbol', url: 'https://elcanaldeportivo.com/ecfutbol.php', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQIkdi0tMnj4tej1cemfhhYuzT6woZTrTIQw&s' },
     { name: 'Eleven Sports 1 PT', url: 'https://streamtpglobal.com/global1.php?stream=eleven1_pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/49/Eleven_Sports.png' },
     { name: 'Eleven Sports 2 PT', url: 'https://streamtpglobal.com/global1.php?stream=eleven2_pt', logoUrl: 'https://tvprofil.com/img/kanali-logo/Eleven_Sports_2_PL_logo.png?1609415475' },
@@ -74,15 +74,15 @@ const channelsData: Channel[] = [
     { name: 'FLOW 1', url: 'https://play.alangulotv.cloud/?channel=flow1', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Flow_2021.jpg' },
     { name: 'FLOW 2', url: 'https://play.alangulotv.cloud/?channel=flow2', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Flow_2021.jpg' },
     { name: 'Flow Music', url: 'https://tvlibreonline.org/html/fl/?get=Rmxvd19NdXNpY19YUA==', logoUrl: 'https://pbs.twimg.com/profile_images/1445057259780837378/kpDGDIyl_400x400.png' },
-    { name: 'Fox Deportes TUBI', url: 'https://streamtpglobal.com/global1.php?stream=tubitv1', logoUrl: 'https://assets.goal.com/images/v3/blt38c232d013be3b9f/unnamed.jpg' },
-    { name: 'Fox Deportes USA', url: 'https://streamtpglobal.com/global1.php?stream=fox_deportes_usa', logoUrl: 'https://yt3.googleusercontent.com/ytc/AIdro_kRD_CzEE876U_cVjUDaMF-hFzDQB906eoYWLq1JT0u99Q=s900-c-k-c0x00ffffff-no-rj' },
-    { name: 'Fox Sports 1 (Argentina)', url: 'https://streamtpglobal.com/global1.php?stream=fox1ar', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
-    { name: 'Fox Sports 1 MX', url: 'https://streamtpglobal.com/global1.php?stream=foxsportsmx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
-    { name: 'Fox Sports 1 USA', url: 'https://streamtpglobal.com/global1.php?stream=fox_1_usa', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
-    { name: 'Fox Sports 2 (Argentina)', url: 'https://streamtpglobal.com/global1.php?stream=fox2ar', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Fox_Sports_2_Argentina_2023.svg/1200px-Fox_Sports_2_Argentina_2023.svg.png' },
+    { name: 'Fox Deportes', url: 'https://streamtpglobal.com/global1.php?stream=tubitv1', logoUrl: 'https://assets.goal.com/images/v3/blt38c232d013be3b9f/unnamed.jpg' },
+    { name: 'Fox Deportes', url: 'https://streamtpglobal.com/global1.php?stream=fox_deportes_usa', logoUrl: 'https://yt3.googleusercontent.com/ytc/AIdro_kRD_CzEE876U_cVjUDaMF-hFzDQB906eoYWLq1JT0u99Q=s900-c-k-c0x00ffffff-no-rj' },
+    { name: 'Fox Sports', url: 'https://streamtpglobal.com/global1.php?stream=fox1ar', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
+    { name: 'Fox Sports MX', url: 'https://streamtpglobal.com/global1.php?stream=foxsportsmx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
+    { name: 'Fox Sports USA', url: 'https://streamtpglobal.com/global1.php?stream=fox_1_usa', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
+    { name: 'Fox Sports 2', url: 'https://streamtpglobal.com/global1.php?stream=fox2ar', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Fox_Sports_2_Argentina_2023.svg/1200px-Fox_Sports_2_Argentina_2023.svg.png' },
     { name: 'Fox Sports 2 MX', url: 'https://streamtpglobal.com/global1.php?stream=foxsports2mx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Fox_Sports_2_Argentina_2023.svg/1200px-Fox_Sports_2_Argentina_2023.svg.png' },
     { name: 'Fox Sports 2 USA', url: 'https://streamtpglobal.com/global1.php?stream=fox_2_usa', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Fox_Sports_2_Argentina_2023.svg/1200px-Fox_Sports_2_Argentina_2023.svg.png' },
-    { name: 'Fox Sports 3 (Argentina)', url: 'https://streamtpglobal.com/global1.php?stream=fox3ar', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Fox_Sports_3_Argentina_2023.svg/800px-Fox_Sports_3_Argentina_2023.svg.png' },
+    { name: 'Fox Sports 3', url: 'https://streamtpglobal.com/global1.php?stream=fox3ar', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Fox_Sports_3_Argentina_2023.svg/800px-Fox_Sports_3_Argentina_2023.svg.png' },
     { name: 'Fox Sports 3 MX', url: 'https://streamtpglobal.com/global1.php?stream=foxsports3mx', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Fox_Sports_3_Argentina_2023.svg/800px-Fox_Sports_3_Argentina_2023.svg.png' },
     { name: 'Fox Sports Premium', url: 'https://streamtpglobal.com/global1.php?stream=foxsportspremium', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Fox_Sports_Premium_Argentina_2020.png' },
     { name: 'Garage TV', url: 'https://tvlibreonline.org/html/fl/?get=RWxfR2FyYWdl', logoUrl: 'https://elgarage.com/wp-content/uploads/2021/04/elgaragetv_WEB.png' },
@@ -94,7 +94,7 @@ const channelsData: Channel[] = [
     { name: 'Gran Hermano CAM 24H', url: 'https://streamtpglobal.com/global1.php?stream=granhermanocamara24horas', logoUrl: 'https://www.cronica.com.ar/__export/1727795734333/sites/cronica/img/2024/10/01/whatsapp_image_2024-10-01_at_11.png_1480801792.png' },
     { name: 'Gran Hermano MultiCAM', url: 'https://streamtpglobal.com/global1.php?stream=granhermanomulticam', logoUrl: 'https://www.cronica.com.ar/__export/1727795734333/sites/cronica/img/2024/10/01/whatsapp_image_2024-10-01_at_11.png_1480801792.png' },
     { name: 'HI! Sports MX', url: 'https://streamtpglobal.com/global1.php?stream=hisports', logoUrl: 'https://yt3.googleusercontent.com/Fjgx6A157keMvkL44bXj2IATT2c8oBvP0UzL4KKKuZYtDB0tx0rUYxwyIjloNch-yzqJd3KhSw=s900-c-k-c0x00ffffff-no-rj' },
-    { name: 'History 1', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeUhE', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
+    { name: 'History', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeUhE', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
     { name: 'History 2', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeV8y', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_h2_m.png' },
     { name: 'LN+', url: 'https://www.youtube.com/embed/OR9MH16MKrg?si=DIfW0Kw81r6pmy3s', logoUrl: 'https://resizer.glanacion.com/resizer/v2/logo-NXKF436PYFDRLJJB77LJU7JVQA.png?auth=488ab06bdc404368ff6d748c0a6349c1766ffb7e6650a305e2f3f8cc5043ac3d&width=161&quality=70&smart=false' },
     { name: 'LaLiga Hypermotion', url: 'https://streamtpglobal.com/global1.php?stream=laligahypermotion', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/LaLiga_TV_Hypermotion_2023_Logo.svg/1200px-LaLiga_TV_Hypermotion_2023_Logo.svg.png' },
@@ -110,13 +110,13 @@ const channelsData: Channel[] = [
     { name: 'SSC EXTRA 1', url: 'https://elcanaldeportivo.com/sscextra1.php', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/SSC_TV_logo.svg/1200px-SSC_TV_logo.svg.png' },
     { name: 'SSC EXTRA 2', url: 'https://elcanaldeportivo.com/sscextra2.php', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/SSC_TV_logo.svg/1200px-SSC_TV_logo.svg.png' },
     { name: 'SSC NEWS', url: 'https://elcanaldeportivo.com/sscnews.php', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/SSC_TV_logo.svg/1200px-SSC_TV_logo.svg.png' },
-    { name: 'Sky Sports Bundesliga 1', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga1', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
-    { name: 'Sky Sports Bundesliga 2', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga2', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
-    { name: 'Sky Sports Bundesliga 3', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga3', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
-    { name: 'Sky Sports Bundesliga 4', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga4', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
-    { name: 'Sky Sports Bundesliga 5', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga5', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
-    { name: 'Sport TV 1 BR', url: 'https://streamtpglobal.com/global1.php?stream=sporttvbr1', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
-    { name: 'Sport TV 1 PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv_1pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
+    { name: 'Sky Sports Bundesliga', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga1', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
+    { name: 'Sky Sports Bundesliga', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga2', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
+    { name: 'Sky Sports Bundesliga', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga3', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
+    { name: 'Sky Sports Bundesliga', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga4', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
+    { name: 'Sky Sports Bundesliga', url: 'https://streamtpglobal.com/global1.php?stream=sky_bundesliga5', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
+    { name: 'Sport TV BR', url: 'https://streamtpglobal.com/global1.php?stream=sporttvbr1', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
+    { name: 'Sport TV PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv_1pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 2 BR', url: 'https://streamtpglobal.com/global1.php?stream=sporttvbr2', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 2 PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv_2pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 3 BR', url: 'https://streamtpglobal.com/global1.php?stream=sporttvbr3', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
@@ -127,12 +127,12 @@ const channelsData: Channel[] = [
     { name: 'TLC', url: 'https://tvlibreonline.org/html/fl/?get=VExD', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/TLC_logo_%282023%29.svg' },
     { name: 'TN', url: 'https://www.youtube.com/embed/cb12KmMMDJA?si=CsUytnnQFJxMs8fL', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TN_todo_noticias_logo.svg/1200px-TN_todo_noticias_logo.svg.png' },
     { name: 'TNT', url: 'https://tvlibreonline.org/html/fl/?get=VE5UX0hEX0FyZw==', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
-    { name: 'TNT 1 GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_1_gb', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
+    { name: 'TNT GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_1_gb', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'TNT 2 GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_2_gb', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'TNT UK 2', url: 'https://alangulotv2.com/?channel=tntuk2', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg'},
     { name: 'TNT 3 GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_3_gb', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'TNT 4 GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_4_gb', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
-    { name: 'TNT Sports Argentina', url: 'https://streamtpglobal.com/global1.php?stream=tntsports', logoUrl: 'https://yt3.googleusercontent.com/nv5OCOIRHGSuTpTqhUrSJlfgZkBxicFbTY_8uXsjLMNrsZ7-TmJSFIvBJdhpxRTOky9kDvRuXJU=s900-c-k-c0x00ffffff-no-rj' },
+    { name: 'TNT Sports', url: 'https://streamtpglobal.com/global1.php?stream=tntsports', logoUrl: 'https://yt3.googleusercontent.com/nv5OCOIRHGSuTpTqhUrSJlfgZkBxicFbTY_8uXsjLMNrsZ7-TmJSFIvBJdhpxRTOky9kDvRuXJU=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'TNT Sports Chile', url: 'https://streamtpglobal.com/global1.php?stream=tntsportschile', logoUrl: 'https://yt3.googleusercontent.com/nv5OCOIRHGSuTpTqhUrSJlfgZkBxicFbTY_8uXsjLMNrsZ7-TmJSFIvBJdhpxRTOky9kDvRuXJU=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'TSN 1', url: 'https://streamtpglobal.com/global1.php?stream=tsn1', logoUrl: 'https://play-lh.googleusercontent.com/Wfh4tn-kWAGTUIMxVgyZ1g2BEHrdDtjyXwUdqJLwX6w640Lc3DJoLoZqoCSEbYWpTw' },
     { name: 'TSN 2', url: 'https://streamtpglobal.com/global1.php?stream=tsn2', logoUrl: 'https://play-lh.googleusercontent.com/Wfh4tn-kWAGTUIMxVgyZ1g2BEHrdDtjyXwUdqJLwX6w640Lc3DJoLoZqoCSEbYWpTw' },
@@ -140,8 +140,8 @@ const channelsData: Channel[] = [
     { name: 'TSN 4', url: 'https://streamtpglobal.com/global1.php?stream=tsn4', logoUrl: 'https://play-lh.googleusercontent.com/Wfh4tn-kWAGTUIMxVgyZ1g2BEHrdDtjyXwUdqJLwX6w640Lc3DJoLoZqoCSEbYWpTw' },
     { name: 'TSN 5', url: 'https://streamtpglobal.com/global1.php?stream=tsn5', logoUrl: 'https://play-lh.googleusercontent.com/Wfh4tn-kWAGTUIMxVgyZ1g2BEHrdDtjyXwUdqJLwX6w640Lc3DJoLoZqoCSEbYWpTw' },
     { name: 'TV Pública', url: 'https://streamtpglobal.com/global1.php?stream=tv_publica', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg/1200px-TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg.png' },
-    { name: 'TVC Deportes MX', url: 'https://streamtpglobal.com/global1.php?stream=tvc_deportes', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Tvc_2003.png' },
-    { name: 'TUDN MX', url: 'https://streamtpglobal.com/global1.php?stream=TUDNMX', logoUrl: 'https://corporate.univision.com/newco/wp-content/uploads/2019/05/TUDN_LOGO_COLOR.png' },
+    { name: 'TVC Deportes', url: 'https://streamtpglobal.com/global1.php?stream=tvc_deportes', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Tvc_2003.png' },
+    { name: 'TUDN', url: 'https://streamtpglobal.com/global1.php?stream=TUDNMX', logoUrl: 'https://corporate.univision.com/newco/wp-content/uploads/2019/05/TUDN_LOGO_COLOR.png' },
     { name: 'TUDN USA', url: 'https://streamtpglobal.com/global1.php?stream=tudn_usa', logoUrl: 'https://corporate.univision.com/newco/wp-content/uploads/2019/05/TUDN_LOGO_COLOR.png' },
     { name: 'Telefe', url: 'https://streamtpglobal.com/global1.php?stream=telefe', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/cc/Telefe_%28nuevo_logo%29.png' },
     { name: 'Telemundo', url: 'https://tvlibreonline.org/html/fl/?get=VGVsZW11bmRvX0hE', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/68/Telemundo_logo_2018.svg' },
@@ -150,24 +150,24 @@ const channelsData: Channel[] = [
     { name: 'TyC Sports Internacional', url: 'https://streamtpglobal.com/global1.php?stream=tycinternacional', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
     { name: 'USA Network', url: 'https://streamtpglobal.com/global1.php?stream=usa_network', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/USA_Network_logo_%282016%29.svg' },
     { name: 'Universo USA', url: 'https://streamtpglobal.com/global1.php?stream=universo_usa', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Universo_2017.svg' },
-    { name: 'Univisíon USA', url: 'https://streamtpglobal.com/global1.php?stream=univision_usa', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Logo_Univision_2019.svg' },
+    { name: 'Univisíon', url: 'https://streamtpglobal.com/global1.php?stream=univision_usa', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Logo_Univision_2019.svg' },
     { name: 'VTV +', url: 'https://streamtpglobal.com/global1.php?stream=vtvplus', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/16/Logo_VTV_nuevo.png' },
     { name: 'Vamos ES', url: 'https://streamtpglobal.com/global1.php?stream=vamoses', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Vamos_por_Movistar_Plus%2B_2023_Logo.svg/800px-Vamos_por_Movistar_Plus%2B_2023_Logo.svg.png' },
-    { name: 'Win Play +', url: 'https://streamtpglobal.com/global1.php?stream=winplusonline1', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
+    { name: 'Win Sports', url: 'https://streamtpglobal.com/global1.php?stream=winplusonline1', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
     { name: 'Win Sports', url: 'https://streamtpglobal.com/global1.php?stream=winsports', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
     { name: 'Win Sports +', url: 'https://streamtpglobal.com/global1.php?stream=winplus', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
     { name: 'Win Sports +', url: 'https://streamtpglobal.com/global1.php?stream=winplus2', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
     { name: 'TUDN', url: 'https://embed.ksdjugfsddeports.fun/embed/tudn.html', logoUrl: 'https://corporate.univision.com/newco/wp-content/uploads/2019/05/TUDN_LOGO_COLOR.png' },
     { name: 'GolPeru', url: 'https://embed.ksdjugfsddeports.fun/embed/golperu.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQU5NdVG4od9akIwHShMdl92aQzAqGS_V95vA&s' },
     { name: 'TNT Sports', url: 'https://embed.ksdjugfsddeports.fun/embed/tntsports.html', logoUrl: 'https://yt3.googleusercontent.com/nv5OCOIRHGSuTpTqhUrSJlfgZkBxicFbTY_8uXsjLMNrsZ7-TmJSFIvBJdhpxRTOky9kDvRuXJU=s900-c-k-c0x00ffffff-no-rj' },
-    { name: 'ESPN Premium Latinoamerica', url: 'https://embed.ksdjugfsddeports.fun/embed/espnpremium.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/ESPN_Premium_logo.svg' },
-    { name: 'ESPN Premium Argentina', url: 'https://embed.ksdjugfsddeports.fun/embed/espnpremiumargentina.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/ESPN_Premium_logo.svg' },
+    { name: 'ESPN Premium', url: 'https://embed.ksdjugfsddeports.fun/embed/espnpremium.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/ESPN_Premium_logo.svg' },
+    { name: 'ESPN Premium', url: 'https://embed.ksdjugfsddeports.fun/embed/espnpremiumargentina.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/ESPN_Premium_logo.svg' },
     { name: 'TyC Sports', url: 'https://embed.ksdjugfsddeports.fun/embed/tycsports.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
     { name: 'Fox Sports', url: 'https://embed.ksdjugfsddeports.fun/embed/foxsports.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
     { name: 'Fox Sports 2', url: 'https://embed.ksdjugfsddeports.fun/embed/foxsports2.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Fox_Sports_2_Argentina_2023.svg/1200px-Fox_Sports_2_Argentina_2023.svg.png' },
     { name: 'Fox Sports 3', url: 'https://embed.ksdjugfsddeports.fun/embed/foxsports3.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Fox_Sports_3_Argentina_2023.svg/800px-Fox_Sports_3_Argentina_2023.svg.png' },
     { name: 'Fox Deportes', url: 'https://embed.ksdjugfsddeports.fun/embed/foxdeportes.html', logoUrl: 'https://yt3.googleusercontent.com/ytc/AIdro_kRD_CzEE876U_cVjUDaMF-hFzDQB906eoYWLq1JT0u99Q=s900-c-k-c0x00ffffff-no-rj' },
-    { name: 'ESPN LAT', url: 'https://embed.ksdjugfsddeports.fun/embed/espn.html', logoUrl: 'https://themenschonabench.com/wp-content/uploads/2014/05/ESPN-Logo.png' },
+    { name: 'ESPN', url: 'https://embed.ksdjugfsddeports.fun/embed/espn.html', logoUrl: 'https://themenschonabench.com/wp-content/uploads/2014/05/ESPN-Logo.png' },
     { name: 'ESPN ARGENTINA', url: 'https://embed.ksdjugfsddeports.fun/embed/espnar.html', logoUrl: 'https://a1.espncdn.com/combiner/i?img=%2Fi%2Fespn%2Fespn_logos%2Fespn_red.png' },
     { name: 'ESPN Colombia', url: 'https://embed.ksdjugfsddeports.fun/embed/espncol.html', logoUrl: 'https://themenschonabench.com/wp-content/uploads/2014/05/ESPN-Logo.png' },
     { name: 'ESPN 2', url: 'https://embed.ksdjugfsddeports.fun/embed/espn2.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/ESPN2_logo.svg/1280px-ESPN2_logo.svg.png' },
@@ -179,7 +179,7 @@ const channelsData: Channel[] = [
     { name: 'DIRECTV SPORTS', url: 'https://embed.ksdjugfsddeports.fun/embed/directvsports.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5a/DSports.png' },
     { name: 'DIRECTV SPORTS 2', url: 'https://embed.ksdjugfsddeports.fun/embed/directvsports2.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/83/DSports2.png' },
     { name: 'DIRECTV SPORTS +', url: 'https://embed.ksdjugfsddeports.fun/embed/directvsportsplus.html', logoUrl: 'https://d18o29lhcg4kda.cloudfront.net/fit-in/360x270/Y2gwMTAwMDAwMDAwMTM5X2xpbmVhcl9jaGFubmVsX3NzbGE_11002_LOGO_360x270.png?timestamp=1750317237946' },
-    { name: 'Fox Sports 1 MX', url: 'https://embed.ksdjugfsddeports.fun/embed/foxsportsmexico.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
+    { name: 'Fox Sports MX', url: 'https://embed.ksdjugfsddeports.fun/embed/foxsportsmexico.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/FOX_Sports_logo.svg/1200px-FOX_Sports_logo.svg.png' },
     { name: 'Fox Sports 2 MX', url: 'https://embed.ksdjugfsddeports.fun/embed/foxsports2mexico.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Fox_Sports_2_Argentina_2023.svg/1200px-Fox_Sports_2_Argentina_2023.svg.png' },
     { name: 'Fox Sports 3 MX', url: 'https://embed.ksdjugfsddeports.fun/embed/foxsports3mexico.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Fox_Sports_3_Argentina_2023.svg/800px-Fox_Sports_3_Argentina_2023.svg.png' },
     { name: 'ESPN MX', url: 'https://embed.ksdjugfsddeports.fun/embed/espnmexico.html', logoUrl: 'https://r2.thesportsdb.com/images/media/channel/logo/fysmne1660760631.png' },
@@ -187,7 +187,7 @@ const channelsData: Channel[] = [
     { name: 'ESPN 3 MX', url: 'https://embed.ksdjugfsddeports.fun/embed/espn3mexico.html', logoUrl: 'https://img2.sport-tv-guide.live/images/tv-station-espn-3-939.png' },
     { name: 'ESPN 4 MX', url: 'https://embed.ksdjugfsddeports.fun/embed/espn4mexico.html', logoUrl: 'https://r2.thesportsdb.com/images/media/channel/logo/fysmne1660760631.png' },
     { name: 'ESPN 5 MX', url: 'https://embed.ksdjugfsddeports.fun/embed/espn5mexico.html', logoUrl: 'https://r2.thesportsdb.com/images/media/channel/logo/fysmne1660760631.png' },
-    { name: 'TVC Deportes MX', url: 'https://embed.ksdjugfsddeports.fun/embed/tvcdeportes.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Tvc_2003.png' },
+    { name: 'TVC Deportes', url: 'https://embed.ksdjugfsddeports.fun/embed/tvcdeportes.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Tvc_2003.png' },
     { name: 'LIGA 1', url: 'https://embed.ksdjugfsddeports.fun/embed/liga1.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'Liga 1 MAX', url: 'https://embed.ksdjugfsddeports.fun/embed/liga1max.html', logoUrl: 'https://play-lh.googleusercontent.com/utRBgwflE7hqjt4UvWeNO_AA1MHdP4l9dVD1V38DdRM9GGzxD5xK1iyXRPcnOXV9d6M' },
     { name: 'Fox Sports Premium', url: 'https://embed.ksdjugfsddeports.fun/embed/foxsportspremium.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Fox_Sports_Premium_Argentina_2020.png' },
@@ -201,14 +201,14 @@ const channelsData: Channel[] = [
     { name: 'MOVISTAR LA LIGA', url: 'https://embed.ksdjugfsddeports.fun/embed/movistarlaliga.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'NBA', url: 'https://embed.ksdjugfsddeports.fun/embed/nba.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'MOVISTAR DEPORTES ES', url: 'https://embed.ksdjugfsddeports.fun/embed/movistardeporteses.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'Azteca Deportes MX', url: 'https://embed.ksdjugfsddeports.fun/embed/aztecadeportes.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aztecadeporteslogo.png/500px-Aztecadeporteslogo.png' },
+    { name: 'Azteca Deportes', url: 'https://embed.ksdjugfsddeports.fun/embed/aztecadeportes.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aztecadeporteslogo.png/500px-Aztecadeporteslogo.png' },
     { name: 'TNT Sports Chile', url: 'https://embed.ksdjugfsddeports.fun/embed/tntsportschile.html', logoUrl: 'https://yt3.googleusercontent.com/nv5OCOIRHGSuTpTqhUrSJlfgZkBxicFbTY_8uXsjLMNrsZ7-TmJSFIvBJdhpxRTOky9kDvRuXJU=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'MLB NETWORK', url: 'https://embed.ksdjugfsddeports.fun/embed/mlbnetwork.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'SKY SPORTS MX', url: 'https://embed.ksdjugfsddeports.fun/embed/skysportsmexico.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'SKY SPORTS BUNDESLIGA', url: 'https://embed.ksdjugfsddeports.fun/embed/skysportsbundesliga.html', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
+    { name: 'Sky Sports Bundesliga', url: 'https://embed.ksdjugfsddeports.fun/embed/skysportsbundesliga.html', logoUrl: 'https://pbs.twimg.com/media/FYjlInYXEAIfUAT.jpg:large' },
     { name: 'SKY SPORTS F1', url: 'https://embed.ksdjugfsddeports.fun/embed/skysportsf1.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'AZTECA 7', url: 'https://embed.ksdjugfsddeports.fun/embed/azteca7.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Logo_Azteca_7_2011.svg/1930px-Logo_Azteca_7_2011.svg.png' },
-    { name: 'CANAL 5', url: 'https://embed.ksdjugfsddeports.fun/embed/canal5.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Canal_5_Mexico_logo_2014.svg' },
+    { name: 'Canal 5', url: 'https://embed.ksdjugfsddeports.fun/embed/canal5.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Canal_5_Mexico_logo_2014.svg' },
     { name: 'LATINA', url: 'https://embed.ksdjugfsddeports.fun/embed/latina.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'AMERICA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/americatv.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'SPACE', url: 'https://embed.ksdjugfsddeports.fun/embed/space.html', logoUrl: 'https://placehold.co/24x24.png' },
@@ -233,7 +233,7 @@ const channelsData: Channel[] = [
     { name: 'SYFY USA', url: 'https://embed.ksdjugfsddeports.fun/embed/syfy.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'Caracol TV', url: 'https://embed.ksdjugfsddeports.fun/embed/caracol.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/65/Logotipo_de_Caracol_Televisi%C3%B3n_Corporativo.png' },
     { name: 'ATV', url: 'https://embed.ksdjugfsddeports.fun/embed/atv.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/ATV_logo_2020.png' },
-    { name: 'Univision', url: 'https://embed.ksdjugfsddeports.fun/embed/univision.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Logo_Univision_2019.svg' },
+    { name: 'Univisíon', url: 'https://embed.ksdjugfsddeports.fun/embed/univision.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Logo_Univision_2019.svg' },
     { name: 'UNICABLE', url: 'https://embed.ksdjugfsddeports.fun/embed/unicable.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'FX', url: 'https://embed.ksdjugfsddeports.fun/embed/fx.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'GOLDEN PLUS', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenplus.html', logoUrl: 'https://placehold.co/24x24.png' },
@@ -291,15 +291,51 @@ const channelsData: Channel[] = [
     { name: 'TELEMUNDO 51 FLORIDA', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundo51florida.html', logoUrl: 'https://placehold.co/24x24.png' },
 ];
 
+const processedChannels: Channel[] = [];
+const nameLogoMap = new Map<string, string>();
+
+channelsData.forEach(channel => {
+    let normalizedName = channel.name
+        .replace(/\(Op\. \d+\)/g, '')
+        .replace(/LATINOAMERICA|ARGENTINA|CHILE|COLOMBIA|USA|MX|PE|ES|GB|BR|NL/g, '')
+        .trim();
+    if (normalizedName.startsWith('DIRECTV SPORTS')) {
+        normalizedName = 'DIRECTV SPORTS';
+    }
+    if (normalizedName.startsWith('ESPN PREMIUM')) {
+        normalizedName = 'ESPN PREMIUM';
+    }
+
+    if (channel.logoUrl && !channel.logoUrl.includes('placehold.co')) {
+        if (!nameLogoMap.has(normalizedName)) {
+            nameLogoMap.set(normalizedName, channel.logoUrl);
+        }
+    }
+});
+
 const uniqueChannelsMap = new Map<string, Channel>();
 channelsData.forEach(channel => {
+  let normalizedName = channel.name
+      .replace(/\(Op\. \d+\)/g, '')
+      .replace(/LATINOAMERICA|ARGENTINA|CHILE|COLOMBIA|USA|MX|PE|ES|GB|BR|NL/g, '')
+      .trim();
+  if (normalizedName.startsWith('DIRECTV SPORTS')) {
+        normalizedName = 'DIRECTV SPORTS';
+  }
+   if (normalizedName.startsWith('ESPN PREMIUM')) {
+        normalizedName = 'ESPN PREMIUM';
+  }
+
+  const finalName = channel.name.trim();
+  const logo = nameLogoMap.get(normalizedName) || channel.logoUrl || 'https://placehold.co/24x24.png';
+  
   if (!uniqueChannelsMap.has(channel.url)) {
-    uniqueChannelsMap.set(channel.url, { ...channel, name: channel.name.toUpperCase(), logoUrl: channel.logoUrl || 'https://placehold.co/24x24.png' });
+    uniqueChannelsMap.set(channel.url, { ...channel, name: finalName.toUpperCase(), logoUrl: logo });
   }
 });
+
 export const channels: Channel[] = Array.from(uniqueChannelsMap.values())
   .sort((a, b) => a.name.localeCompare(b.name));
-
 
 interface CopiedStates {
   [key: string]: boolean;
@@ -318,6 +354,10 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const getStreamStatus = (url: string): ChannelStatus => {
+    if (url.includes('ksdjugfsddeports.fun')) {
+      return 'active';
+    }
+
     let streamName: string | null = null;
     try {
         const urlObject = new URL(url);
@@ -435,5 +475,3 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
     </div>
   );
 };
-
-    
