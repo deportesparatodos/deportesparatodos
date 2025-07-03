@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -497,28 +496,115 @@ export default function HomePage() {
               </Dialog>
 
               <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="justify-start">
-                      <FileText className="mr-2" />
-                      Aviso Legal
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Aviso Legal</DialogTitle>
-                    </DialogHeader>
-                    <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
-                      <p>
-                          DEPORTES PARA TODOS es un proveedor de servicios de Internet que ofrece una plataforma que solo muestra enlaces a contenidos audiovisuales ubicados en servidores de terceros y provistos y/o transmitidos por terceros. Nadie puede responsabilizar a DEPORTES PARA TODOS de alojar contenido con copyright, ya que nosotros no alojamos ningún contenido con derechos de autor ni tampoco transmitimos ningún contenido audiovisual. Por favor: Averigüe bien en qué sitio web están realmente alojados sus archivos o contenido audiovisual antes de culpar a DEPORTES PARA TODOS de infringir derechos de autor.
-                      </p>
-                      <p>
-                          Los enlaces que figuran en esta web han sido encontrados en diferentes webs de streaming online (ustream.tv, justin.tv, yukons.net, mips.tv, dinozap.tv, castalba.tv, sawlive.tv, entre otros...) y desconocemos si los mismos tienen contratos de cesión de derechos sobre estos partidos o eventos de pago para reproducirlos, alojarlos o permitir verlos. Todas las marcas aquí mencionadas y logos están registrados por sus legítimos propietarios y solamente se emplean en referencia a las mismas y con un fin de cita o comentario. No nos hacemos responsables del uso indebido que puedes hacer del contenido de nuestra página. Todo el contenido ha sido exclusivamente sacado de sitios públicos de Internet, por lo que este material es considerado de libre distribución. En ningún artículo legal se menciona la prohibición de material libre, por lo que esta página no infringe en ningún caso la ley. Si alguien tiene alguna duda o problema al respecto, no dude en ponerse en contacto con nosotros.
-                      </p>
-                      <p>
-                          En ningún caso o circunstancia se podrá responsabilizar directa o indirectamente al propietario ni a los colaboradores de DEPORTES PARA TODOS del ilícito uso de la información contenida en rojadirectaenvivo.pl. Asimismo, tampoco se nos podrá responsabilizar directa o indirectamente del incorrecto uso o mala interpretación que se haga de la información y servicios incluidos. Igualmente, quedará fuera de nuestra responsabilidad el material al que usted pueda acceder desde nuestros enlaces.
-                      </p>
-                    </div>
-                  </DialogContent>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="justify-start">
+                    <FileText className="mr-2" />
+                    Aviso Legal
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                      <DialogTitle>Descargo de Responsabilidad – Derechos de Autor</DialogTitle>
+                  </DialogHeader>
+                  <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
+                    <p>
+                        Deportes para Todos es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.
+                    </p>
+                    <p>
+                        No participamos en la creación, alteración ni distribución de dichas señales, y no somos responsables de la legalidad de los contenidos a los que se accede a través de estos terceros. Cualquier infracción potencial corresponde a dichos proveedores externos.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Sobre la legalidad y responsabilidad de terceros:</h4>
+                    <p>
+                        Existen antecedentes de sitios sancionados por alojar y retransmitir directamente contenido con derechos de autor. En contraste, Deportes para Todos no aloja señales ni transmite contenido, y se limita exclusivamente a insertar enlaces públicos de terceros mediante código iframe. No participamos en la obtención ni distribución del contenido audiovisual y no tenemos control sobre su disponibilidad o legalidad.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Uso de marcas y logos:</h4>
+                    <p>
+                        Todas las marcas, nombres comerciales, logotipos o imágenes presentes en el sitio son propiedad de sus respectivos dueños. En Deportes para Todos se utilizan exclusivamente con fines informativos o ilustrativos, respetando el derecho de cita previsto por el Artículo 32 de la Ley 11.723 de Propiedad Intelectual de Argentina.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Legislación aplicable:</h4>
+                    <p>
+                        Este sitio opera bajo las leyes de la República Argentina. El mero hecho de insertar un iframe público no configura, por sí solo, un delito conforme al derecho argentino, siempre que no se participe en la obtención o manipulación del contenido protegido.
+                    </p>
+                    
+                    <h4 className="font-semibold text-foreground">Uso personal y responsabilidad del usuario:</h4>
+                    <p>
+                        El acceso a esta página se realiza bajo responsabilidad del usuario. Si en tu país este tipo de contenido se encuentra restringido, es tu obligación cumplir con las leyes locales. No nos responsabilizamos por el uso indebido o ilegal de los enlaces por parte de los visitantes.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Sobre el uso de subdominios:</h4>
+                    <p>
+                        Deportes para Todos utiliza subdominios como https://www.google.com/search?q=gh.deportesparatodos.com con fines exclusivamente organizativos y técnicos, para centralizar y facilitar el acceso a iframes de terceros. Estos subdominios no almacenan, manipulan ni retransmiten contenido audiovisual, sino que actúan como una ventana hacia los streams originales disponibles públicamente en sitios como streamtp3.com, la12hd.com y otros. En ningún caso se modifica la fuente original ni se interviene en el contenido emitido por dichos terceros.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Sobre la experiencia del usuario:</h4>
+                    <p>
+                        Deportes para Todos puede aplicar medidas para mejorar la experiencia de navegación, como la reducción de anuncios emergentes o contenido intrusivo de terceros. Estas medidas no interfieren con el contenido audiovisual transmitido dentro de los reproductores embebidos, ni modifican las señales originales. Cualquier bloqueo se limita a elementos externos ajenos a la emisión en sí.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Monetización, publicidad y patrocinadores</h4>
+                    <p>
+                        Deportes para Todos puede exhibir anuncios publicitarios proporcionados por plataformas de monetización de terceros (como Monetag) y/o incluir contenido patrocinado de empresas vinculadas al sector iGaming (casas de apuestas, juegos online y plataformas similares).
+                    </p>
+                    <p>
+                        Estos ingresos publicitarios permiten el mantenimiento del sitio, pero no están directamente vinculados al contenido embebido ni implican relación comercial con las plataformas desde las cuales se obtiene dicho contenido.
+                    </p>
+                    <p>
+                        Deportes para Todos no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.
+                    </p>
+                    <p>
+                        Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.
+                    </p>
+                    <p>
+                        Nos reservamos el derecho de incluir o remover campañas publicitarias en cualquier momento, y recomendamos a los usuarios consultar la política de privacidad de cada plataforma externa a la que accedan desde este sitio.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Relación con los dueños del contenido:</h4>
+                    <p>
+                        Deportes para Todos no tiene relación alguna con los titulares de los derechos de las transmisiones embebidas, ni con las plataformas que los alojan. Todo el contenido audiovisual visualizado mediante iframes es responsabilidad exclusiva del sitio externo que lo provee.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Mecanismos de seguridad:</h4>
+                    <p>
+                        No se utilizan mecanismos técnicos para eludir bloqueos, restricciones regionales (geobloqueos) ni sistemas de autenticación de las plataformas externas.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Cookies y datos del usuario:</h4>
+                    <p>
+                        Este sitio puede utilizar cookies de terceros para ofrecer una mejor experiencia de usuario, realizar estadísticas anónimas de uso o mostrar anuncios relevantes. Al navegar por Deportes para Todos usted acepta este uso de cookies. Recomendamos consultar las políticas de privacidad de los servicios externos vinculados a este sitio.
+                    </p>
+                    <p>
+                        El contenido patrocinado relacionado con plataformas de iGaming está destinado únicamente a usuarios mayores de 18 años. Deportes para Todos no se responsabiliza por el acceso a dichas plataformas por parte de menores de edad.
+                    </p>
+                    <p>
+                        This Site is affiliated with Monumetric (dba for The Blogger Network, LLC) for the purposes of placing advertising on the Site, and Monumetric will collect and use certain data for advertising purposes. To learn more about Monumetric’s data usage, click here: Publisher Advertising Privacy
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Notificaciones de derechos de autor:</h4>
+                    <p>
+                        Si usted es titular de derechos o su representante y considera que un contenido embebido desde una fuente externa infringe sus derechos, puede enviarnos una notificación formal mandando un mail a deportesparatodosvercel@gmail.com. Aunque no estamos sujetos a la legislación DMCA de EE.UU., colaboramos voluntariamente con cualquier requerimiento legítimo bajo dicho marco.
+                    </p>
+                    <p>
+                        Por favor incluya en su notificación:
+                    </p>
+                    <ul className="list-disc pl-6 space-y-1">
+                        <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
+                        <li>(b) Identificación clara del contenido presuntamente infringido.</li>
+                        <li>(c) Enlace directo al contenido incrustado en Deportes para Todos.</li>
+                        <li>(d) Datos de contacto válidos (correo electrónico).</li>
+                        <li>(e) Una declaración de buena fe indicando que el uso no está autorizado por usted, su agente o la ley.</li>
+                        <li>(f) Una declaración de veracidad de la información, bajo pena de perjurio.</li>
+                    </ul>
+                    <p>
+                        Una vez recibida y analizada la notificación, procederemos a desactivar el enlace correspondiente si así corresponde. También podremos notificar al proveedor del iframe, si fuera posible.
+                    </p>
+                    <p>
+                        Al utilizar este sitio web, usted declara haber leído, comprendido y aceptado este descargo de responsabilidad en su totalidad.
+                    </p>
+                  </div>
+                </DialogContent>
               </Dialog>
             </SheetContent>
           </Sheet>
