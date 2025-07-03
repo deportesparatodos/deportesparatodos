@@ -287,7 +287,6 @@ const channelsData: Channel[] = [
     { name: 'DISNEY CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/disneychannel.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'TNT NOVELAS', url: 'https://embed.ksdjugfsddeports.fun/embed/tntnovelas.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'UNIVERSAL CINEMA', url: 'https://embed.ksdjugfsddeports.fun/embed/universalcinema.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'FM HOT KIDS', url: 'https://embed.ksdjugfsddeports.fun/embed/fmhotkids.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'TELEMUNDO 51 FLORIDA', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundo51florida.html', logoUrl: 'https://placehold.co/24x24.png' },
 ];
 

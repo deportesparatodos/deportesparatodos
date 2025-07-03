@@ -43,11 +43,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
   const getDisplayStatus = (url: string): { text: string; status: CameraStatus } => {
     if (!url || url.trim() === '') {
-      return { text: "VACIO", status: 'empty' };
-    }
-    
-    if (url.includes('ksdjugfsddeports.fun')) {
-      return { text: 'STREAM VÁLIDO', status: 'valid' };
+        return { text: "VACIO", status: 'empty' };
     }
 
     const getStreamNameFromUrl = (u: string): string | null => {
@@ -56,31 +52,44 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             if (urlObject.hostname.includes('streamtpglobal.com')) {
                 return urlObject.searchParams.get('stream');
             }
-        } catch (e) {
-            const match = u.match(/[?&]stream=([^&]+)/);
-            if (match && match[1]) {
-                return match[1];
+            if (urlObject.hostname.includes('ksdjugfsddeports.fun')) {
+                const pathParts = urlObject.pathname.split('/');
+                const htmlFile = pathParts[pathParts.length - 1];
+                if (htmlFile && htmlFile.endsWith('.html')) {
+                    return htmlFile.slice(0, -5); // Remove .html
+                }
             }
+        } catch (e) {
+            let match = u.match(/[?&]stream=([^&]+)/);
+            if (match && match[1]) return match[1];
+            
+            match = u.match(/embed\/([^/]+)\.html/);
+            if (match && match[1]) return match[1];
         }
         return null;
     };
-    
+
     const streamName = getStreamNameFromUrl(url);
+
     if (streamName && channelStatuses && channelStatuses[streamName] === 'offline') {
         return { text: `CANAL INACTIVO (${streamName.toUpperCase()})`, status: 'inactive' };
     }
 
     const foundChannel = channels.find(channel => channel.url === url);
     if (foundChannel) {
-      return { text: foundChannel.name.toUpperCase(), status: 'valid' };
+        return { text: foundChannel.name.toUpperCase(), status: 'valid' };
     }
-    
-    if(streamName) {
+
+    if (streamName) {
         return { text: streamName.toUpperCase(), status: 'valid' };
     }
-    
+
     if (url.includes('youtube.com/embed/')) {
         return { text: "YOUTUBE", status: 'valid' };
+    }
+    
+    if (url.includes('ksdjugfsddeports.fun')) {
+      return { text: 'STREAM VÁLIDO', status: 'valid' };
     }
 
     return { text: "DESCONOCIDO", status: 'unknown' };
