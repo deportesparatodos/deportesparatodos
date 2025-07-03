@@ -123,7 +123,15 @@ const channelsData: Channel[] = [
     { name: 'GOLDEN EDGE', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenedge.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d5/Golden_Edge_Logo_2020.png' },
     { name: 'GOLDEN PLUS', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenplus.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5F0aqp2753KU8sHrNHjxRrCuI4xXyd_UnnA&s' },
     { name: 'GOLDEN PREMIERE', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenpremier.html', logoUrl: 'https://cdn.storage.foromedios.com/monthly_2022_11/large.large.1689826971_GoldenPremier2020.png.55867f88ed97ec1141ed81ba0f75a494.png.926c708c6f8ba665429c99b39b760a32.png' },
+<<<<<<< Updated upstream
     { name: 'GOLDEN PREMIERE 2', url: 'https://streamtpglobal.com/global1.php?stream=goldenpremier2', logoUrl: 'https://claroperupoc.vtexassets.com/arquivos/golden-premier-2hd-v2.png' },
+=======
+<<<<<<< HEAD
+    { name: 'GOLDEN PREMIERE 2', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenpremier2.html', logoUrl: 'https://claroperupoc.vtexassets.com/arquivos/golden-premier-2hd-v2.png' },
+=======
+    { name: 'GOLDEN PREMIERE 2', url: 'https://streamtpglobal.com/global1.php?stream=goldenpremier2', logoUrl: 'https://claroperupoc.vtexassets.com/arquivos/golden-premier-2hd-v2.png' },
+>>>>>>> 6e716589f32a7afc061fe040e08992292cfb2f25
+>>>>>>> Stashed changes
     { name: 'Garage TV', url: 'https://tvlibreonline.org/html/fl/?get=RWxfR2FyYWdl', logoUrl: 'https://elgarage.com/wp-content/uploads/2021/04/elgaragetv_WEB.png' },
     { name: 'GolPeru', url: 'https://streamtpglobal.com/global1.php?stream=golperu', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQU5NdVG4od9akIwHShMdl92aQzAqGS_V95vA&s' },
     { name: 'GolTV', url: 'https://streamtpglobal.com/global1.php?stream=goltv', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/GOLTV.png' },
@@ -156,7 +164,15 @@ const channelsData: Channel[] = [
     { name: 'NICK', url: 'https://embed.ksdjugfsddeports.fun/embed/nick.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTudsGNYzWPsnCOKE7v5BGeH6QswRB8oYkQ_A&s' },
     { name: 'NICK JR', url: 'https://embed.ksdjugfsddeports.fun/embed/nickjr.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Nick_Jr._logo_2023_%28outline%29.svg' },
     { name: 'National Geographic', url: 'https://tvlibreonline.org/html/fl/?get=TmF0R2VvSEQ=', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Nat_Geo_HD.png' },
+<<<<<<< Updated upstream
     { name: 'ODISEA', url: 'https://embed.ksdjugfsddeports.fun/embed/odisea.html', logoUrl: 'https://forounivers.com/uploads/monthly_2020_02/odisea.png.a810d7a6021d7b380f5c71a337ab2ac7.png' },
+=======
+<<<<<<< HEAD
+    { name: 'ODISEA', url: 'https://embed.ksdjugfsddeports.fun/embed/odisea.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfDwGoMS1UNrB2Fk1kJwDUO7k9cb48MaIHDQ&s' },
+=======
+    { name: 'ODISEA', url: 'https://embed.ksdjugfsddeports.fun/embed/odisea.html', logoUrl: 'https://forounivers.com/uploads/monthly_2020_02/odisea.png.a810d7a6021d7b380f5c71a337ab2ac7.png' },
+>>>>>>> 6e716589f32a7afc061fe040e08992292cfb2f25
+>>>>>>> Stashed changes
     { name: 'PARAMOUNT CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/paramountchannel.html', logoUrl: 'https://cdn.mitvstatic.com/channels/co_paramount-channel_m.png' },
     { name: 'PASIONES', url: 'https://embed.ksdjugfsddeports.fun/embed/pasiones.html', logoUrl: 'https://yt3.googleusercontent.com/czxQxYU7hERMABPcpl6ayjo5NvzNcWjj9bKRdr6UbMZqdbF0QR998JZoO63y_hSHR7eb3B1PGw=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'Premiere 1 BR', url: 'https://streamtpglobal.com/global1.php?stream=premiere1', logoUrl: 'https://s3.glbimg.com/v1/AUTH_36abb2af534644878388f516c38b89ac/prod/home-share-1b75cdaa.png' },
@@ -284,7 +300,14 @@ const channelsData: Channel[] = [
     { name: 'Caracol TV', url: 'https://embed.ksdjugfsddeports.fun/embed/caracol.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/65/Logotipo_de_Caracol_Televisi%C3%B3n_Corporativo.png' },
     { name: 'ATV', url: 'https://embed.ksdjugfsddeports.fun/embed/atv.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/ATV_logo_2020.png' },
     { name: 'Univisíon', url: 'https://embed.ksdjugfsddeports.fun/embed/univision.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Logo_Univision_2019.svg' },
+<<<<<<< Updated upstream
     { name: 'GOLDEN PREMIERE 2', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenpremier2.html', logoUrl: 'https://claroperupoc.vtexassets.com/arquivos/golden-premier-2hd-v2.png' },
+=======
+<<<<<<< HEAD
+=======
+    { name: 'GOLDEN PREMIERE 2', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenpremier2.html', logoUrl: 'https://claroperupoc.vtexassets.com/arquivos/golden-premier-2hd-v2.png' },
+>>>>>>> 6e716589f32a7afc061fe040e08992292cfb2f25
+>>>>>>> Stashed changes
     { name: 'MTV', url: 'https://embed.ksdjugfsddeports.fun/embed/mtv.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/MTV_2021_%28brand_version%29.svg/1200px-MTV_2021_%28brand_version%29.svg.png' },
     { name: 'Comedy Central', url: 'https://embed.ksdjugfsddeports.fun/embed/comedycentral.html', logoUrl: 'https://1000marcas.net/wp-content/uploads/2022/01/Comedy-Central-Productions-Logo.png' },
     { name: 'Nat Geo', url: 'https://embed.ksdjugfsddeports.fun/embed/natgeo.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Nat_Geo_HD.png' },
@@ -368,12 +391,14 @@ type ChannelStatus = 'active' | 'inactive' | 'unknown';
 interface ChannelListProps {
   channelStatuses: Record<string, 'online' | 'offline'>;
   isLoading: boolean;
+  onSelectChannel?: (url: string) => void;
 }
 
-export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, isLoading }) => {
+export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, isLoading, onSelectChannel }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [searchTerm, setSearchTerm] = useState<string>('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const isSelectMode = !!onSelectChannel;
 
   const getStreamStatus = (url: string): ChannelStatus => {
     if (url.includes('ksdjugfsddeports.fun')) {
@@ -418,7 +443,7 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
 
   return (
     <div className="flex flex-col h-full w-full bg-card text-card-foreground">
-      <div className="p-4 flex-shrink-0 border-b border-border">
+      <div className="px-4 flex-shrink-0 border-b border-border pb-5">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -451,7 +476,7 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
                 <div className="flex items-center flex-1 truncate mr-2">
                   {!isLoading && (
                     <span
-                      title={status === 'active' ? 'Activo' : status === 'inactive' ? 'Inactivo' : 'Desconocido'}
+                      title={status === 'active' ? 'Activo' : status === 'inactive' ? 'Desconocido' : 'Desconocido'}
                       className={cn("h-2.5 w-2.5 rounded-full mr-3 flex-shrink-0", {
                         'bg-green-500': status === 'active',
                         'bg-red-500': status === 'inactive',
@@ -474,16 +499,22 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
                 </div>
                 <Button
                   size="sm"
-                  onClick={() => handleCopy(channel.url)}
+                  onClick={isSelectMode && onSelectChannel ? () => onSelectChannel(channel.url) : () => handleCopy(channel.url)}
                   className={cn(
                     "transition-colors duration-300 w-[140px]",
-                    copiedStates[channel.url]
+                    !isSelectMode && copiedStates[channel.url]
                       ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
                       : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
                   )}
                 >
-                  {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                  {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
+                  {isSelectMode ? (
+                    "Seleccionar"
+                  ) : (
+                    <>
+                      {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                      {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
+                    </>
+                  )}
                 </Button>
               </li>
             )})}

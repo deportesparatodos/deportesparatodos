@@ -1,13 +1,17 @@
+
 "use client";
 
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ClipboardPaste, Menu } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import type { Channel } from './channel-list';
+import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EventListComponent, type Event } from './event-list';
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
@@ -23,6 +27,16 @@ interface CameraConfigurationProps {
   channelStatuses: Record<string, 'online' | 'offline'>;
   setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
   setAcknowledged: Dispatch<SetStateAction<boolean>>;
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+  isLoadingChannelStatuses?: boolean;
+  events: Event[];
+  isLoadingEvents: boolean;
+  eventsError: string | null;
+=======
+>>>>>>> 6e716589f32a7afc061fe040e08992292cfb2f25
+>>>>>>> Stashed changes
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -37,13 +51,63 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   channelStatuses,
   setCameraStatuses,
   setAcknowledged,
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+  isLoadingChannelStatuses,
+  events,
+  isLoadingEvents,
+  eventsError,
+=======
+>>>>>>> 6e716589f32a7afc061fe040e08992292cfb2f25
+>>>>>>> Stashed changes
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
+  const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
 
   const getDisplayStatus = (url: string): { text: string; status: CameraStatus } => {
     if (!url || url.trim() === '') {
         return { text: "VACIO", status: 'empty' };
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+    }
+    
+    if (events && events.length > 0) {
+      for (const event of events) {
+        const optionIndex = event.options.indexOf(url);
+        if (optionIndex > -1 && event.buttons[optionIndex]) {
+          return { text: event.buttons[optionIndex].toUpperCase(), status: 'valid' };
+        }
+      }
+    }
+
+    if (url.includes('ksdjugfsddeports.fun')) {
+      const getStreamNameFromUrl = (u: string): string | null => {
+        try {
+            const urlObject = new URL(u);
+            if (urlObject.hostname.includes('ksdjugfsddeports.fun')) {
+                const pathParts = urlObject.pathname.split('/');
+                const htmlFile = pathParts[pathParts.length - 1];
+                if (htmlFile && htmlFile.endsWith('.html')) {
+                    return htmlFile.slice(0, -5);
+                }
+            }
+        } catch (e) {
+            let match = u.match(/embed\/([^/]+)\.html/);
+            if (match && match[1]) return match[1];
+        }
+        return null;
+      };
+      const streamName = getStreamNameFromUrl(url);
+      if (streamName) {
+        return { text: streamName.toUpperCase(), status: 'valid' };
+      }
+      return { text: 'STREAM VÁLIDO', status: 'valid' };
+=======
+>>>>>>> 6e716589f32a7afc061fe040e08992292cfb2f25
+>>>>>>> Stashed changes
     }
 
     const getStreamNameFromUrl = (u: string): string | null => {
@@ -52,6 +116,14 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             if (urlObject.hostname.includes('streamtpglobal.com')) {
                 return urlObject.searchParams.get('stream');
             }
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+        } catch (e) {
+            let match = u.match(/[?&]stream=([^&]+)/);
+            if (match && match[1]) return match[1];
+=======
+>>>>>>> Stashed changes
             if (urlObject.hostname.includes('ksdjugfsddeports.fun')) {
                 const pathParts = urlObject.pathname.split('/');
                 const htmlFile = pathParts[pathParts.length - 1];
@@ -65,6 +137,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             
             match = u.match(/embed\/([^/]+)\.html/);
             if (match && match[1]) return match[1];
+<<<<<<< Updated upstream
+=======
+>>>>>>> 6e716589f32a7afc061fe040e08992292cfb2f25
+>>>>>>> Stashed changes
         }
         return null;
     };
@@ -100,7 +176,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         return getDisplayStatus(cameraUrls[index] || '').status;
     });
     setCameraStatuses(statuses);
-  }, [cameraUrls, numCameras, setCameraStatuses, channelStatuses]);
+  }, [cameraUrls, numCameras, setCameraStatuses, channelStatuses, events]);
 
 
   const handleNumCamerasChange = (value: string) => {
@@ -156,6 +232,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     handleStartView();
+  };
+  
+  const handleSelectChannel = (url: string) => {
+    if (dialogOpenForIndex !== null) {
+      handleUrlChange(dialogOpenForIndex, url);
+      setDialogOpenForIndex(null); // Close dialog
+    }
   };
 
   return (
@@ -249,7 +332,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 >
                     <ClipboardPaste className="h-4 w-4" />
                 </Button>
-                {cameraUrls[index] && (
+
+                {cameraUrls[index] ? (
                   <Button
                       variant="ghost"
                       size="icon"
@@ -260,7 +344,48 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   >
                       <X className="h-4 w-4" />
                   </Button>
+                ) : (
+                  <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        type="button"
+                        aria-label="Seleccionar canal de la lista"
+                        className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                      >
+                        <Menu className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
+                        <DialogHeader className="p-5 pb-0">
+                            <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
+                        </DialogHeader>
+                        <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="channels">Canales</TabsTrigger>
+                                <TabsTrigger value="events">Eventos</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                                <ChannelListComponent 
+                                    channelStatuses={channelStatuses}
+                                    isLoading={isLoadingChannelStatuses || false}
+                                    onSelectChannel={handleSelectChannel}
+                                />
+                            </TabsContent>
+                            <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                                <EventListComponent 
+                                  onSelectEvent={handleSelectChannel}
+                                  events={events}
+                                  isLoading={isLoadingEvents}
+                                  error={eventsError}
+                                />
+                            </TabsContent>
+                        </Tabs>
+                    </DialogContent>
+                  </Dialog>
                 )}
+
                 <Button
                     variant="outline"
                     size="icon"
