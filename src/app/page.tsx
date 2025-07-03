@@ -124,32 +124,19 @@ export default function HomePage() {
     const activeUrls = cameraUrls.slice(0, numCameras);
     const activeStatuses = cameraStatuses.slice(0, numCameras);
     const filledUrls = activeUrls.filter(u => u && u.trim() !== '');
-    const filledUrlCount = filledUrls.length;
     
     setMessages([]); // Clear previous messages
 
-    if (filledUrlCount === 0) {
-        setMessages([`Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.`]);
-        setAcknowledged(false);
-        return;
-    }
-
     const warningMessages: string[] = [];
-    const statusesOfUrlsToActuallyUse = activeStatuses.filter((status, i) => activeUrls[i] && activeUrls[i].trim() !== '');
-    
-    const hasPartial = filledUrlCount < numCameras;
-    const hasInactive = statusesOfUrlsToActuallyUse.includes('inactive');
-    const hasUnknown = statusesOfUrlsToActuallyUse.includes('unknown');
-
-    if (hasPartial) {
-        warningMessages.push(`Hay ${filledUrlCount} de ${numCameras} vistas con URL. Presiona "Iniciar Vista" otra vez para continuar solo con esas.`);
-    }
-    if (hasInactive) {
-      warningMessages.push("Uno o más canales seleccionados están inactivos. Si desea continuar de todas formas presione 'Iniciar Vista'.");
-    }
-    if (hasUnknown) {
-      warningMessages.push("Hay un link o texto desconocido que puede no ser procesado, si desea continuar de todas formas presione 'Iniciar Vista'.");
-    }
+    activeUrls.forEach((url, i) => {
+        if (!url || url.trim() === '') {
+            warningMessages.push(`La Vista ${i + 1} está vacía.`);
+        } else if (activeStatuses[i] === 'inactive') {
+            warningMessages.push(`El canal en la Vista ${i + 1} está inactivo.`);
+        } else if (activeStatuses[i] === 'unknown') {
+            warningMessages.push(`El link en la Vista ${i + 1} es desconocido.`);
+        }
+    });
 
     if (warningMessages.length > 0 && !acknowledged) {
         setMessages(warningMessages);
@@ -157,8 +144,14 @@ export default function HomePage() {
         return;
     }
 
-    setAcknowledged(false);
+    if (filledUrls.length === 0) {
+        setMessages([`Por favor, ingrese al menos una URL.`]);
+        setAcknowledged(false);
+        return;
+    }
 
+    setAcknowledged(false);
+    
     const processedUrls = filledUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
     processedUrls.forEach(url => queryParams.append('urls', encodeURIComponent(url)));
@@ -258,6 +251,7 @@ export default function HomePage() {
                   channelStatuses={channelStatuses}
                   setCameraStatuses={setCameraStatuses}
                   setAcknowledged={setAcknowledged}
+                  isLoadingChannelStatuses={isLoadingStatuses}
                 />
               </div>
           </div>
