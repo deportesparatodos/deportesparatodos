@@ -419,7 +419,7 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
 
   return (
     <div className="flex flex-col h-full w-full bg-card text-card-foreground">
-      <div className="px-4 py-5 flex-shrink-0 border-b border-border mb-5">
+      <div className="px-4 flex-shrink-0 border-b border-border pb-5">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

@@ -314,22 +314,22 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                        <DialogHeader className="px-6 py-5 border-b mb-5">
+                        <DialogHeader className="px-6 py-5 border-b">
                             <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
                         </DialogHeader>
                         <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden">
-                            <TabsList className="mx-6 grid w-[calc(100%-48px)] grid-cols-2 mb-5">
+                            <TabsList className="mx-6 grid w-[calc(100%-48px)] grid-cols-2">
                                 <TabsTrigger value="channels">Canales</TabsTrigger>
                                 <TabsTrigger value="events">Eventos</TabsTrigger>
                             </TabsList>
-                            <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden">
+                            <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
                                 <ChannelListComponent 
                                     channelStatuses={channelStatuses}
                                     isLoading={isLoadingChannelStatuses || false}
                                     onSelectChannel={handleSelectChannel}
                                 />
                             </TabsContent>
-                            <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden">
+                            <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
                                 <EventListComponent 
                                   onSelectEvent={handleSelectChannel}
                                   events={events}
