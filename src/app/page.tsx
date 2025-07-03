@@ -355,7 +355,7 @@ export default function HomePage() {
                   <DialogHeader>
                     <DialogTitle>Configuración de la Vista</DialogTitle>
                   </DialogHeader>
-                  <Separator className="my-4" />
+                  <Separator />
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1">
                       <AccordionTrigger>Bordes</AccordionTrigger>
@@ -392,7 +392,7 @@ export default function HomePage() {
                           <div className="space-y-2">
                               <Label>Vista Previa</Label>
                               <div
-                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border"
+                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
                                   style={{
                                       gap: `${gridGap}px`,
                                       padding: `${gridGap}px`,
