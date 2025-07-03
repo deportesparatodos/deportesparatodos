@@ -209,6 +209,7 @@ export default function HomePage() {
 
     const warningMessages: string[] = [];
     let emptyViewCount = 0;
+    let unknownLinkCount = 0;
 
     activeUrls.forEach((url, i) => {
       if (!url || url.trim() === "") {
@@ -216,16 +217,22 @@ export default function HomePage() {
       } else if (activeStatuses[i] === "inactive") {
         warningMessages.push(`El canal en la Vista ${i + 1} está inactivo.`);
       } else if (activeStatuses[i] === "unknown") {
-        warningMessages.push(`El link en la Vista ${i + 1} es desconocido.`);
+        unknownLinkCount++;
       }
     });
 
     if (emptyViewCount > 0) {
       const pluralS = emptyViewCount > 1 ? "s" : "";
-      const verb = emptyViewCount > 1 ? "están" : "está";
       warningMessages.unshift(
-        `Hay ${emptyViewCount} vista${pluralS} vacía${pluralS}. Si continúas, se iniciará la vista solo con las ventanas que ${verb} llenas.`
+        `Hay ${emptyViewCount} vista${pluralS} vacía${pluralS}. Si presionas "Iniciar Vista" se iniciará la vista solo con las ventanas que están llenas.`
       );
+    }
+    
+    if (unknownLinkCount > 0) {
+        const pluralS = unknownLinkCount > 1 ? "s" : "";
+        warningMessages.push(
+            `Hay ${unknownLinkCount} link${pluralS} desconocido${pluralS}. Si presionas "Iniciar Vista" se iniciará la vista de todas formas (posibles fallos).`
+        );
     }
 
     if (warningMessages.length > 0 && !acknowledged) {
