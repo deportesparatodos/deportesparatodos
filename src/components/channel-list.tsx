@@ -419,7 +419,7 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
 
   return (
     <div className="flex flex-col h-full w-full bg-card text-card-foreground">
-      <div className="px-4 py-5 flex-shrink-0 border-b border-border">
+      <div className="px-4 py-5 flex-shrink-0 border-b border-border mb-5">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -452,7 +452,7 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
                 <div className="flex items-center flex-1 truncate mr-2">
                   {!isLoading && (
                     <span
-                      title={status === 'active' ? 'Activo' : status === 'inactive' ? 'Inactivo' : 'Desconocido'}
+                      title={status === 'active' ? 'Activo' : status === 'inactive' ? 'Desconocido' : 'Desconocido'}
                       className={cn("h-2.5 w-2.5 rounded-full mr-3 flex-shrink-0", {
                         'bg-green-500': status === 'active',
                         'bg-red-500': status === 'inactive',
