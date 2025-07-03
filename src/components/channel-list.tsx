@@ -197,7 +197,7 @@ const channelsData: Channel[] = [
     { name: 'Movistar Liga de Campeones', url: 'https://embed.ksdjugfsddeports.fun/embed/movistarligadecampeones.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Movistar_Liga_de_Campeones.svg/2560px-Movistar_Liga_de_Campeones.svg.png' },
     { name: 'Win Sports', url: 'https://embed.ksdjugfsddeports.fun/embed/winsports.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
     { name: 'Win Sports +', url: 'https://embed.ksdjugfsddeports.fun/embed/winsportsplus.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/1200px-Win_Sports_nuevo_logo.svg.png' },
-    { name: 'BEIN SPORTS XTRA', url: 'https://embed.ksdjugfsddeports.fun/embed/beinsportsxtra.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'BEIN SPORTS XTRA', url: 'https://embed.ksdjugfsddeports.fun/embed/beinsportsxtra.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRo8XMdf5W36gGOa4rhhzCYQoakNbrgrcr0g&s' },
     { name: 'MOVISTAR LA LIGA', url: 'https://embed.ksdjugfsddeports.fun/embed/movistarlaliga.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'NBA', url: 'https://embed.ksdjugfsddeports.fun/embed/nba.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'MOVISTAR DEPORTES ES', url: 'https://embed.ksdjugfsddeports.fun/embed/movistardeporteses.html', logoUrl: 'https://placehold.co/24x24.png' },
@@ -210,13 +210,13 @@ const channelsData: Channel[] = [
     { name: 'AZTECA 7', url: 'https://embed.ksdjugfsddeports.fun/embed/azteca7.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Logo_Azteca_7_2011.svg/1930px-Logo_Azteca_7_2011.svg.png' },
     { name: 'Canal 5', url: 'https://embed.ksdjugfsddeports.fun/embed/canal5.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Canal_5_Mexico_logo_2014.svg' },
     { name: 'LATINA', url: 'https://embed.ksdjugfsddeports.fun/embed/latina.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AMERICA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/americatv.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'AMERICA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/americatv.html', logoUrl: 'https://yt3.googleusercontent.com/KRDAxhSJVhhRP7SACB06iIg7xczMDUur1iGWVlvAJ4XkxRCkY1qFOVqVo02bsnh7W1c9HjNA=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'SPACE', url: 'https://embed.ksdjugfsddeports.fun/embed/space.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'WARNER BROS TV', url: 'https://embed.ksdjugfsddeports.fun/embed/warnerchannel.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'TNT', url: 'https://embed.ksdjugfsddeports.fun/embed/tnt.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'STAR CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/starchannel.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'CINEMAX', url: 'https://embed.ksdjugfsddeports.fun/embed/cinemax.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'CINECANAL', url: 'https://embed.ksdjugfsddeports.fun/embed/cinecanal.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'CINEMAX', url: 'https://embed.ksdjugfsddeports.fun/embed/cinemax.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Cinemax_%28Yellow%29.svg/640px-Cinemax_%28Yellow%29.svg.png' },
+    { name: 'CINECANAL', url: 'https://embed.ksdjugfsddeports.fun/embed/cinecanal.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/CinecanalLA.png' },
     { name: 'Telefe', url: 'https://embed.ksdjugfsddeports.fun/embed/telefe.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/cc/Telefe_%28nuevo_logo%29.png' },
     { name: 'EL TRECE', url: 'https://embed.ksdjugfsddeports.fun/embed/eltrece.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'DISTRITO COMEDIA', url: 'https://embed.ksdjugfsddeports.fun/embed/distritocomedia.html', logoUrl: 'https://placehold.co/24x24.png' },
@@ -224,9 +224,9 @@ const channelsData: Channel[] = [
     { name: 'History', url: 'https://embed.ksdjugfsddeports.fun/embed/history.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
     { name: 'History 2', url: 'https://embed.ksdjugfsddeports.fun/embed/history2.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_h2_m.png' },
     { name: 'PASIONES', url: 'https://embed.ksdjugfsddeports.fun/embed/pasiones.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AZTECA UNO', url: 'https://embed.ksdjugfsddeports.fun/embed/aztecauno.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AZTECA INTERNACIONAL', url: 'https://embed.ksdjugfsddeports.fun/embed/aztecainternacional.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AZ CINEMA', url: 'https://embed.ksdjugfsddeports.fun/embed/azcinema.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'AZTECA UNO', url: 'https://embed.ksdjugfsddeports.fun/embed/aztecauno.html', logoUrl: 'https://static.wikia.nocookie.net/tv-azteca/images/9/98/Uno.png/revision/latest?cb=20200323172904&path-prefix=es' },
+    { name: 'AZTECA INTERNACIONAL', url: 'https://embed.ksdjugfsddeports.fun/embed/aztecainternacional.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRezmNp_pFeJAxqdswiFwYTX8KOmAjITMKm8w&s' },
+    { name: 'AZ CINEMA', url: 'https://embed.ksdjugfsddeports.fun/embed/azcinema.html', logoUrl: 'https://static.wikia.nocookie.net/logopedia/images/6/67/Azcinema.png/revision/latest?cb=20171106201618' },
     { name: 'GALAVISION', url: 'https://embed.ksdjugfsddeports.fun/embed/galavision.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'TLNOVELAS', url: 'https://embed.ksdjugfsddeports.fun/embed/tlnovelas.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'LAS ESTRELLAS', url: 'https://embed.ksdjugfsddeports.fun/embed/lasestrellas.html', logoUrl: 'https://placehold.co/24x24.png' },
@@ -241,40 +241,40 @@ const channelsData: Channel[] = [
     { name: 'GOLDEN PREMIERE', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenpremier.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'GOLDEN PREMIERE 2', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenpremier2.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'TNT SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/tntseries.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'CANAL SONY', url: 'https://embed.ksdjugfsddeports.fun/embed/sony.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AXN', url: 'https://embed.ksdjugfsddeports.fun/embed/axn.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'CANAL SONY', url: 'https://embed.ksdjugfsddeports.fun/embed/sony.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8g4pgtD9NRV7Q3SMRX1XUcxAkSyd3qR23Mw&s' },
+    { name: 'AXN', url: 'https://embed.ksdjugfsddeports.fun/embed/axn.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzMpELJrYH7D81zVpTgT7T96pw0EQCfsgD7A&s' },
     { name: 'UNIVERSAL TV', url: 'https://embed.ksdjugfsddeports.fun/embed/universalchannel.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'STUDIO UNIVERSAL', url: 'https://embed.ksdjugfsddeports.fun/embed/studiouniversal.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'MULTIPREMIER', url: 'https://embed.ksdjugfsddeports.fun/embed/multipremier.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AMC', url: 'https://embed.ksdjugfsddeports.fun/embed/amc.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'AMC', url: 'https://embed.ksdjugfsddeports.fun/embed/amc.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/01/AMC_logo_2016.png' },
     { name: 'PARAMOUNT CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/paramountchannel.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'DPELICULA', url: 'https://embed.ksdjugfsddeports.fun/embed/dpelicula.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'MTV', url: 'https://embed.ksdjugfsddeports.fun/embed/mtv.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/MTV_2021_%28brand_version%29.svg/1200px-MTV_2021_%28brand_version%29.svg.png' },
     { name: 'Comedy Central', url: 'https://embed.ksdjugfsddeports.fun/embed/comedycentral.html', logoUrl: 'https://1000marcas.net/wp-content/uploads/2022/01/Comedy-Central-Productions-Logo.png' },
     { name: 'Nat Geo', url: 'https://embed.ksdjugfsddeports.fun/embed/natgeo.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Nat_Geo_HD.png' },
     { name: 'Animal Planet', url: 'https://embed.ksdjugfsddeports.fun/embed/animalplanet.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg' },
-    { name: 'DISCOVERY CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverychannel.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'DISCOVERY TURBO', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryturbo.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'DISCOVERY H&H', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryhyh.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'DISCOVERY CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverychannel.html', logoUrl: 'https://static.wikia.nocookie.net/telepedia-es/images/8/81/Discovery_channel.png/revision/latest?cb=20210825190420&path-prefix=es' },
+    { name: 'DISCOVERY TURBO', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryturbo.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Discovery_Turbo_logo.svg/1200px-Discovery_Turbo_logo.svg.png' },
+    { name: 'DISCOVERY H&H', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryhyh.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Discovery_Home_%26_Health_logo.svg' },
     { name: 'ID INVESTIGATION', url: 'https://embed.ksdjugfsddeports.fun/embed/idinvestigation.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'DISCOVERY A&E', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryaye.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'DISCOVERY TLC', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverytlc.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'DISCOVERY THEATER', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverytheater.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'DISCOVERY WORLD', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryworld.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'DISCOVERY A&E', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryaye.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvr-HEzPT6Im-07iGS_JQGyMITM5DvbzcMrA&s' },
+    { name: 'DISCOVERY TLC', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverytlc.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/TLC_logo_%282023%29.svg' },
+    { name: 'DISCOVERY THEATER', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverytheater.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_discovery-hd-theater_m.png' },
+    { name: 'DISCOVERY WORLD', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryworld.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/World_Discovery_HD_logo.svg/1200px-World_Discovery_HD_logo.svg.png' },
     { name: 'EVERYTHING', url: 'https://embed.ksdjugfsddeports.fun/embed/everything.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'LIFETIME', url: 'https://embed.ksdjugfsddeports.fun/embed/lifetime.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'EL GOURMET', url: 'https://embed.ksdjugfsddeports.fun/embed/elgourmet.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'DISNEY JUNIOR', url: 'https://embed.ksdjugfsddeports.fun/embed/disneyjr.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'NICK', url: 'https://embed.ksdjugfsddeports.fun/embed/nick.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'NICK JR', url: 'https://embed.ksdjugfsddeports.fun/embed/nickjr.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'CARTOON NETWORK', url: 'https://embed.ksdjugfsddeports.fun/embed/cartoonnetwork.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'CARTOONITO', url: 'https://embed.ksdjugfsddeports.fun/embed/cartoonito.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'CARTOON NETWORK', url: 'https://embed.ksdjugfsddeports.fun/embed/cartoonnetwork.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/80/Cartoon_Network_2010_logo.svg' },
+    { name: 'CARTOONITO', url: 'https://embed.ksdjugfsddeports.fun/embed/cartoonito.html', logoUrl: 'https://static.wikia.nocookie.net/cartoonnetwork/images/8/83/Cartoonito_Logo_2021.png/revision/latest?cb=20211203224901&path-prefix=es' },
     { name: 'TOONCAST', url: 'https://embed.ksdjugfsddeports.fun/embed/tooncast.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'DISCOVERY KIDS', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverykids.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'DISCOVERY KIDS', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverykids.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Discovery_Kids_Logo_%282021%29.webp/215px-Discovery_Kids_Logo_%282021%29.webp.png' },
     { name: 'TELEMUNDO PUERTO RICO', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundopuertorico.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AZ CORAZON', url: 'https://embed.ksdjugfsddeports.fun/embed/azcorazon.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'AZ CLICK', url: 'https://embed.ksdjugfsddeports.fun/embed/azclick.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'A3SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/a3series.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'AZ CORAZON', url: 'https://embed.ksdjugfsddeports.fun/embed/azcorazon.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_az-corazon_m.png' },
+    { name: 'AZ CLICK', url: 'https://embed.ksdjugfsddeports.fun/embed/azclick.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs-6Dgz43MDgis4FMaUDdbDdgpYAhmUmkLCw&s' },
+    { name: 'A3SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/a3series.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnbtKSukxgLre37kBp2mHcm6FyWnotLCxKfA&s' },
     { name: 'NAT GEO MUNDO', url: 'https://embed.ksdjugfsddeports.fun/embed/natgeomundo.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'WILLAX TV', url: 'https://embed.ksdjugfsddeports.fun/embed/willax.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'GLOBAL TV PERU', url: 'https://embed.ksdjugfsddeports.fun/embed/globaltv.html', logoUrl: 'https://placehold.co/24x24.png' },
@@ -282,7 +282,7 @@ const channelsData: Channel[] = [
     { name: 'TELEHIT', url: 'https://embed.ksdjugfsddeports.fun/embed/telehit.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'ODISEA', url: 'https://embed.ksdjugfsddeports.fun/embed/odisea.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'MOVISTAR ACCION', url: 'https://embed.ksdjugfsddeports.fun/embed/movistaraccion.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'ANTENA 3', url: 'https://embed.ksdjugfsddeports.fun/embed/antena3.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'ANTENA 3', url: 'https://embed.ksdjugfsddeports.fun/embed/antena3.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6dtC1BvPcFHYtA9Z3EtmZffEYR8RSs1Xq-w&s' },
     { name: 'TV Pública', url: 'https://embed.ksdjugfsddeports.fun/embed/tvpublica.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg/1200px-TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg.png' },
     { name: 'DISNEY CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/disneychannel.html', logoUrl: 'https://placehold.co/24x24.png' },
     { name: 'TNT NOVELAS', url: 'https://embed.ksdjugfsddeports.fun/embed/tntnovelas.html', logoUrl: 'https://placehold.co/24x24.png' },
@@ -298,12 +298,23 @@ channelsData.forEach(channel => {
     let normalizedName = channel.name
         .replace(/\(Op\. \d+\)/g, '')
         .replace(/LATINOAMERICA|ARGENTINA|CHILE|COLOMBIA|USA|MX|PE|ES|GB|BR|NL/g, '')
+        .replace(/PLUS|\+/g, '+')
+        .replace(/\s+/g, ' ')
         .trim();
     if (normalizedName.startsWith('DIRECTV SPORTS')) {
         normalizedName = 'DIRECTV SPORTS';
     }
     if (normalizedName.startsWith('ESPN PREMIUM')) {
         normalizedName = 'ESPN PREMIUM';
+    }
+    if (normalizedName === 'M. LIGA DE CAMPEONES'){
+      normalizedName = 'Movistar Liga de Campeones';
+    }
+    if (normalizedName === 'CARACOL'){
+      normalizedName = 'Caracol TV';
+    }
+    if (normalizedName === 'UNIVISION'){
+      normalizedName = 'Univisíon';
     }
 
     if (channel.logoUrl && !channel.logoUrl.includes('placehold.co')) {
@@ -318,13 +329,25 @@ channelsData.forEach(channel => {
   let normalizedName = channel.name
       .replace(/\(Op\. \d+\)/g, '')
       .replace(/LATINOAMERICA|ARGENTINA|CHILE|COLOMBIA|USA|MX|PE|ES|GB|BR|NL/g, '')
+      .replace(/PLUS|\+/g, '+')
+      .replace(/\s+/g, ' ')
       .trim();
+
   if (normalizedName.startsWith('DIRECTV SPORTS')) {
         normalizedName = 'DIRECTV SPORTS';
   }
    if (normalizedName.startsWith('ESPN PREMIUM')) {
         normalizedName = 'ESPN PREMIUM';
   }
+  if (normalizedName === 'M. LIGA DE CAMPEONES'){
+    normalizedName = 'Movistar Liga de Campeones';
+  }
+    if (normalizedName === 'CARACOL'){
+      normalizedName = 'Caracol TV';
+    }
+   if (normalizedName === 'UNIVISION'){
+      normalizedName = 'Univisíon';
+    }
 
   const finalName = channel.name.trim();
   const logo = nameLogoMap.get(normalizedName) || channel.logoUrl || 'https://placehold.co/24x24.png';
