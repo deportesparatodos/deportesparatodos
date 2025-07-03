@@ -115,18 +115,20 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                 <Card key={eventIndex} className="bg-muted/50">
                   <CardHeader className="p-4 pb-2">
                     <div className="flex justify-between items-start gap-4">
-                      <p className="font-semibold text-foreground text-sm leading-tight flex-grow">{event.title}</p>
-                      <div className="flex flex-col items-end flex-shrink-0 gap-2 text-center">
-                          <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md flex-shrink-0 w-full">{event.time}</p>
-                          {event.status && (
+                        <div className="flex items-center gap-2 flex-wrap flex-grow">
+                            <p className="font-semibold text-foreground text-sm leading-tight">{event.title}</p>
+                            {event.status && (
                               <Badge className={cn(
-                                "text-xs font-bold border-0 w-full flex justify-center",
-                                event.status === 'En Vivo' && 'bg-green-600 text-primary-foreground hover:bg-green-600/90',
-                                event.status === 'Finalizado' && 'bg-muted-foreground text-muted',
-                                event.status === 'Próximo' && 'bg-blue-600 text-primary-foreground hover:bg-blue-600/90'
+                                "text-xs font-bold border-0 rounded-none",
+                                event.status === 'En Vivo' && 'bg-destructive text-destructive-foreground',
+                                event.status === 'Próximo' && 'bg-muted-foreground text-background',
+                                event.status === 'Finalizado' && 'bg-black text-white'
                               )}>{event.status}</Badge>
-                          )}
-                      </div>
+                            )}
+                        </div>
+                        <div className="flex-shrink-0">
+                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md">{event.time}</p>
+                        </div>
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 pt-2">
