@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -354,6 +355,7 @@ export default function HomePage() {
                   <DialogHeader>
                     <DialogTitle>Configuración de la Vista</DialogTitle>
                   </DialogHeader>
+                  <Separator className="my-4" />
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1">
                       <AccordionTrigger>Bordes</AccordionTrigger>
@@ -390,7 +392,7 @@ export default function HomePage() {
                           <div className="space-y-2">
                               <Label>Vista Previa</Label>
                               <div
-                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
+                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border"
                                   style={{
                                       gap: `${gridGap}px`,
                                       padding: `${gridGap}px`,
@@ -426,22 +428,25 @@ export default function HomePage() {
                    <DialogHeader>
                       <DialogTitle>Tutorial de Uso</DialogTitle>
                    </DialogHeader>
-                   <div className="relative mt-4">
-                      <Image
-                        src={TUTORIAL_IMAGES[currentTutorialSlide]}
-                        alt={`Tutorial paso ${currentTutorialSlide + 1}`}
-                        width={1200}
-                        height={675}
-                        className="rounded-md"
-                        unoptimized
-                      />
-                      <Button onClick={prevTutorialSlide} size="icon" variant="secondary" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full h-8 w-8">
-                        <ChevronLeft />
-                      </Button>
-                      <Button onClick={nextTutorialSlide} size="icon" variant="secondary" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-8 w-8">
-                        <ChevronRight />
-                      </Button>
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    <div className="mt-4 flex flex-col items-center gap-4">
+                      <div className="flex w-full items-center justify-center gap-4">
+                        <Button onClick={prevTutorialSlide} size="icon" variant="secondary" className="rounded-full h-8 w-8 flex-shrink-0">
+                            <ChevronLeft />
+                        </Button>
+                        <div className="border rounded-md overflow-hidden">
+                            <Image
+                                src={TUTORIAL_IMAGES[currentTutorialSlide]}
+                                alt={`Tutorial paso ${currentTutorialSlide + 1}`}
+                                width={1200}
+                                height={675}
+                                unoptimized
+                            />
+                        </div>
+                        <Button onClick={nextTutorialSlide} size="icon" variant="secondary" className="rounded-full h-8 w-8 flex-shrink-0">
+                            <ChevronRight />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
                         {TUTORIAL_IMAGES.map((_, i) => (
                            <div key={i} className={cn(
                              "h-2 w-2 rounded-full transition-colors",

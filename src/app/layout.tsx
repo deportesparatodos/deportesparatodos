@@ -26,6 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark">
+      <head>
+        <link rel="preload" href="https://i.ibb.co/YBjHxj6Z/TUTORIAL-1.jpg" as="image" />
+        <link rel="preload" href="https://i.ibb.co/N2hpR2Jy/TUTORIAL-2.jpg" as="image" />
+        <link rel="preload" href="https://i.ibb.co/hJR6tmYj/TUTORIAL-3.jpg" as="image" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
         {children}
         <Toaster />
