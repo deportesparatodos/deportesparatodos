@@ -11,7 +11,6 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/com
 import { Menu, X } from 'lucide-react';
 import { ChannelListComponent } from '@/components/channel-list';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { EventListComponent } from '@/components/event-list';
 
 const processUrlForView = (inputUrl: string): string => {
   if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
@@ -194,7 +193,13 @@ export default function HomePage() {
               </div>
               <div className="flex-grow overflow-hidden">
                 {mobileView === 'canales' && <ChannelListComponent channelStatuses={channelStatuses} isLoading={isLoadingStatuses} />}
-                {mobileView === 'eventos' && <EventListComponent />}
+                {mobileView === 'eventos' && (
+                  <iframe
+                    src="https://agenda-dpt.vercel.app"
+                    title="Lista de Eventos"
+                    className="w-full h-full border-0"
+                  />
+                )}
               </div>
             </SheetContent>
           </Sheet>
