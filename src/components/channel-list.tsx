@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from 'react';
@@ -212,7 +213,7 @@ const channelsData: Channel[] = [
     { name: 'LATINA', url: 'https://embed.ksdjugfsddeports.fun/embed/latina.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Latina_Television_-_Logotipo.png' },
     { name: 'AMERICA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/americatv.html', logoUrl: 'https://yt3.googleusercontent.com/KRDAxhSJVhhRP7SACB06iIg7xczMDUur1iGWVlvAJ4XkxRCkY1qFOVqVo02bsnh7W1c9HjNA=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'SPACE', url: 'https://embed.ksdjugfsddeports.fun/embed/space.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQYycUTk0VyZoRmq_axU94RnRSASnGZ4ypDIg&s' },
-    { name: 'WARNER BROS TV', url: 'https://embed.ksdjugfsddeports.fun/embed/warnerchannel.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'WARNER BROS TV', url: 'https://embed.ksdjugfsddeports.fun/embed/warnerchannel.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Warner2018LA.png' },
     { name: 'TNT', url: 'https://embed.ksdjugfsddeports.fun/embed/tnt.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'STAR CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/starchannel.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/89/Star_Channel_2020.svg' },
     { name: 'CINEMAX', url: 'https://embed.ksdjugfsddeports.fun/embed/cinemax.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Cinemax_%28Yellow%29.svg/640px-Cinemax_%28Yellow%29.svg.png' },
@@ -220,7 +221,7 @@ const channelsData: Channel[] = [
     { name: 'Telefe', url: 'https://embed.ksdjugfsddeports.fun/embed/telefe.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/cc/Telefe_%28nuevo_logo%29.png' },
     { name: 'EL TRECE', url: 'https://embed.ksdjugfsddeports.fun/embed/eltrece.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Isotipo_eltrece_2016.png' },
     { name: 'DISTRITO COMEDIA', url: 'https://embed.ksdjugfsddeports.fun/embed/distritocomedia.html', logoUrl: 'https://static.wikia.nocookie.net/telepedia-es/images/8/8f/Distrito_Comedia.png/revision/latest?cb=20210827230925&path-prefix=es' },
-    { name: 'TELEMUNDO MIAMI', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundo51.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'TELEMUNDO MIAMI', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundo51.html', logoUrl: 'https://media.telemundo51.com/2022/01/WSCV-51.png?resize=850%2C478&quality=85&strip=all' },
     { name: 'History', url: 'https://embed.ksdjugfsddeports.fun/embed/history.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
     { name: 'History 2', url: 'https://embed.ksdjugfsddeports.fun/embed/history2.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_h2_m.png' },
     { name: 'PASIONES', url: 'https://embed.ksdjugfsddeports.fun/embed/pasiones.html', logoUrl: 'https://yt3.googleusercontent.com/czxQxYU7hERMABPcpl6ayjo5NvzNcWjj9bKRdr6UbMZqdbF0QR998JZoO63y_hSHR7eb3B1PGw=s900-c-k-c0x00ffffff-no-rj' },
@@ -228,23 +229,23 @@ const channelsData: Channel[] = [
     { name: 'AZTECA INTERNACIONAL', url: 'https://embed.ksdjugfsddeports.fun/embed/aztecainternacional.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRezmNp_pFeJAxqdswiFwYTX8KOmAjITMKm8w&s' },
     { name: 'AZ CINEMA', url: 'https://embed.ksdjugfsddeports.fun/embed/azcinema.html', logoUrl: 'https://static.wikia.nocookie.net/logopedia/images/6/67/Azcinema.png/revision/latest?cb=20171106201618' },
     { name: 'GALAVISION', url: 'https://embed.ksdjugfsddeports.fun/embed/galavision.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Galavision_Logo_2024.svg' },
-    { name: 'TLNOVELAS', url: 'https://embed.ksdjugfsddeports.fun/embed/tlnovelas.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'TLNOVELAS', url: 'https://embed.ksdjugfsddeports.fun/embed/tlnovelas.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_tlnovelas_m.png' },
     { name: 'LAS ESTRELLAS', url: 'https://embed.ksdjugfsddeports.fun/embed/lasestrellas.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Las_Estrellas_logo_%282016%29.svg/1200px-Las_Estrellas_logo_%282016%29.svg.png' },
-    { name: 'SYFY USA', url: 'https://embed.ksdjugfsddeports.fun/embed/syfy.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'SYFY USA', url: 'https://embed.ksdjugfsddeports.fun/embed/syfy.html', logoUrl: 'https://deadline.com/wp-content/uploads/2016/05/usa-syfy-3.jpg?w=630&h=383&crop=1' },
     { name: 'Caracol TV', url: 'https://embed.ksdjugfsddeports.fun/embed/caracol.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/65/Logotipo_de_Caracol_Televisi%C3%B3n_Corporativo.png' },
     { name: 'ATV', url: 'https://embed.ksdjugfsddeports.fun/embed/atv.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/ATV_logo_2020.png' },
     { name: 'Univisíon', url: 'https://embed.ksdjugfsddeports.fun/embed/univision.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Logo_Univision_2019.svg' },
-    { name: 'UNICABLE', url: 'https://embed.ksdjugfsddeports.fun/embed/unicable.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'UNICABLE', url: 'https://embed.ksdjugfsddeports.fun/embed/unicable.html', logoUrl: 'https://yt3.googleusercontent.com/Qavdx7MHCieEgzmIZ2QhbdYKzfELtxCP3BUvMMCbrtLt0M2WWYDCD8NkTD150f_0bibG8Ko=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'FX', url: 'https://embed.ksdjugfsddeports.fun/embed/fx.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/FX_International_logo.svg' },
     { name: 'GOLDEN PLUS', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenplus.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5F0aqp2753KU8sHrNHjxRrCuI4xXyd_UnnA&s' },
     { name: 'GOLDEN EDGE', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenedge.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d5/Golden_Edge_Logo_2020.png' },
     { name: 'GOLDEN PREMIERE', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenpremier.html', logoUrl: 'https://cdn.mitvstatic.com/channels/co_golden-premier-hd_m.png' },
     { name: 'GOLDEN PREMIERE 2', url: 'https://embed.ksdjugfsddeports.fun/embed/goldenpremier2.html', logoUrl: 'https://static.wikia.nocookie.net/logopedia/images/9/90/Golden_Premier_2_2020.png/revision/latest?cb=20201201141739&path-prefix=es' },
-    { name: 'TNT SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/tntseries.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'TNT SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/tntseries.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b3/TNT_Series_logo_2023.svg' },
     { name: 'CANAL SONY', url: 'https://embed.ksdjugfsddeports.fun/embed/sony.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8g4pgtD9NRV7Q3SMRX1XUcxAkSyd3qR23Mw&s' },
     { name: 'AXN', url: 'https://embed.ksdjugfsddeports.fun/embed/axn.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzMpELJrYH7D81zVpTgT7T96pw0EQCfsgD7A&s' },
-    { name: 'UNIVERSAL TV', url: 'https://embed.ksdjugfsddeports.fun/embed/universalchannel.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'STUDIO UNIVERSAL', url: 'https://embed.ksdjugfsddeports.fun/embed/studiouniversal.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'UNIVERSAL TV', url: 'https://embed.ksdjugfsddeports.fun/embed/universalchannel.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Universal_TV_logo.svg/1200px-Universal_TV_logo.svg.png' },
+    { name: 'STUDIO UNIVERSAL', url: 'https://embed.ksdjugfsddeports.fun/embed/studiouniversal.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/74/StudioUniversal2016.png' },
     { name: 'MULTIPREMIER', url: 'https://embed.ksdjugfsddeports.fun/embed/multipremier.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Multipremier_logo.svg/1200px-Multipremier_logo.svg.png' },
     { name: 'AMC', url: 'https://embed.ksdjugfsddeports.fun/embed/amc.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/01/AMC_logo_2016.png' },
     { name: 'PARAMOUNT CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/paramountchannel.html', logoUrl: 'https://cdn.mitvstatic.com/channels/co_paramount-channel_m.png' },
@@ -261,7 +262,7 @@ const channelsData: Channel[] = [
     { name: 'DISCOVERY TLC', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverytlc.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/TLC_logo_%282023%29.svg' },
     { name: 'DISCOVERY THEATER', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverytheater.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_discovery-hd-theater_m.png' },
     { name: 'DISCOVERY WORLD', url: 'https://embed.ksdjugfsddeports.fun/embed/discoveryworld.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/World_Discovery_HD_logo.svg/1200px-World_Discovery_HD_logo.svg.png' },
-    { name: 'EVERYTHING', url: 'https://embed.ksdjugfsddeports.fun/embed/everything.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'EVERYTHING', url: 'https://embed.ksdjugfsddeports.fun/embed/everything.html', logoUrl: 'https://e7.pngegg.com/pngimages/15/632/png-clipart-e-television-channel-entertainment-logo-channel-miscellaneous-television-thumbnail.png' },
     { name: 'LIFETIME', url: 'https://embed.ksdjugfsddeports.fun/embed/lifetime.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlzhF3e8RMJSa--VuME5MVRlPqytmzkekmOA&s' },
     { name: 'EL GOURMET', url: 'https://embed.ksdjugfsddeports.fun/embed/elgourmet.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSK6F1LJE-_HEEQbOTGu8X1Zqa6Fs3udromNQ&s' },
     { name: 'DISNEY JUNIOR', url: 'https://embed.ksdjugfsddeports.fun/embed/disneyjr.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZWyVcgbta5_RL2K2EPgrPiK-DrW7icmSCNQ&s' },
@@ -269,25 +270,25 @@ const channelsData: Channel[] = [
     { name: 'NICK JR', url: 'https://embed.ksdjugfsddeports.fun/embed/nickjr.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Nick_Jr._logo_2023_%28outline%29.svg' },
     { name: 'CARTOON NETWORK', url: 'https://embed.ksdjugfsddeports.fun/embed/cartoonnetwork.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/80/Cartoon_Network_2010_logo.svg' },
     { name: 'CARTOONITO', url: 'https://embed.ksdjugfsddeports.fun/embed/cartoonito.html', logoUrl: 'https://static.wikia.nocookie.net/cartoonnetwork/images/8/83/Cartoonito_Logo_2021.png/revision/latest?cb=20211203224901&path-prefix=es' },
-    { name: 'TOONCAST', url: 'https://embed.ksdjugfsddeports.fun/embed/tooncast.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'TOONCAST', url: 'https://embed.ksdjugfsddeports.fun/embed/tooncast.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/41/Tooncast_logo_2021.svg' },
     { name: 'DISCOVERY KIDS', url: 'https://embed.ksdjugfsddeports.fun/embed/discoverykids.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Discovery_Kids_Logo_%282021%29.webp/215px-Discovery_Kids_Logo_%282021%29.webp.png' },
-    { name: 'TELEMUNDO PUERTO RICO', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundopuertorico.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'TELEMUNDO PUERTO RICO', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundopuertorico.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/en/c/c5/Telemundo_PR_WKAQ_logo.png' },
     { name: 'AZ CORAZON', url: 'https://embed.ksdjugfsddeports.fun/embed/azcorazon.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_az-corazon_m.png' },
     { name: 'AZ CLICK', url: 'https://embed.ksdjugfsddeports.fun/embed/azclick.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSs-6Dgz43MDgis4FMaUDdbDdgpYAhmUmkLCw&s' },
     { name: 'A3SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/a3series.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnbtKSukxgLre37kBp2mHcm6FyWnotLCxKfA&s' },
     { name: 'NAT GEO MUNDO', url: 'https://embed.ksdjugfsddeports.fun/embed/natgeomundo.html', logoUrl: 'https://pbs.twimg.com/profile_images/496293907886403584/yQYuZTjL_400x400.png' },
-    { name: 'WILLAX TV', url: 'https://embed.ksdjugfsddeports.fun/embed/willax.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'WILLAX TV', url: 'https://embed.ksdjugfsddeports.fun/embed/willax.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/73/Willax_Televisi%C3%B3n.png' },
     { name: 'GLOBAL TV PERU', url: 'https://embed.ksdjugfsddeports.fun/embed/globaltv.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/bd/Global_logo_2019.png' },
     { name: 'RCN', url: 'https://embed.ksdjugfsddeports.fun/embed/rcn.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/CanalRCN2023.png' },
-    { name: 'TELEHIT', url: 'https://embed.ksdjugfsddeports.fun/embed/telehit.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'TELEHIT', url: 'https://embed.ksdjugfsddeports.fun/embed/telehit.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Telehit_logo_2020.png' },
     { name: 'ODISEA', url: 'https://embed.ksdjugfsddeports.fun/embed/odisea.html', logoUrl: 'https://forounivers.com/uploads/monthly_2020_02/odisea.png.a810d7a6021d7b380f5c71a337ab2ac7.png' },
     { name: 'MOVISTAR ACCION', url: 'https://embed.ksdjugfsddeports.fun/embed/movistaraccion.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwQpf3bK8lcZBW6dNMJs5kZ2o-4mpMEdmUXQ&s' },
     { name: 'ANTENA 3', url: 'https://embed.ksdjugfsddeports.fun/embed/antena3.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6dtC1BvPcFHYtA9Z3EtmZffEYR8RSs1Xq-w&s' },
     { name: 'TV Pública', url: 'https://embed.ksdjugfsddeports.fun/embed/tvpublica.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg/1200px-TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg.png' },
     { name: 'DISNEY CHANNEL', url: 'https://embed.ksdjugfsddeports.fun/embed/disneychannel.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d2/2019_Disney_Channel_logo.svg' },
-    { name: 'TNT NOVELAS', url: 'https://embed.ksdjugfsddeports.fun/embed/tntnovelas.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'UNIVERSAL CINEMA', url: 'https://embed.ksdjugfsddeports.fun/embed/universalcinema.html', logoUrl: 'https://placehold.co/24x24.png' },
-    { name: 'TELEMUNDO 51 FLORIDA', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundo51florida.html', logoUrl: 'https://placehold.co/24x24.png' },
+    { name: 'TNT NOVELAS', url: 'https://embed.ksdjugfsddeports.fun/embed/tntnovelas.html', logoUrl: 'https://yt3.googleusercontent.com/2pBZT2JWbwv3wA8JdzUnO8fiwLEHejjg1n4p9LOskGK2xC4urk7npXE5_eMzJihILaJnLiKF=s900-c-k-c0x00ffffff-no-rj' },
+    { name: 'UNIVERSAL CINEMA', url: 'https://embed.ksdjugfsddeports.fun/embed/universalcinema.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3ED1lg2jESq3qcELJS23H5T2RBJhUj6aB5g&s' },
+    { name: 'TELEMUNDO 51 FLORIDA', url: 'https://embed.ksdjugfsddeports.fun/embed/telemundo51florida.html', logoUrl: 'https://media.telemundo31.com/2022/11/Telemundo-Noticias-Florida.jpg?quality=85&strip=all&resize=850%2C478' },
 ];
 
 const processedChannels: Channel[] = [];
@@ -295,7 +296,6 @@ const nameLogoMap = new Map<string, string>();
 
 channelsData.forEach(channel => {
     let normalizedName = channel.name
-        .replace(/\(Op\. \d+\)/g, '')
         .replace(/LATINOAMERICA|ARGENTINA|CHILE|COLOMBIA|USA|MX|PE|ES|GB|BR|NL/g, '')
         .replace(/PLUS|\+/g, '+')
         .replace(/\s+/g, ' ')
@@ -326,7 +326,6 @@ channelsData.forEach(channel => {
 const uniqueChannelsMap = new Map<string, Channel>();
 channelsData.forEach(channel => {
   let normalizedName = channel.name
-      .replace(/\(Op\. \d+\)/g, '')
       .replace(/LATINOAMERICA|ARGENTINA|CHILE|COLOMBIA|USA|MX|PE|ES|GB|BR|NL/g, '')
       .replace(/PLUS|\+/g, '+')
       .replace(/\s+/g, ' ')
