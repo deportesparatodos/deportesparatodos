@@ -3,14 +3,17 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { WelcomeMessage } from '@/components/welcome-message';
 import { CameraConfigurationComponent, type CameraStatus } from '@/components/camera-configuration';
 import { cn } from "@/lib/utils";
 import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
-import { Menu, X } from 'lucide-react';
-import { ChannelListComponent } from '@/components/channel-list';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Menu, X, Settings, HelpCircle, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { fromZonedTime } from 'date-fns-tz';
@@ -46,6 +49,12 @@ const processUrlForView = (inputUrl: string): string => {
   return inputUrl;
 };
 
+const TUTORIAL_IMAGES = [
+  "https://i.ibb.co/YBjHxj6Z/TUTORIAL-1.jpg",
+  "https://i.ibb.co/N2hpR2Jy/TUTORIAL-2.jpg",
+  "https://i.ibb.co/hJR6tmYj/TUTORIAL-3.jpg",
+];
+
 
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(4);
@@ -56,9 +65,6 @@ export default function HomePage() {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   
-  const [mobileView, setMobileView] = useState<'canales' | 'eventos'>('canales');
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-
   const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
   const [isLoadingStatuses, setIsLoadingStatuses] = useState<boolean>(true);
 
@@ -66,6 +72,9 @@ export default function HomePage() {
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  const [gridGap, setGridGap] = useState<number>(4);
+  const [currentTutorialSlide, setCurrentTutorialSlide] = useState(0);
 
 
   const topBarColorClass = useMemo(() => {
@@ -191,6 +200,10 @@ export default function HomePage() {
     } else {
       setNumCameras(4);
     }
+    const storedGap = localStorage.getItem('gridGap');
+    if (storedGap) {
+      setGridGap(parseInt(storedGap, 10));
+    }
   }, []);
 
   useEffect(() => {
@@ -199,6 +212,20 @@ export default function HomePage() {
       localStorage.setItem('numCameras', numCameras.toString());
     }
   }, [cameraUrls, numCameras, isMounted]);
+
+  const handleGridGapChange = (value: number[]) => {
+    const newGap = value[0];
+    setGridGap(newGap);
+    localStorage.setItem('gridGap', newGap.toString());
+  };
+
+  const nextTutorialSlide = () => {
+    setCurrentTutorialSlide((prev) => (prev === TUTORIAL_IMAGES.length - 1 ? 0 : prev + 1));
+  };
+
+  const prevTutorialSlide = () => {
+    setCurrentTutorialSlide((prev) => (prev === 0 ? TUTORIAL_IMAGES.length - 1 : prev - 1));
+  };
 
   const handleStartView = () => {
     const activeUrls = cameraUrls.slice(0, numCameras);
@@ -261,6 +288,7 @@ export default function HomePage() {
     const processedUrls = filledUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
     processedUrls.forEach((url) => queryParams.append("urls", encodeURIComponent(url)));
+    queryParams.append("gap", gridGap.toString());
     router.push(`/view?${queryParams.toString()}`);
   };
   
@@ -271,7 +299,7 @@ export default function HomePage() {
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
         <div className="absolute top-4 left-4 z-20">
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <Sheet>
             <SheetTrigger asChild>
               <Button size="icon" className="bg-white text-background hover:bg-white/90">
                 <Menu className="h-6 w-6" />
@@ -279,46 +307,102 @@ export default function HomePage() {
             </SheetTrigger>
             <SheetContent 
               side="left" 
-              className="w-full sm:w-96 flex flex-col p-0 gap-0" 
-              hideClose
-              onInteractOutside={(e) => {
-                e.preventDefault();
-              }}
+              className="w-full sm:w-96 flex flex-col p-6 gap-4" 
             >
               <SheetTitle className="sr-only">Menu</SheetTitle>
-              <div className="border-b border-border">
-                <div className="flex items-center gap-2 p-4">
-                  <Button onClick={() => setMobileView('canales')} variant={mobileView === 'canales' ? 'secondary' : 'ghost'} className="flex-1">Lista de Canales</Button>
-                  <Button onClick={() => setMobileView('eventos')} variant={mobileView === 'eventos' ? 'secondary' : 'ghost'} className="flex-1">Lista de Eventos</Button>
-                  <SheetClose asChild>
-                     <Button variant="destructive" size="icon" className="flex-shrink-0">
-                       <X className="h-4 w-4" />
-                     </Button>
-                  </SheetClose>
-                </div>
+              <div className="flex justify-center">
+                 <Image
+                  src="https://i.ibb.co/BVLhxp2k/deportes-para-todos.png"
+                  alt="Deportes Para Todos Logo"
+                  width={250}
+                  height={62.5}
+                  priority
+                  data-ai-hint="logo"
+                />
               </div>
-              <div className="flex-grow overflow-hidden">
-                {mobileView === 'canales' && <ChannelListComponent channelStatuses={channelStatuses} isLoading={isLoadingStatuses} />}
-                {mobileView === 'eventos' && (
-                  <iframe
-                    src="https://agenda-dpt.vercel.app"
-                    title="Lista de Eventos"
-                    className="w-full h-full border-0"
-                  />
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-        
-        <div className="w-full flex-grow flex flex-col relative px-4">
-          <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
-          <div className="flex-grow flex flex-col items-center justify-center gap-6">
-              <div className="flex flex-col items-center gap-2">
-                <WelcomeMessage />
-                <Dialog>
+              <Separator />
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="justify-start">
+                    <Settings className="mr-2" />
+                    Configuración
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Configuración de la Vista</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <Label htmlFor="grid-gap-slider">Margen entre ventanas ({gridGap}px)</Label>
+                    <Slider
+                      id="grid-gap-slider"
+                      min={0}
+                      max={32}
+                      step={1}
+                      value={[gridGap]}
+                      onValueChange={handleGridGapChange}
+                    />
+                    <div className="mt-4 space-y-2">
+                       <Label>Vista Previa</Label>
+                       <div 
+                         className="grid h-48 grid-cols-2 grid-rows-2 rounded-md bg-muted p-2 transition-all"
+                         style={{ gap: `${gridGap}px` }}
+                       >
+                         <div className="rounded-md bg-background" />
+                         <div className="rounded-md bg-background" />
+                         <div className="rounded-md bg-background" />
+                         <div className="rounded-md bg-background" />
+                       </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                   <Button variant="outline" className="justify-start">
+                     <HelpCircle className="mr-2" />
+                     Tutorial
+                   </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                   <DialogHeader>
+                      <DialogTitle>Tutorial de Uso</DialogTitle>
+                   </DialogHeader>
+                   <div className="relative mt-4">
+                      <Image
+                        src={TUTORIAL_IMAGES[currentTutorialSlide]}
+                        alt={`Tutorial paso ${currentTutorialSlide + 1}`}
+                        width={1200}
+                        height={675}
+                        className="rounded-md"
+                        unoptimized
+                      />
+                      <Button onClick={prevTutorialSlide} size="icon" variant="secondary" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full h-8 w-8">
+                        <ChevronLeft />
+                      </Button>
+                      <Button onClick={nextTutorialSlide} size="icon" variant="secondary" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-8 w-8">
+                        <ChevronRight />
+                      </Button>
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                        {TUTORIAL_IMAGES.map((_, i) => (
+                           <div key={i} className={cn(
+                             "h-2 w-2 rounded-full transition-colors",
+                             i === currentTutorialSlide ? 'bg-primary' : 'bg-muted'
+                           )} />
+                        ))}
+                      </div>
+                   </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="link" className="text-sm text-muted-foreground hover:text-foreground px-1 py-0 h-auto">Aviso Legal</Button>
+                    <Button variant="outline" className="justify-start">
+                      <FileText className="mr-2" />
+                      Aviso Legal
+                    </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl">
                     <DialogHeader>
@@ -336,7 +420,16 @@ export default function HomePage() {
                       </p>
                     </div>
                   </DialogContent>
-                </Dialog>
+              </Dialog>
+            </SheetContent>
+          </Sheet>
+        </div>
+        
+        <div className="w-full flex-grow flex flex-col relative px-4">
+          <div className={cn("h-2 w-full absolute top-0 left-0", topBarColorClass)} />
+          <div className="flex-grow flex flex-col items-center justify-center gap-6">
+              <div className="flex flex-col items-center gap-2">
+                <WelcomeMessage />
               </div>
               <div className="w-full max-w-lg">
                 <CameraConfigurationComponent
@@ -366,3 +459,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

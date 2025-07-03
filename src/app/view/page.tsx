@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -9,6 +10,8 @@ import { Button } from "@/components/ui/button";
 function ViewPageContent() {
   const searchParams = useSearchParams();
   const urls: string[] = searchParams.getAll('urls').map((url: string) => decodeURIComponent(url));
+  const gapParam = searchParams.get('gap');
+  const gap = gapParam ? parseInt(gapParam, 10) : 0;
 
   if (urls.length === 0) {
     return (
@@ -24,7 +27,7 @@ function ViewPageContent() {
   }
 
   const numIframes = urls.length;
-  let gridContainerClasses = "grid gap-0 flex-grow w-full h-full";
+  let gridContainerClasses = "grid flex-grow w-full h-full";
 
   if (numIframes === 1) {
     gridContainerClasses += " grid-cols-1 grid-rows-1";
@@ -44,7 +47,7 @@ function ViewPageContent() {
         <X className="h-6 w-6" />
       </Link>
       
-      <main className={gridContainerClasses}>
+      <main className={gridContainerClasses} style={{ gap: `${gap}px` }}>
         {urls.map((url: string, index: number) => (
           <div
             key={index}
@@ -83,3 +86,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    
