@@ -13,7 +13,9 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+
 
 export interface Event {
   time: string;
@@ -24,7 +26,7 @@ export interface Event {
   language: string;
   date: string;
   source: string;
-  status: string;
+  status: 'Próximo' | 'En Vivo' | 'Finalizado';
 }
 
 interface CopiedStates {
@@ -83,7 +85,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
-      <div className="px-4 flex-shrink-0 border-b border-border pb-5">
+      <div className="px-6 flex-shrink-0 pb-5">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -105,16 +107,26 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           )}
         </div>
       </div>
-      <div className="flex-grow p-4 overflow-y-auto">
+      <div className="flex-grow px-4 pb-4 overflow-y-auto">
         <TooltipProvider delayDuration={300}>
           {filteredEvents.length > 0 ? (
             <div className="space-y-4">
               {filteredEvents.map((event, eventIndex) => (
                 <Card key={eventIndex} className="bg-muted/50">
                   <CardHeader className="p-4 pb-2">
-                    <div className="flex justify-between items-center gap-4">
+                    <div className="flex justify-between items-start gap-4">
                       <p className="font-semibold text-foreground text-sm leading-tight flex-grow">{event.title}</p>
-                      <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md flex-shrink-0">{event.time}</p>
+                      <div className="flex flex-col items-end flex-shrink-0 gap-2 text-center">
+                          <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md flex-shrink-0 w-full">{event.time}</p>
+                          {event.status && (
+                              <Badge className={cn(
+                                "text-xs font-bold border-0 w-full flex justify-center",
+                                event.status === 'En Vivo' && 'bg-green-600 text-primary-foreground hover:bg-green-600/90',
+                                event.status === 'Finalizado' && 'bg-muted-foreground text-muted',
+                                event.status === 'Próximo' && 'bg-blue-600 text-primary-foreground hover:bg-blue-600/90'
+                              )}>{event.status}</Badge>
+                          )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 pt-2">

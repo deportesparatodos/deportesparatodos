@@ -13,6 +13,9 @@ import { Menu, X } from 'lucide-react';
 import { ChannelListComponent } from '@/components/channel-list';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
+import { zonedTimeToUtc } from 'date-fns-tz';
+import { addHours, isAfter } from 'date-fns';
+
 
 const processUrlForView = (inputUrl: string): string => {
   if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
@@ -59,9 +62,11 @@ export default function HomePage() {
   const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
   const [isLoadingStatuses, setIsLoadingStatuses] = useState<boolean>(true);
 
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Omit<Event, 'status'>[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
 
   const topBarColorClass = useMemo(() => {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
@@ -74,6 +79,52 @@ export default function HomePage() {
     }
     return 'bg-red-500';
   }, [cameraStatuses, numCameras, cameraUrls]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+        setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const processedAndSortedEvents = useMemo((): Event[] => {
+    if (!events.length) return [];
+    
+    const now = currentTime;
+
+    const getEventStatus = (event: Omit<Event, 'status'>): Event['status'] => {
+      try {
+        const eventStartBA = zonedTimeToUtc(`${event.date}T${event.time}:00`, 'America/Argentina/Buenos_Aires');
+        const eventEndBA = addHours(eventStartBA, 3);
+        
+        if (isAfter(now, eventEndBA)) return 'Finalizado';
+        if (isAfter(now, eventStartBA)) return 'En Vivo';
+        return 'Próximo';
+      } catch (e) {
+        console.error("Error processing event date:", e);
+        return 'Próximo';
+      }
+    };
+    
+    const eventsWithStatus = events.map(e => ({
+      ...e,
+      status: getEventStatus(e),
+    }));
+
+    const statusOrder = { 'En Vivo': 1, 'Próximo': 2, 'Finalizado': 3 };
+
+    eventsWithStatus.sort((a, b) => {
+        if (a.status !== b.status) {
+            return statusOrder[a.status] - statusOrder[b.status];
+        }
+        return a.time.localeCompare(b.time);
+    });
+
+    return eventsWithStatus;
+
+  }, [events, currentTime]);
+
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -106,9 +157,8 @@ export default function HomePage() {
         if (!response.ok) {
           throw new Error('No se pudieron cargar los eventos.');
         }
-        const data: Event[] = await response.json();
-        const sortedData = data.sort((a, b) => a.time.localeCompare(b.time));
-        setEvents(sortedData);
+        const data = await response.json();
+        setEvents(data);
       } catch (err) {
         if (err instanceof Error) {
             setEventsError(err.message);
@@ -280,7 +330,7 @@ export default function HomePage() {
                   setCameraStatuses={setCameraStatuses}
                   setAcknowledged={setAcknowledged}
                   isLoadingChannelStatuses={isLoadingStatuses}
-                  events={events}
+                  events={processedAndSortedEvents}
                   isLoadingEvents={isLoadingEvents}
                   eventsError={eventsError}
                 />
