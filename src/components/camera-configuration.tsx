@@ -11,7 +11,7 @@ import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EventListComponent } from './event-list';
+import { EventListComponent, type Event } from './event-list';
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
@@ -28,6 +28,9 @@ interface CameraConfigurationProps {
   setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
   setAcknowledged: Dispatch<SetStateAction<boolean>>;
   isLoadingChannelStatuses?: boolean;
+  events: Event[];
+  isLoadingEvents: boolean;
+  eventsError: string | null;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -43,6 +46,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setCameraStatuses,
   setAcknowledged,
   isLoadingChannelStatuses,
+  events,
+  isLoadingEvents,
+  eventsError,
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
@@ -53,6 +59,15 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         return { text: "VACIO", status: 'empty' };
     }
     
+    if (events && events.length > 0) {
+      for (const event of events) {
+        const optionIndex = event.options.indexOf(url);
+        if (optionIndex > -1 && event.buttons[optionIndex]) {
+          return { text: event.buttons[optionIndex].toUpperCase(), status: 'valid' };
+        }
+      }
+    }
+
     if (url.includes('ksdjugfsddeports.fun')) {
       const getStreamNameFromUrl = (u: string): string | null => {
         try {
@@ -117,7 +132,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         return getDisplayStatus(cameraUrls[index] || '').status;
     });
     setCameraStatuses(statuses);
-  }, [cameraUrls, numCameras, setCameraStatuses, channelStatuses]);
+  }, [cameraUrls, numCameras, setCameraStatuses, channelStatuses, events]);
 
 
   const handleNumCamerasChange = (value: string) => {
@@ -299,7 +314,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                        <DialogHeader className="px-6 py-5 border-b">
+                        <DialogHeader className="px-6 py-5 my-5 border-b">
                             <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
                         </DialogHeader>
                         <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden">
@@ -315,7 +330,12 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                 />
                             </TabsContent>
                             <TabsContent value="events" className="flex-grow overflow-hidden mt-2 data-[state=inactive]:hidden">
-                                <EventListComponent onSelectEvent={handleSelectChannel} />
+                                <EventListComponent 
+                                  onSelectEvent={handleSelectChannel}
+                                  events={events}
+                                  isLoading={isLoadingEvents}
+                                  error={eventsError}
+                                />
                             </TabsContent>
                         </Tabs>
                     </DialogContent>

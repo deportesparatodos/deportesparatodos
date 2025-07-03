@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -11,6 +12,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/com
 import { Menu, X } from 'lucide-react';
 import { ChannelListComponent } from '@/components/channel-list';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import type { Event } from '@/components/event-list';
 
 const processUrlForView = (inputUrl: string): string => {
   if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
@@ -57,6 +59,10 @@ export default function HomePage() {
   const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
   const [isLoadingStatuses, setIsLoadingStatuses] = useState<boolean>(true);
 
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+
   const topBarColorClass = useMemo(() => {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
     
@@ -91,7 +97,31 @@ export default function HomePage() {
         setIsLoadingStatuses(false);
       }
     };
+
+    const fetchEvents = async () => {
+      setIsLoadingEvents(true);
+      setEventsError(null);
+      try {
+        const response = await fetch('https://agenda-dpt.vercel.app/api/events');
+        if (!response.ok) {
+          throw new Error('No se pudieron cargar los eventos.');
+        }
+        const data: Event[] = await response.json();
+        const sortedData = data.sort((a, b) => a.time.localeCompare(b.time));
+        setEvents(sortedData);
+      } catch (err) {
+        if (err instanceof Error) {
+            setEventsError(err.message);
+        } else {
+            setEventsError('Ocurrió un error inesperado.');
+        }
+      } finally {
+        setIsLoadingEvents(false);
+      }
+    };
+    
     fetchStatuses();
+    fetchEvents();
   }, []);
 
   useEffect(() => {
@@ -250,6 +280,9 @@ export default function HomePage() {
                   setCameraStatuses={setCameraStatuses}
                   setAcknowledged={setAcknowledged}
                   isLoadingChannelStatuses={isLoadingStatuses}
+                  events={events}
+                  isLoadingEvents={isLoadingEvents}
+                  eventsError={eventsError}
                 />
               </div>
           </div>

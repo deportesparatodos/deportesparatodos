@@ -2,7 +2,7 @@
 "use client";
 
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-interface Event {
+export interface Event {
   time: string;
   title: string;
   options: string[];
@@ -33,41 +33,15 @@ interface CopiedStates {
 
 interface EventListComponentProps {
   onSelectEvent?: (url: string) => void;
+  events: Event[];
+  isLoading: boolean;
+  error: string | null;
 }
 
-export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent }) => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [searchTerm, setSearchTerm] = useState('');
   const isSelectMode = !!onSelectEvent;
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch('https://agenda-dpt.vercel.app/api/events');
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar los eventos.');
-        }
-        const data: Event[] = await response.json();
-        const sortedData = data.sort((a, b) => a.time.localeCompare(b.time));
-        setEvents(sortedData);
-      } catch (err) {
-        if (err instanceof Error) {
-            setError(err.message);
-        } else {
-            setError('Ocurrió un error inesperado.');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, []);
 
   const handleAction = async (url: string, key: string) => {
     if (isSelectMode && onSelectEvent) {
@@ -109,7 +83,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent 
 
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
-      <div className="px-4 py-5 flex-shrink-0 border-b border-border">
+      <div className="px-4 py-5 my-5 flex-shrink-0 border-b border-border">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -151,7 +125,6 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent 
                           const isCopied = copiedStates[key];
                           const buttonLabel = event.buttons[channelIndex] || 'Canal';
                           
-                          const actionLabel = isSelectMode ? 'Seleccionar' : (isCopied ? '¡Copiado!' : 'Copiar');
                           const Icon = isSelectMode ? Tv : (isCopied ? CheckCircle2 : Copy);
     
                           return (
@@ -167,11 +140,11 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent 
                                   onClick={() => handleAction(url, key)}
                                 >
                                   <Icon className="mr-2 h-4 w-4" />
-                                  {isSelectMode ? "Seleccionar" : (isCopied ? '¡Copiado!' : 'Copiar')}
+                                  {isSelectMode ? buttonLabel : (isCopied ? '¡Copiado!' : 'Copiar')}
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>{actionLabel} {buttonLabel}</p>
+                                <p>{isSelectMode ? `Seleccionar ${buttonLabel}` : `Copiar ${buttonLabel}`}</p>
                               </TooltipContent>
                             </Tooltip>
                           );
