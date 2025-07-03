@@ -203,38 +203,48 @@ export default function HomePage() {
   const handleStartView = () => {
     const activeUrls = cameraUrls.slice(0, numCameras);
     const activeStatuses = cameraStatuses.slice(0, numCameras);
-    const filledUrls = activeUrls.filter(u => u && u.trim() !== '');
-    
+    const filledUrls = activeUrls.filter((u) => u && u.trim() !== "");
+
     setMessages([]); // Clear previous messages
 
     const warningMessages: string[] = [];
+    let emptyViewCount = 0;
+
     activeUrls.forEach((url, i) => {
-        if (!url || url.trim() === '') {
-            warningMessages.push(`La Vista ${i + 1} está vacía.`);
-        } else if (activeStatuses[i] === 'inactive') {
-            warningMessages.push(`El canal en la Vista ${i + 1} está inactivo.`);
-        } else if (activeStatuses[i] === 'unknown') {
-            warningMessages.push(`El link en la Vista ${i + 1} es desconocido.`);
-        }
+      if (!url || url.trim() === "") {
+        emptyViewCount++;
+      } else if (activeStatuses[i] === "inactive") {
+        warningMessages.push(`El canal en la Vista ${i + 1} está inactivo.`);
+      } else if (activeStatuses[i] === "unknown") {
+        warningMessages.push(`El link en la Vista ${i + 1} es desconocido.`);
+      }
     });
 
-    if (warningMessages.length > 0 && !acknowledged) {
-        setMessages(warningMessages);
-        setAcknowledged(true);
-        return;
+    if (emptyViewCount > 0) {
+      const pluralS = emptyViewCount > 1 ? "s" : "";
+      const verb = emptyViewCount > 1 ? "están" : "está";
+      warningMessages.unshift(
+        `Hay ${emptyViewCount} vista${pluralS} vacía${pluralS}. Si continúas, se iniciará la vista solo con las ventanas que ${verb} llenas.`
+      );
     }
 
+    if (warningMessages.length > 0 && !acknowledged) {
+      setMessages(warningMessages);
+      setAcknowledged(true);
+      return;
+    }
+    
     if (filledUrls.length === 0) {
-        setMessages([`Por favor, ingrese al menos una URL.`]);
-        setAcknowledged(false);
-        return;
+      setMessages([`Por favor, ingrese al menos una URL.`]);
+      setAcknowledged(false);
+      return;
     }
 
     setAcknowledged(false);
-    
+
     const processedUrls = filledUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
-    processedUrls.forEach(url => queryParams.append('urls', encodeURIComponent(url)));
+    processedUrls.forEach((url) => queryParams.append("urls", encodeURIComponent(url)));
     router.push(`/view?${queryParams.toString()}`);
   };
   
