@@ -204,51 +204,60 @@ export default function HomePage() {
     const activeUrls = cameraUrls.slice(0, numCameras);
     const activeStatuses = cameraStatuses.slice(0, numCameras);
     const filledUrls = activeUrls.filter((u) => u && u.trim() !== "");
-
+  
     setMessages([]); // Clear previous messages
-
+  
     const warningMessages: string[] = [];
     let emptyViewCount = 0;
     let unknownLinkCount = 0;
-
+    let inactiveChannelCount = 0;
+  
     activeUrls.forEach((url, i) => {
       if (!url || url.trim() === "") {
         emptyViewCount++;
       } else if (activeStatuses[i] === "inactive") {
-        warningMessages.push(`El canal en la Vista ${i + 1} está inactivo.`);
+        inactiveChannelCount++;
       } else if (activeStatuses[i] === "unknown") {
         unknownLinkCount++;
       }
     });
-
+  
     if (emptyViewCount > 0) {
       const pluralS = emptyViewCount > 1 ? "s" : "";
       warningMessages.unshift(
         `Hay ${emptyViewCount} vista${pluralS} vacía${pluralS}. Si presionas "Iniciar Vista" se iniciará la vista solo con las ventanas que están llenas.`
       );
     }
-    
-    if (unknownLinkCount > 0) {
-        const pluralS = unknownLinkCount > 1 ? "s" : "";
-        warningMessages.push(
-            `Hay ${unknownLinkCount} link${pluralS} desconocido${pluralS}. Si presionas "Iniciar Vista" se iniciará la vista de todas formas (posibles fallos).`
-        );
+  
+    if (inactiveChannelCount > 0) {
+      const pluralNoun = inactiveChannelCount > 1 ? 'canales' : 'canal';
+      const pluralAdj = inactiveChannelCount > 1 ? 'inactivos' : 'inactivo';
+      warningMessages.push(
+        `Hay ${inactiveChannelCount} ${pluralNoun} ${pluralAdj}. Si presionas "Iniciar Vista" se iniciará la vista de todas formas (posibles fallos).`
+      );
     }
-
+  
+    if (unknownLinkCount > 0) {
+      const pluralS = unknownLinkCount > 1 ? "s" : "";
+      warningMessages.push(
+        `Hay ${unknownLinkCount} link${pluralS} desconocido${pluralS}. Si presionas "Iniciar Vista" se iniciará la vista de todas formas (posibles fallos).`
+      );
+    }
+  
     if (warningMessages.length > 0 && !acknowledged) {
       setMessages(warningMessages);
       setAcknowledged(true);
       return;
     }
-    
+  
     if (filledUrls.length === 0) {
       setMessages([`Por favor, ingrese al menos una URL.`]);
       setAcknowledged(false);
       return;
     }
-
+  
     setAcknowledged(false);
-
+  
     const processedUrls = filledUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
     processedUrls.forEach((url) => queryParams.append("urls", encodeURIComponent(url)));
