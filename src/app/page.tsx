@@ -13,7 +13,7 @@ import { Menu, X } from 'lucide-react';
 import { ChannelListComponent } from '@/components/channel-list';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
-import { zonedTimeToUtc } from 'date-fns-tz';
+import { fromZonedTime } from 'date-fns-tz';
 import { addHours, isAfter } from 'date-fns';
 
 
@@ -95,7 +95,7 @@ export default function HomePage() {
 
     const getEventStatus = (event: Omit<Event, 'status'>): Event['status'] => {
       try {
-        const eventStartBA = zonedTimeToUtc(`${event.date}T${event.time}:00`, 'America/Argentina/Buenos_Aires');
+        const eventStartBA = fromZonedTime(`${event.date}T${event.time}:00`, 'America/Argentina/Buenos_Aires');
         const eventEndBA = addHours(eventStartBA, 3);
         
         if (isAfter(now, eventEndBA)) return 'Finalizado';
