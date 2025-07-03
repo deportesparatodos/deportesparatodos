@@ -19,6 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import type { Event } from '@/components/event-list';
 import { fromZonedTime } from 'date-fns-tz';
 import { addHours, isAfter } from 'date-fns';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { LayoutConfigurator } from '@/components/layout-configurator';
 
 
 const processUrlForView = (inputUrl: string): string => {
@@ -77,6 +79,7 @@ export default function HomePage() {
   const [gridGap, setGridGap] = useState<number>(4);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [currentTutorialSlide, setCurrentTutorialSlide] = useState(0);
+  const [layoutOrder, setLayoutOrder] = useState<number[]>(Array.from({ length: 4 }, (_, i) => i));
 
 
   const topBarColorClass = useMemo(() => {
@@ -210,24 +213,39 @@ export default function HomePage() {
     if (storedBorderColor) {
       setBorderColor(storedBorderColor);
     }
+    const storedLayoutOrder = localStorage.getItem('layoutOrder');
+    if (storedLayoutOrder) {
+      try {
+        const parsedOrder = JSON.parse(storedLayoutOrder);
+        if (Array.isArray(parsedOrder) && parsedOrder.length === 4 && parsedOrder.every(n => typeof n === 'number')) {
+          setLayoutOrder(parsedOrder);
+        } else {
+           setLayoutOrder([0, 1, 2, 3]);
+        }
+      } catch (e) {
+        setLayoutOrder([0, 1, 2, 3]);
+      }
+    }
   }, []);
 
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem('cameraUrls', JSON.stringify(cameraUrls));
       localStorage.setItem('numCameras', numCameras.toString());
+      localStorage.setItem('gridGap', gridGap.toString());
+      localStorage.setItem('borderColor', borderColor);
+      localStorage.setItem('layoutOrder', JSON.stringify(layoutOrder));
     }
-  }, [cameraUrls, numCameras, isMounted]);
+  }, [cameraUrls, numCameras, gridGap, borderColor, layoutOrder, isMounted]);
+
 
   const handleGridGapChange = (value: number[]) => {
     const newGap = value[0];
     setGridGap(newGap);
-    localStorage.setItem('gridGap', newGap.toString());
   };
 
   const handleBorderColorChange = (color: string) => {
     setBorderColor(color);
-    localStorage.setItem('borderColor', color);
   };
   
   const handleRestoreDefaults = () => {
@@ -235,8 +253,7 @@ export default function HomePage() {
     const defaultColor = '#18181b'; 
     setGridGap(defaultGap);
     setBorderColor(defaultColor);
-    localStorage.setItem('gridGap', defaultGap.toString());
-    localStorage.setItem('borderColor', defaultColor);
+    setLayoutOrder([0, 1, 2, 3]);
   };
 
   const nextTutorialSlide = () => {
@@ -250,9 +267,8 @@ export default function HomePage() {
   const handleStartView = () => {
     const activeUrls = cameraUrls.slice(0, numCameras);
     const activeStatuses = cameraStatuses.slice(0, numCameras);
-    const filledUrls = activeUrls.filter((u) => u && u.trim() !== "");
   
-    setMessages([]); 
+    setMessages([]);
   
     const warningMessages: string[] = [];
     let emptyViewCount = 0;
@@ -296,16 +312,30 @@ export default function HomePage() {
       setAcknowledged(true);
       return;
     }
-  
-    if (filledUrls.length === 0) {
-      setMessages([`Por favor, ingrese al menos una URL.`]);
-      setAcknowledged(false);
-      return;
+    
+    // Get the URLs for the active cameras, maintaining their original index
+    const activeUrlsWithIndex = cameraUrls
+      .slice(0, numCameras)
+      .map((url, index) => ({ url, originalIndex: index }))
+      .filter(item => item.url && item.url.trim() !== "");
+
+    if (activeUrlsWithIndex.length === 0) {
+        setMessages([`Por favor, ingrese al menos una URL.`]);
+        setAcknowledged(false);
+        return;
     }
-  
+
     setAcknowledged(false);
+    
+    // Create a map for quick lookup
+    const urlMap = new Map(activeUrlsWithIndex.map(item => [item.originalIndex, item.url]));
+
+    // Use layoutOrder to create the new sequence of URLs.
+    const orderedUrls = layoutOrder
+      .map(camIndex => urlMap.get(camIndex)) // Map layout order to URLs
+      .filter((url): url is string => !!url); // Filter out empty slots
   
-    const processedUrls = filledUrls.map(processUrlForView);
+    const processedUrls = orderedUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
     processedUrls.forEach((url) => queryParams.append("urls", encodeURIComponent(url)));
     queryParams.append("gap", gridGap.toString());
@@ -350,56 +380,76 @@ export default function HomePage() {
                     Configuración
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Configuración de la Vista</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-6 pt-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
-                        <Slider
-                            id="grid-gap-slider"
-                            min={0}
-                            max={32}
-                            step={1}
-                            value={[gridGap]}
-                            onValueChange={handleGridGapChange}
-                        />
-                    </div>
+                  <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger>Bordes</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-6 pt-4">
+                          <div className="space-y-2">
+                              <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
+                              <Slider
+                                  id="grid-gap-slider"
+                                  min={0}
+                                  max={32}
+                                  step={1}
+                                  value={[gridGap]}
+                                  onValueChange={handleGridGapChange}
+                              />
+                          </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="border-color-input">Color de Bordes</Label>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                id="border-color-input"
-                                value={borderColor}
-                                onChange={(e) => handleBorderColorChange(e.target.value)}
-                                className="flex-grow"
-                            />
-                            <div
-                                className="h-8 w-8 rounded-md border border-input"
-                                style={{ backgroundColor: borderColor }}
+                          <div className="space-y-2">
+                              <Label htmlFor="border-color-input">Color de Bordes</Label>
+                              <div className="flex items-center gap-2">
+                                  <Input
+                                      id="border-color-input"
+                                      value={borderColor}
+                                      onChange={(e) => handleBorderColorChange(e.target.value)}
+                                      className="flex-grow"
+                                  />
+                                  <div
+                                      className="h-8 w-8 rounded-md border border-input"
+                                      style={{ backgroundColor: borderColor }}
+                                  />
+                              </div>
+                          </div>
+
+                          <div className="space-y-2">
+                              <Label>Vista Previa</Label>
+                              <div
+                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all"
+                                  style={{
+                                      gap: `${gridGap}px`,
+                                      padding: `${gridGap}px`,
+                                      backgroundColor: borderColor,
+                                  }}
+                              >
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                              </div>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-2">
+                      <AccordionTrigger>Display de Ventanas</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="pt-4">
+                           <LayoutConfigurator
+                              numCameras={numCameras}
+                              setNumCameras={setNumCameras}
+                              layoutOrder={layoutOrder}
+                              setLayoutOrder={setLayoutOrder}
                             />
                         </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Vista Previa</Label>
-                        <div
-                            className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all"
-                            style={{
-                                gap: `${gridGap}px`,
-                                padding: `${gridGap}px`,
-                                backgroundColor: borderColor,
-                            }}
-                        >
-                            <div className="rounded-md bg-background" />
-                            <div className="rounded-md bg-background" />
-                            <div className="rounded-md bg-background" />
-                            <div className="rounded-md bg-background" />
-                        </div>
-                    </div>
-                  </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                   <DialogFooter className="pt-4">
                     <Button variant="outline" onClick={handleRestoreDefaults}>
                         Restaurar
@@ -485,6 +535,8 @@ export default function HomePage() {
                   numCameras={numCameras}
                   setNumCameras={(num) => {
                     setNumCameras(num);
+                    const newOrder = Array.from({ length: 4 }, (_, i) => i);
+                    setLayoutOrder(newOrder);
                     setMessages([]);
                     setAcknowledged(false);
                   }}

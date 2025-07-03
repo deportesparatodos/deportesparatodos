@@ -314,11 +314,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                        <DialogHeader className="px-6 py-5 border-b">
+                        <DialogHeader className="p-5 pb-0">
                             <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
                         </DialogHeader>
-                        <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden">
-                            <TabsList className="mx-6 grid w-[calc(100%-48px)] grid-cols-2">
+                        <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
+                            <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="channels">Canales</TabsTrigger>
                                 <TabsTrigger value="events">Eventos</TabsTrigger>
                             </TabsList>
