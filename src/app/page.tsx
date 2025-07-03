@@ -19,7 +19,6 @@ import type { Event } from '@/components/event-list';
 import { fromZonedTime } from 'date-fns-tz';
 import { addHours, isAfter } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { LayoutConfigurator } from '@/components/layout-configurator';
 
 
 const processUrlForView = (inputUrl: string): string => {
@@ -78,7 +77,6 @@ export default function HomePage() {
   const [gridGap, setGridGap] = useState<number>(4);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [currentTutorialSlide, setCurrentTutorialSlide] = useState(0);
-  const [layoutOrder, setLayoutOrder] = useState<number[]>(Array.from({ length: 4 }, (_, i) => i));
 
 
   const topBarColorClass = useMemo(() => {
@@ -212,19 +210,6 @@ export default function HomePage() {
     if (storedBorderColor) {
       setBorderColor(storedBorderColor);
     }
-    const storedLayoutOrder = localStorage.getItem('layoutOrder');
-    if (storedLayoutOrder) {
-      try {
-        const parsedOrder = JSON.parse(storedLayoutOrder);
-        if (Array.isArray(parsedOrder) && parsedOrder.length === 4 && parsedOrder.every(n => typeof n === 'number')) {
-          setLayoutOrder(parsedOrder);
-        } else {
-           setLayoutOrder([0, 1, 2, 3]);
-        }
-      } catch (e) {
-        setLayoutOrder([0, 1, 2, 3]);
-      }
-    }
   }, []);
 
   useEffect(() => {
@@ -233,9 +218,8 @@ export default function HomePage() {
       localStorage.setItem('numCameras', numCameras.toString());
       localStorage.setItem('gridGap', gridGap.toString());
       localStorage.setItem('borderColor', borderColor);
-      localStorage.setItem('layoutOrder', JSON.stringify(layoutOrder));
     }
-  }, [cameraUrls, numCameras, gridGap, borderColor, layoutOrder, isMounted]);
+  }, [cameraUrls, numCameras, gridGap, borderColor, isMounted]);
 
 
   const handleGridGapChange = (value: number[]) => {
@@ -252,7 +236,6 @@ export default function HomePage() {
     const defaultColor = '#18181b'; 
     setGridGap(defaultGap);
     setBorderColor(defaultColor);
-    setLayoutOrder([0, 1, 2, 3]);
   };
 
   const nextTutorialSlide = () => {
@@ -264,7 +247,7 @@ export default function HomePage() {
   };
 
   const handleStartView = () => {
-    const activeUrls = cameraUrls.slice(0, numCameras);
+    const activeUrlInputs = cameraUrls.slice(0, numCameras);
     const activeStatuses = cameraStatuses.slice(0, numCameras);
   
     setMessages([]);
@@ -274,7 +257,7 @@ export default function HomePage() {
     let unknownLinkCount = 0;
     let inactiveChannelCount = 0;
   
-    activeUrls.forEach((url, i) => {
+    activeUrlInputs.forEach((url, i) => {
       if (!url || url.trim() === "") {
         emptyViewCount++;
       } else if (activeStatuses[i] === "inactive") {
@@ -312,13 +295,9 @@ export default function HomePage() {
       return;
     }
     
-    // Get the URLs for the active cameras, maintaining their original index
-    const activeUrlsWithIndex = cameraUrls
-      .slice(0, numCameras)
-      .map((url, index) => ({ url, originalIndex: index }))
-      .filter(item => item.url && item.url.trim() !== "");
+    const activeUrls = activeUrlInputs.filter(url => url && url.trim() !== "");
 
-    if (activeUrlsWithIndex.length === 0) {
+    if (activeUrls.length === 0) {
         setMessages([`Por favor, ingrese al menos una URL.`]);
         setAcknowledged(false);
         return;
@@ -326,15 +305,7 @@ export default function HomePage() {
 
     setAcknowledged(false);
     
-    // Create a map for quick lookup
-    const urlMap = new Map(activeUrlsWithIndex.map(item => [item.originalIndex, item.url]));
-
-    // Use layoutOrder to create the new sequence of URLs.
-    const orderedUrls = layoutOrder
-      .map(camIndex => urlMap.get(camIndex)) // Map layout order to URLs
-      .filter((url): url is string => !!url); // Filter out empty slots
-  
-    const processedUrls = orderedUrls.map(processUrlForView);
+    const processedUrls = activeUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
     processedUrls.forEach((url) => queryParams.append("urls", encodeURIComponent(url)));
     queryParams.append("gap", gridGap.toString());
@@ -383,7 +354,7 @@ export default function HomePage() {
                   <DialogHeader>
                     <DialogTitle>Configuración de la Vista</DialogTitle>
                   </DialogHeader>
-                  <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+                  <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1">
                       <AccordionTrigger>Bordes</AccordionTrigger>
                       <AccordionContent>
@@ -419,7 +390,7 @@ export default function HomePage() {
                           <div className="space-y-2">
                               <Label>Vista Previa</Label>
                               <div
-                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all"
+                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
                                   style={{
                                       gap: `${gridGap}px`,
                                       padding: `${gridGap}px`,
@@ -432,19 +403,6 @@ export default function HomePage() {
                                   <div className="rounded-md bg-background" />
                               </div>
                           </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-2">
-                      <AccordionTrigger>Display de Ventanas</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="pt-4">
-                           <LayoutConfigurator
-                              numCameras={numCameras}
-                              setNumCameras={setNumCameras}
-                              layoutOrder={layoutOrder}
-                              setLayoutOrder={setLayoutOrder}
-                            />
                         </div>
                       </AccordionContent>
                     </AccordionItem>
@@ -621,8 +579,6 @@ export default function HomePage() {
                   numCameras={numCameras}
                   setNumCameras={(num) => {
                     setNumCameras(num);
-                    const newOrder = Array.from({ length: 4 }, (_, i) => i);
-                    setLayoutOrder(newOrder);
                     setMessages([]);
                     setAcknowledged(false);
                   }}
