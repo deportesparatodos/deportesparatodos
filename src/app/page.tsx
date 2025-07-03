@@ -46,10 +46,8 @@ export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(4);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(4).fill(''));
   const [cameraStatuses, setCameraStatuses] = useState<CameraStatus[]>([]);
-  const [message, setMessage] = useState<{type: 'error' | 'warning' | 'info', text: string} | null>(null);
-  const [userAcknowledgedWarning, setUserAcknowledgedWarning] = useState<boolean>(false);
-  const [userAcknowledgedPartial, setUserAcknowledgedPartial] = useState<boolean>(false);
-  const [userAcknowledgedInactive, setUserAcknowledgedInactive] = useState<boolean>(false);
+  const [messages, setMessages] = useState<string[]>([]);
+  const [acknowledged, setAcknowledged] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   
@@ -62,13 +60,10 @@ export default function HomePage() {
   const topBarColorClass = useMemo(() => {
     const activeStatuses = cameraStatuses.slice(0, numCameras);
     
-    if (activeStatuses.includes('empty') || activeStatuses.includes('inactive')) {
+    if (activeStatuses.includes('empty') || activeStatuses.includes('inactive') || activeStatuses.some((s, i) => s === 'unknown' && cameraUrls[i])) {
         return 'bg-red-500';
     }
-    if (activeStatuses.some((s, i) => s === 'unknown' && cameraUrls[i])) {
-      return 'bg-yellow-500';
-    }
-    if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'valid' || !cameraUrls[s.length])) {
+    if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'valid')) {
       return 'bg-green-500';
     }
     return 'bg-red-500';
@@ -126,49 +121,43 @@ export default function HomePage() {
   }, [cameraUrls, numCameras, isMounted]);
 
   const handleStartView = () => {
-    setMessage(null);
     const activeUrls = cameraUrls.slice(0, numCameras);
     const activeStatuses = cameraStatuses.slice(0, numCameras);
-    
     const filledUrls = activeUrls.filter(u => u && u.trim() !== '');
     const filledUrlCount = filledUrls.length;
+    
+    setMessages([]); // Clear previous messages
 
     if (filledUrlCount === 0) {
-        setMessage({ type: 'error', text: `Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.` });
-        setUserAcknowledgedPartial(false);
-        setUserAcknowledgedWarning(false);
-        setUserAcknowledgedInactive(false);
+        setMessages([`Por favor, ingrese las URLs para ${numCameras === 1 ? 'la vista seleccionada' : `las ${numCameras} vistas seleccionadas`}.`]);
+        setAcknowledged(false);
         return;
     }
 
-    if (filledUrlCount < numCameras && !userAcknowledgedPartial) {
-        setMessage({ type: 'warning', text: `Hay ${filledUrlCount} de ${numCameras} vistas con URL. Presiona "Iniciar Vista" otra vez para continuar solo con esas.` });
-        setUserAcknowledgedPartial(true);
-        setUserAcknowledgedWarning(false);
-        setUserAcknowledgedInactive(false);
-        return;
-    }
-
+    const warningMessages: string[] = [];
     const statusesOfUrlsToActuallyUse = activeStatuses.filter((status, i) => activeUrls[i] && activeUrls[i].trim() !== '');
     
-    const hasInactiveChannels = statusesOfUrlsToActuallyUse.includes('inactive');
-    if (hasInactiveChannels && !userAcknowledgedInactive) {
-      setMessage({ type: 'warning', text: "Uno o más canales seleccionados están inactivos. Si desea continuar de todas formas presione 'Iniciar Vista'." });
-      setUserAcknowledgedInactive(true);
-      setUserAcknowledgedWarning(false);
-      return;
+    const hasPartial = filledUrlCount < numCameras;
+    const hasInactive = statusesOfUrlsToActuallyUse.includes('inactive');
+    const hasUnknown = statusesOfUrlsToActuallyUse.includes('unknown');
+
+    if (hasPartial) {
+        warningMessages.push(`Hay ${filledUrlCount} de ${numCameras} vistas con URL. Presiona "Iniciar Vista" otra vez para continuar solo con esas.`);
     }
-    
-    const hasUnknownUrls = statusesOfUrlsToActuallyUse.includes('unknown');
-    if (hasUnknownUrls && !userAcknowledgedWarning) {
-      setMessage({ type: 'warning', text: "Hay un link o texto desconocido que puede no ser procesado, si desea continuar de todas formas presione 'Iniciar Vista'." });
-      setUserAcknowledgedWarning(true);
-      return;
+    if (hasInactive) {
+      warningMessages.push("Uno o más canales seleccionados están inactivos. Si desea continuar de todas formas presione 'Iniciar Vista'.");
+    }
+    if (hasUnknown) {
+      warningMessages.push("Hay un link o texto desconocido que puede no ser procesado, si desea continuar de todas formas presione 'Iniciar Vista'.");
     }
 
-    setUserAcknowledgedWarning(false);
-    setUserAcknowledgedPartial(false);
-    setUserAcknowledgedInactive(false);
+    if (warningMessages.length > 0 && !acknowledged) {
+        setMessages(warningMessages);
+        setAcknowledged(true);
+        return;
+    }
+
+    setAcknowledged(false);
 
     const processedUrls = filledUrls.map(processUrlForView);
     const queryParams = new URLSearchParams();
@@ -257,22 +246,18 @@ export default function HomePage() {
                   numCameras={numCameras}
                   setNumCameras={(num) => {
                     setNumCameras(num);
-                    setMessage(null);
-                    setUserAcknowledgedWarning(false);
-                    setUserAcknowledgedPartial(false);
-                    setUserAcknowledgedInactive(false);
+                    setMessages([]);
+                    setAcknowledged(false);
                   }}
                   cameraUrls={cameraUrls}
                   setCameraUrls={setCameraUrls}
-                  message={message}
-                  setMessage={setMessage}
+                  messages={messages}
+                  setMessages={setMessages}
                   handleStartView={handleStartView}
                   channels={channels}
                   channelStatuses={channelStatuses}
                   setCameraStatuses={setCameraStatuses}
-                  setUserAcknowledgedWarning={setUserAcknowledgedWarning}
-                  setUserAcknowledgedPartial={setUserAcknowledgedPartial}
-                  setUserAcknowledgedInactive={setUserAcknowledgedInactive}
+                  setAcknowledged={setAcknowledged}
                 />
               </div>
           </div>

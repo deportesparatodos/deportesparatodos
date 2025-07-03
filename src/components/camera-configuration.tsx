@@ -16,15 +16,13 @@ interface CameraConfigurationProps {
   setNumCameras: (num: number) => void;
   cameraUrls: string[];
   setCameraUrls: Dispatch<SetStateAction<string[]>>;
-  message: { type: 'error' | 'warning' | 'info'; text: string } | null;
-  setMessage: Dispatch<SetStateAction<{ type: 'error' | 'warning' | 'info'; text: string } | null>>;
+  messages: string[];
+  setMessages: Dispatch<SetStateAction<string[]>>;
   handleStartView: () => void;
   channels: Channel[];
   channelStatuses: Record<string, 'online' | 'offline'>;
   setCameraStatuses: Dispatch<SetStateAction<CameraStatus[]>>;
-  setUserAcknowledgedWarning: Dispatch<SetStateAction<boolean>>;
-  setUserAcknowledgedPartial: Dispatch<SetStateAction<boolean>>;
-  setUserAcknowledgedInactive: Dispatch<SetStateAction<boolean>>;
+  setAcknowledged: Dispatch<SetStateAction<boolean>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -32,15 +30,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setNumCameras,
   cameraUrls,
   setCameraUrls,
-  message,
-  setMessage,
+  messages,
+  setMessages,
   handleStartView,
   channels,
   channelStatuses,
   setCameraStatuses,
-  setUserAcknowledgedWarning,
-  setUserAcknowledgedPartial,
-  setUserAcknowledgedInactive,
+  setAcknowledged,
 }) => {
   const [focusedInput, setFocusedInput] = useState<number | null>(null);
   const [hoveredInputIndex, setHoveredInputIndex] = useState<number | null>(null);
@@ -48,6 +44,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   const getDisplayStatus = (url: string): { text: string; status: CameraStatus } => {
     if (!url || url.trim() === '') {
       return { text: "VACIO", status: 'empty' };
+    }
+    
+    if (url.includes('ksdjugfsddeports.fun')) {
+      return { text: 'STREAM VÁLIDO', status: 'valid' };
     }
 
     const getStreamNameFromUrl = (u: string): string | null => {
@@ -75,10 +75,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return { text: foundChannel.name.toUpperCase(), status: 'valid' };
     }
     
-    if (url.includes('ksdjugfsddeports.fun')) {
-      return { text: 'STREAM VÁLIDO', status: 'valid' };
-    }
-
     if(streamName) {
         return { text: streamName.toUpperCase(), status: 'valid' };
     }
@@ -106,20 +102,16 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     const newUrls = [...cameraUrls];
     newUrls[index] = value;
     setCameraUrls(newUrls);
-    setMessage(null);
-    setUserAcknowledgedWarning(false);
-    setUserAcknowledgedPartial(false);
-    setUserAcknowledgedInactive(false);
+    setMessages([]);
+    setAcknowledged(false);
   };
 
   const handleClearUrl = (index: number) => {
     const newUrls = [...cameraUrls];
     newUrls[index] = '';
     setCameraUrls(newUrls);
-    setMessage(null);
-    setUserAcknowledgedWarning(false);
-    setUserAcknowledgedPartial(false);
-    setUserAcknowledgedInactive(false);
+    setMessages([]);
+    setAcknowledged(false);
   };
 
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
@@ -136,10 +128,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
     [newUrls[index], newUrls[targetIndex]] = [newUrls[targetIndex], newUrls[index]];
     setCameraUrls(newUrls);
-    setMessage(null);
-    setUserAcknowledgedWarning(false);
-    setUserAcknowledgedPartial(false);
-    setUserAcknowledgedInactive(false);
+    setMessages([]);
+    setAcknowledged(false);
   };
 
   const handlePasteUrl = async (index: number) => {
@@ -150,7 +140,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       }
     } catch (err) {
       console.error("Error al pegar desde el portapapeles: ", err);
-      setMessage({ type: 'error', text: "No se pudo pegar. Verifica los permisos del portapapeles."});
+      setMessages(["No se pudo pegar. Verifica los permisos del portapapeles."]);
     }
   };
 
@@ -211,14 +201,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     className={cn(
                       "w-full",
                       displayStatus.status === 'valid' && "bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-700 focus:ring-green-500 dark:focus:ring-green-600",
-                      (displayStatus.status === 'empty' || displayStatus.status === 'inactive') && "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
-                      displayStatus.status === 'unknown' && "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-700 focus:ring-yellow-500 dark:focus:ring-yellow-600",
+                      (displayStatus.status === 'empty' || displayStatus.status === 'inactive' || displayStatus.status === 'unknown') && "bg-red-100 dark:bg-red-900/30 border-red-400 dark:border-red-700 focus:ring-red-500 dark:focus:ring-red-600",
                       isActive
                         ? {
                             'valid': "text-green-800 dark:text-green-300",
                             'empty': "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80",
                             'inactive': "text-red-800 dark:text-red-300",
-                            'unknown': "text-yellow-800 dark:text-yellow-300 placeholder-yellow-500 dark:placeholder-yellow-400/80",
+                            'unknown': "text-red-800 dark:text-red-300 placeholder-red-500 dark:placeholder-red-400/80",
                           }[displayStatus.status]
                         : "text-transparent placeholder-transparent selection:text-transparent selection:bg-transparent caret-transparent"
                     )}
@@ -232,7 +221,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                           'valid': "bg-green-600 text-white",
                           'empty': "bg-destructive text-destructive-foreground",
                           'inactive': "bg-destructive text-destructive-foreground",
-                          'unknown': "bg-yellow-500 text-black",
+                          'unknown': "bg-destructive text-destructive-foreground",
                         }[displayStatus.status]
                       )}
                     >
@@ -279,15 +268,17 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
           })}
           </div>
 
-          {message && (
-            <div className={cn(
-              "flex items-center p-3 text-sm rounded-md border",
-              message.type === 'error' && "bg-destructive/10 text-destructive border-destructive/30",
-              message.type === 'warning' && "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
-              message.type === 'info' && "bg-muted text-muted-foreground border-border"
-            )}>
-              <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
-              <p>{message.text}</p>
+          {messages && messages.length > 0 && (
+            <div className="space-y-2">
+              {messages.map((text, index) => (
+                <div key={index} className={cn(
+                  "flex items-center p-3 text-sm rounded-md border",
+                  "bg-destructive/10 text-destructive border-destructive/30",
+                )}>
+                  <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
+                  <p>{text}</p>
+                </div>
+              ))}
             </div>
           )}
         
