@@ -3,11 +3,9 @@
 
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Copy, CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
-import { channels as allChannels, type Channel } from '@/components/channel-list';
+import { Copy, CheckCircle2, Loader2, AlertTriangle, Tv } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -18,40 +16,37 @@ import {
 
 interface Event {
   time: string;
-  competition: string;
-  team1: string;
-  team2: string;
-  team1_logo: string;
-  team2_logo: string;
-  channels: string[];
-  channels_logo: string[];
+  title: string;
+  options: string[];
+  buttons: string[];
+  category: string;
+  language: string;
+  date: string;
+  source: string;
+  status: string;
 }
 
 interface CopiedStates {
   [key: string]: boolean;
 }
 
-const logoToChannelMap = new Map<string, Channel>();
-allChannels.forEach(c => {
-    if (c.logoUrl) {
-        if (!logoToChannelMap.has(c.logoUrl)) {
-            logoToChannelMap.set(c.logoUrl, c);
-        }
-    }
-});
+interface EventListComponentProps {
+  onSelectEvent?: (url: string) => void;
+}
 
-export const EventListComponent: FC = () => {
+export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
+  const isSelectMode = !!onSelectEvent;
 
   useEffect(() => {
     const fetchEvents = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch('https://corsproxy.io/?https%3A%2F%2Fagenda-dpt.vercel.app%2Fapi%2Fevents');
+        const response = await fetch('https://agenda-dpt.vercel.app/api/events');
         if (!response.ok) {
           throw new Error('No se pudieron cargar los eventos.');
         }
@@ -71,16 +66,19 @@ export const EventListComponent: FC = () => {
     fetchEvents();
   }, []);
 
-  const handleCopy = async (url: string, eventIndex: number, channelIndex: number) => {
-    const key = `${eventIndex}-${channelIndex}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedStates(prev => ({ ...prev, [key]: true }));
-      setTimeout(() => {
-        setCopiedStates(prev => ({ ...prev, [key]: false }));
-      }, 1500);
-    } catch (err) {
-      console.error("Error al copiar: ", err);
+  const handleAction = async (url: string, key: string) => {
+    if (isSelectMode && onSelectEvent) {
+      onSelectEvent(url);
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopiedStates(prev => ({ ...prev, [key]: true }));
+        setTimeout(() => {
+          setCopiedStates(prev => ({ ...prev, [key]: false }));
+        }, 1500);
+      } catch (err) {
+        console.error("Error al copiar: ", err);
+      }
     }
   };
 
@@ -117,68 +115,45 @@ export const EventListComponent: FC = () => {
           {events.map((event, eventIndex) => (
             <Card key={eventIndex} className="bg-muted/50">
               <CardHeader className="p-4 pb-2">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-medium text-muted-foreground truncate mr-2">{event.competition}</p>
+                <div className="flex justify-between items-center gap-4">
+                  <p className="font-semibold text-foreground text-sm leading-tight flex-grow">{event.title}</p>
                   <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md flex-shrink-0">{event.time}</p>
                 </div>
               </CardHeader>
               <CardContent className="p-4 pt-2">
-                <div className="flex items-center justify-around text-center mb-4">
-                  <div className="flex flex-col items-center gap-2 w-2/5">
-                    {event.team1_logo && <Image src={event.team1_logo} alt={`${event.team1} logo`} width={40} height={40} className="object-contain h-10" unoptimized />}
-                    <span className="font-semibold text-foreground text-sm leading-tight">{event.team1}</span>
-                  </div>
-                  <span className="text-2xl font-bold text-muted-foreground">VS</span>
-                  <div className="flex flex-col items-center gap-2 w-2/5">
-                    {event.team2_logo && <Image src={event.team2_logo} alt={`${event.team2} logo`} width={40} height={40} className="object-contain h-10" unoptimized />}
-                    <span className="font-semibold text-foreground text-sm leading-tight">{event.team2}</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Canales</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {event.channels_logo.map((logoUrl, channelIndex) => {
-                      const channel = logoToChannelMap.get(logoUrl);
+                 <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Canales</h4>
+                 <div className="flex flex-wrap gap-2">
+                    {event.options.map((url, channelIndex) => {
                       const key = `${eventIndex}-${channelIndex}`;
                       const isCopied = copiedStates[key];
-                      const channelNameFromApi = event.channels[channelIndex];
+                      const buttonLabel = event.buttons[channelIndex] || 'Canal';
+                      
+                      const actionLabel = isSelectMode ? 'Seleccionar' : (isCopied ? '¡Copiado!' : 'Copiar');
+                      const Icon = isSelectMode ? Tv : (isCopied ? CheckCircle2 : Copy);
 
                       return (
-                        <Tooltip key={channelIndex}>
+                        <Tooltip key={key}>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
-                              size="icon"
+                              size="sm"
                               className={cn(
-                                "h-10 w-10 p-1.5 border-2 transition-all duration-200",
-                                isCopied ? "border-green-500 bg-green-500/10" : "bg-background",
-                                !channel && "opacity-50 cursor-not-allowed"
+                                "transition-all duration-200",
+                                !isSelectMode && isCopied && "border-green-500 bg-green-500/10 text-green-600 hover:text-green-600"
                               )}
-                              onClick={() => channel && handleCopy(channel.url, eventIndex, channelIndex)}
-                              disabled={!channel}
+                              onClick={() => handleAction(url, key)}
                             >
-                              {isCopied ? (
-                                <CheckCircle2 className="h-full w-full text-green-500" />
-                              ) : (
-                                <Image
-                                  src={logoUrl}
-                                  alt={`${channelNameFromApi} logo`}
-                                  width={24}
-                                  height={24}
-                                  className="object-contain w-full h-full"
-                                  unoptimized
-                                />
-                              )}
+                              <Icon className="mr-2 h-4 w-4" />
+                              {isSelectMode ? "Seleccionar" : (isCopied ? '¡Copiado!' : 'Copiar')}
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{channel ? (isCopied ? "¡Copiado!" : `Copiar para ${channel.name}`) : `${channelNameFromApi} (No encontrado)`}</p>
+                            <p>{actionLabel} {buttonLabel}</p>
                           </TooltipContent>
                         </Tooltip>
                       );
                     })}
                   </div>
-                </div>
               </CardContent>
             </Card>
           ))}

@@ -1,9 +1,9 @@
 
+'use client';
+
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
-import { EventListComponent } from '@/components/event-list';
-
 
 export default function EventListPage() {
   return (
@@ -16,8 +16,12 @@ export default function EventListPage() {
           </Button>
         </Link>
       </header>
-      <main className="flex-grow overflow-hidden">
-        <EventListComponent />
+      <main className="flex-grow">
+        <iframe
+          src="https://agenda-dpt.vercel.app"
+          title="Lista de Eventos"
+          className="w-full h-full border-0"
+        />
       </main>
     </div>
   );

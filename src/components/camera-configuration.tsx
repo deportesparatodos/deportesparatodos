@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EventListComponent } from './event-list';
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
@@ -295,17 +297,26 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         <Menu className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
-                      <DialogHeader>
-                        <DialogTitle>Seleccionar un Canal para la Vista {index + 1}</DialogTitle>
-                      </DialogHeader>
-                      <div className="flex-grow overflow-hidden -mx-6 -mb-6">
-                        <ChannelListComponent 
-                          channelStatuses={channelStatuses}
-                          isLoading={isLoadingChannelStatuses || false}
-                          onSelectChannel={handleSelectChannel}
-                        />
-                      </div>
+                    <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
+                        <DialogHeader className="p-6 pb-2 border-b">
+                            <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
+                        </DialogHeader>
+                        <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden">
+                            <TabsList className="mx-6 mt-4 grid w-[calc(100%-48px)] grid-cols-2">
+                                <TabsTrigger value="channels">Canales</TabsTrigger>
+                                <TabsTrigger value="events">Eventos</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="channels" className="flex-grow overflow-hidden mt-2 data-[state=inactive]:hidden">
+                                <ChannelListComponent 
+                                    channelStatuses={channelStatuses}
+                                    isLoading={isLoadingChannelStatuses || false}
+                                    onSelectChannel={handleSelectChannel}
+                                />
+                            </TabsContent>
+                            <TabsContent value="events" className="flex-grow overflow-hidden mt-2 data-[state=inactive]:hidden">
+                                <EventListComponent onSelectEvent={handleSelectChannel} />
+                            </TabsContent>
+                        </Tabs>
                     </DialogContent>
                   </Dialog>
                 )}
