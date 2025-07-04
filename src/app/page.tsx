@@ -100,7 +100,7 @@ export default function HomePage() {
 
     return () => clearInterval(timer);
   }, []);
-
+  
   useEffect(() => {
     if (!events.length || !currentTime) {
       setProcessedEvents([]);
@@ -111,7 +111,7 @@ export default function HomePage() {
 
     const getEventStatus = (event: Omit<Event, 'status'>): Event['status'] => {
       try {
-        const eventStart = new Date(`${event.date}T${event.time}:00-03:00`);
+        const eventStart = new Date(`${event.date}T${event.time}-03:00`);
         const eventEnd = addHours(eventStart, 3);
         
         if (isAfter(now, eventEnd)) return 'Finalizado';
@@ -474,9 +474,17 @@ export default function HomePage() {
                   </DialogHeader>
                   <div className="py-4 text-sm text-muted-foreground">
                     <p>
-                      Para comunicarse con el desarrollador, indicar errores, canales, links incorrectos, sugerencias, etc., comuníquese a <strong>deportesparatodosvercel@gmail.com</strong>.
+                     ¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros a través de <strong>deportesparatodosvercel@gmail.com</strong> para reportar fallos, enlaces incorrectos o proponer nuevos canales.
                     </p>
                   </div>
+                  <DialogFooter>
+                    <Button asChild>
+                        <a href="mailto:deportesparatodosvercel@gmail.com">
+                            <Mail className="mr-2 h-4 w-4" />
+                            Contacto
+                        </a>
+                    </Button>
+                  </DialogFooter>
                 </DialogContent>
               </Dialog>
 
