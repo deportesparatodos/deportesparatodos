@@ -92,7 +92,7 @@ export default function HomePage() {
   }, [cameraStatuses, numCameras, cameraUrls]);
 
   useEffect(() => {
-    const processEvents = () => {
+    const processAndSetEvents = () => {
       if (!events.length) {
         setProcessedEvents([]);
         return;
@@ -100,26 +100,22 @@ export default function HomePage() {
       
       const now = new Date();
 
-      const getEventStatus = (event: Omit<Event, 'status'>): Event['status'] => {
-        try {
-          const eventStart = new Date(`${event.date}T${event.time}:00-03:00`);
-          if (isNaN(eventStart.getTime())) {
-            return 'Próximo';
-          }
-          const eventEnd = addHours(eventStart, 3);
-          
-          if (isAfter(now, eventEnd)) return 'Finalizado';
-          if (isAfter(now, eventStart)) return 'En Vivo';
-          return 'Próximo';
-        } catch (e) {
-          return 'Próximo';
-        }
-      };
-      
-      const eventsWithStatus = events.map(e => ({
-        ...e,
-        status: getEventStatus(e),
-      }));
+      const eventsWithStatus = events
+        .map(e => {
+            const eventStart = new Date(`${e.date}T${e.time}:00-03:00`);
+            if (isNaN(eventStart.getTime())) {
+              return { ...e, status: 'Finalizado' as const };
+            }
+            const eventEnd = addHours(eventStart, 3);
+            
+            let status: Event['status'] = 'Próximo';
+            if (isAfter(now, eventEnd)) {
+                status = 'Finalizado';
+            } else if (isAfter(now, eventStart)) {
+                status = 'En Vivo';
+            }
+            return { ...e, status };
+        });
 
       const ongoingOrUpcomingEvents = eventsWithStatus.filter(
         e => e.status !== 'Finalizado'
@@ -137,11 +133,10 @@ export default function HomePage() {
       setProcessedEvents(ongoingOrUpcomingEvents);
     };
 
-    processEvents();
-    const timerId = setInterval(processEvents, 60000);
+    processAndSetEvents();
+    const timerId = setInterval(processAndSetEvents, 60000);
 
     return () => clearInterval(timerId);
-
   }, [events]);
 
 
