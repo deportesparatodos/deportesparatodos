@@ -180,16 +180,16 @@ function ViewPageContent() {
 
       const eventsWithStatus = events
         .map(e => {
-            const eventStart = toZonedTime(`${e.date}T${e.time}`, timeZone);
-            if (isNaN(eventStart.getTime())) {
+            const zonedStart = toZonedTime(`${e.date}T${e.time}`, timeZone);
+            if (isNaN(zonedStart.getTime())) {
               return { ...e, status: 'Finalizado' as const };
             }
-            const eventEnd = addHours(eventStart, 3);
+            const eventEnd = addHours(zonedStart, 3);
             
             let status: Event['status'] = 'Próximo';
             if (isAfter(now, eventEnd)) {
                 status = 'Finalizado';
-            } else if (isAfter(now, eventStart)) {
+            } else if (isAfter(now, zonedStart)) {
                 status = 'En Vivo';
             }
             return { ...e, status };
@@ -310,7 +310,8 @@ function ViewPageContent() {
   
   const getTopRightIndex = (numCameras: number, isMobile: boolean): number => {
     if (isMobile) return -1;
-    if (numCameras === 1 || numCameras === 3) return 0;
+    if (numCameras === 3) return 0;
+    if (numCameras === 1) return 0;
     if (numCameras === 2 || numCameras === 4) return 1;
     if (numCameras >= 5) return 2;
     return -1;
@@ -320,7 +321,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center h-[56px] px-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
+      <div className="absolute z-20 flex items-center h-[56px] px-2" style={{ top: `${gap}px`, right: `${gap + 16}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -359,11 +360,11 @@ function ViewPageContent() {
           href="/"
           className={cn(
             buttonVariants({ variant: "ghost", size: "icon" }),
-            "h-10 w-10 bg-transparent hover:bg-accent/80"
+            "h-10 w-10 text-white bg-transparent hover:bg-accent/80"
           )}
           aria-label="Cerrar Vista"
         >
-          <X className="h-8 w-8 text-white" />
+          <X className="h-8 w-8" />
         </Link>
       </div>
       
@@ -380,16 +381,23 @@ function ViewPageContent() {
             const isBarVisible = !isMobile && (visibleBarIndex === index || !url);
             const displayStatus = getDisplayStatus(url, processedEvents, channelStatuses);
             const isTopRightWindow = index === topRightIndex;
-
+            
+            const windowClasses: string[] = ["overflow-hidden", "relative", "bg-background"];
+            if (!url) {
+                windowClasses.push("bg-red-500", "flex", "items-center", "justify-center", "text-destructive-foreground", "font-bold");
+            }
+            if (urls.length === 3) {
+              if (index === 0) {
+                windowClasses.push("col-span-2", "row-span-1");
+              } else {
+                windowClasses.push("col-span-1", "row-span-1");
+              }
+            }
+            
             return (
               <div
                 key={`${index}-${url}`}
-                className={cn(
-                  "overflow-hidden relative bg-background",
-                  !url && "bg-red-500 flex items-center justify-center text-destructive-foreground font-bold",
-                  urls.length === 3 && index === 0 && "row-span-1 col-span-2",
-                  urls.length === 3 && index > 0 && "row-span-1 col-span-1"
-                )}
+                className={cn(windowClasses)}
                 onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
                 onMouseLeave={isMobile ? undefined : handleMouseLeave}
               >
