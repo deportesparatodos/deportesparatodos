@@ -4,7 +4,7 @@
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, X, ChevronDown } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -53,7 +53,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
   const getDisplayStatus = (url: string): { text: string; status: CameraStatus } => {
     if (!url || url.trim() === '') {
-        return { text: "VACIO", status: 'empty' };
+        return { text: "Elegir Canal…", status: 'empty' };
     }
     
     if (events && events.length > 0) {
@@ -144,14 +144,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setAcknowledged(false);
   };
 
-  const handleClearUrl = (index: number) => {
-    const newUrls = [...cameraUrls];
-    newUrls[index] = '';
-    setCameraUrls(newUrls);
-    setMessages([]);
-    setAcknowledged(false);
-  };
-
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
     const newUrls = [...cameraUrls];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -222,7 +214,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full flex-grow justify-between"
+                      className="flex-grow justify-between overflow-hidden"
                       aria-label={`Seleccionar entrada para Vista ${index + 1}`}
                     >
                       <span className={cn(
@@ -265,20 +257,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </Tabs>
                   </DialogContent>
                 </Dialog>
-
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleClearUrl(index)}
-                    aria-label="Limpiar URL"
-                    className={cn(
-                        "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-                        !cameraUrls[index] && "invisible"
-                    )}
-                    type="button"
-                >
-                    <X className="h-4 w-4" />
-                </Button>
 
                 <Button
                     variant="outline"
