@@ -210,10 +210,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   return (
     <>
       <form onSubmit={handleFormSubmit} className="w-full space-y-4">
-          <div className="flex flex-col">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full justify-start rounded-b-none border-b-0">
+                <Button variant="outline" className="w-full justify-start">
                   <Settings className="mr-2 h-4 w-4" />
                   Configuración de Bordes
                 </Button>
@@ -283,7 +282,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
               </DialogContent>
             </Dialog>
             <Select onValueChange={handleNumCamerasChange} value={numCameras.toString()}>
-                <SelectTrigger className="w-full rounded-t-none">
+                <SelectTrigger className="w-full">
                     <SelectValue placeholder="Seleccionar cantidad de ventanas" />
                 </SelectTrigger>
                 <SelectContent>
@@ -295,7 +294,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <SelectItem value="9">9 VENTANAS</SelectItem>
                 </SelectContent>
             </Select>
-          </div>
 
           <div className="space-y-3">
           {Array.from({ length: numCameras }).map((_, index) => {
