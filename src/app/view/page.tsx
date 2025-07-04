@@ -321,7 +321,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center h-14" style={{ top: `${gap}px`, right: '6px' }}>
+      <div className="absolute z-20 flex items-center h-14" style={{ top: `${gap}px`, right: '12px' }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -364,7 +364,7 @@ function ViewPageContent() {
           )}
           aria-label="Cerrar Vista"
         >
-          <X className="h-6 w-6 text-white" />
+          <X className="h-7 w-7 text-white" />
         </Link>
       </div>
       
@@ -388,8 +388,8 @@ function ViewPageContent() {
                 className={cn(
                   "overflow-hidden relative bg-background",
                   !url && "bg-red-500 flex items-center justify-center text-destructive-foreground font-bold",
-                  urls.length === 3 && index === 0 && "row-span-1 col-span-2",
-                  urls.length === 3 && index > 1 && "row-span-1 col-span-1",
+                   urls.length === 3 && index === 0 && "row-span-1 col-span-2",
+                  urls.length === 3 && index > 0 && "row-span-1 col-span-1"
                 )}
                 onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
                 onMouseLeave={isMobile ? undefined : handleMouseLeave}
