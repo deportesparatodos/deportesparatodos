@@ -203,10 +203,14 @@ export default function HomePage() {
     const storedNumCameras = localStorage.getItem('numCameras');
     if (storedNumCameras) {
       setNumCameras(parseInt(storedNumCameras, 10));
+    } else {
+      setNumCameras(1);
     }
     const storedGap = localStorage.getItem('gridGap');
     if (storedGap) {
       setGridGap(parseInt(storedGap, 10));
+    } else {
+      setGridGap(0);
     }
     const storedBorderColor = localStorage.getItem('borderColor');
     if (storedBorderColor) {
@@ -250,6 +254,16 @@ export default function HomePage() {
 
   const handleStartView = () => {
     const activeUrlInputs = cameraUrls.slice(0, numCameras);
+    const activeUrls = activeUrlInputs.filter(url => url && url.trim() !== "");
+
+    // Priority check: if no URLs are provided at all.
+    if (activeUrls.length === 0) {
+        setMessages(["Por favor, selecciona al menos 1 canal o evento para poder continuar."]);
+        setAcknowledged(false); // This is a hard stop, not an acknowledgment flow.
+        return;
+    }
+
+    // Now, continue with the warning logic for partially filled views, etc.
     const activeStatuses = cameraStatuses.slice(0, numCameras);
   
     setMessages([]);
@@ -269,6 +283,8 @@ export default function HomePage() {
       }
     });
   
+    // This warning is for when *some* are empty, but not all.
+    // The all-empty case is handled above.
     if (emptyViewCount > 0) {
       const pluralS = emptyViewCount > 1 ? "s" : "";
       warningMessages.unshift(
@@ -297,14 +313,6 @@ export default function HomePage() {
       return;
     }
     
-    const activeUrls = activeUrlInputs.filter(url => url && url.trim() !== "");
-
-    if (activeUrls.length === 0) {
-        setMessages([`Por favor, ingrese al menos una URL.`]);
-        setAcknowledged(false);
-        return;
-    }
-
     setAcknowledged(false);
     
     const processedUrls = activeUrls.map(processUrlForView);
