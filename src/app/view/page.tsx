@@ -353,7 +353,7 @@ function ViewPageContent() {
          )}
         <Link
           href="/"
-          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), "h-10 w-10 bg-background/80 hover:bg-accent/80")}
+          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), "h-10 w-10 bg-background/80 hover:bg-accent/80 relative -left-0.5 -top-px")}
           aria-label="Cerrar Vista"
         >
           <X className="h-5 w-5" />
@@ -402,7 +402,7 @@ function ViewPageContent() {
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2", isTopRightWindow ? "mr-12" : "")}>
+                    <div className={cn("flex-grow flex items-center gap-2", isTopRightWindow ? "mr-[48px]" : "")}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden">
