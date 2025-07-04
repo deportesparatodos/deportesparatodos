@@ -118,6 +118,7 @@ function ViewPageContent() {
   const [eventsError, setEventsError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const closeButtonWidth = 40;
 
 
   useEffect(() => {
@@ -180,16 +181,16 @@ function ViewPageContent() {
 
       const eventsWithStatus = events
         .map(e => {
-            const zonedStart = toZonedTime(`${e.date}T${e.time}`, timeZone);
-            if (isNaN(zonedStart.getTime())) {
+            const eventStart = toZonedTime(`${e.date}T${e.time}`, timeZone);
+            if (isNaN(eventStart.getTime())) {
               return { ...e, status: 'Finalizado' as const };
             }
-            const eventEnd = addHours(zonedStart, 3);
+            const eventEnd = addHours(eventStart, 3);
             
             let status: Event['status'] = 'Próximo';
             if (isAfter(now, eventEnd)) {
                 status = 'Finalizado';
-            } else if (isAfter(now, zonedStart)) {
+            } else if (isAfter(now, eventStart)) {
                 status = 'En Vivo';
             }
             return { ...e, status };
@@ -318,12 +319,10 @@ function ViewPageContent() {
   };
 
   const topRightIndex = getTopRightIndex(urls.length, isMobile);
-  const closeButtonRight = isTopRightWindow => isTopRightWindow ? gap + 12 : gap + 16;
-  const marginRight = isTopRightWindow => isTopRightWindow ? 58 : 62;
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center h-[56px]" style={{ top: `${gap}px`, right: `${gap + 12}px` }}>
+      <div className="absolute z-20 flex items-center h-[56px]" style={{ top: `${gap}px`, right: `${gap + 24}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -360,10 +359,10 @@ function ViewPageContent() {
          )}
         <Link
           href="/"
-          className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "bg-transparent hover:bg-accent/80 text-white")}
+          className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "bg-transparent hover:bg-accent/80 text-white h-10 w-10")}
           aria-label="Cerrar Vista"
         >
-          <X className="h-6 w-6 text-white" />
+          <X className="h-7 w-7 text-white" />
         </Link>
       </div>
       
@@ -418,7 +417,7 @@ function ViewPageContent() {
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && 'mr-[58px]')}>
+                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && 'mr-[76px]')}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden h-10">
