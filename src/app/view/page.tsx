@@ -322,7 +322,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center h-10" style={{ top: `${gap + 17}px`, right: `${gap + 6}px` }}>
+      <div className="absolute z-20 flex items-center h-10" style={{ top: `${gap + 6}px`, right: `${gap + 18}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -417,7 +417,7 @@ function ViewPageContent() {
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && `mr-[${closeButtonWidth + 4}px]`)}>
+                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && `mr-[${closeButtonWidth + 12}px]`)}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden h-10">
