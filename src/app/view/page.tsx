@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -322,7 +321,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center h-10" style={{ top: `${gap + 2}px`, right: `${gap + 2}px` }}>
+      <div className="absolute z-20 flex items-center h-10" style={{ top: `${gap + 6}px`, right: `${gap + 2}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
