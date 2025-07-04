@@ -59,7 +59,7 @@ const TUTORIAL_IMAGES = [
 
 
 export default function HomePage() {
-  const [numCameras, setNumCameras] = useState<number>(4);
+  const [numCameras, setNumCameras] = useState<number>(1);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(9).fill(''));
   const [cameraStatuses, setCameraStatuses] = useState<CameraStatus[]>([]);
   const [messages, setMessages] = useState<string[]>([]);
@@ -75,7 +75,7 @@ export default function HomePage() {
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
 
-  const [gridGap, setGridGap] = useState<number>(4);
+  const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [currentTutorialSlide, setCurrentTutorialSlide] = useState(0);
 
@@ -203,8 +203,6 @@ export default function HomePage() {
     const storedNumCameras = localStorage.getItem('numCameras');
     if (storedNumCameras) {
       setNumCameras(parseInt(storedNumCameras, 10));
-    } else {
-      setNumCameras(4);
     }
     const storedGap = localStorage.getItem('gridGap');
     if (storedGap) {

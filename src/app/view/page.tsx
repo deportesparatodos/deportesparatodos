@@ -22,7 +22,7 @@ function ViewPageContent() {
   
   // State is now driven by localStorage to sync with home page
   const [urls, setUrls] = useState<string[]>(Array(9).fill(''));
-  const [numCameras, setNumCameras] = useState<number>(4);
+  const [numCameras, setNumCameras] = useState<number>(1);
   const [isMounted, setIsMounted] = useState(false);
 
   const [sheetOpen, setSheetOpen] = useState(false);
