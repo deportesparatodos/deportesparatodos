@@ -31,12 +31,15 @@ function ViewPageContent() {
   const numIframes = urls.length;
   let gridContainerClasses = "grid flex-grow w-full h-full";
 
+  // Define grid structure based on the number of iframes
   if (numIframes === 1) {
     gridContainerClasses += " grid-cols-1 grid-rows-1";
   } else if (numIframes === 2) {
+    // For 2, stack on mobile, side-by-side on desktop
     gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
   } else {
-    gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-auto"; 
+    // For 3 or 4, use a 2x2 grid on desktop for consistent layout
+    gridContainerClasses += " grid-cols-1 md:grid-cols-2 md:grid-rows-2";
   }
   
   return (
@@ -60,21 +63,20 @@ function ViewPageContent() {
         {urls.map((url: string, index: number) => (
           <div
             key={index}
-            className={`bg-muted/50 overflow-hidden
-              ${numIframes === 3 && index === 0 ? 'md:col-span-2' : ''} 
-              ${numIframes === 3 && index > 0 ? 'md:col-span-1' : ''}
-            `}
+            // By using a consistent grid structure, we don't need conditional classes here.
+            // Each iframe will flow into its designated grid cell.
+            className="bg-muted/50 overflow-hidden"
           >
             <iframe
               src={url}
               title={`Stream ${index + 1}`}
-              className="w-full h-full border-0 aspect-video min-h-[150px]"
+              // Removed aspect-video and min-h to allow the iframe to fully fill the grid cell
+              className="w-full h-full border-0"
               allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
             />
           </div>
         ))}
-        {numIframes === 3 && <div className="hidden md:block bg-muted/50" />}
       </main>
     </div>
   );
