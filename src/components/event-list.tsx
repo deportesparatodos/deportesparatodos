@@ -45,15 +45,15 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   const [searchTerm, setSearchTerm] = useState('');
   const isSelectMode = !!onSelectEvent;
 
-  const handleAction = async (url: string, key: string) => {
+  const handleAction = async (url: string) => {
     if (isSelectMode && onSelectEvent) {
       onSelectEvent(url);
     } else {
       try {
         await navigator.clipboard.writeText(url);
-        setCopiedStates(prev => ({ ...prev, [key]: true }));
+        setCopiedStates(prev => ({ ...prev, [url]: true }));
         setTimeout(() => {
-          setCopiedStates(prev => ({ ...prev, [key]: false }));
+          setCopiedStates(prev => ({ ...prev, [url]: false }));
         }, 1500);
       } catch (err) {
         console.error("Error al copiar: ", err);
@@ -135,26 +135,25 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                      <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Canales</h4>
                      <div className="flex flex-wrap gap-2">
                         {event.options.map((url, channelIndex) => {
-                          const key = `${eventIndex}-${channelIndex}`;
-                          const isCopied = copiedStates[key];
+                          const isCopied = copiedStates[url];
                           const buttonLabel = event.buttons[channelIndex] || 'Canal';
                           
                           const Icon = isSelectMode ? Tv : (isCopied ? CheckCircle2 : Copy);
     
                           return (
-                            <Tooltip key={key}>
+                            <Tooltip key={`${eventIndex}-${channelIndex}`}>
                               <TooltipTrigger asChild>
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   className={cn(
-                                    "transition-all duration-200",
+                                    "transition-all duration-200 h-auto whitespace-normal justify-start text-left",
                                     !isSelectMode && isCopied && "border-green-500 bg-green-500/10 text-green-600 hover:text-green-600"
                                   )}
-                                  onClick={() => handleAction(url, key)}
+                                  onClick={() => handleAction(url)}
                                 >
-                                  <Icon className="mr-2 h-4 w-4" />
-                                  {isSelectMode ? buttonLabel : (isCopied ? '¡Copiado!' : 'Copiar')}
+                                  <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                                  <span>{isSelectMode ? buttonLabel : (isCopied ? '¡Copiado!' : 'Copiar')}</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
