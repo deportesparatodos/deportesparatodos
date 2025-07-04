@@ -378,8 +378,7 @@ function ViewPageContent() {
               <div
                 key={`${index}-${url}`}
                 className={cn(
-                  "overflow-hidden relative",
-                  numIframes === 3 && index === 0 && "md:col-span-2",
+                  "overflow-hidden relative bg-background",
                   !url && "bg-destructive flex items-center justify-center text-destructive-foreground font-bold"
                 )}
                 onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
@@ -399,9 +398,9 @@ function ViewPageContent() {
                  {!isMobile && (
                    <div
                     className={cn(
-                      "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm top-2 left-2 transition-opacity duration-300",
+                      "absolute flex items-center gap-2 bg-black/50 p-2 backdrop-blur-sm top-0 left-0 transition-opacity duration-300",
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none",
-                      isTopRightWindow ? "right-14" : "right-2"
+                       isTopRightWindow ? "right-14" : "right-0"
                     )}
                   >
                     <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
