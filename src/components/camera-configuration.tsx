@@ -31,6 +31,7 @@ interface CameraConfigurationProps {
   isLoadingEvents: boolean;
   eventsError: string | null;
   hideStartButton?: boolean;
+  onRefreshEvents?: () => void;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -50,6 +51,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   isLoadingEvents,
   eventsError,
   hideStartButton = false,
+  onRefreshEvents,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
 
@@ -264,6 +266,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                 events={events}
                                 isLoading={isLoadingEvents}
                                 error={eventsError}
+                                onRefresh={onRefreshEvents}
                               />
                           </TabsContent>
                       </Tabs>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { FC } from 'react';
@@ -6,7 +7,7 @@ import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
-import { Copy, CheckCircle2, Loader2, AlertTriangle, Tv, Search, X } from 'lucide-react';
+import { Copy, CheckCircle2, Loader2, AlertTriangle, Tv, Search, X, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -39,9 +40,10 @@ interface EventListComponentProps {
   events: Event[];
   isLoading: boolean;
   error: string | null;
+  onRefresh?: () => void;
 }
 
-export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error }) => {
+export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, onRefresh }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [searchTerm, setSearchTerm] = useState('');
   const isSelectMode = !!onSelectEvent;
@@ -66,7 +68,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoading) {
+  if (isLoading && !filteredEvents.length) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -87,23 +89,37 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
       <div className="px-6 flex-shrink-0 pb-5">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Buscar evento por título..."
-            className="h-9 w-full pl-10 pr-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
+        <div className="flex items-center gap-2">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar evento por título..."
+              className="h-9 w-full pl-10 pr-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                onClick={() => setSearchTerm('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {onRefresh && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-              onClick={() => setSearchTerm('')}
+              className="h-9 w-9 flex-shrink-0"
+              onClick={onRefresh}
+              disabled={isLoading}
             >
-              <X className="h-4 w-4" />
+              <span className="sr-only">Actualizar eventos</span>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" />}
             </Button>
           )}
         </div>

@@ -141,6 +141,26 @@ export default function HomePage() {
     return () => clearInterval(timerId);
   }, [events]);
 
+  const fetchEvents = async () => {
+    setIsLoadingEvents(true);
+    setEventsError(null);
+    try {
+      const response = await fetch('https://agenda-dpt.vercel.app/api/events');
+      if (!response.ok) {
+        throw new Error('No se pudieron cargar los eventos.');
+      }
+      const data = await response.json();
+      setEvents(data);
+    } catch (err) {
+      if (err instanceof Error) {
+          setEventsError(err.message);
+      } else {
+          setEventsError('Ocurrió un error inesperado.');
+      }
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -162,27 +182,6 @@ export default function HomePage() {
         console.error("Failed to fetch channel statuses:", error);
       } finally {
         setIsLoadingStatuses(false);
-      }
-    };
-
-    const fetchEvents = async () => {
-      setIsLoadingEvents(true);
-      setEventsError(null);
-      try {
-        const response = await fetch('https://agenda-dpt.vercel.app/api/events');
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar los eventos.');
-        }
-        const data = await response.json();
-        setEvents(data);
-      } catch (err) {
-        if (err instanceof Error) {
-            setEventsError(err.message);
-        } else {
-            setEventsError('Ocurrió un error inesperado.');
-        }
-      } finally {
-        setIsLoadingEvents(false);
       }
     };
     
@@ -680,6 +679,7 @@ export default function HomePage() {
                   events={processedEvents}
                   isLoadingEvents={isLoadingEvents}
                   eventsError={eventsError}
+                  onRefreshEvents={fetchEvents}
                 />
               </div>
           </div>

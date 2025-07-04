@@ -32,6 +32,26 @@ function ViewPageContent() {
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
 
+  const fetchEvents = async () => {
+    setIsLoadingEvents(true);
+    setEventsError(null);
+    try {
+      const response = await fetch('https://agenda-dpt.vercel.app/api/events');
+      if (!response.ok) {
+        throw new Error('No se pudieron cargar los eventos.');
+      }
+      const data = await response.json();
+      setEvents(data);
+    } catch (err) {
+      if (err instanceof Error) {
+          setEventsError(err.message);
+      } else {
+          setEventsError('Ocurrió un error inesperado.');
+      }
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -53,27 +73,6 @@ function ViewPageContent() {
         console.error("Failed to fetch channel statuses:", error);
       } finally {
         setIsLoadingStatuses(false);
-      }
-    };
-
-    const fetchEvents = async () => {
-      setIsLoadingEvents(true);
-      setEventsError(null);
-      try {
-        const response = await fetch('https://agenda-dpt.vercel.app/api/events');
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar los eventos.');
-        }
-        const data = await response.json();
-        setEvents(data);
-      } catch (err) {
-        if (err instanceof Error) {
-            setEventsError(err.message);
-        } else {
-            setEventsError('Ocurrió un error inesperado.');
-        }
-      } finally {
-        setIsLoadingEvents(false);
       }
     };
     
@@ -182,7 +181,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap + 8}px`, right: `${gap + 8}px` }}>
+      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap + 4}px`, right: `${gap + 4}px` }}>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
                 <Button size="icon" variant="ghost" className="bg-transparent hover:bg-accent/80 text-white h-10 w-10">
@@ -216,6 +215,7 @@ function ViewPageContent() {
                         isLoadingEvents={isLoadingEvents}
                         eventsError={eventsError}
                         hideStartButton={true}
+                        onRefreshEvents={fetchEvents}
                    />
                   )}
                </div>
