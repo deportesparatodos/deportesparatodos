@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { X } from "lucide-react";
 import { Suspense } from 'react';
 import { Button } from "@/components/ui/button";
+import { cn } from '@/lib/utils';
 
 function ViewPageContent() {
   const searchParams = useSearchParams();
@@ -65,7 +66,10 @@ function ViewPageContent() {
         {urls.map((url: string, index: number) => (
           <div
             key={index}
-            className="bg-muted/50 overflow-hidden"
+            className={cn(
+              "bg-muted/50 overflow-hidden",
+              numIframes === 3 && index === 0 && "col-span-2"
+            )}
           >
             <iframe
               src={url}
