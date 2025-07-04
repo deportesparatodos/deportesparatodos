@@ -30,6 +30,7 @@ interface CameraConfigurationProps {
   events: Event[];
   isLoadingEvents: boolean;
   eventsError: string | null;
+  hideStartButton?: boolean;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -48,6 +49,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   events,
   isLoadingEvents,
   eventsError,
+  hideStartButton = false,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
 
@@ -144,8 +146,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     const newUrls = [...cameraUrls];
     newUrls[index] = value;
     setCameraUrls(newUrls);
-    setMessages([]);
-    setAcknowledged(false);
+    if (!hideStartButton) {
+      setMessages([]);
+      setAcknowledged(false);
+    }
   };
 
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
@@ -162,13 +166,17 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
     [newUrls[index], newUrls[targetIndex]] = [newUrls[targetIndex], newUrls[index]];
     setCameraUrls(newUrls);
-    setMessages([]);
-    setAcknowledged(false);
+    if (!hideStartButton) {
+      setMessages([]);
+      setAcknowledged(false);
+    }
   };
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    handleStartView();
+    if (!hideStartButton) {
+      handleStartView();
+    }
   };
   
   const handleSelectChannel = (url: string) => {
@@ -278,7 +286,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
           })}
           </div>
 
-          {messages && messages.length > 0 && (
+          {!hideStartButton && messages && messages.length > 0 && (
             <div className="space-y-2">
               {messages.map((text, index) => (
                 <div key={index} className={cn(
@@ -292,9 +300,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             </div>
           )}
         
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
-          </Button>
+          {!hideStartButton && (
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
+            </Button>
+          )}
       </form>
     </>
   );

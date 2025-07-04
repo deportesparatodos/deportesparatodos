@@ -3,19 +3,20 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { X, ChevronDown, Loader2, Trash2, Plus, Settings } from "lucide-react";
+import { X, ChevronDown, Loader2, Trash2, Plus, Menu } from "lucide-react";
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
-import { ChannelListComponent } from '@/components/channel-list';
+import { ChannelListComponent, channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
 import { EventListComponent } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
-import { channels as allChannels } from '@/components/channel-list';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CameraConfigurationComponent } from '@/components/camera-configuration';
 
 
 const getDisplayStatus = (url: string, events: Event[], channelStatuses: Record<string, 'online' | 'offline'>): { text: string } => {
@@ -103,11 +104,11 @@ function ViewPageContent() {
   const borderColor = decodeURIComponent(searchParams.get('borderColor') || '#18181b');
   
   const [urls, setUrls] = useState<string[]>(initialUrls);
+  const [numCameras, setNumCameras] = useState<number>(initialUrls.length);
   const [visibleBarIndex, setVisibleBarIndex] = useState<number | null>(null);
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
   
-  // Data fetching state
   const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
   const [isLoadingStatuses, setIsLoadingStatuses] = useState(true);
   const [events, setEvents] = useState<Omit<Event, 'status'>[]>([]);
@@ -115,6 +116,7 @@ function ViewPageContent() {
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
 
   useEffect(() => {
@@ -213,6 +215,26 @@ function ViewPageContent() {
     return () => clearInterval(timerId);
   }, [events]);
 
+  useEffect(() => {
+    if (urls.length !== numCameras) {
+        setNumCameras(urls.length);
+    }
+  }, [urls.length]);
+
+
+  const handleNumCamerasChange = (newNum: number) => {
+    setNumCameras(newNum);
+    setUrls(currentUrls => {
+        if (currentUrls.length > newNum) {
+            return currentUrls.slice(0, newNum);
+        }
+        if (currentUrls.length < newNum) {
+            return [...currentUrls, ...Array(newNum - currentUrls.length).fill('')];
+        }
+        return currentUrls;
+    });
+  };
+
   const handleMouseMove = (index: number) => {
     if (isMobile) return;
     setVisibleBarIndex(index);
@@ -265,7 +287,7 @@ function ViewPageContent() {
     );
   }
 
-  const numIframes = urls.length;
+  const numIframes = numCameras;
   let gridContainerClasses = "grid flex-grow w-full h-full";
 
   if (numIframes === 1) {
@@ -282,13 +304,49 @@ function ViewPageContent() {
   
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <Link 
-        href="/" 
-        className="absolute top-2 right-2 z-20 p-2 rounded-md text-foreground hover:bg-accent/70 hover:text-accent-foreground transition-colors"
-        aria-label="Cerrar Vista"
-      >
-        <X className="h-6 w-6" />
-      </Link>
+      <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
+         {isMobile && (
+            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                <SheetTrigger asChild>
+                    <Button size="icon" variant="outline" className="h-9 w-9">
+                        <Menu className="h-5 w-5" />
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-full sm:w-96 flex flex-col p-0">
+                   <SheetHeader className="p-4 border-b">
+                     <SheetTitle>Configuración de Vista</SheetTitle>
+                   </SheetHeader>
+                   <div className="flex-grow overflow-y-auto p-4">
+                       <CameraConfigurationComponent
+                            numCameras={numCameras}
+                            setNumCameras={handleNumCamerasChange}
+                            cameraUrls={urls}
+                            setCameraUrls={setUrls}
+                            messages={[]}
+                            setMessages={() => {}}
+                            handleStartView={() => {}}
+                            channels={allChannels}
+                            channelStatuses={channelStatuses}
+                            setCameraStatuses={() => {}}
+                            setAcknowledged={() => {}}
+                            isLoadingChannelStatuses={isLoadingStatuses}
+                            events={processedEvents}
+                            isLoadingEvents={isLoadingEvents}
+                            eventsError={eventsError}
+                            hideStartButton={true}
+                       />
+                   </div>
+                </SheetContent>
+            </Sheet>
+         )}
+        <Link 
+          href="/" 
+          className="p-2 rounded-full text-foreground bg-background/50 hover:bg-accent/70 hover:text-accent-foreground transition-colors"
+          aria-label="Cerrar Vista"
+        >
+          <X className="h-5 w-5" />
+        </Link>
+      </div>
       
       <main 
         className={gridContainerClasses} 
@@ -320,87 +378,86 @@ function ViewPageContent() {
                   allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                   allowFullScreen
                 />
-                 <div
-                  className={cn(
-                    "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm",
-                    isMobile 
-                      ? "bottom-2 left-2 right-2"
-                      : "top-2 left-2 right-2 transition-opacity duration-300",
-                    !isMobile && (isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none")
-                  )}
-                >
-                  <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="flex-grow justify-between overflow-hidden">
-                        <span className="truncate">{displayStatus.text}</span>
-                        <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                        <DialogHeader className="p-5 pb-0">
-                            <DialogTitle>Cambiar entrada para la Vista {index + 1}</DialogTitle>
-                        </DialogHeader>
-                         {isLoadingEvents || isLoadingStatuses ? (
-                            <div className="flex items-center justify-center h-full">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            </div>
-                        ) : (
-                          <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
-                              <TabsList className="grid w-full grid-cols-2">
-                                  <TabsTrigger value="channels">Canales</TabsTrigger>
-                                  <TabsTrigger value="events">Eventos</TabsTrigger>
-                              </TabsList>
-                              <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
-                                  <ChannelListComponent 
-                                      channelStatuses={channelStatuses}
-                                      isLoading={isLoadingStatuses}
-                                      onSelectChannel={(newUrl) => handleUrlChange(index, newUrl)}
-                                  />
-                              </TabsContent>
-                              <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
-                                  <EventListComponent 
-                                    onSelectEvent={(newUrl) => handleUrlChange(index, newUrl)}
-                                    events={processedEvents}
-                                    isLoading={isLoadingEvents}
-                                    error={eventsError}
-                                  />
-                              </TabsContent>
-                          </Tabs>
-                        )}
-                    </DialogContent>
-                  </Dialog>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="icon"
-                        onClick={handleAddWindow}
-                        aria-label="Agregar Ventana"
-                        disabled={urls.length >= 9}
-                        className="bg-green-500 text-primary-foreground hover:bg-green-500/90"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Agregar Ventana</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleRemoveWindow(index)}
-                        aria-label="Eliminar Ventana"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Eliminar Ventana</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+                 {!isMobile && (
+                   <div
+                    className={cn(
+                      "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm top-2 left-2 right-2 transition-opacity duration-300",
+                      isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+                    )}
+                  >
+                    <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="flex-grow justify-between overflow-hidden">
+                          <span className="truncate">{displayStatus.text}</span>
+                          <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
+                          <DialogHeader className="p-5 pb-0">
+                              <DialogTitle>Cambiar entrada para la Vista {index + 1}</DialogTitle>
+                          </DialogHeader>
+                          {isLoadingEvents || isLoadingStatuses ? (
+                              <div className="flex items-center justify-center h-full">
+                                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                              </div>
+                          ) : (
+                            <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="channels">Canales</TabsTrigger>
+                                    <TabsTrigger value="events">Eventos</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                                    <ChannelListComponent 
+                                        channelStatuses={channelStatuses}
+                                        isLoading={isLoadingStatuses}
+                                        onSelectChannel={(newUrl) => handleUrlChange(index, newUrl)}
+                                    />
+                                </TabsContent>
+                                <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                                    <EventListComponent 
+                                      onSelectEvent={(newUrl) => handleUrlChange(index, newUrl)}
+                                      events={processedEvents}
+                                      isLoading={isLoadingEvents}
+                                      error={eventsError}
+                                    />
+                                </TabsContent>
+                            </Tabs>
+                          )}
+                      </DialogContent>
+                    </Dialog>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          onClick={handleAddWindow}
+                          aria-label="Agregar Ventana"
+                          disabled={urls.length >= 9}
+                          className="bg-green-500 text-primary-foreground hover:bg-green-500/90"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Agregar Ventana</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => handleRemoveWindow(index)}
+                          aria-label="Eliminar Ventana"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Eliminar Ventana</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
               </div>
             );
           })}
