@@ -289,14 +289,14 @@ function ViewPageContent() {
     );
   }
 
-  const numIframes = numCameras;
+  const numIframes = urls.length;
   let gridContainerClasses = "grid flex-grow w-full h-full";
 
   if (numIframes === 1) {
     gridContainerClasses += " grid-cols-1 grid-rows-1";
   } else if (numIframes === 2) {
     gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
-  } else if (numIframes <= 4) {
+  } else if (numIframes === 3 || numIframes === 4) {
     gridContainerClasses += " grid-cols-2 grid-rows-2";
   } else if (numIframes <= 6) {
     gridContainerClasses += " grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2";
@@ -306,8 +306,8 @@ function ViewPageContent() {
   
   const getTopRightIndex = (numCameras: number, isMobile: boolean): number => {
     if (isMobile) return -1;
-    if (numCameras === 1) return 0;
-    if (numCameras === 2 || numCameras === 3 || numCameras === 4) return 1;
+    if (numCameras === 1 || numCameras === 3) return 0;
+    if (numCameras === 2 || numCameras === 4) return 1;
     if (numCameras >= 5) return 2;
     return -1;
   };
@@ -316,7 +316,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2 py-2" style={{ top: `${gap}px`, right: `${gap + 9}px` }}>
+      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap}px`, right: `${gap + 6}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -353,7 +353,11 @@ function ViewPageContent() {
          )}
         <Link
           href="/"
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md bg-transparent text-white hover:bg-accent/80"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon" }),
+            "h-10 w-10 hover:bg-accent/80"
+          )}
+          style={{ transform: 'translateX(-3px)'}}
           aria-label="Cerrar Vista"
         >
           <X className="h-5 w-5 text-white" />
@@ -379,7 +383,8 @@ function ViewPageContent() {
                 key={`${index}-${url}`}
                 className={cn(
                   "overflow-hidden relative bg-background",
-                  !url && "bg-destructive flex items-center justify-center text-destructive-foreground font-bold"
+                  !url && "bg-destructive flex items-center justify-center text-destructive-foreground font-bold",
+                  urls.length === 3 && index === 0 && "col-span-2"
                 )}
                 onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
                 onMouseLeave={isMobile ? undefined : handleMouseLeave}
@@ -398,14 +403,14 @@ function ViewPageContent() {
                  {!isMobile && (
                    <div
                     className={cn(
-                      "absolute flex items-center bg-black/50 backdrop-blur-sm top-0 left-0 right-0 transition-opacity duration-300 h-14",
+                      "absolute flex items-center bg-black/50 backdrop-blur-sm top-0 left-0 right-0 transition-opacity duration-300",
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow ? "mr-[48px]" : "")}>
+                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && "mr-[44px]")}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
-                            <Button variant="outline" className="flex-grow justify-between overflow-hidden">
+                            <Button variant="outline" className="flex-grow justify-between overflow-hidden h-10">
                             <span className="truncate">{displayStatus.text}</span>
                             <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
                             </Button>
