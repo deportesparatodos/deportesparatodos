@@ -306,8 +306,8 @@ function ViewPageContent() {
   
   const getTopRightIndex = (numCameras: number, isMobile: boolean): number => {
     if (isMobile) return -1;
-    if (numCameras === 1 || numCameras === 3) return 0;
-    if (numCameras === 2 || numCameras === 4) return 1;
+    if (numCameras === 1) return 0;
+    if (numCameras >= 2 && numCameras <= 4) return 1;
     if (numCameras >= 5) return 2;
     return -1;
   };
@@ -316,7 +316,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
+      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -353,7 +353,7 @@ function ViewPageContent() {
          )}
         <Link
           href="/"
-          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), "h-10 w-10 bg-background/80 hover:bg-accent/80")}
+          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), "h-14 w-14 bg-background/80 hover:bg-accent/80 flex items-center justify-center")}
           aria-label="Cerrar Vista"
         >
           <X className="h-5 w-5" />
@@ -398,82 +398,84 @@ function ViewPageContent() {
                  {!isMobile && (
                    <div
                     className={cn(
-                      "absolute flex items-center gap-2 bg-black/50 p-2 backdrop-blur-sm top-0 left-0 transition-opacity duration-300",
-                      isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none",
-                       isTopRightWindow ? "right-14" : "right-0"
+                      "absolute flex items-center bg-black/50 p-2 backdrop-blur-sm top-0 left-0 right-0 transition-opacity duration-300 h-14",
+                      isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="flex-grow justify-between overflow-hidden">
-                          <span className="truncate">{displayStatus.text}</span>
-                          <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                          <DialogHeader className="p-5 pb-0">
-                              <DialogTitle>Cambiar entrada para la Vista {index + 1}</DialogTitle>
-                          </DialogHeader>
-                          {isLoadingEvents || isLoadingStatuses ? (
-                              <div className="flex items-center justify-center h-full">
-                                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                              </div>
-                          ) : (
-                            <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
-                                <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="channels">Canales</TabsTrigger>
-                                    <TabsTrigger value="events">Eventos</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
-                                    <ChannelListComponent 
-                                        channelStatuses={channelStatuses}
-                                        isLoading={isLoadingStatuses}
-                                        onSelectChannel={(newUrl) => handleUrlChange(index, newUrl)}
-                                    />
-                                </TabsContent>
-                                <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
-                                    <EventListComponent 
-                                      onSelectEvent={(newUrl) => handleUrlChange(index, newUrl)}
-                                      events={processedEvents}
-                                      isLoading={isLoadingEvents}
-                                      error={eventsError}
-                                    />
-                                </TabsContent>
-                            </Tabs>
-                          )}
-                      </DialogContent>
-                    </Dialog>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="icon"
-                          onClick={handleAddWindow}
-                          aria-label="Agregar Ventana"
-                          disabled={urls.length >= 9}
-                          className="bg-green-500 text-primary-foreground hover:bg-green-500/90"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Agregar Ventana</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => handleRemoveWindow(index)}
-                          aria-label="Eliminar Ventana"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Eliminar Ventana</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <div className={cn("flex-grow flex items-center gap-2", isTopRightWindow ? "mr-14" : "")}>
+                        <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="flex-grow justify-between overflow-hidden">
+                            <span className="truncate">{displayStatus.text}</span>
+                            <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
+                            <DialogHeader className="p-5 pb-0">
+                                <DialogTitle>Cambiar entrada para la Vista {index + 1}</DialogTitle>
+                            </DialogHeader>
+                            {isLoadingEvents || isLoadingStatuses ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                </div>
+                            ) : (
+                                <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="channels">Canales</TabsTrigger>
+                                        <TabsTrigger value="events">Eventos</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                                        <ChannelListComponent 
+                                            channelStatuses={channelStatuses}
+                                            isLoading={isLoadingStatuses}
+                                            onSelectChannel={(newUrl) => handleUrlChange(index, newUrl)}
+                                        />
+                                    </TabsContent>
+                                    <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                                        <EventListComponent 
+                                        onSelectEvent={(newUrl) => handleUrlChange(index, newUrl)}
+                                        events={processedEvents}
+                                        isLoading={isLoadingEvents}
+                                        error={eventsError}
+                                        />
+                                    </TabsContent>
+                                </Tabs>
+                            )}
+                        </DialogContent>
+                        </Dialog>
+                        <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                            size="icon"
+                            onClick={handleAddWindow}
+                            aria-label="Agregar Ventana"
+                            disabled={urls.length >= 9}
+                            className="bg-green-500 text-primary-foreground hover:bg-green-500/90 h-10 w-10"
+                            >
+                            <Plus className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Agregar Ventana</p>
+                        </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => handleRemoveWindow(index)}
+                            aria-label="Eliminar Ventana"
+                             className="h-10 w-10"
+                            >
+                            <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Eliminar Ventana</p>
+                        </TooltipContent>
+                        </Tooltip>
+                    </div>
                   </div>
                 )}
               </div>
