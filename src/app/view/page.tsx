@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { X, ChevronDown, Loader2, Trash2, Plus, Menu } from "lucide-react";
 import { Suspense, useState, useEffect, useRef } from 'react';
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -349,9 +349,9 @@ function ViewPageContent() {
                 </SheetContent>
             </Sheet>
          )}
-        <Link 
-          href="/" 
-          className="p-2 rounded-full text-foreground bg-background/50 hover:bg-accent/70 hover:text-accent-foreground transition-colors"
+        <Link
+          href="/"
+          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), "h-10 w-10 bg-background/80 hover:bg-accent/80")}
           aria-label="Cerrar Vista"
         >
           <X className="h-5 w-5" />
@@ -368,7 +368,7 @@ function ViewPageContent() {
       >
         <TooltipProvider>
           {urls.map((url: string, index: number) => {
-            const isBarVisible = !isMobile && visibleBarIndex === index;
+            const isBarVisible = !isMobile && (visibleBarIndex === index || !url);
             const displayStatus = getDisplayStatus(url, processedEvents, channelStatuses);
             const isTopRightWindow = index === topRightIndex;
 
@@ -376,19 +376,24 @@ function ViewPageContent() {
               <div
                 key={`${index}-${url}`}
                 className={cn(
-                  "bg-muted/50 overflow-hidden relative",
-                  numIframes === 3 && index === 0 && "md:col-span-2"
+                  "overflow-hidden relative",
+                  numIframes === 3 && index === 0 && "md:col-span-2",
+                  !url && "bg-destructive flex items-center justify-center text-destructive-foreground font-bold"
                 )}
                 onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
                 onMouseLeave={isMobile ? undefined : handleMouseLeave}
               >
-                <iframe
-                  src={url}
-                  title={`Stream ${index + 1}`}
-                  className="w-full h-full border-0"
-                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                  allowFullScreen
-                />
+                {url ? (
+                  <iframe
+                    src={url}
+                    title={`Stream ${index + 1}`}
+                    className="w-full h-full border-0"
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  "ELEGIR CANAL/EVENTO..."
+                )}
                  {!isMobile && (
                    <div
                     className={cn(
