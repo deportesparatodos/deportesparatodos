@@ -318,10 +318,12 @@ function ViewPageContent() {
   };
 
   const topRightIndex = getTopRightIndex(urls.length, isMobile);
+  const closeButtonRight = isTopRightWindow => isTopRightWindow ? gap + 12 : gap + 16;
+  const marginRight = isTopRightWindow => isTopRightWindow ? 58 : 62;
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center h-[56px]" style={{ top: `${gap}px`, right: `${gap + 10}px` }}>
+      <div className="absolute z-20 flex items-center h-[56px]" style={{ top: `${gap}px`, right: `${gap + 12}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -358,13 +360,10 @@ function ViewPageContent() {
          )}
         <Link
           href="/"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon" }),
-            "h-12 w-12 bg-transparent hover:bg-accent/80"
-          )}
+          className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "bg-transparent hover:bg-accent/80 text-white")}
           aria-label="Cerrar Vista"
         >
-          <X className="h-8 w-8 text-white" />
+          <X className="h-6 w-6 text-white" />
         </Link>
       </div>
       
@@ -419,7 +418,7 @@ function ViewPageContent() {
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && "mr-[62px]")}>
+                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && 'mr-[58px]')}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden h-10">
@@ -519,5 +518,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    
