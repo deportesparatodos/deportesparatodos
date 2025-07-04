@@ -17,12 +17,14 @@ import { CameraConfigurationComponent } from '@/components/camera-configuration'
 
 function ViewPageContent() {
   const searchParams = useSearchParams();
-  const initialUrls: string[] = searchParams.getAll('urls').map((url: string) => decodeURIComponent(url));
   const gap = parseInt(searchParams.get('gap') || '0', 10);
   const borderColor = decodeURIComponent(searchParams.get('borderColor') || '#18181b');
   
-  const [urls, setUrls] = useState<string[]>(initialUrls);
-  const [numCameras, setNumCameras] = useState<number>(initialUrls.length);
+  // State is now driven by localStorage to sync with home page
+  const [urls, setUrls] = useState<string[]>(Array(9).fill(''));
+  const [numCameras, setNumCameras] = useState<number>(4);
+  const [isMounted, setIsMounted] = useState(false);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   
   const [channelStatuses, setChannelStatuses] = useState<Record<string, 'online' | 'offline'>>({});
@@ -31,6 +33,33 @@ function ViewPageContent() {
   const [processedEvents, setProcessedEvents] = useState<Event[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    setIsMounted(true);
+    const storedUrls = localStorage.getItem('cameraUrls');
+    if (storedUrls) {
+      const parsedUrls = JSON.parse(storedUrls);
+      const newUrls = Array(9).fill('');
+      parsedUrls.slice(0, 9).forEach((url: string, i: number) => {
+        newUrls[i] = url;
+      });
+      setUrls(newUrls);
+    }
+    const storedNumCameras = localStorage.getItem('numCameras');
+    if (storedNumCameras) {
+      setNumCameras(parseInt(storedNumCameras, 10));
+    }
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem('cameraUrls', JSON.stringify(urls));
+      localStorage.setItem('numCameras', numCameras.toString());
+    }
+  }, [urls, numCameras, isMounted]);
+
 
   const fetchEvents = async () => {
     setIsLoadingEvents(true);
@@ -129,30 +158,16 @@ function ViewPageContent() {
     return () => clearInterval(timerId);
   }, [events]);
 
-  useEffect(() => {
-    if (urls.length !== numCameras) {
-        setNumCameras(urls.length);
-    }
-  }, [urls.length]);
+  if (!isMounted) {
+    return <Loading />;
+  }
+  
+  const urlsToDisplay = urls.slice(0, numCameras);
 
-
-  const handleNumCamerasChange = (newNum: number) => {
-    setNumCameras(newNum);
-    setUrls(currentUrls => {
-        if (currentUrls.length > newNum) {
-            return currentUrls.slice(0, newNum);
-        }
-        if (currentUrls.length < newNum) {
-            return [...currentUrls, ...Array(newNum - currentUrls.length).fill('')];
-        }
-        return currentUrls;
-    });
-  };
-
-  if (urls.length === 0) {
+  if (urlsToDisplay.filter(url => url && url.trim() !== "").length === 0) {
     return (
       <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
-        <p className="mb-4">No se proporcionaron URLs de transmisión.</p>
+        <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
         <Button asChild>
           <Link href="/">
             <X className="mr-2 h-4 w-4" /> Volver Atrás
@@ -162,7 +177,7 @@ function ViewPageContent() {
     );
   }
 
-  const numIframes = urls.length;
+  const numIframes = numCameras;
   let gridContainerClasses = "grid flex-grow w-full h-full";
 
   if (numIframes === 1) {
@@ -181,7 +196,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap + 4}px`, right: `${gap + 4}px` }}>
+      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
                 <Button size="icon" variant="ghost" className="bg-transparent hover:bg-accent/80 text-white h-10 w-10">
@@ -200,7 +215,7 @@ function ViewPageContent() {
                   ) : (
                    <CameraConfigurationComponent
                         numCameras={numCameras}
-                        setNumCameras={handleNumCamerasChange}
+                        setNumCameras={setNumCameras}
                         cameraUrls={urls}
                         setCameraUrls={setUrls}
                         messages={[]}
@@ -238,13 +253,13 @@ function ViewPageContent() {
           backgroundColor: borderColor
         }}
       >
-        {urls.map((url: string, index: number) => {
+        {urlsToDisplay.map((url: string, index: number) => {
           
           const windowClasses: string[] = ["overflow-hidden", "relative", "bg-background"];
           if (!url) {
               windowClasses.push("bg-red-500", "flex", "items-center", "justify-center", "text-destructive-foreground", "font-bold");
           }
-           if (urls.length === 3) {
+           if (numIframes === 3) {
             if (index === 0) {
               windowClasses.push("row-span-1 col-span-2");
             } else {
@@ -279,7 +294,8 @@ function ViewPageContent() {
 function Loading() {
   return (
     <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
-      <p>Cargando vistas...</p>
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="mt-2">Cargando vistas...</p>
     </div>
   );
 }
