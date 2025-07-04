@@ -3,11 +3,12 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { X, ChevronDown, Loader2 } from "lucide-react";
+import { X, ChevronDown, Loader2, Trash2 } from "lucide-react";
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
 import { ChannelListComponent } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
@@ -233,6 +234,10 @@ function ViewPageContent() {
     setDialogOpenForIndex(null);
   };
   
+  const handleRemoveWindow = (indexToRemove: number) => {
+    setUrls(prevUrls => prevUrls.filter((_, index) => index !== indexToRemove));
+  };
+  
   if (urls.length === 0) {
     return (
       <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
@@ -279,77 +284,94 @@ function ViewPageContent() {
           backgroundColor: borderColor
         }}
       >
-        {urls.map((url: string, index: number) => {
-          const isBarVisible = visibleBarIndex === index;
-          const displayStatus = getDisplayStatus(url, processedEvents, channelStatuses);
+        <TooltipProvider>
+          {urls.map((url: string, index: number) => {
+            const isBarVisible = visibleBarIndex === index;
+            const displayStatus = getDisplayStatus(url, processedEvents, channelStatuses);
 
-          return (
-            <div
-              key={`${index}-${url}`}
-              className={cn(
-                "bg-muted/50 overflow-hidden relative",
-                numIframes === 3 && index === 0 && "col-span-2"
-              )}
-              onMouseMove={() => handleMouseMove(index)}
-              onMouseLeave={handleMouseLeave}
-            >
-              <iframe
-                src={url}
-                title={`Stream ${index + 1}`}
-                className="w-full h-full border-0"
-                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                allowFullScreen
-              />
-               <div
+            return (
+              <div
+                key={`${index}-${url}`}
                 className={cn(
-                  "absolute top-0 left-0 right-0 p-2 bg-black/50 backdrop-blur-sm transition-opacity duration-300",
-                  isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+                  "bg-muted/50 overflow-hidden relative",
+                  numIframes === 3 && index === 0 && "row-span-1 md:col-span-2"
                 )}
+                onMouseMove={() => handleMouseMove(index)}
+                onMouseLeave={handleMouseLeave}
               >
-                <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between overflow-hidden">
-                      <span className="truncate">{displayStatus.text}</span>
-                      <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                      <DialogHeader className="p-5 pb-0">
-                          <DialogTitle>Cambiar entrada para la Vista {index + 1}</DialogTitle>
-                      </DialogHeader>
-                       {isLoadingEvents || isLoadingStatuses ? (
-                          <div className="flex items-center justify-center h-full">
-                              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                          </div>
-                      ) : (
-                        <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="channels">Canales</TabsTrigger>
-                                <TabsTrigger value="events">Eventos</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
-                                <ChannelListComponent 
-                                    channelStatuses={channelStatuses}
-                                    isLoading={isLoadingStatuses}
-                                    onSelectChannel={(newUrl) => handleUrlChange(index, newUrl)}
-                                />
-                            </TabsContent>
-                            <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
-                                <EventListComponent 
-                                  onSelectEvent={(newUrl) => handleUrlChange(index, newUrl)}
-                                  events={processedEvents}
-                                  isLoading={isLoadingEvents}
-                                  error={eventsError}
-                                />
-                            </TabsContent>
-                        </Tabs>
-                      )}
-                  </DialogContent>
-                </Dialog>
+                <iframe
+                  src={url}
+                  title={`Stream ${index + 1}`}
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                  allowFullScreen
+                />
+                 <div
+                  className={cn(
+                    "absolute top-2 left-2 right-14 flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm transition-opacity duration-300",
+                    isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+                  )}
+                >
+                  <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="flex-grow justify-between overflow-hidden">
+                        <span className="truncate">{displayStatus.text}</span>
+                        <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
+                        <DialogHeader className="p-5 pb-0">
+                            <DialogTitle>Cambiar entrada para la Vista {index + 1}</DialogTitle>
+                        </DialogHeader>
+                         {isLoadingEvents || isLoadingStatuses ? (
+                            <div className="flex items-center justify-center h-full">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : (
+                          <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
+                              <TabsList className="grid w-full grid-cols-2">
+                                  <TabsTrigger value="channels">Canales</TabsTrigger>
+                                  <TabsTrigger value="events">Eventos</TabsTrigger>
+                              </TabsList>
+                              <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                                  <ChannelListComponent 
+                                      channelStatuses={channelStatuses}
+                                      isLoading={isLoadingStatuses}
+                                      onSelectChannel={(newUrl) => handleUrlChange(index, newUrl)}
+                                  />
+                              </TabsContent>
+                              <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                                  <EventListComponent 
+                                    onSelectEvent={(newUrl) => handleUrlChange(index, newUrl)}
+                                    events={processedEvents}
+                                    isLoading={isLoadingEvents}
+                                    error={eventsError}
+                                  />
+                              </TabsContent>
+                          </Tabs>
+                        )}
+                    </DialogContent>
+                  </Dialog>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleRemoveWindow(index)}
+                        aria-label="Eliminar Ventana"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Eliminar Ventana</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </TooltipProvider>
       </main>
     </div>
   );
