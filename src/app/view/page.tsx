@@ -307,7 +307,7 @@ function ViewPageContent() {
   const getTopRightIndex = (numCameras: number, isMobile: boolean): number => {
     if (isMobile) return -1;
     if (numCameras === 1) return 0;
-    if (numCameras >= 2 && numCameras <= 4) return 1;
+    if (numCameras === 2 || numCameras === 3 || numCameras === 4) return 1;
     if (numCameras >= 5) return 2;
     return -1;
   };
@@ -316,7 +316,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2 py-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
+      <div className="absolute z-20 flex items-center gap-2 py-2" style={{ top: `${gap}px`, right: `${gap + 3}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -353,7 +353,7 @@ function ViewPageContent() {
          )}
         <Link
           href="/"
-          className="h-10 w-10 inline-flex items-center justify-center rounded-md bg-transparent text-primary-foreground hover:bg-accent/80"
+          className="h-10 w-10 inline-flex items-center justify-center rounded-md bg-transparent text-white hover:bg-accent/80"
           aria-label="Cerrar Vista"
         >
           <X className="h-5 w-5" />
@@ -398,11 +398,11 @@ function ViewPageContent() {
                  {!isMobile && (
                    <div
                     className={cn(
-                      "absolute flex items-center bg-black/50 p-2 backdrop-blur-sm top-0 left-0 right-0 transition-opacity duration-300 h-14",
+                      "absolute flex items-center bg-black/50 backdrop-blur-sm top-0 left-0 right-0 transition-opacity duration-300 h-14",
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2", isTopRightWindow ? "mr-[48px]" : "")}>
+                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow ? "mr-[48px]" : "")}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden">
