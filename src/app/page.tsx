@@ -73,7 +73,6 @@ export default function HomePage() {
   const [processedEvents, setProcessedEvents] = useState<Event[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   const [gridGap, setGridGap] = useState<number>(4);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
@@ -93,53 +92,57 @@ export default function HomePage() {
   }, [cameraStatuses, numCameras, cameraUrls]);
 
   useEffect(() => {
-    setCurrentTime(new Date());
-    const timer = setInterval(() => {
-        setCurrentTime(new Date());
-    }, 60000); 
-
-    return () => clearInterval(timer);
-  }, []);
-  
-  useEffect(() => {
-    if (!events.length || !currentTime) {
-      setProcessedEvents([]);
-      return;
-    }
-    
-    const now = currentTime;
-
-    const getEventStatus = (event: Omit<Event, 'status'>): Event['status'] => {
-      try {
-        const eventStart = new Date(`${event.date}T${event.time}-03:00`);
-        const eventEnd = addHours(eventStart, 3);
-        
-        if (isAfter(now, eventEnd)) return 'Finalizado';
-        if (isAfter(now, eventStart)) return 'En Vivo';
-        return 'Próximo';
-      } catch (e) {
-        console.error("Error processing event date:", event, e);
-        return 'Próximo';
+    const processEvents = () => {
+      if (!events.length) {
+        setProcessedEvents([]);
+        return;
       }
-    };
-    
-    const eventsWithStatus = events.map(e => ({
-      ...e,
-      status: getEventStatus(e),
-    }));
+      
+      const now = new Date();
 
-    const statusOrder = { 'En Vivo': 1, 'Próximo': 2, 'Finalizado': 3 };
-
-    eventsWithStatus.sort((a, b) => {
-        if (a.status !== b.status) {
-            return statusOrder[a.status] - statusOrder[b.status];
+      const getEventStatus = (event: Omit<Event, 'status'>): Event['status'] => {
+        try {
+          const eventStart = new Date(`${event.date}T${event.time}:00-03:00`);
+          if (isNaN(eventStart.getTime())) {
+            return 'Próximo';
+          }
+          const eventEnd = addHours(eventStart, 3);
+          
+          if (isAfter(now, eventEnd)) return 'Finalizado';
+          if (isAfter(now, eventStart)) return 'En Vivo';
+          return 'Próximo';
+        } catch (e) {
+          return 'Próximo';
         }
-        return a.time.localeCompare(b.time);
-    });
+      };
+      
+      const eventsWithStatus = events.map(e => ({
+        ...e,
+        status: getEventStatus(e),
+      }));
 
-    setProcessedEvents(eventsWithStatus);
+      const ongoingOrUpcomingEvents = eventsWithStatus.filter(
+        e => e.status !== 'Finalizado'
+      );
 
-  }, [events, currentTime]);
+      const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2 };
+
+      ongoingOrUpcomingEvents.sort((a, b) => {
+          if (a.status !== b.status) {
+              return (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+          }
+          return a.time.localeCompare(b.time);
+      });
+
+      setProcessedEvents(ongoingOrUpcomingEvents);
+    };
+
+    processEvents();
+    const timerId = setInterval(processEvents, 60000);
+
+    return () => clearInterval(timerId);
+
+  }, [events]);
 
 
   useEffect(() => {
