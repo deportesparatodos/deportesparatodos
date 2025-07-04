@@ -119,7 +119,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
                 return (
                 <Card key={eventIndex} className="bg-muted/50 overflow-hidden">
-                  <div className="flex items-start gap-4 p-4">
+                  <div className="flex items-center gap-4 p-4">
                     {imageSrc && (
                       <Image
                         src={imageSrc}
