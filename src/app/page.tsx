@@ -73,7 +73,7 @@ export default function HomePage() {
   const [events, setEvents] = useState<Omit<Event, 'status'>[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   const [gridGap, setGridGap] = useState<number>(4);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
@@ -93,6 +93,7 @@ export default function HomePage() {
   }, [cameraStatuses, numCameras, cameraUrls]);
 
   useEffect(() => {
+    setCurrentTime(new Date());
     const timer = setInterval(() => {
         setCurrentTime(new Date());
     }, 60000); // Update every minute
@@ -101,7 +102,7 @@ export default function HomePage() {
   }, []);
 
   const processedAndSortedEvents = useMemo((): Event[] => {
-    if (!events.length) return [];
+    if (!events.length || !currentTime) return [];
     
     const now = currentTime;
 
