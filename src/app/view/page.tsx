@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { X, ChevronDown, Loader2, Trash2, Plus } from "lucide-react";
+import { X, ChevronDown, Loader2, Trash2, Plus, Settings } from "lucide-react";
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -15,6 +15,7 @@ import type { Event } from '@/components/event-list';
 import { EventListComponent } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
 import { channels as allChannels } from '@/components/channel-list';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 const getDisplayStatus = (url: string, events: Event[], channelStatuses: Record<string, 'online' | 'offline'>): { text: string } => {
@@ -113,6 +114,8 @@ function ViewPageContent() {
   const [processedEvents, setProcessedEvents] = useState<Event[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+
 
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -211,6 +214,7 @@ function ViewPageContent() {
   }, [events]);
 
   const handleMouseMove = (index: number) => {
+    if (isMobile) return;
     setVisibleBarIndex(index);
     if (inactivityTimer.current) {
       clearTimeout(inactivityTimer.current);
@@ -221,6 +225,7 @@ function ViewPageContent() {
   };
 
   const handleMouseLeave = () => {
+    if (isMobile) return;
     setVisibleBarIndex(null);
     if (inactivityTimer.current) {
       clearTimeout(inactivityTimer.current);
@@ -295,7 +300,7 @@ function ViewPageContent() {
       >
         <TooltipProvider>
           {urls.map((url: string, index: number) => {
-            const isBarVisible = visibleBarIndex === index;
+            const isBarVisible = !isMobile && visibleBarIndex === index;
             const displayStatus = getDisplayStatus(url, processedEvents, channelStatuses);
 
             return (
@@ -305,8 +310,8 @@ function ViewPageContent() {
                   "bg-muted/50 overflow-hidden relative",
                   numIframes === 3 && index === 0 && "row-span-1 md:col-span-2"
                 )}
-                onMouseMove={() => handleMouseMove(index)}
-                onMouseLeave={handleMouseLeave}
+                onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
+                onMouseLeave={isMobile ? undefined : handleMouseLeave}
               >
                 <iframe
                   src={url}
@@ -317,8 +322,11 @@ function ViewPageContent() {
                 />
                  <div
                   className={cn(
-                    "absolute top-2 left-2 right-28 flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm transition-opacity duration-300",
-                    isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+                    "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm",
+                    isMobile 
+                      ? "bottom-2 left-2 right-2"
+                      : "top-2 left-2 right-2 transition-opacity duration-300",
+                    !isMobile && (isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none")
                   )}
                 >
                   <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
