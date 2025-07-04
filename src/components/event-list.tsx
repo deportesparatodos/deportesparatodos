@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { FC } from 'react';
@@ -113,12 +112,17 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
         <TooltipProvider delayDuration={300}>
           {filteredEvents.length > 0 ? (
             <div className="space-y-4">
-              {filteredEvents.map((event, eventIndex) => (
+              {filteredEvents.map((event, eventIndex) => {
+                const imageSrc = event.title.toLowerCase().includes('mlb')
+                  ? 'https://p.alangulotv.live/mlb'
+                  : event.image;
+
+                return (
                 <Card key={eventIndex} className="bg-muted/50 overflow-hidden">
                   <div className="flex items-start gap-4 p-4">
-                    {event.image && (
+                    {imageSrc && (
                       <Image
-                        src={event.image}
+                        src={imageSrc}
                         alt={event.title}
                         width={56}
                         height={56}
@@ -179,7 +183,8 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                     </div>
                   </div>
                 </Card>
-              ))}
+                )
+              })}
             </div>
           ) : (
              <div className="flex items-center justify-center h-full">
