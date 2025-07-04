@@ -4,13 +4,17 @@
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventListComponent, type Event } from './event-list';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { Label } from './ui/label';
+import { Slider } from './ui/slider';
+import { Input } from './ui/input';
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
@@ -32,6 +36,11 @@ interface CameraConfigurationProps {
   eventsError: string | null;
   hideStartButton?: boolean;
   onRefreshEvents?: () => void;
+  gridGap: number;
+  borderColor: string;
+  handleGridGapChange: (value: number[]) => void;
+  handleBorderColorChange: (color: string) => void;
+  handleRestoreDefaults: () => void;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -52,6 +61,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   eventsError,
   hideStartButton = false,
   onRefreshEvents,
+  gridGap,
+  borderColor,
+  handleGridGapChange,
+  handleBorderColorChange,
+  handleRestoreDefaults,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
 
@@ -196,19 +210,92 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   return (
     <>
       <form onSubmit={handleFormSubmit} className="w-full space-y-4">
-          <Select onValueChange={handleNumCamerasChange} value={numCameras.toString()}>
-              <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleccionar cantidad de ventanas" />
-              </SelectTrigger>
-              <SelectContent>
-                  <SelectItem value="1">1 VENTANA</SelectItem>
-                  <SelectItem value="2">2 VENTANAS</SelectItem>
-                  <SelectItem value="3">3 VENTANAS</SelectItem>
-                  <SelectItem value="4">4 VENTANAS</SelectItem>
-                  <SelectItem value="6">6 VENTANAS</SelectItem>
-                  <SelectItem value="9">9 VENTANAS</SelectItem>
-              </SelectContent>
-          </Select>
+          <div className="flex flex-col">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full justify-start rounded-b-none border-b-0">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Configuración de Bordes
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader className="border-b pb-3">
+                  <DialogTitle>Configuración de la Vista:</DialogTitle>
+                </DialogHeader>
+                <Accordion type="single" collapsible className="w-full -mt-4" defaultValue="item-1">
+                  <AccordionItem value="item-1">
+                    <AccordionTrigger>Bordes</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-6 pt-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
+                            <Slider
+                                id="grid-gap-slider"
+                                min={0}
+                                max={32}
+                                step={1}
+                                value={[gridGap]}
+                                onValueChange={handleGridGapChange}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="border-color-input">Color de Bordes</Label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    id="border-color-input"
+                                    value={borderColor}
+                                    onChange={(e) => handleBorderColorChange(e.target.value)}
+                                    className="flex-grow"
+                                />
+                                <div
+                                    className="h-8 w-8 rounded-md border border-input"
+                                    style={{ backgroundColor: borderColor }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Vista Previa</Label>
+                            <div
+                                className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
+                                style={{
+                                    gap: `${gridGap}px`,
+                                    padding: `${gridGap}px`,
+                                    backgroundColor: borderColor,
+                                }}
+                            >
+                                <div className="rounded-md bg-background" />
+                                <div className="rounded-md bg-background" />
+                                <div className="rounded-md bg-background" />
+                                <div className="rounded-md bg-background" />
+                            </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+                <DialogFooter className="pt-4">
+                  <Button variant="outline" onClick={handleRestoreDefaults}>
+                      Restaurar
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <Select onValueChange={handleNumCamerasChange} value={numCameras.toString()}>
+                <SelectTrigger className="w-full rounded-t-none">
+                    <SelectValue placeholder="Seleccionar cantidad de ventanas" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="1">1 VENTANA</SelectItem>
+                    <SelectItem value="2">2 VENTANAS</SelectItem>
+                    <SelectItem value="3">3 VENTANAS</SelectItem>
+                    <SelectItem value="4">4 VENTANAS</SelectItem>
+                    <SelectItem value="6">6 VENTANAS</SelectItem>
+                    <SelectItem value="9">9 VENTANAS</SelectItem>
+                </SelectContent>
+            </Select>
+          </div>
 
           <div className="space-y-3">
           {Array.from({ length: numCameras }).map((_, index) => {
