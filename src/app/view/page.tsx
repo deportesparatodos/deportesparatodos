@@ -2,8 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { X, Loader2, Menu } from "lucide-react";
+import { X, Loader2, Menu, Settings } from "lucide-react";
 import { Suspense, useState, useEffect } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -13,17 +12,51 @@ import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Separator } from '@/components/ui/separator';
+
+const processUrlForView = (inputUrl: string): string => {
+  if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
+
+  try {
+    // Handle standard YouTube watch URLs
+    if (inputUrl.includes('youtube.com/watch')) {
+      const url = new URL(inputUrl);
+      const videoId = url.searchParams.get('v');
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+    }
+    // Handle youtu.be short URLs
+    if (inputUrl.includes('youtu.be/')) {
+      const url = new URL(inputUrl);
+      const videoId = url.pathname.substring(1);
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+    }
+  } catch (e) {
+    // Not a valid URL, or some other parsing error. Fallback to original URL.
+    return inputUrl;
+  }
+  
+  // Return original URL if it's not a convertible YouTube URL
+  return inputUrl;
+};
 
 
 function ViewPageContent() {
-  const searchParams = useSearchParams();
-  const gap = parseInt(searchParams.get('gap') || '0', 10);
-  const borderColor = decodeURIComponent(searchParams.get('borderColor') || '#18181b');
-  
   // State is now driven by localStorage to sync with home page
   const [urls, setUrls] = useState<string[]>(Array(9).fill(''));
   const [numCameras, setNumCameras] = useState<number>(1);
   const [isMounted, setIsMounted] = useState(false);
+  const [gridGap, setGridGap] = useState<number>(0);
+  const [borderColor, setBorderColor] = useState<string>('#18181b');
+
 
   const [sheetOpen, setSheetOpen] = useState(false);
   
@@ -50,6 +83,16 @@ function ViewPageContent() {
     if (storedNumCameras) {
       setNumCameras(parseInt(storedNumCameras, 10));
     }
+    const storedGap = localStorage.getItem('gridGap');
+    if (storedGap) {
+      setGridGap(parseInt(storedGap, 10));
+    } else {
+      setGridGap(0);
+    }
+    const storedBorderColor = localStorage.getItem('borderColor');
+    if (storedBorderColor) {
+      setBorderColor(storedBorderColor);
+    }
   }, []);
 
   // Save to localStorage on change
@@ -57,9 +100,26 @@ function ViewPageContent() {
     if (isMounted) {
       localStorage.setItem('cameraUrls', JSON.stringify(urls));
       localStorage.setItem('numCameras', numCameras.toString());
+      localStorage.setItem('gridGap', gridGap.toString());
+      localStorage.setItem('borderColor', borderColor);
     }
-  }, [urls, numCameras, isMounted]);
+  }, [urls, numCameras, gridGap, borderColor, isMounted]);
 
+  const handleGridGapChange = (value: number[]) => {
+    const newGap = value[0];
+    setGridGap(newGap);
+  };
+
+  const handleBorderColorChange = (color: string) => {
+    setBorderColor(color);
+  };
+  
+  const handleRestoreDefaults = () => {
+    const defaultGap = 0;
+    const defaultColor = '#18181b'; 
+    setGridGap(defaultGap);
+    setBorderColor(defaultColor);
+  };
 
   const fetchEvents = async () => {
     setIsLoadingEvents(true);
@@ -196,7 +256,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
+      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gridGap}px`, right: `${gridGap}px` }}>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
                 <Button size="icon" variant="ghost" className="bg-transparent hover:bg-accent/80 text-white h-10 w-10">
@@ -213,25 +273,99 @@ function ViewPageContent() {
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   ) : (
-                   <CameraConfigurationComponent
-                        numCameras={numCameras}
-                        setNumCameras={setNumCameras}
-                        cameraUrls={urls}
-                        setCameraUrls={setUrls}
-                        messages={[]}
-                        setMessages={() => {}}
-                        handleStartView={() => {}}
-                        channels={allChannels}
-                        channelStatuses={channelStatuses}
-                        setCameraStatuses={() => {}}
-                        setAcknowledged={() => {}}
-                        isLoadingChannelStatuses={isLoadingStatuses}
-                        events={processedEvents}
-                        isLoadingEvents={isLoadingEvents}
-                        eventsError={eventsError}
-                        hideStartButton={true}
-                        onRefreshEvents={fetchEvents}
-                   />
+                   <>
+                    <CameraConfigurationComponent
+                          numCameras={numCameras}
+                          setNumCameras={setNumCameras}
+                          cameraUrls={urls}
+                          setCameraUrls={setUrls}
+                          messages={[]}
+                          setMessages={() => {}}
+                          handleStartView={() => {}}
+                          channels={allChannels}
+                          channelStatuses={channelStatuses}
+                          setCameraStatuses={() => {}}
+                          setAcknowledged={() => {}}
+                          isLoadingChannelStatuses={isLoadingStatuses}
+                          events={processedEvents}
+                          isLoadingEvents={isLoadingEvents}
+                          eventsError={eventsError}
+                          hideStartButton={true}
+                          onRefreshEvents={fetchEvents}
+                    />
+                    <Separator className="my-4" />
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start">
+                          <Settings className="mr-2 h-4 w-4" />
+                          Configuración de Bordes
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-lg">
+                        <DialogHeader className="border-b pb-3">
+                          <DialogTitle>Configuración de la Vista:</DialogTitle>
+                        </DialogHeader>
+                        <Accordion type="single" collapsible className="w-full -mt-4" defaultValue="item-1">
+                          <AccordionItem value="item-1">
+                            <AccordionTrigger>Bordes</AccordionTrigger>
+                            <AccordionContent>
+                              <div className="space-y-6 pt-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
+                                    <Slider
+                                        id="grid-gap-slider"
+                                        min={0}
+                                        max={32}
+                                        step={1}
+                                        value={[gridGap]}
+                                        onValueChange={handleGridGapChange}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="border-color-input">Color de Bordes</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            id="border-color-input"
+                                            value={borderColor}
+                                            onChange={(e) => handleBorderColorChange(e.target.value)}
+                                            className="flex-grow"
+                                        />
+                                        <div
+                                            className="h-8 w-8 rounded-md border border-input"
+                                            style={{ backgroundColor: borderColor }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Vista Previa</Label>
+                                    <div
+                                        className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
+                                        style={{
+                                            gap: `${gridGap}px`,
+                                            padding: `${gridGap}px`,
+                                            backgroundColor: borderColor,
+                                        }}
+                                    >
+                                        <div className="rounded-md bg-background" />
+                                        <div className="rounded-md bg-background" />
+                                        <div className="rounded-md bg-background" />
+                                        <div className="rounded-md bg-background" />
+                                    </div>
+                                </div>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                        <DialogFooter className="pt-4">
+                          <Button variant="outline" onClick={handleRestoreDefaults}>
+                              Restaurar
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                   </>
                   )}
                </div>
             </SheetContent>
@@ -248,8 +382,8 @@ function ViewPageContent() {
       <main 
         className={gridContainerClasses} 
         style={{ 
-          gap: `${gap}px`,
-          padding: `${gap}px`,
+          gap: `${gridGap}px`,
+          padding: `${gridGap}px`,
           backgroundColor: borderColor
         }}
       >
@@ -274,7 +408,7 @@ function ViewPageContent() {
             >
               {url ? (
                 <iframe
-                  src={url}
+                  src={processUrlForView(url)}
                   title={`Stream ${index + 1}`}
                   className="w-full h-full border-0"
                   allow="autoplay; encrypted-media; fullscreen; picture-in-picture"

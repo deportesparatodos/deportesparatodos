@@ -315,12 +315,7 @@ export default function HomePage() {
     
     setAcknowledged(false);
     
-    const processedUrls = activeUrls.map(processUrlForView);
-    const queryParams = new URLSearchParams();
-    processedUrls.forEach((url) => queryParams.append("urls", encodeURIComponent(url)));
-    queryParams.append("gap", gridGap.toString());
-    queryParams.append("borderColor", encodeURIComponent(borderColor));
-    router.push(`/view?${queryParams.toString()}`);
+    router.push(`/view`);
   };
   
   if (!isMounted) {
