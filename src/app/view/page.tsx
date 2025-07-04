@@ -35,11 +35,13 @@ function ViewPageContent() {
   if (numIframes === 1) {
     gridContainerClasses += " grid-cols-1 grid-rows-1";
   } else if (numIframes === 2) {
-    // For 2, stack on mobile, side-by-side on desktop
     gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
-  } else {
-    // For 3 or 4, use a 2x2 grid on desktop for consistent layout
-    gridContainerClasses += " grid-cols-1 md:grid-cols-2 md:grid-rows-2";
+  } else if (numIframes <= 4) { // Handles 3 and 4
+    gridContainerClasses += " grid-cols-2 grid-rows-2";
+  } else if (numIframes <= 6) { // Handles 5 and 6
+    gridContainerClasses += " grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2";
+  } else { // Handles 7, 8, 9
+    gridContainerClasses += " grid-cols-3 grid-rows-3";
   }
   
   return (
@@ -63,14 +65,11 @@ function ViewPageContent() {
         {urls.map((url: string, index: number) => (
           <div
             key={index}
-            // By using a consistent grid structure, we don't need conditional classes here.
-            // Each iframe will flow into its designated grid cell.
             className="bg-muted/50 overflow-hidden"
           >
             <iframe
               src={url}
               title={`Stream ${index + 1}`}
-              // Removed aspect-video and min-h to allow the iframe to fully fill the grid cell
               className="w-full h-full border-0"
               allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen

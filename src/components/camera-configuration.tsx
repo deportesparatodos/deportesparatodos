@@ -209,6 +209,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   <SelectItem value="2">2 VENTANAS</SelectItem>
                   <SelectItem value="3">3 VENTANAS</SelectItem>
                   <SelectItem value="4">4 VENTANAS</SelectItem>
+                  <SelectItem value="6">6 VENTANAS</SelectItem>
+                  <SelectItem value="9">9 VENTANAS</SelectItem>
               </SelectContent>
           </Select>
 
