@@ -399,7 +399,7 @@ function ViewPageContent() {
                  {!isMobile && (
                    <div
                     className={cn(
-                      "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm top-1 left-2 transition-opacity duration-300",
+                      "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm top-2 left-2 transition-opacity duration-300",
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none",
                       isTopRightWindow ? "right-14" : "right-2"
                     )}
