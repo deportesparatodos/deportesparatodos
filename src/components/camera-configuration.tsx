@@ -121,6 +121,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
         return { text: "YOUTUBE", status: 'valid' };
     }
 
+    if (url) {
+        return { text: "Canal del Usuario", status: 'valid' };
+    }
+
     return { text: "DESCONOCIDO", status: 'unknown' };
   };
 

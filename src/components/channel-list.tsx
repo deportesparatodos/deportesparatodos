@@ -6,7 +6,7 @@ import type { FC } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, CheckCircle2, Search, X } from "lucide-react";
+import { Copy, CheckCircle2, Search, X, ClipboardPaste, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface Channel {
@@ -186,7 +186,7 @@ const channelsData: Channel[] = [
     { name: 'Sport TV 3 BR', url: 'https://streamtpglobal.com/global1.php?stream=sporttvbr3', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 3 PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv_3pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 4 PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv_4pt', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
-    { name: 'Sport TV 5 PT', url: 'https://streamtpglobal.com/global1.php?stream=sportv5', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
+    { name: 'Sport TV 5 PT', url: 'https://streamtpglobal.com/global1.php?stream=sporttv5', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 6 PT', url: 'https://streamtpglobal.com/global1.php?stream=sporttv6', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'TLC', url: 'https://tvlibreonline.org/html/fl/?get=VExD', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/TLC_logo_%282023%29.svg' },
     { name: 'TN', url: 'https://www.youtube.com/embed/cb12KmMMDJA?si=CsUytnnQFJxMs8fL', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TN_todo_noticias_logo.svg/1200px-TN_todo_noticias_logo.svg.png' },
@@ -355,8 +355,14 @@ channelsData.forEach(channel => {
   }
 });
 
-export const channels: Channel[] = Array.from(uniqueChannelsMap.values())
-  .sort((a, b) => a.name.localeCompare(b.name));
+const pasteChannel: Channel = {
+  name: "Pega aqui tu enlace!",
+  url: 'paste-action', 
+  logoUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHdpZHRoPSI4IiBoZWlnaHQ9IjQiIHg9IjgiIHk9IjIiIHJ4PSIxIiByeT0iMSIvPjxwYXRoIGQ9Ik0xNiA0aDJhMiAyIDAgMCAxIDIgMnYxNGEyIDIgMCAwIDEtMiAySDZhMiAyIDAgMCAxLTItMlY2YTIgMiAwIDAgMSAyLTJoMiIvPjxwYXRoIGQ9Ik0xMiAxMWg0Ii8+PHBhdGggZD0iTTEyIDE2aDQiLz48cGF0aCBkPSJNOCAxMWguMDEiLz48cGF0aCBkPSJNOCAxNmguMDEiLz48L3N2Zz4='
+};
+
+export const channels: Channel[] = [pasteChannel, ...Array.from(uniqueChannelsMap.values())
+  .sort((a, b) => a.name.localeCompare(b.name))];
 
 interface CopiedStates {
   [key: string]: boolean;
@@ -373,8 +379,24 @@ interface ChannelListProps {
 export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, isLoading, onSelectChannel }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [pasteError, setPasteError] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const isSelectMode = !!onSelectChannel;
+
+  const handlePaste = async () => {
+    if (!onSelectChannel) return;
+
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) throw new Error("Clipboard is empty.");
+      new URL(text); // Validate if it's a URL
+      onSelectChannel(text);
+    } catch (err) {
+      console.error("Failed to paste or invalid URL: ", err);
+      setPasteError(true);
+      setTimeout(() => setPasteError(false), 2000);
+    }
+  };
 
   const getStreamStatus = (url: string): ChannelStatus => {
     if (url.includes('ksdjugfsddeports.fun')) {
@@ -446,6 +468,43 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
         {filteredChannels.length > 0 ? (
           <ul className="space-y-3">
             {filteredChannels.map((channel) => {
+              if (channel.url === 'paste-action') {
+                return (
+                  <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                    <div className="flex items-center flex-1 truncate mr-2">
+                      {channel.logoUrl && (
+                        <Image
+                          src={channel.logoUrl}
+                          alt={`${channel.name} logo`}
+                          width={24}
+                          height={24}
+                          data-ai-hint="paste icon"
+                          className="mr-2 rounded-sm object-contain flex-shrink-0"
+                          unoptimized
+                        />
+                      )}
+                      <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handlePaste}
+                      className={cn(
+                        "transition-colors duration-300 w-[140px]",
+                        pasteError 
+                          ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground border border-destructive" 
+                          : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
+                      )}
+                    >
+                      {pasteError ? (
+                        <><AlertCircle className="mr-2 h-4 w-4" /> Error</>
+                      ) : (
+                        <><ClipboardPaste className="mr-2 h-4 w-4" /> Pegar</>
+                      )}
+                    </Button>
+                  </li>
+                );
+              }
+
               const status = getStreamStatus(channel.url);
               return (
               <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
