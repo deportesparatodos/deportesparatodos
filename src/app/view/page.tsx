@@ -312,7 +312,7 @@ function ViewPageContent() {
     if (isMobile) return -1;
     if (numCameras === 1) return 0;
     if (numCameras === 2 || numCameras === 4) return 1;
-    if (numCameras === 3) return 0; // The top one
+    if (numCameras === 3) return 0; 
     if (numCameras >= 5) return 2;
     return -1;
   };
@@ -362,7 +362,7 @@ function ViewPageContent() {
             buttonVariants({ variant: "ghost", size: "icon" }),
             "h-10 w-10 bg-transparent hover:bg-accent/80"
           )}
-          style={{ transform: 'translateX(-3px)'}}
+          style={{ transform: 'translateX(-6px)'}}
           aria-label="Cerrar Vista"
         >
           <X className="h-5 w-5 text-white" />
