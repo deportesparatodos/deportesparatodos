@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Menu, X, Settings, HelpCircle, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
-import { fromZonedTime } from 'date-fns-tz';
 import { addHours, isAfter } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
@@ -94,6 +93,8 @@ export default function HomePage() {
   }, [cameraStatuses, numCameras, cameraUrls]);
 
   useEffect(() => {
+    // Set current time on mount and update it every minute
+    // This avoids hydration errors by ensuring Date is only used on the client
     setCurrentTime(new Date());
     const timer = setInterval(() => {
         setCurrentTime(new Date());
@@ -103,6 +104,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    // This effect processes events once we have the current time and the event list
     if (!events.length || !currentTime) {
       setProcessedEvents([]);
       return;
@@ -112,15 +114,16 @@ export default function HomePage() {
 
     const getEventStatus = (event: Omit<Event, 'status'>): Event['status'] => {
       try {
-        const eventStartBA = fromZonedTime(`${event.date}T${event.time}:00`, 'America/Argentina/Buenos_Aires');
-        const eventEndBA = addHours(eventStartBA, 3);
+        // Event times are from Argentina (UTC-3). Construct a date string with the timezone offset.
+        const eventStart = new Date(`${event.date}T${event.time}:00-03:00`);
+        const eventEnd = addHours(eventStart, 3);
         
-        if (isAfter(now, eventEndBA)) return 'Finalizado';
-        if (isAfter(now, eventStartBA)) return 'En Vivo';
+        if (isAfter(now, eventEnd)) return 'Finalizado';
+        if (isAfter(now, eventStart)) return 'En Vivo';
         return 'Próximo';
       } catch (e) {
         console.error("Error processing event date:", event, e);
-        return 'Próximo';
+        return 'Próximo'; // Fallback in case of parsing error
       }
     };
     
@@ -129,12 +132,15 @@ export default function HomePage() {
       status: getEventStatus(e),
     }));
 
+    // Define the order for sorting
     const statusOrder = { 'En Vivo': 1, 'Próximo': 2, 'Finalizado': 3 };
 
+    // Sort events by status, and then by time
     eventsWithStatus.sort((a, b) => {
         if (a.status !== b.status) {
             return statusOrder[a.status] - statusOrder[b.status];
         }
+        // Within the same status, sort by time (e.g., 19:00 comes before 20:00)
         return a.time.localeCompare(b.time);
     });
 
