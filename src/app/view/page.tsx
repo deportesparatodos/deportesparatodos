@@ -31,12 +31,17 @@ function ViewPageContent() {
   const numIframes = urls.length;
   let gridContainerClasses = "grid flex-grow w-full h-full";
 
+  // Define grid structure based on the number of iframes
   if (numIframes === 1) {
     gridContainerClasses += " grid-cols-1 grid-rows-1";
   } else if (numIframes === 2) {
     gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
-  } else {
-    gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-auto"; 
+  } else if (numIframes <= 4) { // Handles 3 and 4
+    gridContainerClasses += " grid-cols-2 grid-rows-2";
+  } else if (numIframes <= 6) { // Handles 5 and 6
+    gridContainerClasses += " grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2";
+  } else { // Handles 7, 8, 9
+    gridContainerClasses += " grid-cols-3 grid-rows-3";
   }
   
   return (
@@ -60,21 +65,17 @@ function ViewPageContent() {
         {urls.map((url: string, index: number) => (
           <div
             key={index}
-            className={`bg-muted/50 overflow-hidden
-              ${numIframes === 3 && index === 0 ? 'md:col-span-2' : ''} 
-              ${numIframes === 3 && index > 0 ? 'md:col-span-1' : ''}
-            `}
+            className="bg-muted/50 overflow-hidden"
           >
             <iframe
               src={url}
               title={`Stream ${index + 1}`}
-              className="w-full h-full border-0 aspect-video min-h-[150px]"
+              className="w-full h-full border-0"
               allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
             />
           </div>
         ))}
-        {numIframes === 3 && <div className="hidden md:block bg-muted/50" />}
       </main>
     </div>
   );

@@ -60,7 +60,7 @@ const TUTORIAL_IMAGES = [
 
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(4);
-  const [cameraUrls, setCameraUrls] = useState<string[]>(Array(4).fill(''));
+  const [cameraUrls, setCameraUrls] = useState<string[]>(Array(9).fill(''));
   const [cameraStatuses, setCameraStatuses] = useState<CameraStatus[]>([]);
   const [messages, setMessages] = useState<string[]>([]);
   const [acknowledged, setAcknowledged] = useState<boolean>(false);
@@ -73,7 +73,7 @@ export default function HomePage() {
   const [events, setEvents] = useState<Omit<Event, 'status'>[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   const [gridGap, setGridGap] = useState<number>(4);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
@@ -93,6 +93,7 @@ export default function HomePage() {
   }, [cameraStatuses, numCameras, cameraUrls]);
 
   useEffect(() => {
+    setCurrentTime(new Date());
     const timer = setInterval(() => {
         setCurrentTime(new Date());
     }, 60000); // Update every minute
@@ -101,7 +102,7 @@ export default function HomePage() {
   }, []);
 
   const processedAndSortedEvents = useMemo((): Event[] => {
-    if (!events.length) return [];
+    if (!events.length || !currentTime) return [];
     
     const now = currentTime;
 
@@ -191,8 +192,8 @@ export default function HomePage() {
     const storedUrls = localStorage.getItem('cameraUrls');
     if (storedUrls) {
       const parsedUrls = JSON.parse(storedUrls);
-      const newUrls = Array(4).fill('');
-      parsedUrls.slice(0, 4).forEach((url: string, i: number) => {
+      const newUrls = Array(9).fill('');
+      parsedUrls.slice(0, 9).forEach((url: string, i: number) => {
         newUrls[i] = url;
       });
       setCameraUrls(newUrls);
@@ -352,11 +353,10 @@ export default function HomePage() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle>Configuración de la Vista</DialogTitle>
+                  <DialogHeader className="border-b pb-3">
+                    <DialogTitle>Configuración de la Vista:</DialogTitle>
                   </DialogHeader>
-                  <Separator />
-                  <Accordion type="single" collapsible className="w-full">
+                  <Accordion type="single" collapsible className="w-full -mt-4">
                     <AccordionItem value="item-1">
                       <AccordionTrigger>Bordes</AccordionTrigger>
                       <AccordionContent>
