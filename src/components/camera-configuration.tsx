@@ -214,7 +214,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <Button
                       type="button"
                       variant="outline"
-                      className="flex-grow justify-between overflow-hidden"
+                      className="flex-grow justify-between overflow-hidden w-0"
                       aria-label={`Seleccionar entrada para Vista ${index + 1}`}
                     >
                       <span className={cn(
