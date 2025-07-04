@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { X, ChevronDown, Loader2, Trash2 } from "lucide-react";
+import { X, ChevronDown, Loader2, Trash2, Plus } from "lucide-react";
 import { Suspense, useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -238,6 +238,15 @@ function ViewPageContent() {
     setUrls(prevUrls => prevUrls.filter((_, index) => index !== indexToRemove));
   };
   
+  const handleAddWindow = () => {
+    setUrls(prevUrls => {
+      if (prevUrls.length >= 9) {
+        return prevUrls;
+      }
+      return [...prevUrls, ''];
+    });
+  };
+
   if (urls.length === 0) {
     return (
       <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
@@ -308,7 +317,7 @@ function ViewPageContent() {
                 />
                  <div
                   className={cn(
-                    "absolute top-2 left-2 right-14 flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm transition-opacity duration-300",
+                    "absolute top-2 left-2 right-28 flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm transition-opacity duration-300",
                     isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                   )}
                 >
@@ -352,6 +361,22 @@ function ViewPageContent() {
                         )}
                     </DialogContent>
                   </Dialog>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        onClick={handleAddWindow}
+                        aria-label="Agregar Ventana"
+                        disabled={urls.length >= 9}
+                        className="bg-green-500 text-primary-foreground hover:bg-green-500/90"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Agregar Ventana</p>
+                    </TooltipContent>
+                  </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
