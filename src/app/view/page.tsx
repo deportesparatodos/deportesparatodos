@@ -316,7 +316,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
+      <div className="absolute z-20 flex items-center gap-2 py-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -353,7 +353,7 @@ function ViewPageContent() {
          )}
         <Link
           href="/"
-          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), "h-14 w-14 bg-background/80 hover:bg-accent/80 flex items-center justify-center")}
+          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), "h-10 w-10 bg-background/80 hover:bg-accent/80")}
           aria-label="Cerrar Vista"
         >
           <X className="h-5 w-5" />
@@ -402,7 +402,7 @@ function ViewPageContent() {
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2", isTopRightWindow ? "mr-14" : "")}>
+                    <div className={cn("flex-grow flex items-center gap-2", isTopRightWindow ? "mr-12" : "")}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden">
