@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Menu, X, Settings, HelpCircle, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, X, Settings, HelpCircle, FileText, ChevronLeft, ChevronRight, Mail, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
@@ -93,18 +93,15 @@ export default function HomePage() {
   }, [cameraStatuses, numCameras, cameraUrls]);
 
   useEffect(() => {
-    // Set current time on mount and update it every minute
-    // This avoids hydration errors by ensuring Date is only used on the client
     setCurrentTime(new Date());
     const timer = setInterval(() => {
         setCurrentTime(new Date());
-    }, 60000); // Update every minute
+    }, 60000); 
 
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    // This effect processes events once we have the current time and the event list
     if (!events.length || !currentTime) {
       setProcessedEvents([]);
       return;
@@ -114,7 +111,6 @@ export default function HomePage() {
 
     const getEventStatus = (event: Omit<Event, 'status'>): Event['status'] => {
       try {
-        // Event times are from Argentina (UTC-3). Construct a date string with the timezone offset.
         const eventStart = new Date(`${event.date}T${event.time}:00-03:00`);
         const eventEnd = addHours(eventStart, 3);
         
@@ -123,7 +119,7 @@ export default function HomePage() {
         return 'Próximo';
       } catch (e) {
         console.error("Error processing event date:", event, e);
-        return 'Próximo'; // Fallback in case of parsing error
+        return 'Próximo';
       }
     };
     
@@ -132,15 +128,12 @@ export default function HomePage() {
       status: getEventStatus(e),
     }));
 
-    // Define the order for sorting
     const statusOrder = { 'En Vivo': 1, 'Próximo': 2, 'Finalizado': 3 };
 
-    // Sort events by status, and then by time
     eventsWithStatus.sort((a, b) => {
         if (a.status !== b.status) {
             return statusOrder[a.status] - statusOrder[b.status];
         }
-        // Within the same status, sort by time (e.g., 19:00 comes before 20:00)
         return a.time.localeCompare(b.time);
     });
 
@@ -465,6 +458,75 @@ export default function HomePage() {
                         ))}
                       </div>
                    </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="justify-start">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Contacto
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Contacto</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4 text-sm text-muted-foreground">
+                    <p>
+                      Para comunicarse con el desarrollador, indicar errores, canales, links incorrectos, sugerencias, etc., comuníquese a <strong>deportesparatodosvercel@gmail.com</strong>.
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="justify-start">
+                    <AlertCircle className="mr-2 h-4 w-4" />
+                    Errores
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Solución de Errores Comunes</DialogTitle>
+                  </DialogHeader>
+                  <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
+                    <p>
+                      En ocasiones, para reproducir los videos en esta página, es posible que necesites realizar una de las siguientes dos acciones. A continuación, te explicamos cuáles son y para qué sirven.
+                    </p>
+
+                    <h4 className="font-semibold text-foreground">Solución 1: Configurar el DNS de Cloudflare (1.1.1.1)</h4>
+                    <p>
+                      Si los videos no cargan o no se pueden reproducir, el primer paso que puedes intentar es cambiar el DNS de tu dispositivo.
+                    </p>
+
+                    <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
+                    <p>
+                      El DNS (Sistema de Nombres de Dominio) es como una agenda de contactos de internet que traduce los nombres de las páginas web (como www.ejemplo.com) a una dirección IP numérica que las computadoras pueden entender. A veces, el DNS que te asigna tu proveedor de internet puede ser lento o bloquear el acceso a ciertos contenidos.
+                    </p>
+                    <p>
+                      Al cambiar tu DNS a <strong>1.1.1.1</strong>, que es el servicio de DNS gratuito de Cloudflare, estás utilizando un servicio que a menudo es más rápido y privado. Esto puede resolver problemas de conexión y permitir que tu dispositivo acceda a los videos que antes no podía cargar.
+                    </p>
+
+                    <Separator className="my-4" />
+
+                    <h4 className="font-semibold text-foreground">Solución 2: Instalar la extensión "Reproductor MPD/M3U8/M3U/EPG"</h4>
+                    <p>
+                      Si cambiar el DNS no soluciona el problema, la otra alternativa es instalar una extensión en tu navegador Google Chrome.
+                    </p>
+                    <p>
+                      <strong>Extensión:</strong> Reproductor MPD/M3U8/M3U/EPG
+                    </p>
+
+                    <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
+                    <p>
+                      Algunos videos en internet se transmiten en formatos especiales como M3U8 o MPD. No todos los navegadores web pueden reproducir estos formatos de forma nativa sin ayuda.
+                    </p>
+                    <p>
+                      Esta extensión de Chrome funciona como un reproductor de video especializado que le añade a tu navegador la capacidad de entender y decodificar estos formatos de transmisión. Al instalarla, le das a Chrome las herramientas necesarias para que pueda reproducir correctamente los videos de la página.
+                    </p>
+                  </div>
                 </DialogContent>
               </Dialog>
 
