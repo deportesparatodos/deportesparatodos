@@ -15,6 +15,7 @@ import { ChannelListComponent, channels as allChannels } from '@/components/chan
 import type { Event } from '@/components/event-list';
 import { EventListComponent } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 
@@ -175,10 +176,11 @@ function ViewPageContent() {
       }
       
       const now = new Date();
+      const timeZone = 'America/Argentina/Buenos_Aires';
 
       const eventsWithStatus = events
         .map(e => {
-            const eventStart = new Date(`${e.date}T${e.time}:00-03:00`);
+            const eventStart = toZonedTime(`${e.date}T${e.time}`, timeZone);
             if (isNaN(eventStart.getTime())) {
               return { ...e, status: 'Finalizado' as const };
             }
@@ -296,7 +298,9 @@ function ViewPageContent() {
     gridContainerClasses += " grid-cols-1 grid-rows-1";
   } else if (numIframes === 2) {
     gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
-  } else if (numIframes === 3 || numIframes === 4) {
+  } else if (numIframes === 3) {
+    gridContainerClasses += " grid-cols-2 grid-rows-2";
+  } else if (numIframes === 4) {
     gridContainerClasses += " grid-cols-2 grid-rows-2";
   } else if (numIframes <= 6) {
     gridContainerClasses += " grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2";
@@ -306,8 +310,9 @@ function ViewPageContent() {
   
   const getTopRightIndex = (numCameras: number, isMobile: boolean): number => {
     if (isMobile) return -1;
-    if (numCameras === 1 || numCameras === 3) return 0;
+    if (numCameras === 1) return 0;
     if (numCameras === 2 || numCameras === 4) return 1;
+    if (numCameras === 3) return 0; // The top one
     if (numCameras >= 5) return 2;
     return -1;
   };
@@ -316,7 +321,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap}px`, right: `${gap + 6}px` }}>
+      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -355,7 +360,7 @@ function ViewPageContent() {
           href="/"
           className={cn(
             buttonVariants({ variant: "ghost", size: "icon" }),
-            "h-10 w-10 hover:bg-accent/80"
+            "h-10 w-10 bg-transparent hover:bg-accent/80"
           )}
           style={{ transform: 'translateX(-3px)'}}
           aria-label="Cerrar Vista"
@@ -383,8 +388,9 @@ function ViewPageContent() {
                 key={`${index}-${url}`}
                 className={cn(
                   "overflow-hidden relative bg-background",
-                  !url && "bg-destructive flex items-center justify-center text-destructive-foreground font-bold",
-                  urls.length === 3 && index === 0 && "col-span-2"
+                  !url && "bg-red-500 flex items-center justify-center text-destructive-foreground font-bold",
+                  urls.length === 3 && index === 0 && "row-span-1 col-span-2",
+                  urls.length === 3 && index > 0 && "row-span-1 col-span-1",
                 )}
                 onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
                 onMouseLeave={isMobile ? undefined : handleMouseLeave}
@@ -407,7 +413,7 @@ function ViewPageContent() {
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && "mr-[44px]")}>
+                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && "mr-[52px]")}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden h-10">

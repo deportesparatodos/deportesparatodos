@@ -18,6 +18,7 @@ import { Menu, X, Settings, HelpCircle, FileText, ChevronLeft, ChevronRight, Mai
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 
@@ -99,10 +100,11 @@ export default function HomePage() {
       }
       
       const now = new Date();
+      const timeZone = 'America/Argentina/Buenos_Aires';
 
       const eventsWithStatus = events
         .map(e => {
-            const eventStart = new Date(`${e.date}T${e.time}:00-03:00`);
+            const eventStart = toZonedTime(`${e.date}T${e.time}`, timeZone);
             if (isNaN(eventStart.getTime())) {
               return { ...e, status: 'Finalizado' as const };
             }
