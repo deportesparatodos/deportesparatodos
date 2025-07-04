@@ -248,10 +248,12 @@ function ViewPageContent() {
 
   const handleMouseLeave = () => {
     if (isMobile) return;
-    setVisibleBarIndex(null);
     if (inactivityTimer.current) {
       clearTimeout(inactivityTimer.current);
     }
+     inactivityTimer.current = setTimeout(() => {
+      setVisibleBarIndex(null);
+    }, 500);
   };
 
   const handleUrlChange = (index: number, newUrl: string) => {
@@ -318,7 +320,7 @@ function ViewPageContent() {
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
-                    <Button size="icon" variant="outline" className="h-9 w-9">
+                    <Button size="icon" variant="outline" className="h-10 w-10">
                         <Menu className="h-5 w-5" />
                     </Button>
                 </SheetTrigger>
@@ -397,7 +399,7 @@ function ViewPageContent() {
                  {!isMobile && (
                    <div
                     className={cn(
-                      "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm top-2 left-2 transition-opacity duration-300",
+                      "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm top-1 left-2 transition-opacity duration-300",
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none",
                       isTopRightWindow ? "right-14" : "right-2"
                     )}
