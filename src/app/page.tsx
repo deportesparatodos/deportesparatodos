@@ -71,6 +71,7 @@ export default function HomePage() {
   const [isLoadingStatuses, setIsLoadingStatuses] = useState<boolean>(true);
 
   const [events, setEvents] = useState<Omit<Event, 'status'>[]>([]);
+  const [processedEvents, setProcessedEvents] = useState<Event[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
@@ -101,8 +102,11 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  const processedAndSortedEvents = useMemo((): Event[] => {
-    if (!events.length || !currentTime) return [];
+  useEffect(() => {
+    if (!events.length || !currentTime) {
+      setProcessedEvents([]);
+      return;
+    }
     
     const now = currentTime;
 
@@ -115,7 +119,7 @@ export default function HomePage() {
         if (isAfter(now, eventStartBA)) return 'En Vivo';
         return 'Próximo';
       } catch (e) {
-        console.error("Error processing event date:", e);
+        console.error("Error processing event date:", event, e);
         return 'Próximo';
       }
     };
@@ -134,7 +138,7 @@ export default function HomePage() {
         return a.time.localeCompare(b.time);
     });
 
-    return eventsWithStatus;
+    setProcessedEvents(eventsWithStatus);
 
   }, [events, currentTime]);
 
@@ -597,7 +601,7 @@ export default function HomePage() {
                   setCameraStatuses={setCameraStatuses}
                   setAcknowledged={setAcknowledged}
                   isLoadingChannelStatuses={isLoadingStatuses}
-                  events={processedAndSortedEvents}
+                  events={processedEvents}
                   isLoadingEvents={isLoadingEvents}
                   eventsError={eventsError}
                 />
