@@ -147,7 +147,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                   variant="outline"
                                   size="sm"
                                   className={cn(
-                                    "transition-all duration-200 h-auto whitespace-normal justify-start text-left",
+                                    "transition-all duration-200 h-auto whitespace-normal justify-start text-left py-1.5",
                                     !isSelectMode && isCopied && "border-green-500 bg-green-500/10 text-green-600 hover:text-green-600"
                                   )}
                                   onClick={() => handleAction(url)}
