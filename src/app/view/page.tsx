@@ -321,7 +321,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center h-[56px] px-2" style={{ top: `${gap}px`, right: `${gap + 16}px` }}>
+      <div className="absolute z-20 flex items-center h-[56px]" style={{ top: `${gap}px`, right: `${gap + 26}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -360,11 +360,11 @@ function ViewPageContent() {
           href="/"
           className={cn(
             buttonVariants({ variant: "ghost", size: "icon" }),
-            "h-10 w-10 text-white bg-transparent hover:bg-accent/80"
+            "h-10 w-10 bg-transparent hover:bg-accent/80"
           )}
           aria-label="Cerrar Vista"
         >
-          <X className="h-8 w-8" />
+          <X className="h-10 w-10 text-white" />
         </Link>
       </div>
       
@@ -386,7 +386,7 @@ function ViewPageContent() {
             if (!url) {
                 windowClasses.push("bg-red-500", "flex", "items-center", "justify-center", "text-destructive-foreground", "font-bold");
             }
-            if (urls.length === 3) {
+             if (urls.length === 3) {
               if (index === 0) {
                 windowClasses.push("col-span-2", "row-span-1");
               } else {
@@ -419,7 +419,7 @@ function ViewPageContent() {
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && "mr-[56px]")}>
+                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && "mr-[66px]")}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden h-10">
