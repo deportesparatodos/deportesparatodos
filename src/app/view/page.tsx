@@ -182,10 +182,10 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2 h-10" style={{ top: `${gap + 18}px`, right: `${gap + 17}px` }}>
+      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gap + 8}px`, right: `${gap + 8}px` }}>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-                <Button size="icon" variant="outline" className="h-10 w-10">
+                <Button size="icon" variant="ghost" className="bg-transparent hover:bg-accent/80 text-white h-10 w-10">
                     <Menu className="h-5 w-5" />
                 </Button>
             </SheetTrigger>
