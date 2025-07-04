@@ -302,6 +302,16 @@ function ViewPageContent() {
     gridContainerClasses += " grid-cols-3 grid-rows-3";
   }
   
+  const getTopRightIndex = (numCameras: number, isMobile: boolean): number => {
+    if (isMobile) return -1;
+    if (numCameras === 1 || numCameras === 3) return 0;
+    if (numCameras === 2 || numCameras === 4) return 1;
+    if (numCameras >= 5) return 2;
+    return -1;
+  };
+
+  const topRightIndex = getTopRightIndex(urls.length, isMobile);
+
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
       <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
@@ -360,13 +370,14 @@ function ViewPageContent() {
           {urls.map((url: string, index: number) => {
             const isBarVisible = !isMobile && visibleBarIndex === index;
             const displayStatus = getDisplayStatus(url, processedEvents, channelStatuses);
+            const isTopRightWindow = index === topRightIndex;
 
             return (
               <div
                 key={`${index}-${url}`}
                 className={cn(
                   "bg-muted/50 overflow-hidden relative",
-                  numIframes === 3 && index === 0 && "row-span-1 md:col-span-2"
+                  numIframes === 3 && index === 0 && "md:col-span-2"
                 )}
                 onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
                 onMouseLeave={isMobile ? undefined : handleMouseLeave}
@@ -381,8 +392,9 @@ function ViewPageContent() {
                  {!isMobile && (
                    <div
                     className={cn(
-                      "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm top-2 left-2 right-2 transition-opacity duration-300",
-                      isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+                      "absolute flex items-center gap-2 rounded-lg bg-black/50 p-1 backdrop-blur-sm top-2 left-2 transition-opacity duration-300",
+                      isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+                      isTopRightWindow ? "right-14" : "right-2"
                     )}
                   >
                     <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
