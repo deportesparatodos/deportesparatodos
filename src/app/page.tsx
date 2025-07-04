@@ -11,11 +11,15 @@ import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Menu, X, HelpCircle, FileText, ChevronLeft, ChevronRight, Mail, AlertCircle } from 'lucide-react';
+import { Menu, X, HelpCircle, FileText, ChevronLeft, ChevronRight, Mail, AlertCircle, Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 
 
 const processUrlForView = (inputUrl: string): string => {
@@ -346,6 +350,78 @@ export default function HomePage() {
 
               <Dialog>
                 <DialogTrigger asChild>
+                  <Button variant="outline" className="justify-start">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Configuración de Bordes
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader className="border-b pb-3">
+                    <DialogTitle>Configuración de la Vista:</DialogTitle>
+                  </DialogHeader>
+                  <Accordion type="single" collapsible className="w-full -mt-4" defaultValue="item-1">
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger>Bordes</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-6 pt-4">
+                          <div className="space-y-2">
+                              <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
+                              <Slider
+                                  id="grid-gap-slider"
+                                  min={0}
+                                  max={32}
+                                  step={1}
+                                  value={[gridGap]}
+                                  onValueChange={handleGridGapChange}
+                              />
+                          </div>
+
+                          <div className="space-y-2">
+                              <Label htmlFor="border-color-input">Color de Bordes</Label>
+                              <div className="flex items-center gap-2">
+                                  <Input
+                                      id="border-color-input"
+                                      value={borderColor}
+                                      onChange={(e) => handleBorderColorChange(e.target.value)}
+                                      className="flex-grow"
+                                  />
+                                  <div
+                                      className="h-8 w-8 rounded-md border border-input"
+                                      style={{ backgroundColor: borderColor }}
+                                  />
+                              </div>
+                          </div>
+
+                          <div className="space-y-2">
+                              <Label>Vista Previa</Label>
+                              <div
+                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
+                                  style={{
+                                      gap: `${gridGap}px`,
+                                      padding: `${gridGap}px`,
+                                      backgroundColor: borderColor,
+                                  }}
+                              >
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                              </div>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                  <DialogFooter className="pt-4">
+                    <Button variant="outline" onClick={handleRestoreDefaults}>
+                        Restaurar
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
                    <Button variant="outline" className="justify-start">
                      <HelpCircle className="mr-2" />
                      Tutorial
@@ -610,6 +686,7 @@ export default function HomePage() {
                   handleGridGapChange={handleGridGapChange}
                   handleBorderColorChange={handleBorderColorChange}
                   handleRestoreDefaults={handleRestoreDefaults}
+                  hideBorderConfigButton={true}
                 />
               </div>
           </div>

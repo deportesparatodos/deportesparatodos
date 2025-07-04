@@ -41,6 +41,7 @@ interface CameraConfigurationProps {
   handleGridGapChange: (value: number[]) => void;
   handleBorderColorChange: (color: string) => void;
   handleRestoreDefaults: () => void;
+  hideBorderConfigButton?: boolean;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -66,6 +67,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   handleGridGapChange,
   handleBorderColorChange,
   handleRestoreDefaults,
+  hideBorderConfigButton = false,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
 
@@ -210,6 +212,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   return (
     <>
       <form onSubmit={handleFormSubmit} className="w-full space-y-4">
+            {!hideBorderConfigButton && (
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
@@ -281,6 +284,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            )}
             <Select onValueChange={handleNumCamerasChange} value={numCameras.toString()}>
                 <SelectTrigger className="w-full">
                     <SelectValue placeholder="Seleccionar cantidad de ventanas" />
