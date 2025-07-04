@@ -310,9 +310,8 @@ function ViewPageContent() {
   
   const getTopRightIndex = (numCameras: number, isMobile: boolean): number => {
     if (isMobile) return -1;
-    if (numCameras === 1) return 0;
+    if (numCameras === 1 || numCameras === 3) return 0;
     if (numCameras === 2 || numCameras === 4) return 1;
-    if (numCameras === 3) return 0; 
     if (numCameras >= 5) return 2;
     return -1;
   };
@@ -321,7 +320,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center h-14" style={{ top: `${gap}px`, right: '12px' }}>
+      <div className="absolute z-20 flex items-center h-[56px] px-2" style={{ top: `${gap}px`, right: `${gap}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -364,7 +363,7 @@ function ViewPageContent() {
           )}
           aria-label="Cerrar Vista"
         >
-          <X className="h-7 w-7 text-white" />
+          <X className="h-8 w-8 text-white" />
         </Link>
       </div>
       
@@ -388,7 +387,7 @@ function ViewPageContent() {
                 className={cn(
                   "overflow-hidden relative bg-background",
                   !url && "bg-red-500 flex items-center justify-center text-destructive-foreground font-bold",
-                   urls.length === 3 && index === 0 && "row-span-1 col-span-2",
+                  urls.length === 3 && index === 0 && "row-span-1 col-span-2",
                   urls.length === 3 && index > 0 && "row-span-1 col-span-1"
                 )}
                 onMouseMove={isMobile ? undefined : () => handleMouseMove(index)}
@@ -408,11 +407,11 @@ function ViewPageContent() {
                  {!isMobile && (
                    <div
                     className={cn(
-                      "absolute flex items-center bg-black/50 backdrop-blur-sm top-0 left-0 right-0 transition-opacity duration-300",
+                      "absolute flex items-center bg-black/50 backdrop-blur-sm top-0 left-0 right-0 transition-opacity duration-300 h-14",
                       isBarVisible ? "opacity-100" : "opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && "mr-[52px]")}>
+                    <div className={cn("flex-grow flex items-center gap-2 p-2", isTopRightWindow && "mr-[56px]")}>
                         <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="flex-grow justify-between overflow-hidden h-10">
