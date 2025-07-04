@@ -353,7 +353,7 @@ function ViewPageContent() {
          )}
         <Link
           href="/"
-          className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), "h-10 w-10 bg-background/80 hover:bg-accent/80 relative -left-0.5 -top-px")}
+          className="h-10 w-10 inline-flex items-center justify-center rounded-md bg-transparent text-primary-foreground hover:bg-accent/80"
           aria-label="Cerrar Vista"
         >
           <X className="h-5 w-5" />
