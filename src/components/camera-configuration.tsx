@@ -4,7 +4,7 @@
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -154,6 +154,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     }
   };
 
+  const handleClearUrl = (e: React.MouseEvent | React.KeyboardEvent, index: number) => {
+    e.stopPropagation();
+    handleUrlChange(index, '');
+  };
+
   const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
     const newUrls = [...cameraUrls];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -208,6 +213,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
           <div className="space-y-3">
           {Array.from({ length: numCameras }).map((_, index) => {
             const displayStatus = getDisplayStatus(cameraUrls[index] || '');
+            const hasContent = !!(cameraUrls[index] && cameraUrls[index].trim() !== '');
 
             return (
               <div key={index} className="flex items-center space-x-2">
@@ -228,7 +234,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <Button
                       type="button"
                       variant="outline"
-                      className="flex-grow justify-between overflow-hidden w-0"
+                      className="relative flex-grow justify-between items-center overflow-hidden w-0"
                       aria-label={`Seleccionar entrada para Vista ${index + 1}`}
                     >
                       <span className={cn(
@@ -241,7 +247,21 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       )}>
                         {displayStatus.text}
                       </span>
-                      <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                      <div className="flex items-center gap-1">
+                        {hasContent && (
+                           <span
+                              role="button"
+                              aria-label="Limpiar entrada"
+                              tabIndex={0}
+                              onClick={(e) => handleClearUrl(e, index)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClearUrl(e, index); } }}
+                              className="p-1 rounded-full hover:bg-muted z-10"
+                           >
+                              <X className="h-4 w-4 opacity-50 flex-shrink-0 hover:opacity-100" />
+                           </span>
+                        )}
+                        <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                      </div>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
