@@ -316,7 +316,7 @@ function ViewPageContent() {
 
   return (
     <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2 py-2" style={{ top: `${gap}px`, right: `${gap + 3}px` }}>
+      <div className="absolute z-20 flex items-center gap-2 py-2" style={{ top: `${gap}px`, right: `${gap + 9}px` }}>
          {isMobile && (
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
@@ -356,7 +356,7 @@ function ViewPageContent() {
           className="h-10 w-10 inline-flex items-center justify-center rounded-md bg-transparent text-white hover:bg-accent/80"
           aria-label="Cerrar Vista"
         >
-          <X className="h-5 w-5" />
+          <X className="h-5 w-5 text-white" />
         </Link>
       </div>
       
