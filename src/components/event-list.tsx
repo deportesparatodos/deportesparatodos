@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { FC } from 'react';
@@ -88,7 +87,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   ) : [];
 
   const mundialDeClubesEvents = groupAll && groupMundial ? allFilteredEvents.filter(event =>
-    event.title.toLowerCase().includes('mundial de clubes') && !f1Events.includes(event) && !mlbEvents.includes(event)
+    event.image === 'https://p.alangulotv.live/copamundialdeclubes' && !f1Events.includes(event) && !mlbEvents.includes(event)
   ) : [];
 
   const otherEvents = allFilteredEvents.filter(event => 
