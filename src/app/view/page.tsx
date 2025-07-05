@@ -36,14 +36,6 @@ const processUrlForView = (inputUrl: string): string => {
         return `https://www.youtube.com/embed/${videoId}`;
       }
     }
-    
-    // Process streamtpglobal URLs to use the direct player
-    if (urlObj.hostname.includes('streamtpglobal.com')) {
-        const stream = urlObj.searchParams.get('stream');
-        if(stream) {
-            return `https://live.streamtps.com/live.php?stream=${stream}`;
-        }
-    }
 
   } catch (e) {
     // Not a valid URL, or some other parsing error. Fallback to original URL.
@@ -323,10 +315,10 @@ function ViewPageContent() {
                   </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-full sm:w-96 flex flex-col p-0">
-                 <SheetHeader className="p-4 border-b">
-                   <SheetTitle>Configuracion</SheetTitle>
+                 <SheetHeader className="p-4 py-3 border-b">
+                   <SheetTitle>Configuracion:</SheetTitle>
                  </SheetHeader>
-                 <div className="overflow-y-auto p-4">
+                 <div className="overflow-y-auto p-4 flex-grow">
                     {isLoadingEvents || isLoadingStatuses ? (
                       <div className="flex items-center justify-center h-full">
                           <Loader2 className="h-8 w-8 animate-spin text-primary" />
