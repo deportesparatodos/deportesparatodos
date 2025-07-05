@@ -81,27 +81,28 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const f1Events = groupAll && groupF1 ? allFilteredEvents.filter(event => 
-    event.title.toLowerCase().includes('f1') || event.title.toLowerCase().includes('formula 1')
+  const mundialDeClubesEvents = groupAll && groupMundial ? allFilteredEvents.filter(event =>
+    event.image === 'https://p.alangulotv.live/copamundialdeclubes'
   ) : [];
 
-  const mlbEvents = groupAll && groupMlb ? allFilteredEvents.filter(event => 
-    event.title.toLowerCase().includes('mlb') && !f1Events.includes(event)
-  ) : [];
-  
   const nbaEvents = groupAll && groupNba ? allFilteredEvents.filter(event =>
     (event.title.toLowerCase().includes('nba') || event.image === 'https://p.alangulotv.live/nba') &&
-    !f1Events.includes(event) &&
-    !mlbEvents.includes(event)
+    !mundialDeClubesEvents.includes(event)
   ) : [];
-
-  const mundialDeClubesEvents = groupAll && groupMundial ? allFilteredEvents.filter(event =>
-    event.image === 'https://p.alangulotv.live/copamundialdeclubes' && 
-    !f1Events.includes(event) && 
-    !mlbEvents.includes(event) &&
+  
+  const f1Events = groupAll && groupF1 ? allFilteredEvents.filter(event => 
+    (event.title.toLowerCase().includes('f1') || event.title.toLowerCase().includes('formula 1')) &&
+    !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event)
   ) : [];
 
+  const mlbEvents = groupAll && groupMlb ? allFilteredEvents.filter(event => 
+    event.title.toLowerCase().includes('mlb') && 
+    !mundialDeClubesEvents.includes(event) &&
+    !nbaEvents.includes(event) &&
+    !f1Events.includes(event)
+  ) : [];
+  
   const combatKeywords = ['boxeo de primera', 'ko', 'wwe', 'ufc', 'boxeo'];
   const combatImages = [
       'https://p.alangulotv.live/ufc',
@@ -111,18 +112,18 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
   const deportesDeCombateEvents = groupAll && groupCombate ? allFilteredEvents.filter(event => 
     (combatKeywords.some(keyword => event.title.toLowerCase().includes(keyword)) || (event.image && combatImages.includes(event.image))) &&
-    !f1Events.includes(event) && 
-    !mlbEvents.includes(event) &&
+    !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
-    !mundialDeClubesEvents.includes(event)
+    !f1Events.includes(event) && 
+    !mlbEvents.includes(event)
   ) : [];
 
 
   const otherEvents = allFilteredEvents.filter(event => 
-    !f1Events.includes(event) && 
-    !mlbEvents.includes(event) && 
-    !nbaEvents.includes(event) && 
     !mundialDeClubesEvents.includes(event) &&
+    !nbaEvents.includes(event) &&
+    !f1Events.includes(event) && 
+    !mlbEvents.includes(event) &&
     !deportesDeCombateEvents.includes(event)
   );
   
@@ -267,6 +268,80 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           {allFilteredEvents.length > 0 ? (
             <div className="space-y-4">
               <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
+                 {mundialDeClubesEvents.length > 0 && (
+                    <AccordionItem value="mundial-de-clubes-events" className="border-b-0">
+                        <Card className="bg-muted/50 overflow-hidden">
+                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex w-full items-center">
+                                    <div className="w-20 flex-shrink-0">
+                                        <div className="flex flex-col items-center gap-1 text-center">
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mundialDeClubesEvents[0].time}</p>
+                                            <span className="text-xs font-mono text-muted-foreground">-</span>
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mundialDeClubesEvents[mundialDeClubesEvents.length - 1].time}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                        {isMundialDeClubesLive && (
+                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                        )}
+                                        <Image
+                                            src={mundialDeClubesEvents[0].image || "https://upload.wikimedia.org/wikipedia/en/thumb/7/77/FIFA_Club_World_Cup_logo.svg/250px-FIFA_Club_World_Cup_logo.svg.png"}
+                                            alt="Mundial de Clubes Logo"
+                                            width={50}
+                                            height={50}
+                                            className="object-contain"
+                                            data-ai-hint="club world cup"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="w-20 flex-shrink-0" />
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="space-y-4 p-4">
+                                    {mundialDeClubesEvents.map(renderEventCard)}
+                                </div>
+                            </AccordionContent>
+                        </Card>
+                    </AccordionItem>
+                 )}
+                 {nbaEvents.length > 0 && (
+                    <AccordionItem value="nba-events" className="border-b-0">
+                        <Card className="bg-muted/50 overflow-hidden">
+                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex w-full items-center">
+                                    <div className="w-20 flex-shrink-0">
+                                        <div className="flex flex-col items-center gap-1 text-center">
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{nbaEvents[0].time}</p>
+                                            <span className="text-xs font-mono text-muted-foreground">-</span>
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{nbaEvents[nbaEvents.length - 1].time}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                        {isNbaLive && (
+                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                        )}
+                                        <Image
+                                            src="https://p.alangulotv.live/nba"
+                                            alt="NBA Logo"
+                                            width={30}
+                                            height={60}
+                                            className="object-contain h-14"
+                                            data-ai-hint="nba logo"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="w-20 flex-shrink-0" />
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="space-y-4 p-4">
+                                    {nbaEvents.map(renderEventCard)}
+                                </div>
+                            </AccordionContent>
+                        </Card>
+                    </AccordionItem>
+                 )}
                  {f1Events.length > 0 && (
                     <AccordionItem value="f1-events" className="border-b-0">
                         <Card className="bg-muted/50 overflow-hidden">
@@ -336,80 +411,6 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                             <AccordionContent className="p-0">
                                 <div className="space-y-4 p-4">
                                     {mlbEvents.map(renderEventCard)}
-                                </div>
-                            </AccordionContent>
-                        </Card>
-                    </AccordionItem>
-                 )}
-                 {nbaEvents.length > 0 && (
-                    <AccordionItem value="nba-events" className="border-b-0">
-                        <Card className="bg-muted/50 overflow-hidden">
-                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                                <div className="flex w-full items-center">
-                                    <div className="w-20 flex-shrink-0">
-                                        <div className="flex flex-col items-center gap-1 text-center">
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{nbaEvents[0].time}</p>
-                                            <span className="text-xs font-mono text-muted-foreground">-</span>
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{nbaEvents[nbaEvents.length - 1].time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                        {isNbaLive && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                        )}
-                                        <Image
-                                            src="https://p.alangulotv.live/nba"
-                                            alt="NBA Logo"
-                                            width={30}
-                                            height={60}
-                                            className="object-contain h-14"
-                                            data-ai-hint="nba logo"
-                                            unoptimized
-                                        />
-                                    </div>
-                                    <div className="w-20 flex-shrink-0" />
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                                <div className="space-y-4 p-4">
-                                    {nbaEvents.map(renderEventCard)}
-                                </div>
-                            </AccordionContent>
-                        </Card>
-                    </AccordionItem>
-                 )}
-                 {mundialDeClubesEvents.length > 0 && (
-                    <AccordionItem value="mundial-de-clubes-events" className="border-b-0">
-                        <Card className="bg-muted/50 overflow-hidden">
-                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                                <div className="flex w-full items-center">
-                                    <div className="w-20 flex-shrink-0">
-                                        <div className="flex flex-col items-center gap-1 text-center">
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mundialDeClubesEvents[0].time}</p>
-                                            <span className="text-xs font-mono text-muted-foreground">-</span>
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mundialDeClubesEvents[mundialDeClubesEvents.length - 1].time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                        {isMundialDeClubesLive && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                        )}
-                                        <Image
-                                            src={mundialDeClubesEvents[0].image || "https://upload.wikimedia.org/wikipedia/en/thumb/7/77/FIFA_Club_World_Cup_logo.svg/250px-FIFA_Club_World_Cup_logo.svg.png"}
-                                            alt="Mundial de Clubes Logo"
-                                            width={50}
-                                            height={50}
-                                            className="object-contain"
-                                            data-ai-hint="club world cup"
-                                            unoptimized
-                                        />
-                                    </div>
-                                    <div className="w-20 flex-shrink-0" />
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                                <div className="space-y-4 p-4">
-                                    {mundialDeClubesEvents.map(renderEventCard)}
                                 </div>
                             </AccordionContent>
                         </Card>
