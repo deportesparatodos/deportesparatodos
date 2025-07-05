@@ -123,30 +123,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return { text: channelUrlMatch.name.toUpperCase(), status: 'valid' };
     }
 
-    if (url.includes('streamtps.com') || url.includes('ksdjugfsddeports.fun')) {
-      const getStreamNameFromUrl = (u: string): string | null => {
-        try {
-            const urlObject = new URL(u);
-            if (urlObject.hostname.includes('streamtps.com')) {
-                const pathParts = urlObject.pathname.split('/');
-                const htmlFile = pathParts[pathParts.length - 1];
-                if (htmlFile && htmlFile.endsWith('.html')) {
-                    return htmlFile.slice(0, -5);
-                }
-            }
-        } catch (e) {
-            let match = u.match(/embed\/([^/]+)\.html/);
-            if (match && match[1]) return match[1];
-        }
-        return null;
-      };
-      const streamName = getStreamNameFromUrl(url);
-      if (streamName) {
-        return { text: streamName.toUpperCase(), status: 'valid' };
-      }
-      return { text: 'STREAM VÁLIDO', status: 'valid' };
-    }
-
     const getStreamNameFromUrl = (u: string): string | null => {
         try {
             const urlObject = new URL(u);
@@ -259,7 +235,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg flex flex-col p-0 max-h-[90vh]">
-                <DialogHeader className="p-4 border-b shrink-0">
+                <DialogHeader className="p-4 py-3 border-b shrink-0">
                     <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
                 <div className="overflow-y-auto p-4 flex-grow">
@@ -544,7 +520,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       <DialogHeader className="p-4 border-b">
                           <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
                       </DialogHeader>
-                      <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-4">
+                      <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden px-4 pb-4 pt-2">
                           <TabsList className="grid w-full grid-cols-2">
                               <TabsTrigger value="channels">Canales</TabsTrigger>
                               <TabsTrigger value="events">Eventos</TabsTrigger>
@@ -613,7 +589,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                   Puede desactivar la agrupación de eventos en el menú de configuración.
                               </p>
                               <Separator className="mb-2" />
-                              <div className="flex-grow overflow-y-auto pt-2">
+                              <div className="flex-grow overflow-y-auto">
                                   <EventListComponent 
                                       onSelectEvent={handleSelectChannel}
                                       events={events}
