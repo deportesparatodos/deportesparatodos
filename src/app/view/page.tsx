@@ -53,6 +53,19 @@ const processUrlForView = (inputUrl: string): string => {
   return inputUrl;
 };
 
+const defaultEventGrouping = {
+  all: true,
+  enVivo: true,
+  otros: true,
+  f1: true,
+  mlb: true,
+  nba: true,
+  mundialDeClubes: true,
+  deportesDeCombate: true,
+  liga1: true,
+  ligaPro: true,
+  mls: true,
+};
 
 function ViewPageContent() {
   // State is now driven by localStorage to sync with home page
@@ -64,18 +77,7 @@ function ViewPageContent() {
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobile = useIsMobile();
-  const [eventGrouping, setEventGrouping] = useState({
-    all: true,
-    otros: true,
-    f1: true,
-    mlb: true,
-    nba: true,
-    mundialDeClubes: true,
-    deportesDeCombate: true,
-    liga1: true,
-    ligaPro: true,
-    mls: true,
-  });
+  const [eventGrouping, setEventGrouping] = useState(defaultEventGrouping);
 
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -120,7 +122,7 @@ function ViewPageContent() {
       try {
         const parsed = JSON.parse(storedEventGrouping);
         if (typeof parsed === 'object' && parsed !== null && 'all' in parsed) {
-          setEventGrouping(parsed);
+          setEventGrouping({ ...defaultEventGrouping, ...parsed });
         }
       } catch (e) {
         console.error("Failed to parse eventGrouping from localStorage", e);
@@ -470,3 +472,4 @@ export default function Page() {
     </Suspense>
   );
 }
+

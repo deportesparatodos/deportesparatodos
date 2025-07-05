@@ -34,6 +34,7 @@ export interface Event {
 
 interface EventGrouping {
     all: boolean;
+    enVivo: boolean;
     f1: boolean;
     mlb: boolean;
     nba: boolean;
@@ -79,12 +80,14 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     }
   };
   
-  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
+  const { all: groupAll, enVivo: groupEnVivo, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
 
   const allFilteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
+  const liveEvents = allFilteredEvents.filter(event => event.status === 'En Vivo');
+
   const mundialDeClubesEvents = groupAll && groupMundial ? allFilteredEvents.filter(event =>
     event.image === 'https://p.alangulotv.live/copamundialdeclubes'
   ) : [];
@@ -289,6 +292,20 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       if (!a.isLive && b.isLive) return 1;
       return a.startTime.localeCompare(b.startTime);
   });
+  
+  if (groupAll && groupEnVivo && liveEvents.length > 0) {
+    const enVivoGroup = {
+        id: 'en-vivo',
+        name: 'TODOS LOS EVENTOS',
+        events: liveEvents.sort((a, b) => a.time.localeCompare(b.time)),
+        isLive: true,
+        startTime: null,
+        logo: null,
+        logoProps: {}
+    };
+    eventGroups.unshift(enVivoGroup);
+  }
+
 
   if (ungroupedEvents.length > 1) {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2 };
@@ -434,7 +451,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       </div>
       <div className="flex-grow px-4 pb-4 overflow-y-auto">
         <TooltipProvider delayDuration={300}>
-          {allFilteredEvents.length > 0 ? (
+          {allFilteredEvents.length > 0 || eventGroups.length > 0 ? (
             <div className="space-y-4">
               <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
                 {eventGroups.map((group) => (
@@ -443,7 +460,8 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                       <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
                           <div className="flex w-full items-center">
                               <div className="w-20 flex-shrink-0">
-                                  <div className="flex flex-col items-center justify-center gap-1 text-center">
+                                  {group.startTime && (
+                                    <div className="flex flex-col items-center justify-center gap-1 text-center">
                                       {(() => {
                                           const allTimes = group.events.map(e => e.time);
                                           const uniqueTimes = [...new Set(allTimes)];
@@ -470,22 +488,34 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                               </>
                                           );
                                       })()}
-                                  </div>
+                                    </div>
+                                  )}
                               </div>
                               <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                  {group.isLive && (
-                                      <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                  {group.logo ? (
+                                    <>
+                                      {group.isLive && (
+                                          <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                      )}
+                                      <Image
+                                          src={group.logo}
+                                          alt={`${group.name} Logo`}
+                                          width={group.logoProps.width}
+                                          height={group.logoProps.height}
+                                          className={group.logoProps.className}
+                                          data-ai-hint={`${group.id} logo`}
+                                          unoptimized
+                                      />
+                                      <p className="font-semibold text-sm text-foreground mt-1">{group.name}</p>
+                                    </>
+                                  ) : (
+                                    <>
+                                       <p className="font-semibold text-lg text-foreground">{group.name}</p>
+                                        {group.isLive && (
+                                          <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">EN VIVO</Badge>
+                                        )}
+                                    </>
                                   )}
-                                  <Image
-                                      src={group.logo}
-                                      alt={`${group.name} Logo`}
-                                      width={group.logoProps.width}
-                                      height={group.logoProps.height}
-                                      className={group.logoProps.className}
-                                      data-ai-hint={`${group.id} logo`}
-                                      unoptimized
-                                  />
-                                  <p className="font-semibold text-sm text-foreground mt-1">{group.name}</p>
                               </div>
                               <div className="w-20 flex-shrink-0" />
                           </div>
@@ -513,3 +543,4 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     </div>
   );
 };
+

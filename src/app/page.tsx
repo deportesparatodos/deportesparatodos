@@ -23,6 +23,20 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 
 
+const defaultEventGrouping = {
+  all: true,
+  enVivo: true,
+  otros: true,
+  f1: true,
+  mlb: true,
+  nba: true,
+  mundialDeClubes: true,
+  deportesDeCombate: true,
+  liga1: true,
+  ligaPro: true,
+  mls: true,
+};
+
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(1);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(9).fill(''));
@@ -43,18 +57,7 @@ export default function HomePage() {
   const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
-  const [eventGrouping, setEventGrouping] = useState({
-    all: true,
-    otros: true,
-    f1: true,
-    mlb: true,
-    nba: true,
-    mundialDeClubes: true,
-    deportesDeCombate: true,
-    liga1: true,
-    ligaPro: true,
-    mls: true,
-  });
+  const [eventGrouping, setEventGrouping] = useState(defaultEventGrouping);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -205,9 +208,8 @@ export default function HomePage() {
     if (storedEventGrouping) {
       try {
         const parsed = JSON.parse(storedEventGrouping);
-        // Basic validation to ensure it has the expected shape
         if (typeof parsed === 'object' && parsed !== null && 'all' in parsed) {
-          setEventGrouping(parsed);
+          setEventGrouping({ ...defaultEventGrouping, ...parsed });
         }
       } catch (e) {
         console.error("Failed to parse eventGrouping from localStorage", e);
@@ -246,7 +248,7 @@ export default function HomePage() {
     setEventGrouping(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'otros' | 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'enVivo' | 'otros' | 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
     setEventGrouping(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -690,9 +692,20 @@ export default function HomePage() {
                           onCheckedChange={handleMasterGroupingChange}
                         />
                       </div>
+
                       <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="group-otros-switch" className="text-base">Agrupar Otros</Label>
+                          <Label htmlFor="group-enVivo-switch" className="text-base">Agrupar "En Vivo"</Label>
+                          <Switch
+                            id="group-enVivo-switch"
+                            checked={eventGrouping.enVivo}
+                            onCheckedChange={(checked) => handleIndividualGroupingChange('enVivo', checked)}
+                            disabled={!eventGrouping.all}
+                          />
+                        </div>
+                        <Separator/>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="group-otros-switch" className="text-base">Agrupar "Otros"</Label>
                           <Switch
                             id="group-otros-switch"
                             checked={eventGrouping.otros}
@@ -700,7 +713,9 @@ export default function HomePage() {
                             disabled={!eventGrouping.all}
                           />
                         </div>
-                        <Separator/>
+                      </div>
+
+                      <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
                         <div className="flex items-center justify-between">
                           <Label htmlFor="group-f1-switch" className="text-base">Agrupar F1</Label>
                           <Switch
@@ -836,3 +851,4 @@ export default function HomePage() {
     </Dialog>
   );
 }
+
