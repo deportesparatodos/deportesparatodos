@@ -59,6 +59,7 @@ export default function HomePage() {
     mundialDeClubes: true,
     deportesDeCombate: true,
     liga1: true,
+    ligaPro: true,
   });
 
 
@@ -250,7 +251,7 @@ export default function HomePage() {
     setEventGrouping(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro', checked: boolean) => {
     setEventGrouping(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -514,6 +515,16 @@ export default function HomePage() {
                                   id="group-liga1-switch"
                                   checked={eventGrouping.liga1}
                                   onCheckedChange={(checked) => handleIndividualGroupingChange('liga1', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                              <Separator/>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-ligapro-switch" className="text-base">Agrupar Liga Pro</Label>
+                                <Switch
+                                  id="group-ligapro-switch"
+                                  checked={eventGrouping.ligaPro}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('ligaPro', checked)}
                                   disabled={!eventGrouping.all}
                                 />
                               </div>

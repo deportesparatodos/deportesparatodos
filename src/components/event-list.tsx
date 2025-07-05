@@ -40,6 +40,7 @@ interface EventGrouping {
     mundialDeClubes: boolean;
     deportesDeCombate: boolean;
     liga1: boolean;
+    ligaPro: boolean;
 }
 
 interface CopiedStates {
@@ -76,7 +77,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     }
   };
   
-  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1 } = eventGrouping;
+  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro } = eventGrouping;
 
   const allFilteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -131,6 +132,17 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !deportesDeCombateEvents.includes(event)
   ) : [];
 
+  const ligaProImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg/2048px-Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg.png';
+  const ligaProEvents = groupAll && groupLigaPro ? allFilteredEvents.filter(event =>
+    (event.title.toLowerCase().includes('primera a') || event.image === ligaProImage) &&
+    !mundialDeClubesEvents.includes(event) &&
+    !nbaEvents.includes(event) &&
+    !f1Events.includes(event) &&
+    !mlbEvents.includes(event) &&
+    !deportesDeCombateEvents.includes(event) &&
+    !liga1Events.includes(event)
+  ) : [];
+
 
   const otherEvents = allFilteredEvents.filter(event => 
     !mundialDeClubesEvents.includes(event) &&
@@ -138,11 +150,23 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !f1Events.includes(event) && 
     !mlbEvents.includes(event) &&
     !deportesDeCombateEvents.includes(event) &&
-    !liga1Events.includes(event)
+    !liga1Events.includes(event) &&
+    !ligaProEvents.includes(event)
   );
 
   const eventGroups = [];
   
+  if (ligaProEvents.length > 0) {
+      eventGroups.push({
+          id: 'liga-pro',
+          name: 'Liga Pro',
+          events: ligaProEvents,
+          isLive: ligaProEvents.some(e => e.status === 'En Vivo'),
+          startTime: ligaProEvents[0].time,
+          logo: ligaProImage,
+          logoProps: { width: 50, height: 50, className: 'object-contain' }
+      });
+  }
   if (liga1Events.length > 0) {
       eventGroups.push({
           id: 'liga1',

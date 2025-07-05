@@ -72,6 +72,7 @@ function ViewPageContent() {
     mundialDeClubes: true,
     deportesDeCombate: true,
     liga1: true,
+    ligaPro: true,
   });
 
 
