@@ -430,7 +430,7 @@ export default function HomePage() {
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                    <AccordionItem value="item-3" className="border-b-0">
+                    <AccordionItem value="item-3" className="border-none">
                         <AccordionTrigger className="px-4 py-3">Eventos</AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-6 pt-4 px-4">
