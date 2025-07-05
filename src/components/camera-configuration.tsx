@@ -30,6 +30,7 @@ interface EventGrouping {
     liga1: boolean;
     ligaPro: boolean;
     mls: boolean;
+    otros: boolean;
 }
 
 interface CameraConfigurationProps {
@@ -97,7 +98,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setEventGrouping?.(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'otros' | 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
     setEventGrouping?.(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -342,6 +343,16 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                           />
                         </div>
                         <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
+                          <div className="flex items-center justify-between">
+                              <Label htmlFor="group-otros-switch-view" className="text-base">Agrupar Otros</Label>
+                              <Switch
+                                id="group-otros-switch-view"
+                                checked={eventGrouping.otros}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('otros', checked)}
+                                disabled={!eventGrouping.all}
+                              />
+                          </div>
+                          <Separator/>
                           <div className="flex items-center justify-between">
                             <Label htmlFor="group-f1-switch-view" className="text-base">Agrupar F1</Label>
                             <Switch

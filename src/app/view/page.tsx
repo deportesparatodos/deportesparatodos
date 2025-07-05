@@ -66,6 +66,7 @@ function ViewPageContent() {
   const isMobile = useIsMobile();
   const [eventGrouping, setEventGrouping] = useState({
     all: true,
+    otros: true,
     f1: true,
     mlb: true,
     nba: true,

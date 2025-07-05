@@ -42,6 +42,7 @@ interface EventGrouping {
     liga1: boolean;
     ligaPro: boolean;
     mls: boolean;
+    otros: boolean;
 }
 
 interface CopiedStates {
@@ -78,7 +79,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     }
   };
   
-  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls } = eventGrouping;
+  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
 
   const allFilteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -265,16 +266,22 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           logoProps: { width: 40, height: 40, className: 'object-contain' }
       });
   }
+  
+  const ungroupedEvents = [];
   if (otherEvents.length > 0) {
+    if (groupAll && groupOtros) {
       eventGroups.push({
-          id: 'otros',
-          name: 'Otros',
-          events: otherEvents,
-          isLive: otherEvents.some(e => e.status === 'En Vivo'),
-          startTime: otherEvents[0].time,
-          logo: "https://cdn-icons-png.flaticon.com/512/9192/9192710.png",
-          logoProps: { width: 40, height: 40, className: 'object-contain' }
+        id: 'otros',
+        name: 'Otros',
+        events: otherEvents,
+        isLive: otherEvents.some(e => e.status === 'En Vivo'),
+        startTime: otherEvents[0].time,
+        logo: "https://cdn-icons-png.flaticon.com/512/9192/9192710.png",
+        logoProps: { width: 40, height: 40, className: 'object-contain' }
       });
+    } else {
+      ungroupedEvents.push(...otherEvents);
+    }
   }
 
   eventGroups.sort((a, b) => {
@@ -282,6 +289,16 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       if (!a.isLive && b.isLive) return 1;
       return a.startTime.localeCompare(b.startTime);
   });
+
+  if (ungroupedEvents.length > 1) {
+    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2 };
+    ungroupedEvents.sort((a, b) => {
+        if (a.status !== b.status) {
+            return (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+        }
+        return a.time.localeCompare(b.time);
+    });
+  }
 
   const renderEventCard = (event: Event, eventIndex: number) => {
     const imageSrc = event.image;
@@ -479,6 +496,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                   </AccordionItem>
                 ))}
               </Accordion>
+              {ungroupedEvents.map((event, index) => renderEventCard(event, index))}
             </div>
           ) : (
              <div className="flex items-center justify-center h-full">
