@@ -23,35 +23,6 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 
 
-const processUrlForView = (inputUrl: string): string => {
-  if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
-
-  try {
-    // Handle standard YouTube watch URLs
-    if (inputUrl.includes('youtube.com/watch')) {
-      const url = new URL(inputUrl);
-      const videoId = url.searchParams.get('v');
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-    }
-    // Handle youtu.be short URLs
-    if (inputUrl.includes('youtu.be/')) {
-      const url = new URL(inputUrl);
-      const videoId = url.pathname.substring(1);
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-    }
-  } catch (e) {
-    // Not a valid URL, or some other parsing error. Fallback to original URL.
-    return inputUrl;
-  }
-  
-  // Return original URL if it's not a convertible YouTube URL
-  return inputUrl;
-};
-
 const TUTORIAL_IMAGES = [
   "https://i.ibb.co/YBjHxj6Z/TUTORIAL-1.jpg",
   "https://i.ibb.co/N2hpR2Jy/TUTORIAL-2.jpg",

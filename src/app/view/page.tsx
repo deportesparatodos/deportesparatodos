@@ -37,15 +37,6 @@ const processUrlForView = (inputUrl: string): string => {
       }
     }
     
-    // Attempt to normalize streamtpglobal URLs to avoid nested iframes that might have fixed heights
-    if (inputUrl.includes('streamtpglobal.com/global1.php')) {
-        const url = new URL(inputUrl);
-        const streamName = url.searchParams.get('stream');
-        if (streamName) {
-            return `https://live.streamingtps.com/hls/${streamName}.html`;
-        }
-    }
-
   } catch (e) {
     // Not a valid URL, or some other parsing error. Fallback to original URL.
     return inputUrl;
