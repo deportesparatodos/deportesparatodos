@@ -371,7 +371,7 @@ export default function HomePage() {
                   <DialogHeader className="border-b pb-3">
                     <DialogTitle>Configuración de la Vista:</DialogTitle>
                   </DialogHeader>
-                  <Accordion type="single" collapsible defaultValue="item-1" className="w-full -mt-4">
+                  <Accordion type="single" collapsible className="w-full -mt-4">
                     <AccordionItem value="item-1">
                       <AccordionTrigger>Bordes</AccordionTrigger>
                       <AccordionContent>
