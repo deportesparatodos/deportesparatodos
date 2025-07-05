@@ -11,7 +11,7 @@ import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Menu, X, HelpCircle, FileText, ChevronLeft, ChevronRight, Mail, AlertCircle, Settings } from 'lucide-react';
+import { Menu, X, HelpCircle, FileText, Mail, AlertCircle, Settings, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
@@ -21,13 +21,6 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-
-
-const TUTORIAL_IMAGES = [
-  "https://i.ibb.co/YBjHxj6Z/TUTORIAL-1.jpg",
-  "https://i.ibb.co/N2hpR2Jy/TUTORIAL-2.jpg",
-  "https://i.ibb.co/hJR6tmYj/TUTORIAL-3.jpg",
-];
 
 
 export default function HomePage() {
@@ -49,7 +42,6 @@ export default function HomePage() {
 
   const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
-  const [currentTutorialSlide, setCurrentTutorialSlide] = useState(0);
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [eventGrouping, setEventGrouping] = useState({
     all: true,
@@ -258,15 +250,6 @@ export default function HomePage() {
     setEventGrouping(prev => ({ ...prev, [key]: checked }));
   };
 
-
-  const nextTutorialSlide = () => {
-    setCurrentTutorialSlide((prev) => (prev === TUTORIAL_IMAGES.length - 1 ? 0 : prev + 1));
-  };
-
-  const prevTutorialSlide = () => {
-    setCurrentTutorialSlide((prev) => (prev === 0 ? TUTORIAL_IMAGES.length - 1 : prev - 1));
-  };
-
   const handleStartView = () => {
     const activeUrlInputs = cameraUrls.slice(0, numCameras);
     const activeUrls = activeUrlInputs.filter(url => url && url.trim() !== "");
@@ -373,42 +356,54 @@ export default function HomePage() {
 
                 <Dialog>
                   <DialogTrigger asChild>
-                     <Button variant="outline" className="justify-start">
-                       <HelpCircle className="mr-2" />
-                       Tutorial
-                     </Button>
+                      <Button variant="outline" className="justify-start">
+                          <HelpCircle className="mr-2 h-4 w-4" />
+                          Tutorial
+                      </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                     <DialogHeader>
-                        <DialogTitle>Tutorial de Uso</DialogTitle>
-                     </DialogHeader>
-                      <div className="mt-4 flex flex-col items-center gap-4">
-                        <div className="flex w-full items-center justify-center gap-4">
-                          <Button onClick={prevTutorialSlide} size="icon" variant="secondary" className="rounded-full h-8 w-8 flex-shrink-0">
-                              <ChevronLeft />
-                          </Button>
-                          <div className="border rounded-md overflow-hidden">
-                              <Image
-                                  src={TUTORIAL_IMAGES[currentTutorialSlide]}
-                                  alt={`Tutorial paso ${currentTutorialSlide + 1}`}
-                                  width={1200}
-                                  height={675}
-                                  unoptimized
-                              />
-                          </div>
-                          <Button onClick={nextTutorialSlide} size="icon" variant="secondary" className="rounded-full h-8 w-8 flex-shrink-0">
-                              <ChevronRight />
-                          </Button>
-                        </div>
-                        <div className="flex gap-2">
-                          {TUTORIAL_IMAGES.map((_, i) => (
-                             <div key={i} className={cn(
-                               "h-2 w-2 rounded-full transition-colors",
-                               i === currentTutorialSlide ? 'bg-primary' : 'bg-muted'
-                             )} />
-                          ))}
-                        </div>
-                     </div>
+                  <DialogContent className="max-w-3xl">
+                      <DialogHeader>
+                          <DialogTitle>Tutorial de Uso</DialogTitle>
+                      </DialogHeader>
+                      <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
+                          <p>
+                              ¡Bienvenido a Deportes para Todos! Esta guía te ayudará a sacar el máximo provecho de la plataforma.
+                          </p>
+                          <h4 className="font-semibold text-foreground pt-2">Paso 1: Selecciona la cantidad de ventanas</h4>
+                          <p>
+                              Usa el menú desplegable en el centro de la pantalla para elegir cuántas transmisiones quieres ver simultáneamente. Puedes seleccionar entre 1, 2, 3, 4, 6 o 9 ventanas.
+                          </p>
+                          <h4 className="font-semibold text-foreground pt-2">Paso 2: Elige tus canales o eventos</h4>
+                          <p>
+                              Para cada una de las ventanas que seleccionaste, verás un botón que dice "Elegir Canal…". Haz clic en él para abrir un diálogo con dos pestañas:
+                          </p>
+                          <ul className="list-disc pl-6 space-y-1">
+                              <li><strong>Canales:</strong> Una lista de canales de televisión disponibles 24/7. Puedes usar la barra de búsqueda para encontrar uno rápidamente.</li>
+                              <li><strong>Eventos:</strong> Una lista de eventos deportivos en vivo o próximos a comenzar. Los eventos están agrupados por competición (puedes desactivar esto en la configuración).</li>
+                          </ul>
+                          <p>
+                              Simplemente haz clic en "Seleccionar" en el canal o evento que desees, y se asignará a esa ventana. También puedes pegar un enlace de video directamente desde el portapapeles.
+                          </p>
+                          <h4 className="font-semibold text-foreground pt-2">Paso 3: Inicia la vista</h4>
+                          <p>
+                              Una vez que hayas configurado todas tus ventanas, presiona el botón "Iniciar Vista". Esto te llevará a una nueva página donde verás todas tus transmisiones seleccionadas en la disposición que elegiste.
+                          </p>
+                          <h4 className="font-semibold text-foreground pt-2">Configuraciones Adicionales</h4>
+                          <p>
+                              En el menú principal (arriba a la izquierda) encontrarás la sección de "Configuración", donde puedes personalizar tu experiencia:
+                          </p>
+                          <ul className="list-disc pl-6 space-y-1">
+                              <li><strong>Bordes:</strong> Ajusta el tamaño y el color de los bordes entre las ventanas de video.</li>
+                              <li><strong>Chat:</strong> Activa o desactiva el chat en vivo en la página de visualización.</li>
+                              <li><strong>Eventos:</strong> Activa o desactiva la agrupación de eventos por competición.</li>
+                          </ul>
+                          <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
+                          <ul className="list-disc pl-6 space-y-1">
+                              <li>Puedes mover las ventanas hacia arriba o hacia abajo usando las flechas junto a cada selección.</li>
+                              <li>Si un canal aparece como "Inactivo", es posible que no funcione.</li>
+                              <li>Para cualquier problema, consulta las secciones de "Errores" o "Contacto" en el menú.</li>
+                          </ul>
+                      </div>
                   </DialogContent>
                 </Dialog>
 
@@ -608,7 +603,7 @@ export default function HomePage() {
             <DialogHeader className="border-b pb-3">
               <DialogTitle>Configuración de la Vista:</DialogTitle>
             </DialogHeader>
-            <Accordion type="single" collapsible className="w-full -mt-4" defaultValue="item-1">
+            <Accordion type="single" collapsible className="w-full -mt-4">
               <AccordionItem value="item-1">
                 <AccordionTrigger>Bordes</AccordionTrigger>
                 <AccordionContent>
