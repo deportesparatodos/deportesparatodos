@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { FC } from 'react';
@@ -77,12 +76,17 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     event.title.toLowerCase().includes('mlb') && !f1Events.includes(event)
   );
 
+  const mundialDeClubesEvents = allFilteredEvents.filter(event =>
+    event.title.toLowerCase().includes('mundial de clubes') && !f1Events.includes(event) && !mlbEvents.includes(event)
+  );
+
   const otherEvents = allFilteredEvents.filter(event => 
-    !f1Events.includes(event) && !mlbEvents.includes(event)
+    !f1Events.includes(event) && !mlbEvents.includes(event) && !mundialDeClubesEvents.includes(event)
   );
   
   const isF1Live = f1Events.some(e => e.status === 'En Vivo');
   const isMlbLive = mlbEvents.some(e => e.status === 'En Vivo');
+  const isMundialDeClubesLive = mundialDeClubesEvents.some(e => e.status === 'En Vivo');
 
 
   const renderEventCard = (event: Event, eventIndex: number) => {
@@ -181,6 +185,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   const accordionDefaultValues = [];
   if (isF1Live) accordionDefaultValues.push('f1-events');
   if (isMlbLive) accordionDefaultValues.push('mlb-events');
+  if (isMundialDeClubesLive) accordionDefaultValues.push('mundial-de-clubes-events');
 
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
@@ -294,6 +299,43 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                             <AccordionContent className="p-0">
                                 <div className="space-y-4 p-4">
                                     {mlbEvents.map(renderEventCard)}
+                                </div>
+                            </AccordionContent>
+                        </Card>
+                    </AccordionItem>
+                 )}
+                 {mundialDeClubesEvents.length > 0 && (
+                    <AccordionItem value="mundial-de-clubes-events" className="border-b-0">
+                        <Card className="bg-muted/50 overflow-hidden">
+                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex w-full items-center">
+                                    <div className="w-20 flex-shrink-0">
+                                        <div className="flex flex-col items-center gap-1 text-center">
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mundialDeClubesEvents[0].time}</p>
+                                            <span className="text-xs font-mono text-muted-foreground">-</span>
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mundialDeClubesEvents[mundialDeClubesEvents.length - 1].time}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                        {isMundialDeClubesLive && (
+                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                        )}
+                                        <Image
+                                            src="https://upload.wikimedia.org/wikipedia/en/thumb/7/77/FIFA_Club_World_Cup_logo.svg/250px-FIFA_Club_World_Cup_logo.svg.png"
+                                            alt="Mundial de Clubes Logo"
+                                            width={50}
+                                            height={50}
+                                            className="object-contain"
+                                            data-ai-hint="club world cup"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="w-20 flex-shrink-0" />
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="space-y-4 p-4">
+                                    {mundialDeClubesEvents.map(renderEventCard)}
                                 </div>
                             </AccordionContent>
                         </Card>
