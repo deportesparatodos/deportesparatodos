@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { FC } from 'react';
@@ -380,10 +379,32 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                       <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
                           <div className="flex w-full items-center">
                               <div className="w-20 flex-shrink-0">
-                                  <div className="flex flex-col items-center gap-1 text-center">
-                                      <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{group.events[0].time}</p>
-                                      <span className="text-xs font-mono text-muted-foreground">-</span>
-                                      <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{group.events[group.events.length - 1].time}</p>
+                                  <div className="flex flex-col items-center justify-center gap-1 text-center">
+                                      {(() => {
+                                          const startTime = group.events[0].time;
+                                          const endTime = group.events[group.events.length - 1].time;
+                                          const isSingleTime = startTime === endTime;
+
+                                          if (isSingleTime) {
+                                              return (
+                                                  <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                      {startTime}
+                                                  </p>
+                                              );
+                                          }
+
+                                          return (
+                                              <>
+                                                  <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                      {startTime}
+                                                  </p>
+                                                  <span className="text-xs font-mono text-muted-foreground">-</span>
+                                                  <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                      {endTime}
+                                                  </p>
+                                              </>
+                                          );
+                                      })()}
                                   </div>
                               </div>
                               <div className="flex-grow flex flex-col items-center justify-center gap-2">
