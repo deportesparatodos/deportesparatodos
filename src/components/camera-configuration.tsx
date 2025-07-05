@@ -4,7 +4,7 @@
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,6 +52,7 @@ interface CameraConfigurationProps {
   eventsError: string | null;
   hideStartButton?: boolean;
   onRefreshEvents?: () => void;
+  onReloadCamera?: (index: number) => void;
   gridGap: number;
   borderColor: string;
   handleGridGapChange: (value: number[]) => void;
@@ -82,6 +83,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   eventsError,
   hideStartButton = false,
   onRefreshEvents,
+  onReloadCamera,
   gridGap,
   borderColor,
   handleGridGapChange,
@@ -570,6 +572,19 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 >
                     <ArrowDown className="h-4 w-4" />
                 </Button>
+                
+                {onReloadCamera && hasContent && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onReloadCamera(index)}
+                    aria-label="Recargar vista"
+                    className="bg-background hover:bg-accent/50"
+                    type="button"
+                  >
+                    <RefreshCcw className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             )
           })}

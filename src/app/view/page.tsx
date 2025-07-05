@@ -16,35 +16,6 @@ import { CameraConfigurationComponent } from '@/components/camera-configuration'
 import { useIsMobile } from '@/hooks/use-mobile';
 
 
-const processUrlForView = (inputUrl: string): string => {
-  if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
-
-  try {
-    const urlObj = new URL(inputUrl);
-
-    // Handle standard YouTube watch URLs
-    if (urlObj.hostname.includes('youtube.com') && urlObj.pathname === '/watch') {
-      const videoId = urlObj.searchParams.get('v');
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-    }
-    // Handle youtu.be short URLs
-    if (urlObj.hostname === 'youtu.be') {
-      const videoId = urlObj.pathname.substring(1);
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}`;
-      }
-    }
-
-  } catch (e) {
-    // Not a valid URL, or some other parsing error. Fallback to original URL.
-    return inputUrl;
-  }
-  
-  return inputUrl;
-};
-
 const defaultEventGrouping = {
   all: true,
   enVivo: true,
@@ -70,6 +41,7 @@ function ViewPageContent() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobile = useIsMobile();
   const [eventGrouping, setEventGrouping] = useState(defaultEventGrouping);
+  const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
 
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -80,6 +52,14 @@ function ViewPageContent() {
   const [processedEvents, setProcessedEvents] = useState<Event[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+
+  const handleReloadCamera = (index: number) => {
+    setReloadCounters(prevCounters => {
+      const newCounters = [...prevCounters];
+      newCounters[index] = (newCounters[index] || 0) + 1;
+      return newCounters;
+    });
+  };
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -342,6 +322,7 @@ function ViewPageContent() {
                             eventsError={eventsError}
                             hideStartButton={true}
                             onRefreshEvents={fetchEvents}
+                            onReloadCamera={handleReloadCamera}
                             gridGap={gridGap}
                             borderColor={borderColor}
                             handleGridGapChange={handleGridGapChange}
@@ -389,12 +370,12 @@ function ViewPageContent() {
             
             return (
               <div
-                key={`${index}-${url}`}
+                key={`${index}-${url}-${reloadCounters[index]}`}
                 className={cn(windowClasses)}
               >
                 {url ? (
                   <iframe
-                    src={processUrlForView(url)}
+                    src={url}
                     title={`Stream ${index + 1}`}
                     className="w-full h-full border-0"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
