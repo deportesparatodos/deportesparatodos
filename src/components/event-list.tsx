@@ -428,6 +428,9 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
             </Button>
           )}
         </div>
+        <p className="text-center text-xs text-muted-foreground mt-2">
+            Puede desactivar la agrupación de eventos en el menú de configuración.
+        </p>
       </div>
       <div className="flex-grow px-4 pb-4 overflow-y-auto">
         <TooltipProvider delayDuration={300}>

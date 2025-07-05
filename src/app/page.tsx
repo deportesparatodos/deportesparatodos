@@ -11,7 +11,7 @@ import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Menu, X, HelpCircle, FileText, ChevronLeft, ChevronRight, Mail, AlertCircle, Settings, AlertTriangle } from 'lucide-react';
+import { Menu, X, HelpCircle, FileText, ChevronLeft, ChevronRight, Mail, AlertCircle, Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
@@ -65,7 +65,6 @@ export default function HomePage() {
   });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showGroupingInfo, setShowGroupingInfo] = useState(false);
 
 
   const topBarColorClass = useMemo(() => {
@@ -222,10 +221,6 @@ export default function HomePage() {
         console.error("Failed to parse eventGrouping from localStorage", e);
       }
     }
-    const groupingInfoDismissed = localStorage.getItem('groupingInfoDismissed');
-    if (groupingInfoDismissed !== 'true') {
-        setShowGroupingInfo(true);
-    }
   }, []);
 
   useEffect(() => {
@@ -238,11 +233,6 @@ export default function HomePage() {
       localStorage.setItem('eventGrouping', JSON.stringify(eventGrouping));
     }
   }, [cameraUrls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, isMounted]);
-
-  const handleDismissGroupingInfo = () => {
-    setShowGroupingInfo(false);
-    localStorage.setItem('groupingInfoDismissed', 'true');
-  };
 
   const handleGridGapChange = (value: number[]) => {
     const newGap = value[0];
@@ -618,7 +608,7 @@ export default function HomePage() {
             <DialogHeader className="border-b pb-3">
               <DialogTitle>Configuración de la Vista:</DialogTitle>
             </DialogHeader>
-            <Accordion type="single" collapsible className="w-full -mt-4">
+            <Accordion type="single" collapsible className="w-full -mt-4" defaultValue="item-1">
               <AccordionItem value="item-1">
                 <AccordionTrigger>Bordes</AccordionTrigger>
                 <AccordionContent>
@@ -847,23 +837,6 @@ export default function HomePage() {
             </div>
           </div>
         
-          {showGroupingInfo && (
-            <div className="fixed bottom-0 left-0 right-0 z-30 bg-yellow-400/95 border-t border-yellow-500 text-yellow-950 p-3 flex items-center justify-between gap-4 shadow-lg backdrop-blur-sm animate-in slide-in-from-bottom-2">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-                  <p className="text-sm font-medium">
-                      <span>Puede desactivar la agrupación de eventos en el menú de </span>
-                      <DialogTrigger asChild>
-                          <button className="font-bold underline hover:no-underline">configuración</button>
-                      </DialogTrigger>
-                      <span>.</span>
-                  </p>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 text-yellow-950 hover:bg-yellow-950/10" onClick={handleDismissGroupingInfo}>
-                    <X className="h-4 w-4" />
-                </Button>
-            </div>
-          )}
       </div>
     </Dialog>
   );
