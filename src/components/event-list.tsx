@@ -413,9 +413,12 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           {allFilteredEvents.length > 0 || eventGroups.length > 0 ? (
             <div className="space-y-4">
               {eventGroups.length > 0 && (
-                <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4 mt-[18px]">
-                  {eventGroups.map((group) => (
-                    <AccordionItem value={`${group.id}-events`} className="border-b-0" key={group.id}>
+                <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
+                  {eventGroups.map((group, index) => (
+                    <AccordionItem value={`${group.id}-events`} className={cn(
+                        "border-b-0",
+                        index === 0 && "mt-[16px]"
+                    )} key={group.id}>
                       <Card className="bg-muted/50 overflow-hidden">
                         <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
                             <div className="flex w-full items-center">
@@ -493,14 +496,13 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
               {ungroupedEvents.map((event, index) => {
                   const isFirstElementInList = eventGroups.length === 0 && index === 0;
                   const card = renderEventCard(event, index);
-                  if (isFirstElementInList) {
-                    return (
-                      <div key={card.key} className="mt-[18px]">
-                        {card}
+                  return (
+                      <div key={card.key} className={cn(
+                          isFirstElementInList && "mt-[16px]"
+                      )}>
+                          {card}
                       </div>
-                    );
-                  }
-                  return card;
+                  );
               })}
             </div>
           ) : (
