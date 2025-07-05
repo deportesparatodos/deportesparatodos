@@ -55,12 +55,11 @@ interface EventListComponentProps {
   events: Event[];
   isLoading: boolean;
   error: string | null;
-  onRefresh?: () => void;
   eventGrouping: EventGrouping;
   searchTerm: string;
 }
 
-export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, onRefresh, eventGrouping, searchTerm }) => {
+export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, eventGrouping, searchTerm }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const isSelectMode = !!onSelectEvent;
 
@@ -410,23 +409,6 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
-      <div className="flex-shrink-0 pb-4 flex justify-between items-center">
-        <p className="text-xs text-muted-foreground pr-4">
-            Puede desactivar la agrupación de eventos en el menú de configuración.
-        </p>
-        {onRefresh && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 flex-shrink-0"
-            onClick={onRefresh}
-            disabled={isLoading}
-          >
-            <span className="sr-only">Actualizar eventos</span>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" />}
-          </Button>
-        )}
-      </div>
       <div className="flex-grow overflow-y-auto">
         <TooltipProvider delayDuration={300}>
           {allFilteredEvents.length > 0 || eventGroups.length > 0 ? (

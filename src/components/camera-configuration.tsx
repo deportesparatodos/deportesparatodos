@@ -4,7 +4,7 @@
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw, Search } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw, Search, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -536,54 +536,88 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                      <DialogHeader className="p-5 pb-3">
+                      <DialogHeader className="p-4 border-b">
                           <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
                       </DialogHeader>
-                      <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-0">
+                      <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-4">
                           <TabsList className="grid w-full grid-cols-2">
                               <TabsTrigger value="channels">Canales</TabsTrigger>
                               <TabsTrigger value="events">Eventos</TabsTrigger>
                           </TabsList>
-                          
-                          <div className="relative mt-4">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                              type="text"
-                              placeholder="Buscar..."
-                              className="h-9 w-full pl-10 pr-8"
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            {searchTerm && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                                onClick={() => setSearchTerm('')}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-
-                          <TabsContent value="channels" className="flex-grow overflow-hidden mt-4 data-[state=inactive]:hidden">
-                              <ChannelListComponent 
-                                  channelStatuses={channelStatuses}
-                                  isLoading={isLoadingChannelStatuses || false}
-                                  onSelectChannel={handleSelectChannel}
-                                  searchTerm={searchTerm}
-                              />
+                          <TabsContent value="channels" className="flex-grow flex flex-col overflow-hidden mt-4 data-[state=inactive]:hidden">
+                              <div className="relative">
+                                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                  <Input
+                                      type="text"
+                                      placeholder="Buscar canal..."
+                                      className="h-9 w-full pl-10 pr-8"
+                                      value={searchTerm}
+                                      onChange={(e) => setSearchTerm(e.target.value)}
+                                  />
+                                  {searchTerm && (
+                                      <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                                          onClick={() => setSearchTerm('')}
+                                      >
+                                          <X className="h-4 w-4" />
+                                      </Button>
+                                  )}
+                              </div>
+                              <div className="flex-grow overflow-y-auto mt-4">
+                                  <ChannelListComponent 
+                                      channelStatuses={channelStatuses}
+                                      isLoading={isLoadingChannelStatuses || false}
+                                      onSelectChannel={handleSelectChannel}
+                                      searchTerm={searchTerm}
+                                  />
+                              </div>
                           </TabsContent>
-                          <TabsContent value="events" className="flex-grow overflow-hidden mt-4 data-[state=inactive]:hidden">
-                              <EventListComponent 
-                                onSelectEvent={handleSelectChannel}
-                                events={events}
-                                isLoading={isLoadingEvents}
-                                error={eventsError}
-                                onRefresh={onRefreshEvents}
-                                eventGrouping={eventGrouping}
-                                searchTerm={searchTerm}
-                              />
+                          <TabsContent value="events" className="flex-grow flex flex-col overflow-hidden mt-4 data-[state=inactive]:hidden">
+                               <div className="flex items-center gap-2">
+                                  <div className="relative flex-grow">
+                                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                      <Input
+                                          type="text"
+                                          placeholder="Buscar evento..."
+                                          className="h-9 w-full pl-10 pr-8"
+                                          value={searchTerm}
+                                          onChange={(e) => setSearchTerm(e.target.value)}
+                                      />
+                                      {searchTerm && (
+                                          <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2" onClick={() => setSearchTerm('')}>
+                                              <X className="h-4 w-4" />
+                                          </Button>
+                                      )}
+                                  </div>
+                                  {onRefreshEvents && (
+                                      <Button
+                                          variant="outline"
+                                          size="icon"
+                                          className="h-9 w-9 flex-shrink-0"
+                                          onClick={onRefreshEvents}
+                                          disabled={isLoadingEvents}
+                                      >
+                                          <span className="sr-only">Actualizar eventos</span>
+                                          {isLoadingEvents ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                                      </Button>
+                                  )}
+                              </div>
+                              <p className="text-xs text-muted-foreground pt-2">
+                                  Puede desactivar la agrupación de eventos en el menú de configuración.
+                              </p>
+                              <Separator className="my-2" />
+                              <div className="flex-grow overflow-y-auto pt-2">
+                                  <EventListComponent 
+                                      onSelectEvent={handleSelectChannel}
+                                      events={events}
+                                      isLoading={isLoadingEvents}
+                                      error={eventsError}
+                                      eventGrouping={eventGrouping}
+                                      searchTerm={searchTerm}
+                                  />
+                              </div>
                           </TabsContent>
                       </Tabs>
                   </DialogContent>
