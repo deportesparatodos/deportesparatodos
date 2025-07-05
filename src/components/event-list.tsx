@@ -126,13 +126,70 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !mlbEvents.includes(event) &&
     !deportesDeCombateEvents.includes(event)
   );
-  
-  const isF1Live = f1Events.some(e => e.status === 'En Vivo');
-  const isMlbLive = mlbEvents.some(e => e.status === 'En Vivo');
-  const isNbaLive = nbaEvents.some(e => e.status === 'En Vivo');
-  const isMundialDeClubesLive = mundialDeClubesEvents.some(e => e.status === 'En Vivo');
-  const isDeportesDeCombateLive = deportesDeCombateEvents.some(e => e.status === 'En Vivo');
 
+  const eventGroups = [];
+
+  if (mundialDeClubesEvents.length > 0) {
+      eventGroups.push({
+          id: 'mundial-de-clubes',
+          name: 'Mundial de Clubes',
+          events: mundialDeClubesEvents,
+          isLive: mundialDeClubesEvents.some(e => e.status === 'En Vivo'),
+          startTime: mundialDeClubesEvents[0].time,
+          logo: mundialDeClubesEvents[0].image || "https://upload.wikimedia.org/wikipedia/en/thumb/7/77/FIFA_Club_World_Cup_logo.svg/250px-FIFA_Club_World_Cup_logo.svg.png",
+          logoProps: { width: 50, height: 50, className: 'object-contain' }
+      });
+  }
+  if (nbaEvents.length > 0) {
+      eventGroups.push({
+          id: 'nba',
+          name: 'NBA',
+          events: nbaEvents,
+          isLive: nbaEvents.some(e => e.status === 'En Vivo'),
+          startTime: nbaEvents[0].time,
+          logo: "https://p.alangulotv.live/nba",
+          logoProps: { width: 30, height: 60, className: 'object-contain h-14' }
+      });
+  }
+  if (f1Events.length > 0) {
+      eventGroups.push({
+          id: 'f1',
+          name: 'Formula 1',
+          events: f1Events,
+          isLive: f1Events.some(e => e.status === 'En Vivo'),
+          startTime: f1Events[0].time,
+          logo: "https://p.alangulotv.live/f1",
+          logoProps: { width: 80, height: 20, className: 'object-contain' }
+      });
+  }
+  if (mlbEvents.length > 0) {
+      eventGroups.push({
+          id: 'mlb',
+          name: 'MLB',
+          events: mlbEvents,
+          isLive: mlbEvents.some(e => e.status === 'En Vivo'),
+          startTime: mlbEvents[0].time,
+          logo: "https://p.alangulotv.live/mlb",
+          logoProps: { width: 60, height: 34, className: 'object-contain' }
+      });
+  }
+  if (deportesDeCombateEvents.length > 0) {
+      eventGroups.push({
+          id: 'deportes-de-combate',
+          name: 'Deportes de Combate',
+          events: deportesDeCombateEvents,
+          isLive: deportesDeCombateEvents.some(e => e.status === 'En Vivo'),
+          startTime: deportesDeCombateEvents[0].time,
+          logo: "https://p.alangulotv.live/boxeo",
+          logoProps: { width: 40, height: 40, className: 'object-contain' }
+      });
+  }
+
+  eventGroups.sort((a, b) => {
+      if (a.isLive && !b.isLive) return -1;
+      if (!a.isLive && b.isLive) return 1;
+      return a.startTime.localeCompare(b.startTime);
+  });
 
   const renderEventCard = (event: Event, eventIndex: number) => {
     const imageSrc = event.image;
@@ -268,196 +325,44 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           {allFilteredEvents.length > 0 ? (
             <div className="space-y-4">
               <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
-                 {mundialDeClubesEvents.length > 0 && (
-                    <AccordionItem value="mundial-de-clubes-events" className="border-b-0">
-                        <Card className="bg-muted/50 overflow-hidden">
-                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                                <div className="flex w-full items-center">
-                                    <div className="w-20 flex-shrink-0">
-                                        <div className="flex flex-col items-center gap-1 text-center">
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mundialDeClubesEvents[0].time}</p>
-                                            <span className="text-xs font-mono text-muted-foreground">-</span>
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mundialDeClubesEvents[mundialDeClubesEvents.length - 1].time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                        {isMundialDeClubesLive && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                        )}
-                                        <Image
-                                            src={mundialDeClubesEvents[0].image || "https://upload.wikimedia.org/wikipedia/en/thumb/7/77/FIFA_Club_World_Cup_logo.svg/250px-FIFA_Club_World_Cup_logo.svg.png"}
-                                            alt="Mundial de Clubes Logo"
-                                            width={50}
-                                            height={50}
-                                            className="object-contain"
-                                            data-ai-hint="club world cup"
-                                            unoptimized
-                                        />
-                                        <p className="font-semibold text-sm text-foreground mt-1">Mundial de Clubes</p>
-                                    </div>
-                                    <div className="w-20 flex-shrink-0" />
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                                <div className="space-y-4 p-4">
-                                    {mundialDeClubesEvents.map(renderEventCard)}
-                                </div>
-                            </AccordionContent>
-                        </Card>
-                    </AccordionItem>
-                 )}
-                 {nbaEvents.length > 0 && (
-                    <AccordionItem value="nba-events" className="border-b-0">
-                        <Card className="bg-muted/50 overflow-hidden">
-                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                                <div className="flex w-full items-center">
-                                    <div className="w-20 flex-shrink-0">
-                                        <div className="flex flex-col items-center gap-1 text-center">
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{nbaEvents[0].time}</p>
-                                            <span className="text-xs font-mono text-muted-foreground">-</span>
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{nbaEvents[nbaEvents.length - 1].time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                        {isNbaLive && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                        )}
-                                        <Image
-                                            src="https://p.alangulotv.live/nba"
-                                            alt="NBA Logo"
-                                            width={30}
-                                            height={60}
-                                            className="object-contain h-14"
-                                            data-ai-hint="nba logo"
-                                            unoptimized
-                                        />
-                                        <p className="font-semibold text-sm text-foreground mt-1">NBA</p>
-                                    </div>
-                                    <div className="w-20 flex-shrink-0" />
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                                <div className="space-y-4 p-4">
-                                    {nbaEvents.map(renderEventCard)}
-                                </div>
-                            </AccordionContent>
-                        </Card>
-                    </AccordionItem>
-                 )}
-                 {f1Events.length > 0 && (
-                    <AccordionItem value="f1-events" className="border-b-0">
-                        <Card className="bg-muted/50 overflow-hidden">
-                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                                <div className="flex w-full items-center">
-                                    <div className="w-20 flex-shrink-0">
-                                        <div className="flex flex-col items-center gap-1 text-center">
-                                             <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{f1Events[0].time}</p>
-                                             <span className="text-xs font-mono text-muted-foreground">-</span>
-                                             <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{f1Events[f1Events.length - 1].time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                        {isF1Live && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                        )}
-                                        <Image
-                                            src="https://p.alangulotv.live/f1"
-                                            alt="Formula 1 Logo"
-                                            width={80}
-                                            height={20}
-                                            className="object-contain"
-                                            data-ai-hint="formula 1 logo"
-                                            unoptimized
-                                        />
-                                        <p className="font-semibold text-sm text-foreground mt-1">Formula 1</p>
-                                    </div>
-                                    <div className="w-20 flex-shrink-0" />
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                                <div className="space-y-4 p-4">
-                                    {f1Events.map(renderEventCard)}
-                                </div>
-                            </AccordionContent>
-                        </Card>
-                    </AccordionItem>
-                 )}
-                 {mlbEvents.length > 0 && (
-                    <AccordionItem value="mlb-events" className="border-b-0">
-                        <Card className="bg-muted/50 overflow-hidden">
-                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                                <div className="flex w-full items-center">
-                                    <div className="w-20 flex-shrink-0">
-                                        <div className="flex flex-col items-center gap-1 text-center">
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mlbEvents[0].time}</p>
-                                            <span className="text-xs font-mono text-muted-foreground">-</span>
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mlbEvents[mlbEvents.length - 1].time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                        {isMlbLive && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                        )}
-                                        <Image
-                                            src="https://p.alangulotv.live/mlb"
-                                            alt="MLB Logo"
-                                            width={60}
-                                            height={34}
-                                            className="object-contain"
-                                            data-ai-hint="mlb logo"
-                                            unoptimized
-                                        />
-                                        <p className="font-semibold text-sm text-foreground mt-1">MLB</p>
-                                    </div>
-                                    <div className="w-20 flex-shrink-0" />
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                                <div className="space-y-4 p-4">
-                                    {mlbEvents.map(renderEventCard)}
-                                </div>
-                            </AccordionContent>
-                        </Card>
-                    </AccordionItem>
-                 )}
-                 {deportesDeCombateEvents.length > 0 && (
-                    <AccordionItem value="deportes-de-combate-events" className="border-b-0">
-                        <Card className="bg-muted/50 overflow-hidden">
-                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                                <div className="flex w-full items-center">
-                                    <div className="w-20 flex-shrink-0">
-                                        <div className="flex flex-col items-center gap-1 text-center">
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{deportesDeCombateEvents[0].time}</p>
-                                            <span className="text-xs font-mono text-muted-foreground">-</span>
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{deportesDeCombateEvents[deportesDeCombateEvents.length - 1].time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                        {isDeportesDeCombateLive && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                        )}
-                                        <Image
-                                            src="https://p.alangulotv.live/boxeo"
-                                            alt="Deportes de Combate Logo"
-                                            width={40}
-                                            height={40}
-                                            className="object-contain"
-                                            data-ai-hint="combat sports"
-                                            unoptimized
-                                        />
-                                        <p className="font-semibold text-sm text-foreground mt-1">Deportes de Combate</p>
-                                    </div>
-                                    <div className="w-20 flex-shrink-0" />
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-0">
-                                <div className="space-y-4 p-4">
-                                    {deportesDeCombateEvents.map(renderEventCard)}
-                                </div>
-                            </AccordionContent>
-                        </Card>
-                    </AccordionItem>
-                 )}
+                {eventGroups.map((group) => (
+                  <AccordionItem value={`${group.id}-events`} className="border-b-0" key={group.id}>
+                    <Card className="bg-muted/50 overflow-hidden">
+                      <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                          <div className="flex w-full items-center">
+                              <div className="w-20 flex-shrink-0">
+                                  <div className="flex flex-col items-center gap-1 text-center">
+                                      <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{group.events[0].time}</p>
+                                      <span className="text-xs font-mono text-muted-foreground">-</span>
+                                      <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{group.events[group.events.length - 1].time}</p>
+                                  </div>
+                              </div>
+                              <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                  {group.isLive && (
+                                      <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                  )}
+                                  <Image
+                                      src={group.logo}
+                                      alt={`${group.name} Logo`}
+                                      width={group.logoProps.width}
+                                      height={group.logoProps.height}
+                                      className={group.logoProps.className}
+                                      data-ai-hint={`${group.id} logo`}
+                                      unoptimized
+                                  />
+                                  <p className="font-semibold text-sm text-foreground mt-1">{group.name}</p>
+                              </div>
+                              <div className="w-20 flex-shrink-0" />
+                          </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="p-0">
+                          <div className="space-y-4 p-4">
+                              {group.events.map(renderEventCard)}
+                          </div>
+                      </AccordionContent>
+                    </Card>
+                  </AccordionItem>
+                ))}
               </Accordion>
               {otherEvents.map(renderEventCard)}
             </div>
