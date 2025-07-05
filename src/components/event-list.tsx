@@ -218,10 +218,12 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                         <Card className="bg-muted/50 overflow-hidden">
                             <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
                                 <div className="flex w-full items-center">
-                                    <div className="flex flex-col items-center justify-center text-sm font-semibold text-primary w-16 flex-shrink-0">
-                                        <span>{f1Events[0].time}</span>
-                                        <span>-</span>
-                                        <span>{f1Events[f1Events.length - 1].time}</span>
+                                    <div className="w-16 flex-shrink-0 flex items-center justify-center">
+                                        <div className="flex flex-col items-center rounded-md bg-background px-2 py-1 text-sm font-semibold text-primary">
+                                            <span>{f1Events[0].time}</span>
+                                            <span>-</span>
+                                            <span>{f1Events[f1Events.length - 1].time}</span>
+                                        </div>
                                     </div>
                                     <div className="flex-grow flex justify-center">
                                         <Image
