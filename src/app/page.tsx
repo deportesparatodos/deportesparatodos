@@ -353,11 +353,11 @@ export default function HomePage() {
                   Configuración
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg flex flex-col h-[70vh] sm:h-[325px]">
-                <DialogHeader className="border-b pb-3">
-                  <DialogTitle>Configuración de la Vista:</DialogTitle>
+              <DialogContent className="max-w-lg flex flex-col max-h-[90vh] p-0">
+                <DialogHeader className="p-4 border-b">
+                  <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
-                <div className="flex-grow overflow-y-auto pr-3 -mr-3 my-4">
+                <div className="flex-grow overflow-y-auto p-4">
                   <Accordion type="multiple" collapsible className="w-full" defaultValue={[]}>
                     <AccordionItem value="item-1">
                       <AccordionTrigger>Bordes</AccordionTrigger>
@@ -554,7 +554,7 @@ export default function HomePage() {
                       </AccordionItem>
                   </Accordion>
                 </div>
-                <DialogFooter className="pt-4">
+                <DialogFooter className="p-4 border-t">
                   <Button variant="outline" onClick={handleRestoreDefaults}>
                       Restaurar
                   </Button>
@@ -850,3 +850,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
