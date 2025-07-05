@@ -73,6 +73,7 @@ function ViewPageContent() {
     deportesDeCombate: true,
     liga1: true,
     ligaPro: true,
+    mls: true,
   });
 
 

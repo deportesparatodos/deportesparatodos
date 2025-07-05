@@ -41,6 +41,7 @@ interface EventGrouping {
     deportesDeCombate: boolean;
     liga1: boolean;
     ligaPro: boolean;
+    mls: boolean;
 }
 
 interface CopiedStates {
@@ -77,7 +78,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     }
   };
   
-  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro } = eventGrouping;
+  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls } = eventGrouping;
 
   const allFilteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -142,6 +143,25 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !deportesDeCombateEvents.includes(event) &&
     !liga1Events.includes(event)
   ) : [];
+  
+  const mlsKeywords = ['mls'];
+  const mlsImage = 'https://p.alangulotv.live/mls';
+  const mlsButton = 'mls pass';
+
+  const mlsEvents = groupAll && groupMls ? allFilteredEvents.filter(event =>
+      (
+          (event.image === mlsImage) ||
+          (mlsKeywords.some(keyword => event.title.toLowerCase().includes(keyword))) ||
+          (event.buttons.some(b => b.toLowerCase() === mlsButton))
+      ) &&
+      !mundialDeClubesEvents.includes(event) &&
+      !nbaEvents.includes(event) &&
+      !f1Events.includes(event) &&
+      !mlbEvents.includes(event) &&
+      !deportesDeCombateEvents.includes(event) &&
+      !liga1Events.includes(event) &&
+      !ligaProEvents.includes(event)
+  ) : [];
 
 
   const otherEvents = allFilteredEvents.filter(event => 
@@ -151,11 +171,23 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !mlbEvents.includes(event) &&
     !deportesDeCombateEvents.includes(event) &&
     !liga1Events.includes(event) &&
-    !ligaProEvents.includes(event)
+    !ligaProEvents.includes(event) &&
+    !mlsEvents.includes(event)
   );
 
   const eventGroups = [];
   
+  if (mlsEvents.length > 0) {
+      eventGroups.push({
+          id: 'mls',
+          name: 'MLS',
+          events: mlsEvents,
+          isLive: mlsEvents.some(e => e.status === 'En Vivo'),
+          startTime: mlsEvents[0].time,
+          logo: mlsImage,
+          logoProps: { width: 60, height: 60, className: 'object-contain' }
+      });
+  }
   if (ligaProEvents.length > 0) {
       eventGroups.push({
           id: 'liga-pro',

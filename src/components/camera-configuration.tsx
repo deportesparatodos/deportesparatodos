@@ -29,6 +29,7 @@ interface EventGrouping {
     deportesDeCombate: boolean;
     liga1: boolean;
     ligaPro: boolean;
+    mls: boolean;
 }
 
 interface CameraConfigurationProps {
@@ -96,7 +97,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setEventGrouping?.(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
     setEventGrouping?.(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -407,6 +408,16 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                   id="group-ligapro-switch-view"
                                   checked={eventGrouping.ligaPro}
                                   onCheckedChange={(checked) => handleIndividualGroupingChange('ligaPro', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                           <Separator/>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-mls-switch-view" className="text-base">Agrupar MLS</Label>
+                                <Switch
+                                  id="group-mls-switch-view"
+                                  checked={eventGrouping.mls}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('mls', checked)}
                                   disabled={!eventGrouping.all}
                                 />
                               </div>
