@@ -73,11 +73,17 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     event.title.toLowerCase().includes('f1') || event.title.toLowerCase().includes('formula 1')
   );
 
+  const mlbEvents = allFilteredEvents.filter(event => 
+    event.title.toLowerCase().includes('mlb') && !f1Events.includes(event)
+  );
+
   const otherEvents = allFilteredEvents.filter(event => 
-    !f1Events.includes(event)
+    !f1Events.includes(event) && !mlbEvents.includes(event)
   );
   
   const isF1Live = f1Events.some(e => e.status === 'En Vivo');
+  const isMlbLive = mlbEvents.some(e => e.status === 'En Vivo');
+
 
   const renderEventCard = (event: Event, eventIndex: number) => {
     const imageSrc = event.title.toLowerCase().includes('mlb')
@@ -172,6 +178,10 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     );
   }
 
+  const accordionDefaultValues = [];
+  if (isF1Live) accordionDefaultValues.push('f1-events');
+  if (isMlbLive) accordionDefaultValues.push('mlb-events');
+
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
       <div className="px-6 flex-shrink-0 pb-5">
@@ -214,8 +224,8 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
         <TooltipProvider delayDuration={300}>
           {allFilteredEvents.length > 0 ? (
             <div className="space-y-4">
-              {f1Events.length > 0 && (
-                 <Accordion type="single" collapsible className="w-full" defaultValue='f1-events'>
+              <Accordion type="multiple" className="w-full space-y-4" defaultValue={accordionDefaultValues}>
+                 {f1Events.length > 0 && (
                     <AccordionItem value="f1-events" className="border-b-0">
                         <Card className="bg-muted/50 overflow-hidden">
                             <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
@@ -251,8 +261,45 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                             </AccordionContent>
                         </Card>
                     </AccordionItem>
-                </Accordion>
-              )}
+                 )}
+                 {mlbEvents.length > 0 && (
+                    <AccordionItem value="mlb-events" className="border-b-0">
+                        <Card className="bg-muted/50 overflow-hidden">
+                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex w-full items-center">
+                                    <div className="w-20 flex-shrink-0">
+                                        <div className="flex flex-col items-center gap-1 text-center">
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mlbEvents[0].time}</p>
+                                            <span className="text-xs font-mono text-muted-foreground">-</span>
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{mlbEvents[mlbEvents.length - 1].time}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                        {isMlbLive && (
+                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                        )}
+                                        <Image
+                                            src="https://p.alangulotv.live/mlb"
+                                            alt="MLB Logo"
+                                            width={60}
+                                            height={34}
+                                            className="object-contain"
+                                            data-ai-hint="mlb logo"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="w-20 flex-shrink-0" />
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="space-y-4 p-4">
+                                    {mlbEvents.map(renderEventCard)}
+                                </div>
+                            </AccordionContent>
+                        </Card>
+                    </AccordionItem>
+                 )}
+              </Accordion>
               {otherEvents.map(renderEventCard)}
             </div>
           ) : (
