@@ -182,10 +182,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     );
   }
 
-  const accordionDefaultValues = [];
-  if (isF1Live) accordionDefaultValues.push('f1-events');
-  if (isMlbLive) accordionDefaultValues.push('mlb-events');
-  if (isMundialDeClubesLive) accordionDefaultValues.push('mundial-de-clubes-events');
+  const accordionDefaultValues: string[] = [];
 
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
@@ -321,7 +318,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                             <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
                                         )}
                                         <Image
-                                            src="https://upload.wikimedia.org/wikipedia/en/thumb/7/77/FIFA_Club_World_Cup_logo.svg/250px-FIFA_Club_World_Cup_logo.svg.png"
+                                            src={mundialDeClubesEvents[0].image || "https://upload.wikimedia.org/wikipedia/en/thumb/7/77/FIFA_Club_World_Cup_logo.svg/250px-FIFA_Club_World_Cup_logo.svg.png"}
                                             alt="Mundial de Clubes Logo"
                                             width={50}
                                             height={50}
