@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { FC } from 'react';
@@ -412,84 +411,97 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       <div className="flex-grow overflow-y-auto">
         <TooltipProvider delayDuration={300}>
           {allFilteredEvents.length > 0 || eventGroups.length > 0 ? (
-            <div className="space-y-4 pt-[6px]">
-              <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
-                {eventGroups.map((group) => (
-                  <AccordionItem value={`${group.id}-events`} className="border-b-0" key={group.id}>
-                    <Card className="bg-muted/50 overflow-hidden">
-                      <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                          <div className="flex w-full items-center">
-                              <div className="w-20 flex-shrink-0">
-                                  {group.startTime && (
-                                    <div className="flex flex-col items-center justify-center gap-1 text-center">
-                                      {(() => {
-                                          const allTimes = group.events.map(e => e.time);
-                                          const uniqueTimes = [...new Set(allTimes)];
-                                          
-                                          if (uniqueTimes.length === 1) {
-                                              return (
-                                                  <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
-                                                      {uniqueTimes[0]}
-                                                  </p>
-                                              );
-                                          }
-                                          const startTime = group.events[0].time;
-                                          const endTime = group.events[group.events.length - 1].time;
+            <div className="space-y-4">
+              {eventGroups.length > 0 && (
+                <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4 mt-[18px]">
+                  {eventGroups.map((group) => (
+                    <AccordionItem value={`${group.id}-events`} className="border-b-0" key={group.id}>
+                      <Card className="bg-muted/50 overflow-hidden">
+                        <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                            <div className="flex w-full items-center">
+                                <div className="w-20 flex-shrink-0">
+                                    {group.startTime && (
+                                      <div className="flex flex-col items-center justify-center gap-1 text-center">
+                                        {(() => {
+                                            const allTimes = group.events.map(e => e.time);
+                                            const uniqueTimes = [...new Set(allTimes)];
+                                            
+                                            if (uniqueTimes.length === 1) {
+                                                return (
+                                                    <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                        {uniqueTimes[0]}
+                                                    </p>
+                                                );
+                                            }
+                                            const startTime = group.events[0].time;
+                                            const endTime = group.events[group.events.length - 1].time;
 
-                                          return (
-                                              <>
-                                                  <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
-                                                      {startTime}
-                                                  </p>
-                                                  <span className="text-xs font-mono text-muted-foreground">-</span>
-                                                  <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
-                                                      {endTime}
-                                                  </p>
-                                              </>
-                                          );
-                                      })()}
-                                    </div>
-                                  )}
-                              </div>
-                              <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                  {group.logo ? (
-                                    <>
-                                      {group.isLive && (
-                                          <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                      )}
-                                      <Image
-                                          src={group.logo}
-                                          alt={`${group.name} Logo`}
-                                          width={group.logoProps.width}
-                                          height={group.logoProps.height}
-                                          className={group.logoProps.className}
-                                          data-ai-hint={`${group.id} logo`}
-                                          unoptimized
-                                      />
-                                      <p className="font-semibold text-sm text-foreground mt-1">{group.name}</p>
-                                    </>
-                                  ) : (
-                                    <>
-                                       <p className="font-semibold text-lg text-foreground">{group.name}</p>
+                                            return (
+                                                <>
+                                                    <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                        {startTime}
+                                                    </p>
+                                                    <span className="text-xs font-mono text-muted-foreground">-</span>
+                                                    <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                        {endTime}
+                                                    </p>
+                                                </>
+                                            );
+                                        })()}
+                                      </div>
+                                    )}
+                                </div>
+                                <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                    {group.logo ? (
+                                      <>
                                         {group.isLive && (
-                                          <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">EN VIVO</Badge>
+                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
                                         )}
-                                    </>
-                                  )}
-                              </div>
-                              <div className="w-20 flex-shrink-0" />
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="p-0">
-                          <div className="space-y-4 p-4">
-                              {group.events.map(renderEventCard)}
-                          </div>
-                      </AccordionContent>
-                    </Card>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-              {ungroupedEvents.map((event, index) => renderEventCard(event, index))}
+                                        <Image
+                                            src={group.logo}
+                                            alt={`${group.name} Logo`}
+                                            width={group.logoProps.width}
+                                            height={group.logoProps.height}
+                                            className={group.logoProps.className}
+                                            data-ai-hint={`${group.id} logo`}
+                                            unoptimized
+                                        />
+                                        <p className="font-semibold text-sm text-foreground mt-1">{group.name}</p>
+                                      </>
+                                    ) : (
+                                      <>
+                                         <p className="font-semibold text-lg text-foreground">{group.name}</p>
+                                          {group.isLive && (
+                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">EN VIVO</Badge>
+                                          )}
+                                      </>
+                                    )}
+                                </div>
+                                <div className="w-20 flex-shrink-0" />
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="p-0">
+                            <div className="space-y-4 p-4">
+                                {group.events.map(renderEventCard)}
+                            </div>
+                        </AccordionContent>
+                      </Card>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+              {ungroupedEvents.map((event, index) => {
+                  const isFirstElementInList = eventGroups.length === 0 && index === 0;
+                  const card = renderEventCard(event, index);
+                  if (isFirstElementInList) {
+                    return (
+                      <div key={card.key} className="mt-[18px]">
+                        {card}
+                      </div>
+                    );
+                  }
+                  return card;
+              })}
             </div>
           ) : (
              <div className="flex items-center justify-center h-full">
