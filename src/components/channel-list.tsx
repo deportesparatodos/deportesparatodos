@@ -374,13 +374,12 @@ interface ChannelListProps {
   channelStatuses: Record<string, 'online' | 'offline'>;
   isLoading: boolean;
   onSelectChannel?: (url: string) => void;
+  searchTerm: string;
 }
 
-export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, isLoading, onSelectChannel }) => {
+export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, isLoading, onSelectChannel, searchTerm }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
-  const [searchTerm, setSearchTerm] = useState<string>('');
   const [pasteError, setPasteError] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const isSelectMode = !!onSelectChannel;
 
   const handlePaste = async () => {
@@ -441,30 +440,7 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
 
   return (
     <div className="flex flex-col h-full w-full bg-card text-card-foreground">
-      <div className="px-4 flex-shrink-0 border-b border-border pb-5">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Buscar canal..."
-            className="h-9 w-full pl-10 pr-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-              onClick={() => setSearchTerm('')}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-      <div className="overflow-y-auto flex-grow p-4">
+      <div className="overflow-y-auto flex-grow">
         {filteredChannels.length > 0 ? (
           <ul className="space-y-3">
             {filteredChannels.map((channel) => {

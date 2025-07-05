@@ -57,11 +57,11 @@ interface EventListComponentProps {
   error: string | null;
   onRefresh?: () => void;
   eventGrouping: EventGrouping;
+  searchTerm: string;
 }
 
-export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, onRefresh, eventGrouping }) => {
+export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, onRefresh, eventGrouping, searchTerm }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
-  const [searchTerm, setSearchTerm] = useState('');
   const isSelectMode = !!onSelectEvent;
 
   const handleAction = async (url: string) => {
@@ -410,46 +410,24 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
-      <div className="px-6 flex-shrink-0 pb-5">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Buscar evento por título..."
-              className="h-9 w-full pl-10 pr-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                onClick={() => setSearchTerm('')}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-          {onRefresh && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 flex-shrink-0"
-              onClick={onRefresh}
-              disabled={isLoading}
-            >
-              <span className="sr-only">Actualizar eventos</span>
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" />}
-            </Button>
-          )}
-        </div>
-        <p className="text-center text-xs text-muted-foreground mt-2">
+      <div className="flex-shrink-0 pb-4 flex justify-between items-center">
+        <p className="text-xs text-muted-foreground pr-4">
             Puede desactivar la agrupación de eventos en el menú de configuración.
         </p>
+        {onRefresh && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 flex-shrink-0"
+            onClick={onRefresh}
+            disabled={isLoading}
+          >
+            <span className="sr-only">Actualizar eventos</span>
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" />}
+          </Button>
+        )}
       </div>
-      <div className="flex-grow px-4 pb-4 overflow-y-auto">
+      <div className="flex-grow overflow-y-auto">
         <TooltipProvider delayDuration={300}>
           {allFilteredEvents.length > 0 || eventGroups.length > 0 ? (
             <div className="space-y-4">
@@ -543,4 +521,3 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     </div>
   );
 };
-

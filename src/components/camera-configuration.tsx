@@ -4,7 +4,7 @@
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw, Search } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -96,6 +96,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setEventGrouping,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleMasterGroupingChange = (checked: boolean) => {
     setEventGrouping?.(prev => ({ ...prev, all: checked }));
@@ -117,11 +118,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return { text: eventUrlMatch.button.toUpperCase(), status: 'valid' };
     }
 
-    if (url.includes('ksdjugfsddeports.fun')) {
+    if (url.includes('streamtps.com')) {
       const getStreamNameFromUrl = (u: string): string | null => {
         try {
             const urlObject = new URL(u);
-            if (urlObject.hostname.includes('ksdjugfsddeports.fun')) {
+            if (urlObject.hostname.includes('streamtps.com')) {
                 const pathParts = urlObject.pathname.split('/');
                 const htmlFile = pathParts[pathParts.length - 1];
                 if (htmlFile && htmlFile.endsWith('.html')) {
@@ -253,15 +254,15 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg flex flex-col p-0 max-h-[90vh]">
-                <DialogHeader className="p-4 border-b">
-                  <DialogTitle>Configuración:</DialogTitle>
+                <DialogHeader className="p-4 border-b shrink-0">
+                    <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
-                <div className="overflow-y-auto p-4">
+                <div className="overflow-y-auto p-4 flex-grow">
                   <Accordion type="multiple" collapsible className="w-full space-y-4" defaultValue={[]}>
                     <AccordionItem value="item-1" className="border rounded-md px-1">
                       <AccordionTrigger className="px-4 py-3">Bordes</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4 px-4">
+                        <div className="space-y-6 pt-4 px-4 pb-2">
                           <div className="space-y-2">
                               <Label htmlFor="grid-gap-slider-view">Tamaño de Bordes ({gridGap}px)</Label>
                               <Slider
@@ -313,7 +314,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       <AccordionItem value="item-2" className="border rounded-md px-1">
                         <AccordionTrigger className="px-4 py-3">Chat</AccordionTrigger>
                         <AccordionContent>
-                          <div className="space-y-6 pt-4 px-4">
+                          <div className="space-y-6 pt-4 px-4 pb-2">
                             <div className="flex items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
                                 <Label htmlFor="chat-switch-view" className="text-base">Activar Chat en Vivo</Label>
@@ -334,7 +335,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <AccordionItem value="item-3" className="border-b-0 border rounded-md px-1">
                       <AccordionTrigger className="px-4 py-3">Eventos</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4 px-4">
+                        <div className="space-y-6 pt-4 px-4 pb-2">
                           <div className="flex items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
                               <Label htmlFor="group-all-switch-view" className="text-base">Agrupar todos los eventos</Label>
@@ -496,7 +497,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <ArrowUp className="h-4 w-4" />
                 </Button>
                 
-                <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => setDialogOpenForIndex(isOpen ? index : null)}>
+                <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => {
+                  setDialogOpenForIndex(isOpen ? index : null);
+                  if (!isOpen) setSearchTerm('');
+                }}>
                   <DialogTrigger asChild>
                     <Button
                       type="button"
@@ -532,22 +536,45 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                      <DialogHeader className="p-5 pb-0">
+                      <DialogHeader className="p-5 pb-3">
                           <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
                       </DialogHeader>
-                      <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-2">
+                      <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-5 pt-0">
                           <TabsList className="grid w-full grid-cols-2">
                               <TabsTrigger value="channels">Canales</TabsTrigger>
                               <TabsTrigger value="events">Eventos</TabsTrigger>
                           </TabsList>
-                          <TabsContent value="channels" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                          
+                          <div className="relative mt-4">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                              type="text"
+                              placeholder="Buscar..."
+                              className="h-9 w-full pl-10 pr-8"
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                                onClick={() => setSearchTerm('')}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+
+                          <TabsContent value="channels" className="flex-grow overflow-hidden mt-4 data-[state=inactive]:hidden">
                               <ChannelListComponent 
                                   channelStatuses={channelStatuses}
                                   isLoading={isLoadingChannelStatuses || false}
                                   onSelectChannel={handleSelectChannel}
+                                  searchTerm={searchTerm}
                               />
                           </TabsContent>
-                          <TabsContent value="events" className="flex-grow overflow-hidden mt-0 data-[state=inactive]:hidden pt-5">
+                          <TabsContent value="events" className="flex-grow overflow-hidden mt-4 data-[state=inactive]:hidden">
                               <EventListComponent 
                                 onSelectEvent={handleSelectChannel}
                                 events={events}
@@ -555,6 +582,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                 error={eventsError}
                                 onRefresh={onRefreshEvents}
                                 eventGrouping={eventGrouping}
+                                searchTerm={searchTerm}
                               />
                           </TabsContent>
                       </Tabs>
