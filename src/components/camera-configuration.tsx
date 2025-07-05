@@ -16,8 +16,16 @@ import { Label } from './ui/label';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 import { Switch } from './ui/switch';
+import { Separator } from './ui/separator';
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
+
+interface EventGrouping {
+    all: boolean;
+    f1: boolean;
+    mlb: boolean;
+    mundialDeClubes: boolean;
+}
 
 interface CameraConfigurationProps {
   numCameras: number;
@@ -45,6 +53,8 @@ interface CameraConfigurationProps {
   hideBorderConfigButton?: boolean;
   isChatEnabled?: boolean;
   setIsChatEnabled?: (enabled: boolean) => void;
+  eventGrouping: EventGrouping;
+  setEventGrouping?: Dispatch<SetStateAction<EventGrouping>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -73,21 +83,29 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   hideBorderConfigButton = false,
   isChatEnabled,
   setIsChatEnabled,
+  eventGrouping,
+  setEventGrouping,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
+
+  const handleMasterGroupingChange = (checked: boolean) => {
+    setEventGrouping?.(prev => ({ ...prev, all: checked }));
+  };
+
+  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'mundialDeClubes', checked: boolean) => {
+    setEventGrouping?.(prev => ({ ...prev, [key]: checked }));
+  };
 
   const getDisplayStatus = (url: string): { text: string; status: CameraStatus } => {
     if (!url || url.trim() === '') {
         return { text: "Elegir Canal…", status: 'empty' };
     }
     
-    if (events && events.length > 0) {
-      for (const event of events) {
-        const optionIndex = event.options.indexOf(url);
-        if (optionIndex > -1 && event.buttons[optionIndex]) {
-          return { text: event.buttons[optionIndex].toUpperCase(), status: 'valid' };
-        }
-      }
+    const eventUrlMatch = events.flatMap(e => e.options.map((optionUrl, i) => ({ ...e, optionUrl, button: e.buttons[i] })))
+                                .find(item => item.optionUrl === url);
+
+    if (eventUrlMatch) {
+      return { text: eventUrlMatch.button.toUpperCase(), status: 'valid' };
     }
 
     if (url.includes('ksdjugfsddeports.fun')) {
@@ -217,7 +235,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   return (
     <>
       <form onSubmit={handleFormSubmit} className="w-full space-y-4">
-            {!hideBorderConfigButton && (
+            {!hideBorderConfigButton && setEventGrouping && (
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full justify-start">
@@ -235,9 +253,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <AccordionContent>
                       <div className="space-y-6 pt-4">
                         <div className="space-y-2">
-                            <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
+                            <Label htmlFor="grid-gap-slider-view">Tamaño de Bordes ({gridGap}px)</Label>
                             <Slider
-                                id="grid-gap-slider"
+                                id="grid-gap-slider-view"
                                 min={0}
                                 max={32}
                                 step={1}
@@ -247,10 +265,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="border-color-input">Color de Bordes</Label>
+                            <Label htmlFor="border-color-input-view">Color de Bordes</Label>
                             <div className="flex items-center gap-2">
                                 <Input
-                                    id="border-color-input"
+                                    id="border-color-input-view"
                                     value={borderColor}
                                     onChange={(e) => handleBorderColorChange(e.target.value)}
                                     className="flex-grow"
@@ -303,6 +321,55 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </AccordionContent>
                     </AccordionItem>
                   )}
+                  <AccordionItem value="item-3">
+                    <AccordionTrigger>Eventos</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-6 pt-4">
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="group-all-switch-view" className="text-base">Agrupar todos los eventos</Label>
+                            <p className="text-sm text-muted-foreground">Activa o desactiva todas las agrupaciones.</p>
+                          </div>
+                          <Switch
+                            id="group-all-switch-view"
+                            checked={eventGrouping.all}
+                            onCheckedChange={handleMasterGroupingChange}
+                          />
+                        </div>
+                        <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="group-f1-switch-view" className="text-base">Agrupar F1</Label>
+                            <Switch
+                              id="group-f1-switch-view"
+                              checked={eventGrouping.f1}
+                              onCheckedChange={(checked) => handleIndividualGroupingChange('f1', checked)}
+                              disabled={!eventGrouping.all}
+                            />
+                          </div>
+                          <Separator/>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="group-mlb-switch-view" className="text-base">Agrupar MLB</Label>
+                            <Switch
+                              id="group-mlb-switch-view"
+                              checked={eventGrouping.mlb}
+                              onCheckedChange={(checked) => handleIndividualGroupingChange('mlb', checked)}
+                              disabled={!eventGrouping.all}
+                            />
+                          </div>
+                          <Separator/>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="group-mundial-switch-view" className="text-base">Agrupar Mundial de Clubes</Label>
+                            <Switch
+                              id="group-mundial-switch-view"
+                              checked={eventGrouping.mundialDeClubes}
+                              onCheckedChange={(checked) => handleIndividualGroupingChange('mundialDeClubes', checked)}
+                              disabled={!eventGrouping.all}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 </Accordion>
                 <DialogFooter className="pt-4">
                   <Button variant="outline" onClick={handleRestoreDefaults}>
@@ -403,6 +470,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                 isLoading={isLoadingEvents}
                                 error={eventsError}
                                 onRefresh={onRefreshEvents}
+                                eventGrouping={eventGrouping}
                               />
                           </TabsContent>
                       </Tabs>

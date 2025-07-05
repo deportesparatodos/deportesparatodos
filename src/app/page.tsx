@@ -51,6 +51,12 @@ export default function HomePage() {
   const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [currentTutorialSlide, setCurrentTutorialSlide] = useState(0);
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  const [eventGrouping, setEventGrouping] = useState({
+    all: true,
+    f1: true,
+    mlb: true,
+    mundialDeClubes: true,
+  });
 
 
   const topBarColorClass = useMemo(() => {
@@ -195,6 +201,18 @@ export default function HomePage() {
     } else {
       setIsChatEnabled(true);
     }
+     const storedEventGrouping = localStorage.getItem('eventGrouping');
+    if (storedEventGrouping) {
+      try {
+        const parsed = JSON.parse(storedEventGrouping);
+        // Basic validation to ensure it has the expected shape
+        if (typeof parsed === 'object' && parsed !== null && 'all' in parsed) {
+          setEventGrouping(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to parse eventGrouping from localStorage", e);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -204,8 +222,9 @@ export default function HomePage() {
       localStorage.setItem('gridGap', gridGap.toString());
       localStorage.setItem('borderColor', borderColor);
       localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
+      localStorage.setItem('eventGrouping', JSON.stringify(eventGrouping));
     }
-  }, [cameraUrls, numCameras, gridGap, borderColor, isChatEnabled, isMounted]);
+  }, [cameraUrls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, isMounted]);
 
 
   const handleGridGapChange = (value: number[]) => {
@@ -223,6 +242,15 @@ export default function HomePage() {
     setGridGap(defaultGap);
     setBorderColor(defaultColor);
   };
+
+  const handleMasterGroupingChange = (checked: boolean) => {
+    setEventGrouping(prev => ({ ...prev, all: checked }));
+  };
+
+  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'mundialDeClubes', checked: boolean) => {
+    setEventGrouping(prev => ({ ...prev, [key]: checked }));
+  };
+
 
   const nextTutorialSlide = () => {
     setCurrentTutorialSlide((prev) => (prev === TUTORIAL_IMAGES.length - 1 ? 0 : prev + 1));
@@ -411,6 +439,55 @@ export default function HomePage() {
                         </div>
                       </AccordionContent>
                     </AccordionItem>
+                     <AccordionItem value="item-3">
+                        <AccordionTrigger>Eventos</AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-6 pt-4">
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <Label htmlFor="group-all-switch" className="text-base">Agrupar todos los eventos</Label>
+                                <p className="text-sm text-muted-foreground">Activa o desactiva todas las agrupaciones.</p>
+                              </div>
+                              <Switch
+                                id="group-all-switch"
+                                checked={eventGrouping.all}
+                                onCheckedChange={handleMasterGroupingChange}
+                              />
+                            </div>
+                            <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-f1-switch" className="text-base">Agrupar F1</Label>
+                                <Switch
+                                  id="group-f1-switch"
+                                  checked={eventGrouping.f1}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('f1', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                              <Separator/>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-mlb-switch" className="text-base">Agrupar MLB</Label>
+                                <Switch
+                                  id="group-mlb-switch"
+                                  checked={eventGrouping.mlb}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('mlb', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                               <Separator/>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-mundial-switch" className="text-base">Agrupar Mundial de Clubes</Label>
+                                <Switch
+                                  id="group-mundial-switch"
+                                  checked={eventGrouping.mundialDeClubes}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('mundialDeClubes', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
                   </Accordion>
                   <DialogFooter className="pt-4">
                     <Button variant="outline" onClick={handleRestoreDefaults}>
@@ -687,6 +764,7 @@ export default function HomePage() {
                   handleBorderColorChange={handleBorderColorChange}
                   handleRestoreDefaults={handleRestoreDefaults}
                   hideBorderConfigButton={true}
+                  eventGrouping={eventGrouping}
                 />
               </div>
           </div>

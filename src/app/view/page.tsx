@@ -56,6 +56,12 @@ function ViewPageContent() {
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobile = useIsMobile();
+  const [eventGrouping, setEventGrouping] = useState({
+    all: true,
+    f1: true,
+    mlb: true,
+    mundialDeClubes: true,
+  });
 
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -95,6 +101,17 @@ function ViewPageContent() {
     if (storedChatEnabled) {
       setIsChatEnabled(JSON.parse(storedChatEnabled));
     }
+    const storedEventGrouping = localStorage.getItem('eventGrouping');
+    if (storedEventGrouping) {
+      try {
+        const parsed = JSON.parse(storedEventGrouping);
+        if (typeof parsed === 'object' && parsed !== null && 'all' in parsed) {
+          setEventGrouping(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to parse eventGrouping from localStorage", e);
+      }
+    }
   }, []);
 
   // Save to localStorage on change
@@ -105,8 +122,9 @@ function ViewPageContent() {
       localStorage.setItem('gridGap', gridGap.toString());
       localStorage.setItem('borderColor', borderColor);
       localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
+      localStorage.setItem('eventGrouping', JSON.stringify(eventGrouping));
     }
-  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, isMounted]);
+  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, isMounted]);
 
   const handleGridGapChange = (value: number[]) => {
     const newGap = value[0];
@@ -323,6 +341,8 @@ function ViewPageContent() {
                             handleRestoreDefaults={handleRestoreDefaults}
                             isChatEnabled={isChatEnabled}
                             setIsChatEnabled={setIsChatEnabled}
+                            eventGrouping={eventGrouping}
+                            setEventGrouping={setEventGrouping}
                       />
                     )}
                  </div>

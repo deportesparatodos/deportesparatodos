@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { FC } from 'react';
@@ -31,6 +32,13 @@ export interface Event {
   status: 'Próximo' | 'En Vivo' | 'Finalizado';
 }
 
+interface EventGrouping {
+    all: boolean;
+    f1: boolean;
+    mlb: boolean;
+    mundialDeClubes: boolean;
+}
+
 interface CopiedStates {
   [key: string]: boolean;
 }
@@ -41,9 +49,10 @@ interface EventListComponentProps {
   isLoading: boolean;
   error: string | null;
   onRefresh?: () => void;
+  eventGrouping: EventGrouping;
 }
 
-export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, onRefresh }) => {
+export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, onRefresh, eventGrouping }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [searchTerm, setSearchTerm] = useState('');
   const isSelectMode = !!onSelectEvent;
@@ -64,21 +73,23 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     }
   };
   
+  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial } = eventGrouping;
+
   const allFilteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const f1Events = allFilteredEvents.filter(event => 
+  
+  const f1Events = groupAll && groupF1 ? allFilteredEvents.filter(event => 
     event.title.toLowerCase().includes('f1') || event.title.toLowerCase().includes('formula 1')
-  );
+  ) : [];
 
-  const mlbEvents = allFilteredEvents.filter(event => 
+  const mlbEvents = groupAll && groupMlb ? allFilteredEvents.filter(event => 
     event.title.toLowerCase().includes('mlb') && !f1Events.includes(event)
-  );
+  ) : [];
 
-  const mundialDeClubesEvents = allFilteredEvents.filter(event =>
+  const mundialDeClubesEvents = groupAll && groupMundial ? allFilteredEvents.filter(event =>
     event.title.toLowerCase().includes('mundial de clubes') && !f1Events.includes(event) && !mlbEvents.includes(event)
-  );
+  ) : [];
 
   const otherEvents = allFilteredEvents.filter(event => 
     !f1Events.includes(event) && !mlbEvents.includes(event) && !mundialDeClubesEvents.includes(event)
@@ -90,9 +101,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
 
   const renderEventCard = (event: Event, eventIndex: number) => {
-    const imageSrc = event.title.toLowerCase().includes('mlb')
-      ? 'https://p.alangulotv.live/mlb'
-      : event.image;
+    const imageSrc = event.image;
 
     return (
       <Card key={`${event.title}-${eventIndex}`} className="bg-muted/50 overflow-hidden">
@@ -182,8 +191,6 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     );
   }
 
-  const accordionDefaultValues: string[] = [];
-
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
       <div className="px-6 flex-shrink-0 pb-5">
@@ -226,7 +233,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
         <TooltipProvider delayDuration={300}>
           {allFilteredEvents.length > 0 ? (
             <div className="space-y-4">
-              <Accordion type="multiple" className="w-full space-y-4" defaultValue={accordionDefaultValues}>
+              <Accordion type="multiple" className="w-full space-y-4">
                  {f1Events.length > 0 && (
                     <AccordionItem value="f1-events" className="border-b-0">
                         <Card className="bg-muted/50 overflow-hidden">
