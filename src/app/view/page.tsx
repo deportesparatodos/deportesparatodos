@@ -324,9 +324,9 @@ function ViewPageContent() {
               </SheetTrigger>
               <SheetContent side="left" className="w-full sm:w-96 flex flex-col p-0">
                  <SheetHeader className="p-4 border-b">
-                   <SheetTitle>Configuración de Vista</SheetTitle>
+                   <SheetTitle>Configuracion</SheetTitle>
                  </SheetHeader>
-                 <div className="flex-grow overflow-y-auto p-4">
+                 <div className="overflow-y-auto p-4">
                     {isLoadingEvents || isLoadingStatuses ? (
                       <div className="flex items-center justify-center h-full">
                           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -472,4 +472,3 @@ export default function Page() {
     </Suspense>
   );
 }
-

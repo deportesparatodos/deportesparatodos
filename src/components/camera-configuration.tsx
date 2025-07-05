@@ -250,13 +250,13 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   Configuración
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg flex flex-col p-0 h-[80vh] max-h-[700px]">
+              <DialogContent className="max-w-lg flex flex-col p-0 max-h-[90vh]">
                 <DialogHeader className="p-4 border-b">
                   <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
-                <div className="flex-grow overflow-y-auto p-4">
-                  <Accordion type="multiple" collapsible className="w-full" defaultValue={[]}>
-                    <AccordionItem value="item-1">
+                <div className="overflow-y-auto p-4">
+                  <Accordion type="multiple" collapsible className="w-full space-y-4" defaultValue={[]}>
+                    <AccordionItem value="item-1" className="border rounded-md px-1">
                       <AccordionTrigger className="px-4 py-3">Bordes</AccordionTrigger>
                       <AccordionContent>
                         <div className="space-y-6 pt-4 px-4">
@@ -308,7 +308,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </AccordionContent>
                     </AccordionItem>
                     {isChatEnabled !== undefined && setIsChatEnabled && (
-                      <AccordionItem value="item-2">
+                      <AccordionItem value="item-2" className="border rounded-md px-1">
                         <AccordionTrigger className="px-4 py-3">Chat</AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-6 pt-4 px-4">
@@ -329,7 +329,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         </AccordionContent>
                       </AccordionItem>
                     )}
-                    <AccordionItem value="item-3" className="border-b-0">
+                    <AccordionItem value="item-3" className="border-b-0 border rounded-md px-1">
                       <AccordionTrigger className="px-4 py-3">Eventos</AccordionTrigger>
                       <AccordionContent>
                         <div className="space-y-6 pt-4 px-4">
@@ -453,7 +453,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     </AccordionItem>
                   </Accordion>
                 </div>
-                <DialogFooter className="p-4 border-t">
+                <DialogFooter className="p-4 border-t shrink-0">
                   <Button variant="outline" onClick={handleRestoreDefaults}>
                       Restaurar
                   </Button>
