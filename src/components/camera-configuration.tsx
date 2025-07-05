@@ -250,11 +250,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   Configuración
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg flex flex-col p-0">
+              <DialogContent className="max-w-lg flex flex-col p-0 h-[80vh] max-h-[700px]">
                 <DialogHeader className="p-4 border-b">
                   <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
-                <div className="flex-grow overflow-y-auto">
+                <div className="flex-grow overflow-y-auto p-4">
                   <Accordion type="multiple" collapsible className="w-full" defaultValue={[]}>
                     <AccordionItem value="item-1">
                       <AccordionTrigger className="px-4 py-3">Bordes</AccordionTrigger>
@@ -603,5 +603,3 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </>
   );
 };
-
-

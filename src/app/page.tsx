@@ -349,16 +349,16 @@ export default function HomePage() {
                   Configuración
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg flex flex-col p-0">
-                <DialogHeader className="p-4 border-b">
+              <DialogContent className="max-w-lg flex flex-col p-0 h-[80vh] max-h-[700px]">
+                <DialogHeader className="p-4 py-3 border-b">
                   <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
-                <div className="flex-grow overflow-y-auto">
-                  <Accordion type="multiple" collapsible className="w-full" defaultValue={[]}>
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger className="px-4 py-3">Bordes</AccordionTrigger>
+                <div className="flex-grow overflow-y-auto p-4">
+                  <Accordion type="multiple" collapsible className="w-full">
+                    <AccordionItem value="item-1" className="border rounded-md px-1">
+                      <AccordionTrigger className="p-3 hover:no-underline">Bordes</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4 px-4">
+                        <div className="space-y-6 pt-2 px-3 pb-3">
                           <div className="space-y-2">
                               <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
                               <Slider
@@ -406,10 +406,10 @@ export default function HomePage() {
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                    <AccordionItem value="item-2">
-                      <AccordionTrigger className="px-4 py-3">Chat</AccordionTrigger>
+                    <AccordionItem value="item-2" className="border rounded-md px-1 mt-4">
+                      <AccordionTrigger className="p-3 hover:no-underline">Chat</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4 px-4">
+                        <div className="space-y-6 pt-2 px-3 pb-3">
                           <div className="flex items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
                               <Label htmlFor="chat-switch" className="text-base">Activar Chat en Vivo</Label>
@@ -426,10 +426,10 @@ export default function HomePage() {
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                    <AccordionItem value="item-3" className="border-b-0">
-                        <AccordionTrigger className="px-4 py-3">Eventos</AccordionTrigger>
+                    <AccordionItem value="item-3" className="border-b-0 border rounded-md px-1 mt-4">
+                        <AccordionTrigger className="p-3 hover:no-underline">Eventos</AccordionTrigger>
                         <AccordionContent>
-                          <div className="space-y-6 pt-4 px-4">
+                          <div className="space-y-6 pt-2 px-3 pb-3">
                             <div className="flex items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
                                 <Label htmlFor="group-all-switch" className="text-base">Agrupar todos los eventos</Label>
@@ -443,7 +443,7 @@ export default function HomePage() {
                             </div>
 
                             <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
-                              <div className="flex items-center justify-between">
+                               <div className="flex items-center justify-between">
                                 <Label htmlFor="group-enVivo-switch" className="text-base">Agrupar "En Vivo"</Label>
                                 <Switch
                                   id="group-enVivo-switch"
@@ -463,7 +463,7 @@ export default function HomePage() {
                                 />
                               </div>
                             </div>
-
+                            
                             <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
                               <div className="flex items-center justify-between">
                                 <Label htmlFor="group-f1-switch" className="text-base">Agrupar F1</Label>
@@ -846,8 +846,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
-
-    
-
