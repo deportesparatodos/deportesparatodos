@@ -123,38 +123,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return { text: channelUrlMatch.name.toUpperCase(), status: 'valid' };
     }
 
-    const getStreamNameFromUrl = (u: string): string | null => {
-        try {
-            const urlObject = new URL(u);
-            if (urlObject.hostname.includes('streamtpglobal.com')) {
-                return urlObject.searchParams.get('stream');
-            }
-        } catch (e) {
-            let match = u.match(/[?&]stream=([^&]+)/);
-            if (match && match[1]) return match[1];
-        }
-        return null;
-    };
-
-    const streamName = getStreamNameFromUrl(url);
-
-    if (streamName && channelStatuses && channelStatuses[streamName] === 'offline') {
-        return { text: `CANAL INACTIVO (${streamName.toUpperCase()})`, status: 'inactive' };
-    }
-
-    const foundChannel = channels.find(channel => channel.url === url);
-    if (foundChannel) {
-        return { text: foundChannel.name.toUpperCase(), status: 'valid' };
-    }
-
-    if (streamName) {
-        return { text: streamName.toUpperCase(), status: 'valid' };
-    }
-
-    if (url.includes('youtube.com/embed/')) {
-        return { text: "YOUTUBE", status: 'valid' };
-    }
-
     if (url) {
         return { text: "Canal del Usuario", status: 'valid' };
     }
@@ -241,9 +209,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 <div className="overflow-y-auto p-4 flex-grow">
                   <Accordion type="multiple" collapsible className="w-full space-y-4" defaultValue={[]}>
                     <AccordionItem value="item-1" className="border rounded-md px-1">
-                      <AccordionTrigger className="px-4 py-3">Bordes</AccordionTrigger>
+                      <AccordionTrigger className="p-3 hover:no-underline">Bordes</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4 px-4 pb-2">
+                        <div className="space-y-6 pt-2 px-3 pb-3">
                           <div className="space-y-2">
                               <Label htmlFor="grid-gap-slider-view">Tamaño de Bordes ({gridGap}px)</Label>
                               <Slider
@@ -293,9 +261,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     </AccordionItem>
                     {isChatEnabled !== undefined && setIsChatEnabled && (
                       <AccordionItem value="item-2" className="border rounded-md px-1">
-                        <AccordionTrigger className="px-4 py-3">Chat</AccordionTrigger>
+                        <AccordionTrigger className="p-3 hover:no-underline">Chat</AccordionTrigger>
                         <AccordionContent>
-                          <div className="space-y-6 pt-4 px-4 pb-2">
+                          <div className="space-y-6 pt-2 px-3 pb-3">
                             <div className="flex items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
                                 <Label htmlFor="chat-switch-view" className="text-base">Activar Chat en Vivo</Label>
@@ -314,9 +282,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </AccordionItem>
                     )}
                     <AccordionItem value="item-3" className="border-b-0 border rounded-md px-1">
-                      <AccordionTrigger className="px-4 py-3">Eventos</AccordionTrigger>
+                      <AccordionTrigger className="p-3 hover:no-underline">Eventos</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4 px-4 pb-2">
+                        <div className="space-y-6 pt-2 px-3 pb-3">
                           <div className="flex items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
                               <Label htmlFor="group-all-switch-view" className="text-base">Agrupar todos los eventos</Label>
@@ -555,7 +523,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                   />
                               </div>
                           </TabsContent>
-                          <TabsContent value="events" className="flex-grow flex flex-col overflow-hidden mt-4 data-[state=inactive]:hidden">
+                          <TabsContent value="events" className="flex-grow flex flex-col overflow-hidden mt-2 data-[state=inactive]:hidden">
                                <div className="flex items-center gap-2">
                                   <div className="relative flex-grow">
                                       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -585,10 +553,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                       </Button>
                                   )}
                               </div>
-                              <p className="text-xs text-center text-muted-foreground pt-2 pb-0.5">
+                              <p className="text-xs text-center text-muted-foreground pt-2">
                                   Puede desactivar la agrupación de eventos en el menú de configuración.
                               </p>
-                              <Separator className="mb-2" />
+                              <Separator className="mt-2 mb-[2px]" />
                               <div className="flex-grow overflow-y-auto">
                                   <EventListComponent 
                                       onSelectEvent={handleSelectChannel}
