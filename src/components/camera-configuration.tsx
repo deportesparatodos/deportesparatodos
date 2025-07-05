@@ -250,208 +250,210 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   Configuración
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader className="border-b pb-3">
-                  <DialogTitle>Configuración de la Vista:</DialogTitle>
+              <DialogContent className="max-w-lg flex flex-col p-0">
+                <DialogHeader className="p-4 border-b">
+                  <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
-                <Accordion type="single" collapsible className="w-full -mt-4">
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger>Bordes</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-6 pt-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="grid-gap-slider-view">Tamaño de Bordes ({gridGap}px)</Label>
-                            <Slider
-                                id="grid-gap-slider-view"
-                                min={0}
-                                max={32}
-                                step={1}
-                                value={[gridGap]}
-                                onValueChange={handleGridGapChange}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="border-color-input-view">Color de Bordes</Label>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    id="border-color-input-view"
-                                    value={borderColor}
-                                    onChange={(e) => handleBorderColorChange(e.target.value)}
-                                    className="flex-grow"
-                                />
-                                <div
-                                    className="h-8 w-8 rounded-md border border-input"
-                                    style={{ backgroundColor: borderColor }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Vista Previa</Label>
-                            <div
-                                className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
-                                style={{
-                                    gap: `${gridGap}px`,
-                                    padding: `${gridGap}px`,
-                                    backgroundColor: borderColor,
-                                }}
-                            >
-                                <div className="rounded-md bg-background" />
-                                <div className="rounded-md bg-background" />
-                                <div className="rounded-md bg-background" />
-                                <div className="rounded-md bg-background" />
-                            </div>
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  {isChatEnabled !== undefined && setIsChatEnabled && (
-                    <AccordionItem value="item-2">
-                      <AccordionTrigger>Chat</AccordionTrigger>
+                <div className="flex-grow overflow-y-auto">
+                  <Accordion type="multiple" collapsible className="w-full" defaultValue={[]}>
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger className="px-4 py-3">Bordes</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4">
-                          <div className="flex items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <Label htmlFor="chat-switch-view" className="text-base">Activar Chat en Vivo</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Muestra el botón para abrir el chat en la vista.
-                              </p>
-                            </div>
-                            <Switch
-                              id="chat-switch-view"
-                              checked={isChatEnabled}
-                              onCheckedChange={setIsChatEnabled}
-                            />
+                        <div className="space-y-6 pt-4 px-4">
+                          <div className="space-y-2">
+                              <Label htmlFor="grid-gap-slider-view">Tamaño de Bordes ({gridGap}px)</Label>
+                              <Slider
+                                  id="grid-gap-slider-view"
+                                  min={0}
+                                  max={32}
+                                  step={1}
+                                  value={[gridGap]}
+                                  onValueChange={handleGridGapChange}
+                              />
+                          </div>
+
+                          <div className="space-y-2">
+                              <Label htmlFor="border-color-input-view">Color de Bordes</Label>
+                              <div className="flex items-center gap-2">
+                                  <Input
+                                      id="border-color-input-view"
+                                      value={borderColor}
+                                      onChange={(e) => handleBorderColorChange(e.target.value)}
+                                      className="flex-grow"
+                                  />
+                                  <div
+                                      className="h-8 w-8 rounded-md border border-input"
+                                      style={{ backgroundColor: borderColor }}
+                                  />
+                              </div>
+                          </div>
+
+                          <div className="space-y-2">
+                              <Label>Vista Previa</Label>
+                              <div
+                                  className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
+                                  style={{
+                                      gap: `${gridGap}px`,
+                                      padding: `${gridGap}px`,
+                                      backgroundColor: borderColor,
+                                  }}
+                              >
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                                  <div className="rounded-md bg-background" />
+                              </div>
                           </div>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                  )}
-                  <AccordionItem value="item-3">
-                    <AccordionTrigger>Eventos</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-6 pt-4">
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <Label htmlFor="group-all-switch-view" className="text-base">Agrupar todos los eventos</Label>
-                            <p className="text-sm text-muted-foreground">Activa o desactiva todas las agrupaciones.</p>
-                          </div>
-                          <Switch
-                            id="group-all-switch-view"
-                            checked={eventGrouping.all}
-                            onCheckedChange={handleMasterGroupingChange}
-                          />
-                        </div>
-
-                        <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
-                            <div className="flex items-center justify-between">
-                              <Label htmlFor="group-enVivo-switch-view" className="text-base">Agrupar "En Vivo"</Label>
+                    {isChatEnabled !== undefined && setIsChatEnabled && (
+                      <AccordionItem value="item-2">
+                        <AccordionTrigger className="px-4 py-3">Chat</AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-6 pt-4 px-4">
+                            <div className="flex items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <Label htmlFor="chat-switch-view" className="text-base">Activar Chat en Vivo</Label>
+                                <p className="text-sm text-muted-foreground">
+                                  Muestra el botón para abrir el chat en la vista.
+                                </p>
+                              </div>
                               <Switch
-                                id="group-enVivo-switch-view"
-                                checked={eventGrouping.enVivo}
-                                onCheckedChange={(checked) => handleIndividualGroupingChange('enVivo', checked)}
+                                id="chat-switch-view"
+                                checked={isChatEnabled}
+                                onCheckedChange={setIsChatEnabled}
+                              />
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                    <AccordionItem value="item-3" className="border-b-0">
+                      <AccordionTrigger className="px-4 py-3">Eventos</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-6 pt-4 px-4">
+                          <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="group-all-switch-view" className="text-base">Agrupar todos los eventos</Label>
+                              <p className="text-sm text-muted-foreground">Activa o desactiva todas las agrupaciones.</p>
+                            </div>
+                            <Switch
+                              id="group-all-switch-view"
+                              checked={eventGrouping.all}
+                              onCheckedChange={handleMasterGroupingChange}
+                            />
+                          </div>
+
+                          <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-enVivo-switch-view" className="text-base">Agrupar "En Vivo"</Label>
+                                <Switch
+                                  id="group-enVivo-switch-view"
+                                  checked={eventGrouping.enVivo}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('enVivo', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                              <Separator/>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-otros-switch-view" className="text-base">Agrupar "Otros"</Label>
+                                <Switch
+                                  id="group-otros-switch-view"
+                                  checked={eventGrouping.otros}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('otros', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                          </div>
+
+                          <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="group-f1-switch-view" className="text-base">Agrupar F1</Label>
+                              <Switch
+                                id="group-f1-switch-view"
+                                checked={eventGrouping.f1}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('f1', checked)}
                                 disabled={!eventGrouping.all}
                               />
                             </div>
                             <Separator/>
                             <div className="flex items-center justify-between">
-                              <Label htmlFor="group-otros-switch-view" className="text-base">Agrupar "Otros"</Label>
+                              <Label htmlFor="group-mlb-switch-view" className="text-base">Agrupar MLB</Label>
                               <Switch
-                                id="group-otros-switch-view"
-                                checked={eventGrouping.otros}
-                                onCheckedChange={(checked) => handleIndividualGroupingChange('otros', checked)}
+                                id="group-mlb-switch-view"
+                                checked={eventGrouping.mlb}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('mlb', checked)}
                                 disabled={!eventGrouping.all}
                               />
                             </div>
+                            <Separator/>
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="group-nba-switch-view" className="text-base">Agrupar NBA</Label>
+                              <Switch
+                                id="group-nba-switch-view"
+                                checked={eventGrouping.nba}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('nba', checked)}
+                                disabled={!eventGrouping.all}
+                              />
+                            </div>
+                            <Separator/>
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="group-mundial-switch-view" className="text-base">Agrupar Mundial de Clubes</Label>
+                              <Switch
+                                id="group-mundial-switch-view"
+                                checked={eventGrouping.mundialDeClubes}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('mundialDeClubes', checked)}
+                                disabled={!eventGrouping.all}
+                              />
+                            </div>
+                            <Separator/>
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="group-combate-switch-view" className="text-base">Agrupar Deportes de Combate</Label>
+                              <Switch
+                                id="group-combate-switch-view"
+                                checked={eventGrouping.deportesDeCombate}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('deportesDeCombate', checked)}
+                                disabled={!eventGrouping.all}
+                              />
+                            </div>
+                            <Separator/>
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="group-liga1-switch-view" className="text-base">Agrupar LIGA1</Label>
+                              <Switch
+                                id="group-liga1-switch-view"
+                                checked={eventGrouping.liga1}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('liga1', checked)}
+                                disabled={!eventGrouping.all}
+                              />
+                            </div>
+                            <Separator/>
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="group-ligapro-switch-view" className="text-base">Agrupar Liga Pro</Label>
+                              <Switch
+                                id="group-ligapro-switch-view"
+                                checked={eventGrouping.ligaPro}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('ligaPro', checked)}
+                                disabled={!eventGrouping.all}
+                              />
+                            </div>
+                            <Separator/>
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="group-mls-switch-view" className="text-base">Agrupar MLS</Label>
+                              <Switch
+                                id="group-mls-switch-view"
+                                checked={eventGrouping.mls}
+                                onCheckedChange={(checked) => handleIndividualGroupingChange('mls', checked)}
+                                disabled={!eventGrouping.all}
+                              />
+                            </div>
+                          </div>
                         </div>
-
-                        <div className={cn("space-y-4 rounded-lg border p-4", !eventGrouping.all && "opacity-50 pointer-events-none")}>
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="group-f1-switch-view" className="text-base">Agrupar F1</Label>
-                            <Switch
-                              id="group-f1-switch-view"
-                              checked={eventGrouping.f1}
-                              onCheckedChange={(checked) => handleIndividualGroupingChange('f1', checked)}
-                              disabled={!eventGrouping.all}
-                            />
-                          </div>
-                          <Separator/>
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="group-mlb-switch-view" className="text-base">Agrupar MLB</Label>
-                            <Switch
-                              id="group-mlb-switch-view"
-                              checked={eventGrouping.mlb}
-                              onCheckedChange={(checked) => handleIndividualGroupingChange('mlb', checked)}
-                              disabled={!eventGrouping.all}
-                            />
-                          </div>
-                          <Separator/>
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="group-nba-switch-view" className="text-base">Agrupar NBA</Label>
-                            <Switch
-                              id="group-nba-switch-view"
-                              checked={eventGrouping.nba}
-                              onCheckedChange={(checked) => handleIndividualGroupingChange('nba', checked)}
-                              disabled={!eventGrouping.all}
-                            />
-                          </div>
-                          <Separator/>
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="group-mundial-switch-view" className="text-base">Agrupar Mundial de Clubes</Label>
-                            <Switch
-                              id="group-mundial-switch-view"
-                              checked={eventGrouping.mundialDeClubes}
-                              onCheckedChange={(checked) => handleIndividualGroupingChange('mundialDeClubes', checked)}
-                              disabled={!eventGrouping.all}
-                            />
-                          </div>
-                          <Separator/>
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="group-combate-switch-view" className="text-base">Agrupar Deportes de Combate</Label>
-                            <Switch
-                              id="group-combate-switch-view"
-                              checked={eventGrouping.deportesDeCombate}
-                              onCheckedChange={(checked) => handleIndividualGroupingChange('deportesDeCombate', checked)}
-                              disabled={!eventGrouping.all}
-                            />
-                          </div>
-                           <Separator/>
-                              <div className="flex items-center justify-between">
-                                <Label htmlFor="group-liga1-switch-view" className="text-base">Agrupar LIGA1</Label>
-                                <Switch
-                                  id="group-liga1-switch-view"
-                                  checked={eventGrouping.liga1}
-                                  onCheckedChange={(checked) => handleIndividualGroupingChange('liga1', checked)}
-                                  disabled={!eventGrouping.all}
-                                />
-                              </div>
-                           <Separator/>
-                              <div className="flex items-center justify-between">
-                                <Label htmlFor="group-ligapro-switch-view" className="text-base">Agrupar Liga Pro</Label>
-                                <Switch
-                                  id="group-ligapro-switch-view"
-                                  checked={eventGrouping.ligaPro}
-                                  onCheckedChange={(checked) => handleIndividualGroupingChange('ligaPro', checked)}
-                                  disabled={!eventGrouping.all}
-                                />
-                              </div>
-                           <Separator/>
-                              <div className="flex items-center justify-between">
-                                <Label htmlFor="group-mls-switch-view" className="text-base">Agrupar MLS</Label>
-                                <Switch
-                                  id="group-mls-switch-view"
-                                  checked={eventGrouping.mls}
-                                  onCheckedChange={(checked) => handleIndividualGroupingChange('mls', checked)}
-                                  disabled={!eventGrouping.all}
-                                />
-                              </div>
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                <DialogFooter className="pt-4">
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+                <DialogFooter className="p-4 border-t">
                   <Button variant="outline" onClick={handleRestoreDefaults}>
                       Restaurar
                   </Button>
@@ -601,4 +603,5 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     </>
   );
 };
+
 

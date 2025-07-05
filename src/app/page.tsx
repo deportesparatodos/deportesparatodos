@@ -11,7 +11,7 @@ import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Menu, X, HelpCircle, FileText, Mail, AlertCircle, Settings, AlertTriangle } from 'lucide-react';
+import { Menu, X, HelpCircle, FileText, Mail, AlertCircle, Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
@@ -254,14 +254,12 @@ export default function HomePage() {
     const activeUrlInputs = cameraUrls.slice(0, numCameras);
     const activeUrls = activeUrlInputs.filter(url => url && url.trim() !== "");
 
-    // Priority check: if no URLs are provided at all.
     if (activeUrls.length === 0) {
         setMessages(["Por favor, selecciona al menos 1 canal o evento para poder continuar."]);
-        setAcknowledged(false); // This is a hard stop, not an acknowledgment flow.
+        setAcknowledged(false); 
         return;
     }
 
-    // Now, continue with the warning logic for partially filled views, etc.
     const activeStatuses = cameraStatuses.slice(0, numCameras);
   
     setMessages([]);
@@ -281,8 +279,6 @@ export default function HomePage() {
       }
     });
   
-    // This warning is for when *some* are empty, but not all.
-    // The all-empty case is handled above.
     if (emptyViewCount > 0) {
       const pluralS = emptyViewCount > 1 ? "s" : "";
       warningMessages.unshift(
@@ -353,7 +349,7 @@ export default function HomePage() {
                   Configuración
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg flex flex-col max-h-[90vh] p-0">
+              <DialogContent className="max-w-lg flex flex-col p-0">
                 <DialogHeader className="p-4 border-b">
                   <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
@@ -430,7 +426,7 @@ export default function HomePage() {
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                    <AccordionItem value="item-3" className="border-none">
+                    <AccordionItem value="item-3" className="border-b-0">
                         <AccordionTrigger className="px-4 py-3">Eventos</AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-6 pt-4 px-4">
@@ -854,3 +850,4 @@ export default function HomePage() {
     
 
     
+
