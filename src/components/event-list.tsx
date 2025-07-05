@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { FC } from 'react';
@@ -232,6 +233,17 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           logoProps: { width: 40, height: 40, className: 'object-contain' }
       });
   }
+  if (otherEvents.length > 0) {
+      eventGroups.push({
+          id: 'otros',
+          name: 'Otros',
+          events: otherEvents,
+          isLive: otherEvents.some(e => e.status === 'En Vivo'),
+          startTime: otherEvents[0].time,
+          logo: "https://cdn-icons-png.flaticon.com/512/9192/9192710.png",
+          logoProps: { width: 40, height: 40, className: 'object-contain' }
+      });
+  }
 
   eventGroups.sort((a, b) => {
       if (a.isLive && !b.isLive) return -1;
@@ -381,17 +393,18 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                               <div className="w-20 flex-shrink-0">
                                   <div className="flex flex-col items-center justify-center gap-1 text-center">
                                       {(() => {
-                                          const startTime = group.events[0].time;
-                                          const endTime = group.events[group.events.length - 1].time;
-                                          const isSingleTime = startTime === endTime;
-
-                                          if (isSingleTime) {
+                                          const allTimes = group.events.map(e => e.time);
+                                          const uniqueTimes = [...new Set(allTimes)];
+                                          
+                                          if (uniqueTimes.length === 1) {
                                               return (
                                                   <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
-                                                      {startTime}
+                                                      {uniqueTimes[0]}
                                                   </p>
                                               );
                                           }
+                                          const startTime = group.events[0].time;
+                                          const endTime = group.events[group.events.length - 1].time;
 
                                           return (
                                               <>
@@ -434,7 +447,6 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                   </AccordionItem>
                 ))}
               </Accordion>
-              {otherEvents.map(renderEventCard)}
             </div>
           ) : (
              <div className="flex items-center justify-center h-full">
