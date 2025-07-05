@@ -412,7 +412,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       <div className="flex-grow overflow-y-auto">
         <TooltipProvider delayDuration={300}>
           {allFilteredEvents.length > 0 || eventGroups.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-4 pt-[2px]">
               <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
                 {eventGroups.map((group) => (
                   <AccordionItem value={`${group.id}-events`} className="border-b-0" key={group.id}>
