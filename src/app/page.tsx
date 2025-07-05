@@ -353,7 +353,7 @@ export default function HomePage() {
                   Configuración
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg flex flex-col h-[90vh] max-h-[700px]">
+              <DialogContent className="max-w-lg flex flex-col h-[70vh] sm:h-[325px]">
                 <DialogHeader className="border-b pb-3">
                   <DialogTitle>Configuración de la Vista:</DialogTitle>
                 </DialogHeader>
