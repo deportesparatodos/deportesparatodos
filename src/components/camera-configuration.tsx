@@ -574,9 +574,14 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
           )}
         
           {!hideStartButton && (
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-              <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
-            </Button>
+            <div className="space-y-2 pt-1">
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Tv className="mr-2 h-4 w-4" /> Iniciar Vista
+              </Button>
+              <p className="text-center text-xs text-muted-foreground px-2">
+                  Ante posibles errores, problemas legales o si no sabe como proceder, puede visitar el menú principal para despejar sus dudas.
+              </p>
+            </div>
           )}
       </form>
     </>
