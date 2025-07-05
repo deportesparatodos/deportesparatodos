@@ -11,7 +11,7 @@ import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Menu, X, HelpCircle, FileText, ChevronLeft, ChevronRight, Mail, AlertCircle, Settings } from 'lucide-react';
+import { Menu, X, HelpCircle, FileText, ChevronLeft, ChevronRight, Mail, AlertCircle, Settings, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
