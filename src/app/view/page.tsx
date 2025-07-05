@@ -70,6 +70,7 @@ function ViewPageContent() {
     mlb: true,
     nba: true,
     mundialDeClubes: true,
+    deportesDeCombate: true,
   });
 
 

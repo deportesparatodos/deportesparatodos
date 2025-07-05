@@ -26,6 +26,7 @@ interface EventGrouping {
     mlb: boolean;
     nba: boolean;
     mundialDeClubes: boolean;
+    deportesDeCombate: boolean;
 }
 
 interface CameraConfigurationProps {
@@ -93,7 +94,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setEventGrouping?.(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate', checked: boolean) => {
     setEventGrouping?.(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -248,7 +249,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 <DialogHeader className="border-b pb-3">
                   <DialogTitle>Configuración de la Vista:</DialogTitle>
                 </DialogHeader>
-                <Accordion type="single" collapsible defaultValue="item-1" className="w-full -mt-4">
+                <Accordion type="single" collapsible className="w-full -mt-4">
                   <AccordionItem value="item-1">
                     <AccordionTrigger>Bordes</AccordionTrigger>
                     <AccordionContent>
@@ -374,6 +375,16 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                               id="group-mundial-switch-view"
                               checked={eventGrouping.mundialDeClubes}
                               onCheckedChange={(checked) => handleIndividualGroupingChange('mundialDeClubes', checked)}
+                              disabled={!eventGrouping.all}
+                            />
+                          </div>
+                          <Separator/>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="group-combate-switch-view" className="text-base">Agrupar Deportes de Combate</Label>
+                            <Switch
+                              id="group-combate-switch-view"
+                              checked={eventGrouping.deportesDeCombate}
+                              onCheckedChange={(checked) => handleIndividualGroupingChange('deportesDeCombate', checked)}
                               disabled={!eventGrouping.all}
                             />
                           </div>

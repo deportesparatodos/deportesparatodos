@@ -38,6 +38,7 @@ interface EventGrouping {
     mlb: boolean;
     nba: boolean;
     mundialDeClubes: boolean;
+    deportesDeCombate: boolean;
 }
 
 interface CopiedStates {
@@ -74,7 +75,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     }
   };
   
-  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba } = eventGrouping;
+  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate } = eventGrouping;
 
   const allFilteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -101,14 +102,35 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !nbaEvents.includes(event)
   ) : [];
 
+  const combatKeywords = ['boxeo de primera', 'ko', 'wwe', 'ufc', 'boxeo'];
+  const combatImages = [
+      'https://p.alangulotv.live/ufc',
+      'https://p.alangulotv.live/boxeo',
+      'https://i.ibb.co/chR144x9/boxing-glove-emoji-clipart-md.png'
+  ];
+
+  const deportesDeCombateEvents = groupAll && groupCombate ? allFilteredEvents.filter(event => 
+    (combatKeywords.some(keyword => event.title.toLowerCase().includes(keyword)) || (event.image && combatImages.includes(event.image))) &&
+    !f1Events.includes(event) && 
+    !mlbEvents.includes(event) &&
+    !nbaEvents.includes(event) &&
+    !mundialDeClubesEvents.includes(event)
+  ) : [];
+
+
   const otherEvents = allFilteredEvents.filter(event => 
-    !f1Events.includes(event) && !mlbEvents.includes(event) && !nbaEvents.includes(event) && !mundialDeClubesEvents.includes(event)
+    !f1Events.includes(event) && 
+    !mlbEvents.includes(event) && 
+    !nbaEvents.includes(event) && 
+    !mundialDeClubesEvents.includes(event) &&
+    !deportesDeCombateEvents.includes(event)
   );
   
   const isF1Live = f1Events.some(e => e.status === 'En Vivo');
   const isMlbLive = mlbEvents.some(e => e.status === 'En Vivo');
   const isNbaLive = nbaEvents.some(e => e.status === 'En Vivo');
   const isMundialDeClubesLive = mundialDeClubesEvents.some(e => e.status === 'En Vivo');
+  const isDeportesDeCombateLive = deportesDeCombateEvents.some(e => e.status === 'En Vivo');
 
 
   const renderEventCard = (event: Event, eventIndex: number) => {
@@ -388,6 +410,44 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                             <AccordionContent className="p-0">
                                 <div className="space-y-4 p-4">
                                     {mundialDeClubesEvents.map(renderEventCard)}
+                                </div>
+                            </AccordionContent>
+                        </Card>
+                    </AccordionItem>
+                 )}
+                 {deportesDeCombateEvents.length > 0 && (
+                    <AccordionItem value="deportes-de-combate-events" className="border-b-0">
+                        <Card className="bg-muted/50 overflow-hidden">
+                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex w-full items-center">
+                                    <div className="w-20 flex-shrink-0">
+                                        <div className="flex flex-col items-center gap-1 text-center">
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{deportesDeCombateEvents[0].time}</p>
+                                            <span className="text-xs font-mono text-muted-foreground">-</span>
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{deportesDeCombateEvents[deportesDeCombateEvents.length - 1].time}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                        {isDeportesDeCombateLive && (
+                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                        )}
+                                        <Image
+                                            src="https://p.alangulotv.live/boxeo"
+                                            alt="Deportes de Combate Logo"
+                                            width={40}
+                                            height={40}
+                                            className="object-contain"
+                                            data-ai-hint="combat sports"
+                                            unoptimized
+                                        />
+                                        <p className="font-semibold text-sm text-foreground mt-1">Deportes de Combate</p>
+                                    </div>
+                                    <div className="w-20 flex-shrink-0" />
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="space-y-4 p-4">
+                                    {deportesDeCombateEvents.map(renderEventCard)}
                                 </div>
                             </AccordionContent>
                         </Card>

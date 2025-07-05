@@ -57,6 +57,7 @@ export default function HomePage() {
     mlb: true,
     nba: true,
     mundialDeClubes: true,
+    deportesDeCombate: true,
   });
 
 
@@ -248,7 +249,7 @@ export default function HomePage() {
     setEventGrouping(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate', checked: boolean) => {
     setEventGrouping(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -492,6 +493,16 @@ export default function HomePage() {
                                   id="group-mundial-switch"
                                   checked={eventGrouping.mundialDeClubes}
                                   onCheckedChange={(checked) => handleIndividualGroupingChange('mundialDeClubes', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                              <Separator/>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-combate-switch" className="text-base">Agrupar Deportes de Combate</Label>
+                                <Switch
+                                  id="group-combate-switch"
+                                  checked={eventGrouping.deportesDeCombate}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('deportesDeCombate', checked)}
                                   disabled={!eventGrouping.all}
                                 />
                               </div>
