@@ -97,7 +97,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   ) : [];
 
   const mlbEvents = groupAll && groupMlb ? allFilteredEvents.filter(event => 
-    event.title.toLowerCase().includes('mlb') && 
+    (event.title.toLowerCase().includes('mlb') || event.image === 'https://p.alangulotv.live/mlb') && 
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
     !f1Events.includes(event)
@@ -293,6 +293,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                             data-ai-hint="club world cup"
                                             unoptimized
                                         />
+                                        <p className="font-semibold text-sm text-foreground mt-1">Mundial de Clubes</p>
                                     </div>
                                     <div className="w-20 flex-shrink-0" />
                                 </div>
@@ -330,6 +331,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                             data-ai-hint="nba logo"
                                             unoptimized
                                         />
+                                        <p className="font-semibold text-sm text-foreground mt-1">NBA</p>
                                     </div>
                                     <div className="w-20 flex-shrink-0" />
                                 </div>
@@ -349,9 +351,9 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                 <div className="flex w-full items-center">
                                     <div className="w-20 flex-shrink-0">
                                         <div className="flex flex-col items-center gap-1 text-center">
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{f1Events[0].time}</p>
-                                            <span className="text-xs font-mono text-muted-foreground">-</span>
-                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{f1Events[f1Events.length - 1].time}</p>
+                                             <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{f1Events[0].time}</p>
+                                             <span className="text-xs font-mono text-muted-foreground">-</span>
+                                             <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{f1Events[f1Events.length - 1].time}</p>
                                         </div>
                                     </div>
                                     <div className="flex-grow flex flex-col items-center justify-center gap-2">
@@ -367,6 +369,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                             data-ai-hint="formula 1 logo"
                                             unoptimized
                                         />
+                                        <p className="font-semibold text-sm text-foreground mt-1">Formula 1</p>
                                     </div>
                                     <div className="w-20 flex-shrink-0" />
                                 </div>
@@ -404,6 +407,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                             data-ai-hint="mlb logo"
                                             unoptimized
                                         />
+                                        <p className="font-semibold text-sm text-foreground mt-1">MLB</p>
                                     </div>
                                     <div className="w-20 flex-shrink-0" />
                                 </div>
