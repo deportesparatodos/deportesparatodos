@@ -2,16 +2,19 @@
 "use client";
 
 import Link from 'next/link';
-import { X, Loader2, Menu } from "lucide-react";
+import { X, Loader2, Menu, MessageSquare } from "lucide-react";
 import { Suspense, useState, useEffect } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 const processUrlForView = (inputUrl: string): string => {
   if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
@@ -50,6 +53,9 @@ function ViewPageContent() {
   const [isMounted, setIsMounted] = useState(false);
   const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
+  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const isMobile = useIsMobile();
 
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -80,12 +86,14 @@ function ViewPageContent() {
     const storedGap = localStorage.getItem('gridGap');
     if (storedGap) {
       setGridGap(parseInt(storedGap, 10));
-    } else {
-      setGridGap(0);
     }
     const storedBorderColor = localStorage.getItem('borderColor');
     if (storedBorderColor) {
       setBorderColor(storedBorderColor);
+    }
+    const storedChatEnabled = localStorage.getItem('isChatEnabled');
+    if (storedChatEnabled) {
+      setIsChatEnabled(JSON.parse(storedChatEnabled));
     }
   }, []);
 
@@ -96,8 +104,9 @@ function ViewPageContent() {
       localStorage.setItem('numCameras', numCameras.toString());
       localStorage.setItem('gridGap', gridGap.toString());
       localStorage.setItem('borderColor', borderColor);
+      localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
     }
-  }, [urls, numCameras, gridGap, borderColor, isMounted]);
+  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, isMounted]);
 
   const handleGridGapChange = (value: number[]) => {
     const newGap = value[0];
@@ -249,103 +258,153 @@ function ViewPageContent() {
   }
 
   return (
-    <div className="relative flex flex-col h-screen bg-background text-foreground">
-      <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gridGap}px`, right: `${gridGap}px` }}>
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-                <Button size="icon" variant="ghost" className="bg-transparent hover:bg-accent/80 text-white h-10 w-10">
-                    <Menu className="h-5 w-5" />
-                </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-full sm:w-96 flex flex-col p-0">
-               <SheetHeader className="p-4 border-b">
-                 <SheetTitle>Configuración de Vista</SheetTitle>
-               </SheetHeader>
-               <div className="flex-grow overflow-y-auto p-4">
-                  {isLoadingEvents || isLoadingStatuses ? (
-                    <div className="flex items-center justify-center h-full">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  ) : (
-                    <CameraConfigurationComponent
-                          numCameras={numCameras}
-                          setNumCameras={setNumCameras}
-                          cameraUrls={urls}
-                          setCameraUrls={setUrls}
-                          messages={[]}
-                          setMessages={() => {}}
-                          handleStartView={() => {}}
-                          channels={allChannels}
-                          channelStatuses={channelStatuses}
-                          setCameraStatuses={() => {}}
-                          setAcknowledged={() => {}}
-                          isLoadingChannelStatuses={isLoadingStatuses}
-                          events={processedEvents}
-                          isLoadingEvents={isLoadingEvents}
-                          eventsError={eventsError}
-                          hideStartButton={true}
-                          onRefreshEvents={fetchEvents}
-                          gridGap={gridGap}
-                          borderColor={borderColor}
-                          handleGridGapChange={handleGridGapChange}
-                          handleBorderColorChange={handleBorderColorChange}
-                          handleRestoreDefaults={handleRestoreDefaults}
-                    />
-                  )}
-               </div>
-            </SheetContent>
-        </Sheet>
-        <Link
-          href="/"
-          className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "bg-transparent hover:bg-accent/80 text-white h-10 w-10")}
-          aria-label="Cerrar Vista"
-        >
-          <X className="h-7 w-7 text-white" />
-        </Link>
-      </div>
-      
-      <main 
-        className={gridContainerClasses} 
-        style={{ 
-          gap: `${gridGap}px`,
-          padding: `${gridGap}px`,
-          backgroundColor: borderColor
-        }}
+    <div className="flex h-screen w-screen bg-background text-foreground">
+       {/* Chat Sidebar for Desktop */}
+       <div
+        className={cn(
+          'w-80 flex-shrink-0 bg-background flex-col border-r border-border',
+          isChatOpen && !isMobile ? 'flex' : 'hidden'
+        )}
       >
-        {urlsToDisplay.map((url: string, index: number) => {
-          
-          const windowClasses: string[] = ["overflow-hidden", "relative", "bg-background"];
-          if (!url) {
-              windowClasses.push("bg-red-500", "flex", "items-center", "justify-center", "text-destructive-foreground", "font-bold");
-          }
-           if (numIframes === 3) {
-            if (index === 0) {
-              windowClasses.push("row-span-1 col-span-2");
-            } else {
-              windowClasses.push("col-span-1 row-span-1");
-            }
-          }
-          
-          return (
-            <div
-              key={`${index}-${url}`}
-              className={cn(windowClasses)}
+        <div className="p-2 border-b border-border flex justify-between items-center">
+          <h2 className="font-semibold">Chat en Vivo</h2>
+          <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="h-8 w-8">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <iframe
+          src="https://deportespt.chatango.com"
+          title="Chat en Vivo"
+          className="w-full flex-grow border-0"
+        />
+      </div>
+
+      <div className="relative flex flex-col h-screen flex-grow">
+        <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gridGap}px`, right: `${gridGap}px` }}>
+          {isChatEnabled && (
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              className="bg-transparent hover:bg-accent/80 text-white h-10 w-10" 
+              onClick={() => setIsChatOpen(!isChatOpen)}
+              aria-label="Abrir o cerrar chat"
             >
-              {url ? (
-                <iframe
-                  src={processUrlForView(url)}
-                  title={`Stream ${index + 1}`}
-                  className="w-full h-full border-0"
-                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                "ELEGIR CANAL/EVENTO..."
-              )}
-            </div>
-          );
-        })}
-      </main>
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+          )}
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                  <Button size="icon" variant="ghost" className="bg-transparent hover:bg-accent/80 text-white h-10 w-10">
+                      <Menu className="h-5 w-5" />
+                  </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-full sm:w-96 flex flex-col p-0">
+                 <SheetHeader className="p-4 border-b">
+                   <SheetTitle>Configuración de Vista</SheetTitle>
+                 </SheetHeader>
+                 <div className="flex-grow overflow-y-auto p-4">
+                    {isLoadingEvents || isLoadingStatuses ? (
+                      <div className="flex items-center justify-center h-full">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      <CameraConfigurationComponent
+                            numCameras={numCameras}
+                            setNumCameras={setNumCameras}
+                            cameraUrls={urls}
+                            setCameraUrls={setUrls}
+                            messages={[]}
+                            setMessages={() => {}}
+                            handleStartView={() => {}}
+                            channels={allChannels}
+                            channelStatuses={channelStatuses}
+                            setCameraStatuses={() => {}}
+                            setAcknowledged={() => {}}
+                            isLoadingChannelStatuses={isLoadingStatuses}
+                            events={processedEvents}
+                            isLoadingEvents={isLoadingEvents}
+                            eventsError={eventsError}
+                            hideStartButton={true}
+                            onRefreshEvents={fetchEvents}
+                            gridGap={gridGap}
+                            borderColor={borderColor}
+                            handleGridGapChange={handleGridGapChange}
+                            handleBorderColorChange={handleBorderColorChange}
+                            handleRestoreDefaults={handleRestoreDefaults}
+                            isChatEnabled={isChatEnabled}
+                            setIsChatEnabled={setIsChatEnabled}
+                      />
+                    )}
+                 </div>
+              </SheetContent>
+          </Sheet>
+          <Link
+            href="/"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "bg-transparent hover:bg-accent/80 text-white h-10 w-10")}
+            aria-label="Cerrar Vista"
+          >
+            <X className="h-7 w-7 text-white" />
+          </Link>
+        </div>
+        
+        <main 
+          className={gridContainerClasses} 
+          style={{ 
+            gap: `${gridGap}px`,
+            padding: `${gridGap}px`,
+            backgroundColor: borderColor
+          }}
+        >
+          {urlsToDisplay.map((url: string, index: number) => {
+            
+            const windowClasses: string[] = ["overflow-hidden", "relative", "bg-background"];
+            if (!url) {
+                windowClasses.push("bg-red-500", "flex", "items-center", "justify-center", "text-destructive-foreground", "font-bold");
+            }
+             if (numIframes === 3) {
+              if (index === 0) {
+                windowClasses.push("row-span-1 col-span-2");
+              } else {
+                windowClasses.push("col-span-1 row-span-1");
+              }
+            }
+            
+            return (
+              <div
+                key={`${index}-${url}`}
+                className={cn(windowClasses)}
+              >
+                {url ? (
+                  <iframe
+                    src={processUrlForView(url)}
+                    title={`Stream ${index + 1}`}
+                    className="w-full h-full border-0"
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  "ELEGIR CANAL/EVENTO..."
+                )}
+              </div>
+            );
+          })}
+        </main>
+      </div>
+      {/* Chat Dialog for Mobile */}
+      {isMobile && (
+        <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+          <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
+            <DialogHeader className="p-4 border-b">
+                <DialogTitle>Chat en Vivo</DialogTitle>
+            </DialogHeader>
+            <iframe
+              src="https://deportespt.chatango.com"
+              title="Chat en Vivo"
+              className="w-full flex-grow border-0"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

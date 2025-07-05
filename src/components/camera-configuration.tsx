@@ -15,6 +15,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './
 import { Label } from './ui/label';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
+import { Switch } from './ui/switch';
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
@@ -42,6 +43,8 @@ interface CameraConfigurationProps {
   handleBorderColorChange: (color: string) => void;
   handleRestoreDefaults: () => void;
   hideBorderConfigButton?: boolean;
+  isChatEnabled?: boolean;
+  setIsChatEnabled?: (enabled: boolean) => void;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -68,6 +71,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   handleBorderColorChange,
   handleRestoreDefaults,
   hideBorderConfigButton = false,
+  isChatEnabled,
+  setIsChatEnabled,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
 
@@ -276,6 +281,28 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </div>
                     </AccordionContent>
                   </AccordionItem>
+                  {isChatEnabled !== undefined && setIsChatEnabled && (
+                    <AccordionItem value="item-2">
+                      <AccordionTrigger>Chat</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-6 pt-4">
+                          <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="chat-switch-view" className="text-base">Activar Chat en Vivo</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Muestra el botón para abrir el chat en la vista.
+                              </p>
+                            </div>
+                            <Switch
+                              id="chat-switch-view"
+                              checked={isChatEnabled}
+                              onCheckedChange={setIsChatEnabled}
+                            />
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
                 </Accordion>
                 <DialogFooter className="pt-4">
                   <Button variant="outline" onClick={handleRestoreDefaults}>
@@ -285,6 +312,102 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
               </DialogContent>
             </Dialog>
             )}
+            <div className="space-y-4">
+              {!hideBorderConfigButton && (
+                <div className="space-y-4">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Configuración
+                        </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-lg">
+                        <DialogHeader className="border-b pb-3">
+                            <DialogTitle>Configuración de la Vista:</DialogTitle>
+                        </DialogHeader>
+                        <Accordion type="single" collapsible className="w-full -mt-4" defaultValue="item-1">
+                            <AccordionItem value="item-1">
+                            <AccordionTrigger>Bordes</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="space-y-6 pt-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="grid-gap-slider-2">Tamaño de Bordes ({gridGap}px)</Label>
+                                    <Slider
+                                        id="grid-gap-slider-2"
+                                        min={0}
+                                        max={32}
+                                        step={1}
+                                        value={[gridGap]}
+                                        onValueChange={handleGridGapChange}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="border-color-input-2">Color de Bordes</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            id="border-color-input-2"
+                                            value={borderColor}
+                                            onChange={(e) => handleBorderColorChange(e.target.value)}
+                                            className="flex-grow"
+                                        />
+                                        <div
+                                            className="h-8 w-8 rounded-md border border-input"
+                                            style={{ backgroundColor: borderColor }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Vista Previa</Label>
+                                    <div
+                                        className="grid h-48 grid-cols-2 grid-rows-2 rounded-md transition-all border border-black"
+                                        style={{
+                                            gap: `${gridGap}px`,
+                                            padding: `${gridGap}px`,
+                                            backgroundColor: borderColor,
+                                        }}
+                                    >
+                                        <div className="rounded-md bg-background" />
+                                        <div className="rounded-md bg-background" />
+                                        <div className="rounded-md bg-background" />
+                                        <div className="rounded-md bg-background" />
+                                    </div>
+                                </div>
+                                </div>
+                            </AccordionContent>
+                            </AccordionItem>
+                             {isChatEnabled !== undefined && setIsChatEnabled && (
+                                <AccordionItem value="item-2">
+                                <AccordionTrigger>Chat</AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="space-y-6 pt-4">
+                                    <div className="flex items-center justify-between rounded-lg border p-4">
+                                        <div className="space-y-0.5">
+                                        <Label htmlFor="chat-switch-view" className="text-base">Activar Chat en Vivo</Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Muestra el botón para abrir el chat en la vista.
+                                        </p>
+                                        </div>
+                                        <Switch
+                                        id="chat-switch-view"
+                                        checked={isChatEnabled}
+                                        onCheckedChange={setIsChatEnabled}
+                                        />
+                                    </div>
+                                    </div>
+                                </AccordionContent>
+                                </AccordionItem>
+                            )}
+                        </Accordion>
+                        <DialogFooter className="pt-4">
+                            <Button variant="outline" onClick={handleRestoreDefaults}>
+                                Restaurar
+                            </Button>
+                        </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+                )}
             <Select onValueChange={handleNumCamerasChange} value={numCameras.toString()}>
                 <SelectTrigger className="w-full">
                     <SelectValue placeholder="Seleccionar cantidad de ventanas" />
@@ -298,6 +421,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <SelectItem value="9">9 VENTANAS</SelectItem>
                 </SelectContent>
             </Select>
+            </div>
 
           <div className="space-y-3">
           {Array.from({ length: numCameras }).map((_, index) => {

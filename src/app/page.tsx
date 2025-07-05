@@ -20,6 +20,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 
 
 const processUrlForView = (inputUrl: string): string => {
@@ -78,6 +79,7 @@ export default function HomePage() {
   const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [currentTutorialSlide, setCurrentTutorialSlide] = useState(0);
+  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
 
 
   const topBarColorClass = useMemo(() => {
@@ -216,6 +218,12 @@ export default function HomePage() {
     if (storedBorderColor) {
       setBorderColor(storedBorderColor);
     }
+    const storedChatEnabled = localStorage.getItem('isChatEnabled');
+    if (storedChatEnabled) {
+      setIsChatEnabled(JSON.parse(storedChatEnabled));
+    } else {
+      setIsChatEnabled(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -224,8 +232,9 @@ export default function HomePage() {
       localStorage.setItem('numCameras', numCameras.toString());
       localStorage.setItem('gridGap', gridGap.toString());
       localStorage.setItem('borderColor', borderColor);
+      localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
     }
-  }, [cameraUrls, numCameras, gridGap, borderColor, isMounted]);
+  }, [cameraUrls, numCameras, gridGap, borderColor, isChatEnabled, isMounted]);
 
 
   const handleGridGapChange = (value: number[]) => {
@@ -407,6 +416,26 @@ export default function HomePage() {
                                   <div className="rounded-md bg-background" />
                                   <div className="rounded-md bg-background" />
                               </div>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-2">
+                      <AccordionTrigger>Chat</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-6 pt-4">
+                          <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="chat-switch" className="text-base">Activar Chat en Vivo</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Muestra el botón para abrir el chat en la página de visualización.
+                              </p>
+                            </div>
+                            <Switch
+                              id="chat-switch"
+                              checked={isChatEnabled}
+                              onCheckedChange={setIsChatEnabled}
+                            />
                           </div>
                         </div>
                       </AccordionContent>
