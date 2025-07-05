@@ -357,12 +357,12 @@ export default function HomePage() {
                 <DialogHeader className="p-4 border-b">
                   <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
-                <div className="flex-grow overflow-y-auto p-4">
+                <div className="flex-grow overflow-y-auto">
                   <Accordion type="multiple" collapsible className="w-full" defaultValue={[]}>
                     <AccordionItem value="item-1">
-                      <AccordionTrigger>Bordes</AccordionTrigger>
+                      <AccordionTrigger className="px-4 py-3">Bordes</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4">
+                        <div className="space-y-6 pt-4 px-4">
                           <div className="space-y-2">
                               <Label htmlFor="grid-gap-slider">Tamaño de Bordes ({gridGap}px)</Label>
                               <Slider
@@ -411,9 +411,9 @@ export default function HomePage() {
                       </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-2">
-                      <AccordionTrigger>Chat</AccordionTrigger>
+                      <AccordionTrigger className="px-4 py-3">Chat</AccordionTrigger>
                       <AccordionContent>
-                        <div className="space-y-6 pt-4">
+                        <div className="space-y-6 pt-4 px-4">
                           <div className="flex items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
                               <Label htmlFor="chat-switch" className="text-base">Activar Chat en Vivo</Label>
@@ -430,10 +430,10 @@ export default function HomePage() {
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                    <AccordionItem value="item-3">
-                        <AccordionTrigger>Eventos</AccordionTrigger>
+                    <AccordionItem value="item-3" className="border-b-0">
+                        <AccordionTrigger className="px-4 py-3">Eventos</AccordionTrigger>
                         <AccordionContent>
-                          <div className="space-y-6 pt-4">
+                          <div className="space-y-6 pt-4 px-4">
                             <div className="flex items-center justify-between rounded-lg border p-4">
                               <div className="space-y-0.5">
                                 <Label htmlFor="group-all-switch" className="text-base">Agrupar todos los eventos</Label>
@@ -850,5 +850,7 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
 
     
