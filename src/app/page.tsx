@@ -55,6 +55,7 @@ export default function HomePage() {
     all: true,
     f1: true,
     mlb: true,
+    nba: true,
     mundialDeClubes: true,
   });
 
@@ -247,7 +248,7 @@ export default function HomePage() {
     setEventGrouping(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'mundialDeClubes', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'f1' | 'mlb' | 'nba' | 'mundialDeClubes', checked: boolean) => {
     setEventGrouping(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -367,7 +368,7 @@ export default function HomePage() {
                   <DialogHeader className="border-b pb-3">
                     <DialogTitle>Configuración de la Vista:</DialogTitle>
                   </DialogHeader>
-                  <Accordion type="single" collapsible className="w-full -mt-4">
+                  <Accordion type="single" collapsible defaultValue="item-1" className="w-full -mt-4">
                     <AccordionItem value="item-1">
                       <AccordionTrigger>Bordes</AccordionTrigger>
                       <AccordionContent>
@@ -471,6 +472,16 @@ export default function HomePage() {
                                   id="group-mlb-switch"
                                   checked={eventGrouping.mlb}
                                   onCheckedChange={(checked) => handleIndividualGroupingChange('mlb', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                               <Separator/>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="group-nba-switch" className="text-base">Agrupar NBA</Label>
+                                <Switch
+                                  id="group-nba-switch"
+                                  checked={eventGrouping.nba}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('nba', checked)}
                                   disabled={!eventGrouping.all}
                                 />
                               </div>

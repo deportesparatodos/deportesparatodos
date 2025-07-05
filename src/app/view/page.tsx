@@ -20,23 +20,31 @@ const processUrlForView = (inputUrl: string): string => {
   if (!inputUrl || typeof inputUrl !== 'string') return inputUrl;
 
   try {
+    const urlObj = new URL(inputUrl);
+
     // Handle standard YouTube watch URLs
-    if (inputUrl.includes('youtube.com/watch')) {
-      const url = new URL(inputUrl);
-      const videoId = url.searchParams.get('v');
+    if (urlObj.hostname.includes('youtube.com') && urlObj.pathname === '/watch') {
+      const videoId = urlObj.searchParams.get('v');
       if (videoId) {
         return `https://www.youtube.com/embed/${videoId}`;
       }
     }
     // Handle youtu.be short URLs
-    if (inputUrl.includes('youtu.be/')) {
-      const url = new URL(inputUrl);
-      const videoId = url.pathname.substring(1);
+    if (urlObj.hostname === 'youtu.be') {
+      const videoId = urlObj.pathname.substring(1);
       if (videoId) {
         return `https://www.youtube.com/embed/${videoId}`;
       }
     }
     
+    // Process streamtpglobal URLs to use the direct player
+    if (urlObj.hostname.includes('streamtpglobal.com')) {
+        const stream = urlObj.searchParams.get('stream');
+        if(stream) {
+            return `https://live.streamtps.com/live.php?stream=${stream}`;
+        }
+    }
+
   } catch (e) {
     // Not a valid URL, or some other parsing error. Fallback to original URL.
     return inputUrl;
@@ -60,6 +68,7 @@ function ViewPageContent() {
     all: true,
     f1: true,
     mlb: true,
+    nba: true,
     mundialDeClubes: true,
   });
 
@@ -281,11 +290,11 @@ function ViewPageContent() {
         <div
           className={cn(
             "absolute z-20 flex items-center gap-2",
-            isChatOpen && !isMobile ? "flex-row-reverse" : ""
+            isChatOpen && !isMobile ? "flex-row-reverse left-0" : "right-0"
           )}
           style={
-            isChatOpen && !isMobile
-              ? { top: `${gridGap}px`, left: `${gridGap}px` }
+             isChatOpen && !isMobile 
+              ? { top: `${gridGap}px`, left: `${gridGap}px` } 
               : { top: `${gridGap}px`, right: `${gridGap}px` }
           }
         >

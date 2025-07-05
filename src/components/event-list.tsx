@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { FC } from 'react';
@@ -35,6 +36,7 @@ interface EventGrouping {
     all: boolean;
     f1: boolean;
     mlb: boolean;
+    nba: boolean;
     mundialDeClubes: boolean;
 }
 
@@ -72,7 +74,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     }
   };
   
-  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial } = eventGrouping;
+  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba } = eventGrouping;
 
   const allFilteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -85,17 +87,27 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   const mlbEvents = groupAll && groupMlb ? allFilteredEvents.filter(event => 
     event.title.toLowerCase().includes('mlb') && !f1Events.includes(event)
   ) : [];
+  
+  const nbaEvents = groupAll && groupNba ? allFilteredEvents.filter(event =>
+    (event.title.toLowerCase().includes('nba') || event.image === 'https://p.alangulotv.live/nba') &&
+    !f1Events.includes(event) &&
+    !mlbEvents.includes(event)
+  ) : [];
 
   const mundialDeClubesEvents = groupAll && groupMundial ? allFilteredEvents.filter(event =>
-    event.image === 'https://p.alangulotv.live/copamundialdeclubes' && !f1Events.includes(event) && !mlbEvents.includes(event)
+    event.image === 'https://p.alangulotv.live/copamundialdeclubes' && 
+    !f1Events.includes(event) && 
+    !mlbEvents.includes(event) &&
+    !nbaEvents.includes(event)
   ) : [];
 
   const otherEvents = allFilteredEvents.filter(event => 
-    !f1Events.includes(event) && !mlbEvents.includes(event) && !mundialDeClubesEvents.includes(event)
+    !f1Events.includes(event) && !mlbEvents.includes(event) && !nbaEvents.includes(event) && !mundialDeClubesEvents.includes(event)
   );
   
   const isF1Live = f1Events.some(e => e.status === 'En Vivo');
   const isMlbLive = mlbEvents.some(e => e.status === 'En Vivo');
+  const isNbaLive = nbaEvents.some(e => e.status === 'En Vivo');
   const isMundialDeClubesLive = mundialDeClubesEvents.some(e => e.status === 'En Vivo');
 
 
@@ -232,7 +244,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
         <TooltipProvider delayDuration={300}>
           {allFilteredEvents.length > 0 ? (
             <div className="space-y-4">
-              <Accordion type="multiple" className="w-full space-y-4">
+              <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
                  {f1Events.length > 0 && (
                     <AccordionItem value="f1-events" className="border-b-0">
                         <Card className="bg-muted/50 overflow-hidden">
@@ -302,6 +314,43 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                             <AccordionContent className="p-0">
                                 <div className="space-y-4 p-4">
                                     {mlbEvents.map(renderEventCard)}
+                                </div>
+                            </AccordionContent>
+                        </Card>
+                    </AccordionItem>
+                 )}
+                 {nbaEvents.length > 0 && (
+                    <AccordionItem value="nba-events" className="border-b-0">
+                        <Card className="bg-muted/50 overflow-hidden">
+                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex w-full items-center">
+                                    <div className="w-20 flex-shrink-0">
+                                        <div className="flex flex-col items-center gap-1 text-center">
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{nbaEvents[0].time}</p>
+                                            <span className="text-xs font-mono text-muted-foreground">-</span>
+                                            <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">{nbaEvents[nbaEvents.length - 1].time}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                        {isNbaLive && (
+                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                        )}
+                                        <Image
+                                            src="https://p.alangulotv.live/nba"
+                                            alt="NBA Logo"
+                                            width={30}
+                                            height={60}
+                                            className="object-contain h-14"
+                                            data-ai-hint="nba logo"
+                                            unoptimized
+                                        />
+                                    </div>
+                                    <div className="w-20 flex-shrink-0" />
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="space-y-4 p-4">
+                                    {nbaEvents.map(renderEventCard)}
                                 </div>
                             </AccordionContent>
                         </Card>
