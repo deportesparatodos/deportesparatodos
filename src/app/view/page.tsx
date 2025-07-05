@@ -71,6 +71,7 @@ function ViewPageContent() {
     nba: true,
     mundialDeClubes: true,
     deportesDeCombate: true,
+    liga1: true,
   });
 
 

@@ -39,6 +39,7 @@ interface EventGrouping {
     nba: boolean;
     mundialDeClubes: boolean;
     deportesDeCombate: boolean;
+    liga1: boolean;
 }
 
 interface CopiedStates {
@@ -75,7 +76,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     }
   };
   
-  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate } = eventGrouping;
+  const { all: groupAll, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1 } = eventGrouping;
 
   const allFilteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -118,17 +119,41 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !mlbEvents.includes(event)
   ) : [];
 
+  const liga1Keywords = ['liga1max', 'l1max'];
+  const liga1Image = 'https://a.espncdn.com/combiner/i?img=%2Fi%2Fleaguelogos%2Fsoccer%2F500%2F1813.png';
+
+  const liga1Events = groupAll && groupLiga1 ? allFilteredEvents.filter(event =>
+    (event.image === liga1Image || event.buttons.some(b => liga1Keywords.includes(b.toLowerCase()))) &&
+    !mundialDeClubesEvents.includes(event) &&
+    !nbaEvents.includes(event) &&
+    !f1Events.includes(event) &&
+    !mlbEvents.includes(event) &&
+    !deportesDeCombateEvents.includes(event)
+  ) : [];
+
 
   const otherEvents = allFilteredEvents.filter(event => 
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
     !f1Events.includes(event) && 
     !mlbEvents.includes(event) &&
-    !deportesDeCombateEvents.includes(event)
+    !deportesDeCombateEvents.includes(event) &&
+    !liga1Events.includes(event)
   );
 
   const eventGroups = [];
-
+  
+  if (liga1Events.length > 0) {
+      eventGroups.push({
+          id: 'liga1',
+          name: 'LIGA1',
+          events: liga1Events,
+          isLive: liga1Events.some(e => e.status === 'En Vivo'),
+          startTime: liga1Events[0].time,
+          logo: liga1Image,
+          logoProps: { width: 50, height: 50, className: 'object-contain' }
+      });
+  }
   if (mundialDeClubesEvents.length > 0) {
       eventGroups.push({
           id: 'mundial-de-clubes',
