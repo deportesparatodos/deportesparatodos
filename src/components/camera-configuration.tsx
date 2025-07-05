@@ -118,6 +118,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       return { text: eventUrlMatch.button.toUpperCase(), status: 'valid' };
     }
 
+    const channelUrlMatch = channels.find(c => c.url === url);
+    if(channelUrlMatch) {
+      return { text: channelUrlMatch.name.toUpperCase(), status: 'valid' };
+    }
+
     if (url.includes('streamtps.com')) {
       const getStreamNameFromUrl = (u: string): string | null => {
         try {
@@ -539,8 +544,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       <DialogHeader className="p-4 border-b">
                           <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
                       </DialogHeader>
-                      <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden p-4">
-                          <TabsList className="grid w-full grid-cols-2">
+                      <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden px-4 pb-4">
+                          <TabsList className="grid w-full grid-cols-2 mt-4">
                               <TabsTrigger value="channels">Canales</TabsTrigger>
                               <TabsTrigger value="events">Eventos</TabsTrigger>
                           </TabsList>
@@ -604,7 +609,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                       </Button>
                                   )}
                               </div>
-                              <p className="text-xs text-muted-foreground pt-2">
+                              <p className="text-xs text-center text-muted-foreground pt-2 pb-0.5">
                                   Puede desactivar la agrupación de eventos en el menú de configuración.
                               </p>
                               <Separator className="my-2" />
