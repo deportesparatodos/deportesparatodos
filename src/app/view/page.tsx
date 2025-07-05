@@ -184,7 +184,7 @@ function ViewPageContent() {
 
       const eventsWithStatus = events
         .map(e => {
-            const eventStart = toZonedTime(`${e.date}T${e.time}`, timeZone);
+            const eventStart = toZonedTime(`${e.date}T${e.time}:00`, timeZone);
             if (isNaN(eventStart.getTime())) {
               return { ...e, status: 'Finalizado' as const };
             }
