@@ -395,7 +395,7 @@ function ViewPageContent() {
           </Button>
         </div>
         <iframe
-          src="https://deportespt.chatango.com"
+          src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
           title="Chat en Vivo"
           className="w-full flex-grow border-0"
         />
@@ -409,7 +409,7 @@ function ViewPageContent() {
                 <DialogTitle>Chat en Vivo</DialogTitle>
             </DialogHeader>
             <iframe
-              src="https://deportespt.chatango.com"
+              src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
               title="Chat en Vivo"
               className="w-full flex-grow border-0"
             />
