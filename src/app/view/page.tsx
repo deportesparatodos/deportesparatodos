@@ -259,28 +259,18 @@ function ViewPageContent() {
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
-       {/* Chat Sidebar for Desktop */}
-       <div
-        className={cn(
-          'w-80 flex-shrink-0 bg-background flex-col border-r border-border',
-          isChatOpen && !isMobile ? 'flex' : 'hidden'
-        )}
-      >
-        <div className="p-2 border-b border-border flex justify-between items-center">
-          <h2 className="font-semibold">Chat en Vivo</h2>
-          <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="h-8 w-8">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <iframe
-          src="https://deportespt.chatango.com"
-          title="Chat en Vivo"
-          className="w-full flex-grow border-0"
-        />
-      </div>
-
       <div className="relative flex flex-col h-screen flex-grow">
-        <div className="absolute z-20 flex items-center gap-2" style={{ top: `${gridGap}px`, right: `${gridGap}px` }}>
+        <div
+          className={cn(
+            "absolute z-20 flex items-center gap-2",
+            isChatOpen && !isMobile ? "flex-row-reverse" : ""
+          )}
+          style={
+            isChatOpen && !isMobile
+              ? { top: `${gridGap}px`, left: `${gridGap}px` }
+              : { top: `${gridGap}px`, right: `${gridGap}px` }
+          }
+        >
           {isChatEnabled && (
             <Button 
               size="icon" 
@@ -390,6 +380,27 @@ function ViewPageContent() {
           })}
         </main>
       </div>
+      
+       {/* Chat Sidebar for Desktop */}
+       <div
+        className={cn(
+          'w-80 flex-shrink-0 bg-background flex-col border-l border-border',
+          isChatOpen && !isMobile ? 'flex' : 'hidden'
+        )}
+      >
+        <div className="p-2 border-b border-border flex justify-between items-center">
+          <h2 className="font-semibold">Chat en Vivo</h2>
+          <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="h-8 w-8">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <iframe
+          src="https://deportespt.chatango.com"
+          title="Chat en Vivo"
+          className="w-full flex-grow border-0"
+        />
+      </div>
+
       {/* Chat Dialog for Mobile */}
       {isMobile && (
         <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
