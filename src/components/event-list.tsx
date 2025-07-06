@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { FC } from 'react';
@@ -128,7 +127,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   const liga1Image = 'https://a.espncdn.com/combiner/i?img=%2Fi%2Fleaguelogos%2Fsoccer%2F500%2F1813.png';
 
   const liga1Events = groupAll && groupLiga1 ? allFilteredEvents.filter(event =>
-    (event.image === liga1Image || event.buttons.some(b => liga1Keywords.includes(b.toLowerCase()))) &&
+    (event.image === liga1Image || event.buttons.some(b => b && liga1Keywords.includes(b.toLowerCase()))) &&
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
     !f1Events.includes(event) &&
@@ -155,7 +154,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       (
           (event.image === mlsImage) ||
           (mlsKeywords.some(keyword => event.title.toLowerCase().includes(keyword))) ||
-          (event.buttons.some(b => b.toLowerCase() === mlsButton))
+          (event.buttons.some(b => b && b.toLowerCase() === mlsButton))
       ) &&
       !mundialDeClubesEvents.includes(event) &&
       !nbaEvents.includes(event) &&
