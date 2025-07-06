@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { FC } from 'react';
@@ -7,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { Copy, CheckCircle2, Loader2, AlertTriangle, Tv, Search, X, RotateCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getUrlOrigin } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
@@ -356,6 +357,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                   const isCopied = copiedStates[url];
                   const buttonLabel = event.buttons[channelIndex] || 'Canal';
                   const Icon = isSelectMode ? Tv : (isCopied ? CheckCircle2 : Copy);
+                  const origin = getUrlOrigin(url);
 
                   return (
                     <Tooltip key={`${event.title}-${eventIndex}-${channelIndex}`}>
@@ -374,7 +376,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>{isSelectMode ? `Seleccionar ${buttonLabel}` : `Copiar ${buttonLabel}`}</p>
+                        {origin ? <p>{origin}</p> : <p>{isSelectMode ? `Seleccionar ${buttonLabel}` : `Copiar ${buttonLabel}`}</p>}
                       </TooltipContent>
                     </Tooltip>
                   );
