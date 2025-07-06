@@ -262,14 +262,23 @@ export default function HomePage() {
         throw new Error('No se pudieron cargar los eventos.');
       }
       const data = await response.json();
-      const processedData = data.map((event: any) => ({
-        ...event,
-        options: event.options.map((option: string) =>
-          option === 'https://p.alangulotv.space/?channel=disneysiestsenpcwindowsusaestaextensinsoloarg'
-            ? 'https://p.alangulotv.space/?channel=transmi1'
-            : option
-        ),
-      }));
+      const processedData = data.map((event: any) => {
+        const newEvent = {
+            ...event,
+            options: event.options.map((option: string) =>
+              option === 'https://p.alangulotv.space/?channel=disneysiestsenpcwindowsusaestaextensinsoloarg'
+                ? 'https://p.alangulotv.space/?channel=transmi1'
+                : option
+            ),
+        };
+
+        const ecdfImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg/1200px-Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg.png';
+        if (newEvent.buttons?.some((b: string) => b?.toLowerCase() === 'ecdf')) {
+          newEvent.image = ecdfImage;
+        }
+        
+        return newEvent;
+      });
       const merged = mergeDuplicateEvents(processedData);
       setEvents(merged);
     } catch (err) {
@@ -731,7 +740,7 @@ export default function HomePage() {
                       </p>
                       <h4 className="font-semibold text-foreground pt-2">Paso 3: Inicia la vista</h4>
                       <p>
-                          Una vez que hayas configurado todas tus ventanas, presiona el botón "Iniciar Vista". Esto te llevará a una nueva página donde verás todas tus transmisiones seleccionadas en la disposición que elegiste.
+                          Once que hayas configurado todas tus ventanas, presiona el botón "Iniciar Vista". Esto te llevará a una nueva página donde verás todas tus transmisiones seleccionadas en la disposición que elegiste.
                       </p>
                       <h4 className="font-semibold text-foreground pt-2">Configuraciones Adicionales</h4>
                       <p>

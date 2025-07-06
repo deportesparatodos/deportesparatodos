@@ -270,14 +270,23 @@ function ViewPageContent() {
         throw new Error('No se pudieron cargar los eventos.');
       }
       const data = await response.json();
-      const processedData = data.map((event: any) => ({
-        ...event,
-        options: event.options.map((option: string) =>
-          option === 'https://p.alangulotv.space/?channel=disneysiestsenpcwindowsusaestaextensinsoloarg'
-            ? 'https://p.alangulotv.space/?channel=transmi1'
-            : option
-        ),
-      }));
+      const processedData = data.map((event: any) => {
+        const newEvent = {
+            ...event,
+            options: event.options.map((option: string) =>
+              option === 'https://p.alangulotv.space/?channel=disneysiestsenpcwindowsusaestaextensinsoloarg'
+                ? 'https://p.alangulotv.space/?channel=transmi1'
+                : option
+            ),
+        };
+        
+        const ecdfImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg/1200px-Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg.png';
+        if (newEvent.buttons?.some((b: string) => b?.toLowerCase() === 'ecdf')) {
+          newEvent.image = ecdfImage;
+        }
+
+        return newEvent;
+      });
       const merged = mergeDuplicateEvents(processedData);
       setEvents(merged);
     } catch (err) {

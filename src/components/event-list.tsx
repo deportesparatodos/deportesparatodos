@@ -135,7 +135,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !deportesDeCombateEvents.includes(event)
   ) : [];
 
-  const ligaProImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg/2048px-Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg.png';
+  const ligaProImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg/1200px-Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg.png';
   const ligaProEvents = groupAll && groupLigaPro ? allFilteredEvents.filter(event =>
     (event.title.toLowerCase().includes('primera a') || event.image === ligaProImage) &&
     !mundialDeClubesEvents.includes(event) &&
