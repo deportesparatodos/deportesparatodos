@@ -186,7 +186,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           events: mlsEvents,
           isLive: mlsEvents.some(e => e.status === 'En Vivo'),
           startTime: mlsEvents[0].time,
-          logo: mlsImage,
+          logo: mlsEvents[0].image || mlsImage,
           logoProps: { width: 60, height: 60, className: 'object-contain' }
       });
   }
@@ -197,7 +197,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           events: ligaProEvents,
           isLive: ligaProEvents.some(e => e.status === 'En Vivo'),
           startTime: ligaProEvents[0].time,
-          logo: ligaProImage,
+          logo: ligaProEvents[0].image || ligaProImage,
           logoProps: { width: 50, height: 50, className: 'object-contain' }
       });
   }
@@ -208,7 +208,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           events: liga1Events,
           isLive: liga1Events.some(e => e.status === 'En Vivo'),
           startTime: liga1Events[0].time,
-          logo: liga1Image,
+          logo: liga1Events[0].image || liga1Image,
           logoProps: { width: 50, height: 50, className: 'object-contain' }
       });
   }
@@ -230,7 +230,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           events: nbaEvents,
           isLive: nbaEvents.some(e => e.status === 'En Vivo'),
           startTime: nbaEvents[0].time,
-          logo: "https://p.alangulotv.live/nba",
+          logo: nbaEvents[0].image || "https://p.alangulotv.live/nba",
           logoProps: { width: 30, height: 60, className: 'object-contain h-14' }
       });
   }
@@ -241,7 +241,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           events: f1Events,
           isLive: f1Events.some(e => e.status === 'En Vivo'),
           startTime: f1Events[0].time,
-          logo: "https://p.alangulotv.live/f1",
+          logo: f1Events[0].image || "https://p.alangulotv.live/f1",
           logoProps: { width: 80, height: 20, className: 'object-contain' }
       });
   }
@@ -252,7 +252,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           events: mlbEvents,
           isLive: mlbEvents.some(e => e.status === 'En Vivo'),
           startTime: mlbEvents[0].time,
-          logo: "https://p.alangulotv.live/mlb",
+          logo: mlbEvents[0].image || "https://p.alangulotv.live/mlb",
           logoProps: { width: 60, height: 34, className: 'object-contain' }
       });
   }
@@ -263,7 +263,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           events: deportesDeCombateEvents,
           isLive: deportesDeCombateEvents.some(e => e.status === 'En Vivo'),
           startTime: deportesDeCombateEvents[0].time,
-          logo: "https://p.alangulotv.live/boxeo",
+          logo: deportesDeCombateEvents[0].image || "https://p.alangulotv.live/boxeo",
           logoProps: { width: 40, height: 40, className: 'object-contain' }
       });
   }
@@ -406,6 +406,8 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     );
   }
 
+  const firstRenderedItem = eventGroups.length > 0 ? 'group' : (ungroupedEvents.length > 0 ? 'event' : null);
+
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
       <div className="flex-grow overflow-y-auto">
@@ -417,7 +419,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                   {eventGroups.map((group, index) => (
                     <AccordionItem value={`${group.id}-events`} className={cn(
                         "border-b-0",
-                        index === 0 && "mt-[16px]"
+                        firstRenderedItem === 'group' && index === 0 && "mt-[16px]"
                     )} key={group.id}>
                       <Card className="bg-muted/50 overflow-hidden">
                         <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
@@ -494,7 +496,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                 </Accordion>
               )}
               {ungroupedEvents.map((event, index) => {
-                  const isFirstElementInList = eventGroups.length === 0 && index === 0;
+                  const isFirstElementInList = firstRenderedItem === 'event' && index === 0;
                   const card = renderEventCard(event, index);
                   return (
                       <div key={card.key} className={cn(
