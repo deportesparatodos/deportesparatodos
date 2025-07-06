@@ -37,6 +37,49 @@ const defaultEventGrouping = {
   mls: true,
 };
 
+function normalizeEventTitleForKey(title: string): string {
+    let normalized = title.toLowerCase();
+    
+    // 1. Remove prefixes like "Liga: ", "Copa: ", etc.
+    normalized = normalized.replace(/.*: /,'').trim();
+
+    // 2. Remove accents and diacritics
+    normalized = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // 3. Specific replacements for abbreviations and common names
+    const replacements: { [key: string]: string } = {
+        'ee. uu.': 'estados unidos',
+        'u.s.a.': 'estados unidos',
+        'usa': 'estados unidos',
+        "newell's old boys": 'newells',
+        "newell’s old boys": 'newells', // Different apostrophe
+        "newell's": 'newells',
+        "newell’s": 'newells',
+    };
+
+    for (const [key, value] of Object.entries(replacements)) {
+        // Escape special regex characters in the key
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        normalized = normalized.replace(new RegExp(escapedKey, 'g'), value);
+    }
+
+    // 4. Split by 'vs', normalize each team, sort, and join
+    const teams = normalized
+        .split(/\s+vs\.?\s+/) // Handles ' vs ' and ' vs. ' with surrounding spaces
+        .map(team => team.replace(/[^a-z0-9]/g, '')) // Remove all non-alphanumeric
+        .filter(Boolean);
+
+    if (teams.length < 2) {
+        // Fallback for titles that don't contain 'vs'
+        return normalized.replace(/[^a-z0-9]/g, '');
+    }
+
+    // 5. Sort teams alphabetically to handle "A vs B" and "B vs A"
+    teams.sort();
+    
+    return teams.join('-');
+}
+
 function finalizeMerge(groupToMerge: Omit<Event, 'status'>[]): Omit<Event, 'status'> {
     if (groupToMerge.length === 1) return groupToMerge[0];
 
@@ -77,8 +120,8 @@ function mergeDuplicateEvents(events: Omit<Event, 'status'>[]): Omit<Event, 'sta
   const eventGroups = new Map<string, Omit<Event, 'status'>[]>();
 
   events.forEach(event => {
-    const cleanTitle = event.title.replace(/.*: /,'').trim().toLowerCase();
-    const key = `${event.date}-${cleanTitle}`;
+    const cleanTitleKey = normalizeEventTitleForKey(event.title);
+    const key = `${event.date}-${cleanTitleKey}`;
     if (!eventGroups.has(key)) {
       eventGroups.set(key, []);
     }
