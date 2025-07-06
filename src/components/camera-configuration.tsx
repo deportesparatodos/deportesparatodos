@@ -184,9 +184,14 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     }
   };
   
-  const handleSelectChannel = (url: string) => {
+  const handleSelectChannel = async (url: string) => {
     if (dialogOpenForIndex !== null) {
       handleUrlChange(dialogOpenForIndex, url);
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        console.error("Failed to copy URL to clipboard:", err);
+      }
       setDialogOpenForIndex(null); // Close dialog
     }
   };
@@ -556,8 +561,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                               <p className="text-xs text-center text-muted-foreground pt-2">
                                   Puede desactivar la agrupación de eventos en el menú de configuración.
                               </p>
-                              <Separator className="mt-2 mb-[2px]" />
-                              <div className="flex-grow overflow-y-auto">
+                              <Separator className="mt-2 mb-0.5" />
+                              <div className="flex-grow overflow-y-auto pt-[16px]">
                                   <EventListComponent 
                                       onSelectEvent={handleSelectChannel}
                                       events={events}
