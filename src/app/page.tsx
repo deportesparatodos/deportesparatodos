@@ -37,6 +37,95 @@ const defaultEventGrouping = {
   mls: true,
 };
 
+function finalizeMerge(groupToMerge: Omit<Event, 'status'>[]): Omit<Event, 'status'> {
+    if (groupToMerge.length === 1) return groupToMerge[0];
+
+    const allOptions = new Map<string, string>(); // url -> button text
+    let earliestTime = '23:59';
+    let longestTitle = '';
+    
+    const preferredEvent = groupToMerge.find(e => e.source.includes('alangulotv')) || groupToMerge[0];
+
+    groupToMerge.forEach(event => {
+        if (event.time < earliestTime) {
+            earliestTime = event.time;
+        }
+        if (event.title.length > longestTitle.length) {
+            longestTitle = event.title;
+        }
+        event.options.forEach((opt, index) => {
+            if (!allOptions.has(opt)) {
+                allOptions.set(opt, event.buttons[index]);
+            }
+        });
+    });
+
+    return {
+        ...preferredEvent,
+        time: earliestTime,
+        title: longestTitle,
+        image: preferredEvent.image,
+        source: preferredEvent.source,
+        options: Array.from(allOptions.keys()),
+        buttons: Array.from(allOptions.values()),
+    };
+}
+
+function mergeDuplicateEvents(events: Omit<Event, 'status'>[]): Omit<Event, 'status'>[] {
+  if (!events || events.length === 0) return [];
+
+  const eventGroups = new Map<string, Omit<Event, 'status'>[]>();
+
+  events.forEach(event => {
+    const cleanTitle = event.title.replace(/.*: /,'').trim().toLowerCase();
+    const key = `${event.date}-${cleanTitle}`;
+    if (!eventGroups.has(key)) {
+      eventGroups.set(key, []);
+    }
+    eventGroups.get(key)!.push(event);
+  });
+  
+  const mergedEvents: Omit<Event, 'status'>[] = [];
+
+  for (const group of eventGroups.values()) {
+    if (group.length === 1) {
+      mergedEvents.push(group[0]);
+      continue;
+    }
+
+    group.sort((a, b) => a.time.localeCompare(b.time));
+    
+    let currentMergeGroup: Omit<Event, 'status'>[] = [group[0]];
+    
+    for (let i = 1; i < group.length; i++) {
+        const lastEventInMergeGroup = currentMergeGroup[currentMergeGroup.length - 1];
+        const nextEvent = group[i];
+        
+        const time1 = new Date(`${lastEventInMergeGroup.date}T${lastEventInMergeGroup.time}`);
+        const time2 = new Date(`${nextEvent.date}T${nextEvent.time}`);
+        const timeDiff = Math.abs(time1.getTime() - time2.getTime()) / (1000 * 60);
+
+        if (timeDiff <= 30) {
+            currentMergeGroup.push(nextEvent);
+        } else {
+            mergedEvents.push(finalizeMerge(currentMergeGroup));
+            currentMergeGroup = [nextEvent];
+        }
+    }
+    if (currentMergeGroup.length > 0) {
+        mergedEvents.push(finalizeMerge(currentMergeGroup));
+    }
+  }
+
+  mergedEvents.sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    return a.time.localeCompare(b.time);
+  });
+
+  return mergedEvents;
+}
+
+
 export default function HomePage() {
   const [numCameras, setNumCameras] = useState<number>(1);
   const [cameraUrls, setCameraUrls] = useState<string[]>(Array(9).fill(''));
@@ -138,7 +227,8 @@ export default function HomePage() {
             : option
         ),
       }));
-      setEvents(processedData);
+      const merged = mergeDuplicateEvents(processedData);
+      setEvents(merged);
     } catch (err) {
       if (err instanceof Error) {
           setEventsError(err.message);
