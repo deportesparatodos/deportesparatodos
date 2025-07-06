@@ -139,7 +139,15 @@ function ViewPageContent() {
         throw new Error('No se pudieron cargar los eventos.');
       }
       const data = await response.json();
-      setEvents(data);
+      const processedData = data.map((event: any) => ({
+        ...event,
+        options: event.options.map((option: string) =>
+          option === 'https://p.alangulotv.space/?channel=disneysiestsenpcwindowsusaestaextensinsoloarg'
+            ? 'https://p.alangulotv.space/?channel=transmi1'
+            : option
+        ),
+      }));
+      setEvents(processedData);
     } catch (err) {
       if (err instanceof Error) {
           setEventsError(err.message);
