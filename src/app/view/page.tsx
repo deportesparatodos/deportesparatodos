@@ -271,13 +271,32 @@ function ViewPageContent() {
       }
       const data = await response.json();
       const processedData = data.map((event: any) => {
+        const newButtons = [...(event.buttons || [])];
+        const newOptions = (event.options || []).map((option: string, index: number) => {
+          let currentOption = option;
+          
+          if (currentOption === 'https://p.alangulotv.space/?channel=disneysiestsenpcwindowsusaestaextensinsoloarg') {
+            currentOption = 'https://p.alangulotv.space/?channel=transmi1';
+          }
+
+          if (currentOption && typeof currentOption === 'string' && currentOption.includes('streamtpglobal.com')) {
+              try {
+                  const url = new URL(currentOption);
+                  const streamParam = url.searchParams.get('stream');
+                  if (streamParam) {
+                      newButtons[index] = streamParam.toUpperCase();
+                  }
+              } catch (e) {
+                  // Not a valid URL, ignore
+              }
+          }
+          return currentOption;
+        });
+
         const newEvent = {
             ...event,
-            options: event.options.map((option: string) =>
-              option === 'https://p.alangulotv.space/?channel=disneysiestsenpcwindowsusaestaextensinsoloarg'
-                ? 'https://p.alangulotv.space/?channel=transmi1'
-                : option
-            ),
+            options: newOptions,
+            buttons: newButtons,
         };
         
         const ecdfImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg/1200px-Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg.png';
