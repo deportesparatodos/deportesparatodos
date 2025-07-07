@@ -232,15 +232,14 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                         </DialogContent>
                     </Dialog>
                 </div>
-                
-                <Button onClick={handleAddChange} disabled={!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url}>
-                  <Plus className="mr-2 h-4 w-4" /> Agregar a la Lista
-                </Button>
              </div>
           </div>
         </div>
 
         <DialogFooter className="p-4 border-t shrink-0">
+          <Button onClick={handleAddChange} disabled={!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url}>
+            <Plus className="mr-2 h-4 w-4" /> Agregar a la Lista
+          </Button>
           <DialogClose asChild>
             <Button type="button" variant="secondary">
               Cerrar
