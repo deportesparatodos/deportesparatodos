@@ -20,6 +20,7 @@ import { Clock, Plus, Save, Search, Trash2, Pencil } from 'lucide-react';
 import { ChannelListComponent, type Channel } from './channel-list';
 import { EventListComponent, type Event } from './event-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from '@/lib/utils';
 
 // Exporting the type for use in other components
 export interface ScheduledChange {
@@ -167,14 +168,17 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                   scheduledChanges
                     .sort((a,b) => a.time.localeCompare(b.time))
                     .map((change) => (
-                      <div key={change.id} className="relative flex items-center p-2 bg-muted rounded-md text-sm group">
+                      <div key={change.id} className={cn(
+                          "relative flex items-center p-2 bg-muted rounded-md text-sm group",
+                          editingId === change.id && "ring-2 ring-primary"
+                        )}>
                         <div className="flex-1 min-w-0 pr-20">
                           <p className="font-bold">{change.time}</p>
                           <p className="text-xs text-muted-foreground truncate">
                             Ventana {change.viewIndex + 1}: {change.name}
                           </p>
                         </div>
-                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-muted">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(change)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
