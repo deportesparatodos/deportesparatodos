@@ -171,21 +171,10 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                        <div
                           key={change.id}
                           className={cn(
-                            "relative p-2 rounded-md text-sm group transition-colors bg-muted",
+                            "relative p-2 rounded-md text-sm group transition-colors bg-muted w-full max-w-xl",
                             editingId === change.id && "ring-2 ring-primary"
                           )}
                         >
-                          {/* Original content - will fade out on hover */}
-                          <div className="flex items-center justify-between group-hover:opacity-0 transition-opacity">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold">{change.time}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                Ventana {change.viewIndex + 1}: {change.name}
-                              </p>
-                            </div>
-                          </div>
-                      
-                          {/* Hover overlay with centered buttons */}
                           <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-accent/95 rounded-md transition-all">
                             <Button variant="outline" size="sm" className="bg-background/80 hover:bg-background" onClick={() => handleEditClick(change)}>
                               <Pencil className="mr-2 h-4 w-4" />
@@ -195,6 +184,14 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                               <Trash2 className="mr-2 h-4 w-4" />
                               Eliminar
                             </Button>
+                          </div>
+                          <div className="flex items-center justify-between group-hover:opacity-0 transition-opacity">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold">{change.time}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                Ventana {change.viewIndex + 1}: {change.name}
+                              </p>
+                            </div>
                           </div>
                         </div>
                     ))
