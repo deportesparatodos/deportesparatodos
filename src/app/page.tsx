@@ -217,6 +217,10 @@ export default function HomePage() {
 
       const eventsWithStatus = events
         .map(e => {
+            if (e.title.includes('24/7')) {
+              return { ...e, status: 'En Vivo' as const };
+            }
+
             if (currentHour >= 21 || currentHour < 6) {
               return { ...e, status: 'Desconocido' as const };
             }
