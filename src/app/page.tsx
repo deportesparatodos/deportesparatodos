@@ -250,6 +250,11 @@ export default function HomePage() {
 
       const eventsWithStatus = events
         .map(e => {
+            // Force 'En Vivo' for embedrun.store links
+            if (e.options.some(opt => opt.includes('embedrun.store'))) {
+                return { ...e, status: 'En Vivo' as const };
+            }
+
             // Handle 24/7 events first, they are always 'En Vivo'
             if (e.title.includes('24/7')) {
               return { ...e, status: 'En Vivo' as const };
