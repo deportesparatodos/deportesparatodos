@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, Plus, Save, Search, Trash2 } from 'lucide-react';
+import { Clock, Plus, Save, Search, Trash2, Pencil } from 'lucide-react';
 import { ChannelListComponent, type Channel } from './channel-list';
 import { EventListComponent, type Event } from './event-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -167,18 +167,18 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                   scheduledChanges
                     .sort((a,b) => a.time.localeCompare(b.time))
                     .map((change) => (
-                      <div key={change.id} className="flex items-center p-2 bg-muted rounded-md text-sm group">
-                        <div
-                          className="flex-1 min-w-0 cursor-pointer"
-                          onClick={() => handleEditClick(change)}
-                        >
+                      <div key={change.id} className="relative flex items-center p-2 bg-muted rounded-md text-sm group">
+                        <div className="flex-1 min-w-0 pr-20">
                           <p className="font-bold">{change.time}</p>
-                          <p className="text-xs text-muted-foreground truncate group-hover:underline">
+                          <p className="text-xs text-muted-foreground truncate">
                             Ventana {change.viewIndex + 1}: {change.name}
                           </p>
                         </div>
-                        <div className="flex-shrink-0 pl-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveChange(change.id)}>
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(change)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleRemoveChange(change.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -289,15 +289,8 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="p-4 border-t shrink-0 flex sm:justify-between w-full">
-            <div className="flex-grow">
-                 {editingId && (
-                     <Button variant="outline" onClick={handleCancelEdit}>
-                        Cancelar Edición
-                    </Button>
-                 )}
-            </div>
-            <div className="flex gap-2 justify-end">
+        <DialogFooter className="p-4 border-t shrink-0 flex justify-end">
+            <div className="flex gap-2">
                 <Button onClick={handleAddOrUpdateChange} disabled={!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url}>
                    {editingId ? (
                     <>
