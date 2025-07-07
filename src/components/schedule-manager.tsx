@@ -168,18 +168,20 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     .sort((a,b) => a.time.localeCompare(b.time))
                     .map((change) => (
                       <div key={change.id} className="flex items-center p-2 bg-muted rounded-md text-sm group">
-                        <div 
-                          className="flex flex-col flex-grow overflow-hidden mr-2 cursor-pointer min-w-0"
+                        <div
+                          className="flex-1 min-w-0 cursor-pointer"
                           onClick={() => handleEditClick(change)}
                         >
-                          <span className="font-bold">{change.time}</span>
-                          <span className="text-xs text-muted-foreground truncate group-hover:underline">
+                          <p className="font-bold">{change.time}</p>
+                          <p className="text-xs text-muted-foreground truncate group-hover:underline">
                             Ventana {change.viewIndex + 1}: {change.name}
-                          </span>
+                          </p>
                         </div>
-                        <Button variant="ghost" size="icon" className="ml-auto flex-shrink-0 h-8 w-8" onClick={() => handleRemoveChange(change.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex-shrink-0 pl-2">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleRemoveChange(change.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))
                 ) : (
@@ -287,23 +289,32 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="p-4 border-t shrink-0">
-          <Button onClick={handleAddOrUpdateChange} disabled={!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url}>
-             {editingId ? (
-              <>
-                <Save className="mr-2 h-4 w-4" /> Actualizar Cambio
-              </>
-            ) : (
-              <>
-                <Plus className="mr-2 h-4 w-4" /> Agregar a la Lista
-              </>
-            )}
-          </Button>
-          <DialogClose asChild>
-            <Button type="button" variant="secondary">
-              Cerrar
-            </Button>
-          </DialogClose>
+        <DialogFooter className="p-4 border-t shrink-0 flex sm:justify-between w-full">
+            <div className="flex-grow">
+                 {editingId && (
+                     <Button variant="outline" onClick={handleCancelEdit}>
+                        Cancelar Edición
+                    </Button>
+                 )}
+            </div>
+            <div className="flex gap-2 justify-end">
+                <Button onClick={handleAddOrUpdateChange} disabled={!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url}>
+                   {editingId ? (
+                    <>
+                      <Save className="mr-2 h-4 w-4" /> Actualizar
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" /> Agregar
+                    </>
+                  )}
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Cerrar
+                  </Button>
+                </DialogClose>
+            </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
