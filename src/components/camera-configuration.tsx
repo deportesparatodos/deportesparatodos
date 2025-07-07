@@ -217,7 +217,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
                 <div className="overflow-y-auto p-4 flex-grow">
-                  <Accordion type="multiple" collapsible className="w-full space-y-4" defaultValue={[]}>
+                  <Accordion type="multiple" className="w-full space-y-4" defaultValue={[]}>
                     <AccordionItem value="item-1" className="border rounded-md px-1">
                       <AccordionTrigger className="p-3 hover:no-underline">Bordes</AccordionTrigger>
                       <AccordionContent>

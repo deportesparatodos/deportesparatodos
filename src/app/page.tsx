@@ -532,7 +532,7 @@ export default function HomePage() {
                   <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
                 <div className="overflow-y-auto p-4">
-                  <Accordion type="multiple" collapsible className="w-full space-y-4">
+                  <Accordion type="multiple" className="w-full space-y-4">
                     <AccordionItem value="item-1" className="border rounded-md px-1">
                       <AccordionTrigger className="p-3 hover:no-underline">Bordes</AccordionTrigger>
                       <AccordionContent>
