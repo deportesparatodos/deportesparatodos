@@ -14,6 +14,7 @@ import { addHours, isAfter } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { type ScheduledChange } from '@/components/schedule-manager';
 
 
 const defaultEventGrouping = {
@@ -173,6 +174,7 @@ function ViewPageContent() {
   const isMobile = useIsMobile();
   const [eventGrouping, setEventGrouping] = useState(defaultEventGrouping);
   const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
+  const [scheduledChanges, setScheduledChanges] = useState<ScheduledChange[]>([]);
 
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -231,6 +233,14 @@ function ViewPageContent() {
         console.error("Failed to parse eventGrouping from localStorage", e);
       }
     }
+    const storedScheduledChanges = localStorage.getItem('scheduledChanges');
+    if (storedScheduledChanges) {
+        try {
+            setScheduledChanges(JSON.parse(storedScheduledChanges));
+        } catch (e) {
+            console.error("Failed to parse scheduledChanges from localStorage", e);
+        }
+    }
   }, []);
 
   // Save to localStorage on change
@@ -242,8 +252,40 @@ function ViewPageContent() {
       localStorage.setItem('borderColor', borderColor);
       localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
       localStorage.setItem('eventGrouping', JSON.stringify(eventGrouping));
+      localStorage.setItem('scheduledChanges', JSON.stringify(scheduledChanges));
     }
-  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, isMounted]);
+  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, scheduledChanges, isMounted]);
+
+  // Scheduler Execution Logic
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const intervalId = setInterval(() => {
+      const now = new Date();
+      const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+      
+      const dueChanges = scheduledChanges.filter(change => change.time === currentTime);
+
+      if (dueChanges.length > 0) {
+        setUrls(currentUrls => {
+          const newUrls = [...currentUrls];
+          dueChanges.forEach(change => {
+            if (change.viewIndex < newUrls.length) {
+              newUrls[change.viewIndex] = change.url;
+            }
+          });
+          return newUrls;
+        });
+
+        // Remove executed changes from state
+        setScheduledChanges(currentChanges => 
+          currentChanges.filter(change => !dueChanges.find(due => due.id === change.id))
+        );
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(intervalId);
+  }, [isMounted, scheduledChanges]);
 
   const handleGridGapChange = (value: number[]) => {
     const newGap = value[0];
@@ -504,6 +546,8 @@ function ViewPageContent() {
                             setIsChatEnabled={setIsChatEnabled}
                             eventGrouping={eventGrouping}
                             setEventGrouping={setEventGrouping}
+                            scheduledChanges={scheduledChanges}
+                            setScheduledChanges={setScheduledChanges}
                       />
                     )}
                  </div>

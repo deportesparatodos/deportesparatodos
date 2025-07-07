@@ -17,6 +17,7 @@ import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
+import { ScheduleManager, type ScheduledChange } from './schedule-manager';
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
@@ -63,6 +64,8 @@ interface CameraConfigurationProps {
   setIsChatEnabled?: (enabled: boolean) => void;
   eventGrouping: EventGrouping;
   setEventGrouping?: Dispatch<SetStateAction<EventGrouping>>;
+  scheduledChanges?: ScheduledChange[];
+  setScheduledChanges?: Dispatch<SetStateAction<ScheduledChange[]>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -94,6 +97,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setIsChatEnabled,
   eventGrouping,
   setEventGrouping,
+  scheduledChanges,
+  setScheduledChanges,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -605,6 +610,20 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             )
           })}
           </div>
+
+          {hideStartButton && scheduledChanges !== undefined && setScheduledChanges && (
+            <ScheduleManager 
+                scheduledChanges={scheduledChanges}
+                setScheduledChanges={setScheduledChanges}
+                numCameras={numCameras}
+                channels={channels}
+                events={events}
+                channelStatuses={channelStatuses}
+                isLoadingChannels={isLoadingChannelStatuses || false}
+                isLoadingEvents={isLoadingEvents}
+                eventGrouping={eventGrouping}
+            />
+          )}
 
           {!hideStartButton && messages && messages.length > 0 && (
             <div className="space-y-2">
