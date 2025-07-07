@@ -175,15 +175,17 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                             editingId === change.id && "ring-2 ring-primary"
                           )}
                         >
-                          <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-accent/95 rounded-md transition-all">
-                            <Button variant="outline" size="sm" className="bg-background/80 hover:bg-background" onClick={() => handleEditClick(change)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Modificar
-                            </Button>
-                            <Button variant="destructive" size="sm" className="ml-2" onClick={() => handleRemoveChange(change.id)}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Eliminar
-                            </Button>
+                          <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-black/70 rounded-md transition-all">
+                            <div className="flex items-center justify-center">
+                              <Button variant="outline" size="sm" className="bg-background/80 hover:bg-background" onClick={() => handleEditClick(change)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Modificar
+                              </Button>
+                              <Button variant="destructive" size="sm" className="ml-2" onClick={() => handleRemoveChange(change.id)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Eliminar
+                              </Button>
+                            </div>
                           </div>
                           <div className="flex items-center justify-between group-hover:opacity-0 transition-opacity">
                             <div className="flex-1 min-w-0">
