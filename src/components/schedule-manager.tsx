@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, type FC } from 'react';
@@ -15,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, Plus, Search, Trash2 } from 'lucide-react';
+import { Clock, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { ChannelListComponent, type Channel } from './channel-list';
 import { EventListComponent, type Event } from './event-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -71,40 +72,78 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   const [newChange, setNewChange] = useState<{ time: string; viewIndex: number | null; url: string; name: string } | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const getChannelOrEventName = (url: string): string => {
-    const event = events
-        .flatMap(e => e.options.map((optionUrl, i) => ({ url: optionUrl, name: e.buttons[i] || e.title })))
-        .find(item => item.url === url);
-    if (event) return event.name.toUpperCase();
+    const event = events.find(e => e.options.includes(url));
+    if (event) {
+        return event.title;
+    }
 
     const channel = channels.find(c => c.url === url);
-    if (channel) return channel.name.toUpperCase();
+    if (channel) {
+        return channel.name.toUpperCase();
+    }
 
     return "Enlace Personalizado";
   };
   
   const handleSelectContent = (url: string) => {
     const name = getChannelOrEventName(url);
-    setNewChange(prev => ({ ...(prev || { time: '', viewIndex: null }), url, name }));
+    setNewChange(prev => ({ ...(prev || { time: '', viewIndex: null, url: '', name: '' }), url, name }));
     setIsPickerOpen(false);
     setSearchTerm('');
   };
 
-  const handleAddChange = () => {
-    if (newChange && newChange.time && newChange.viewIndex !== null && newChange.url) {
+  const handleAddOrUpdateChange = () => {
+    if (!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url) {
+      return;
+    }
+
+    if (editingId) {
+      // Update existing change
+      setScheduledChanges(
+        scheduledChanges.map((change) =>
+          change.id === editingId
+            ? { ...change, ...newChange, id: editingId }
+            : change
+        )
+      );
+    } else {
+      // Add new change
       setScheduledChanges([
         ...scheduledChanges,
-        { ...newChange, id: crypto.randomUUID(), viewIndex: newChange.viewIndex },
+        { ...newChange, id: crypto.randomUUID(), viewIndex: newChange.viewIndex! },
       ]);
-      setNewChange(null);
     }
+    // Reset form state
+    setNewChange(null);
+    setEditingId(null);
   };
 
   const handleRemoveChange = (id: string) => {
     setScheduledChanges(scheduledChanges.filter((change) => change.id !== id));
+    if (editingId === id) {
+      setEditingId(null);
+      setNewChange(null);
+    }
+  };
+
+  const handleEditClick = (change: ScheduledChange) => {
+    setEditingId(change.id);
+    setNewChange({
+      time: change.time,
+      viewIndex: change.viewIndex,
+      url: change.url,
+      name: change.name,
+    });
   };
   
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setNewChange(null);
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -128,10 +167,13 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                   scheduledChanges
                     .sort((a,b) => a.time.localeCompare(b.time))
                     .map((change) => (
-                      <div key={change.id} className="flex items-center justify-between p-2 bg-muted rounded-md text-sm">
-                        <div className="flex flex-col flex-grow overflow-hidden mr-2">
+                      <div key={change.id} className="flex items-center justify-between p-2 bg-muted rounded-md text-sm group">
+                        <div 
+                          className="flex flex-col flex-grow overflow-hidden mr-2 cursor-pointer"
+                          onClick={() => handleEditClick(change)}
+                        >
                           <span className="font-bold">{change.time}</span>
-                          <span className="text-xs text-muted-foreground truncate">
+                          <span className="text-xs text-muted-foreground truncate group-hover:underline">
                             Ventana {change.viewIndex + 1}: {change.name}
                           </span>
                         </div>
@@ -149,7 +191,16 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
 
           {/* Right Side: Add new change */}
           <div className="w-full sm:w-1/2 flex flex-col">
-             <h3 className="text-lg font-semibold mb-2">Agregar Nuevo</h3>
+            <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold">
+                    {editingId ? 'Editando Cambio' : 'Agregar Nuevo'}
+                </h3>
+                {editingId && (
+                    <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                        Cancelar
+                    </Button>
+                )}
+            </div>
              <div className="space-y-4">
                 <div>
                   <Label htmlFor="schedule-time">Hora (24hs)</Label>
@@ -237,8 +288,16 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
         </div>
 
         <DialogFooter className="p-4 border-t shrink-0">
-          <Button onClick={handleAddChange} disabled={!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url}>
-            <Plus className="mr-2 h-4 w-4" /> Agregar a la Lista
+          <Button onClick={handleAddOrUpdateChange} disabled={!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url}>
+             {editingId ? (
+              <>
+                <Save className="mr-2 h-4 w-4" /> Actualizar Cambio
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 h-4 w-4" /> Agregar a la Lista
+              </>
+            )}
           </Button>
           <DialogClose asChild>
             <Button type="button" variant="secondary">
