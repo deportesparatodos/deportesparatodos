@@ -75,9 +75,9 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const getChannelOrEventName = (url: string): string => {
-    const event = events.find(e => e.options.includes(url));
-    if (event) {
-        return event.title;
+    const eventMatch = events.flatMap(e => e.options.map(optionUrl => ({ ...e, optionUrl }))).find(item => item.optionUrl === url);
+    if (eventMatch) {
+        return eventMatch.title;
     }
 
     const channel = channels.find(c => c.url === url);
@@ -169,7 +169,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     .map((change) => (
                       <div key={change.id} className="flex items-center justify-between p-2 bg-muted rounded-md text-sm group">
                         <div 
-                          className="flex flex-col flex-grow overflow-hidden mr-2 cursor-pointer"
+                          className="flex flex-col flex-grow overflow-hidden mr-2 cursor-pointer min-w-0"
                           onClick={() => handleEditClick(change)}
                         >
                           <span className="font-bold">{change.time}</span>
