@@ -120,7 +120,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                 .find(item => item.optionUrl === url);
 
     if (eventUrlMatch) {
-      return { text: eventUrlMatch.button.toUpperCase(), status: 'valid' };
+      return { text: eventUrlMatch.title, status: 'valid' };
     }
 
     const channelUrlMatch = channels.find(c => c.url === url);
