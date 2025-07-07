@@ -564,7 +564,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                   )}
                               </div>
                               <p className="text-xs text-center text-muted-foreground pt-2">
-                                  Puede desactivar la agrupación de eventos en el menú de configuración.
+                                  Puede modificar la agrupación de eventos en el menú de configuración.
                               </p>
                               <Separator className="mt-2 mb-0.5" />
                               <div className="flex-grow overflow-y-auto pt-[16px]">
