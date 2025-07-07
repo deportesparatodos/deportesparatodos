@@ -113,7 +113,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           Programar Selección
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl h-[70vh] flex flex-col p-0">
+      <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
         <DialogHeader className="p-4 border-b shrink-0">
           <DialogTitle>Programar Cambios</DialogTitle>
         </DialogHeader>
