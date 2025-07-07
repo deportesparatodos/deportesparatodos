@@ -217,16 +217,15 @@ export default function HomePage() {
 
       const eventsWithStatus = events
         .map(e => {
+            // Handle 24/7 events first, they are always 'En Vivo'
             if (e.title.includes('24/7')) {
               return { ...e, status: 'En Vivo' as const };
             }
 
-            if (currentHour >= 21 || currentHour < 6) {
-              return { ...e, status: 'Desconocido' as const };
-            }
-
+            // Calculate start and end times for all other events
             const eventStart = toZonedTime(`${e.date}T${e.time}:00`, timeZone);
             if (isNaN(eventStart.getTime())) {
+              // If date is invalid, it's probably an old or malformed event. Mark as Finalizado.
               return { ...e, status: 'Finalizado' as const };
             }
             
@@ -237,13 +236,21 @@ export default function HomePage() {
             }
             const eventEnd = addHours(eventStart, durationInHours);
             
-            let status: Event['status'] = 'Próximo';
+            let theoreticalStatus: Event['status'];
             if (isAfter(now, eventEnd)) {
-                status = 'Finalizado';
+                theoreticalStatus = 'Finalizado';
             } else if (isAfter(now, eventStart)) {
-                status = 'En Vivo';
+                theoreticalStatus = 'En Vivo';
+            } else {
+                theoreticalStatus = 'Próximo';
             }
-            return { ...e, status };
+
+            // Apply the "Desconocido" override only if the event is not already 'En Vivo' or 'Finalizado'
+            if (theoreticalStatus === 'Próximo' && (currentHour >= 21 || currentHour < 6)) {
+                return { ...e, status: 'Desconocido' as const };
+            }
+    
+            return { ...e, status: theoreticalStatus };
         });
 
       setProcessedEvents(eventsWithStatus);
