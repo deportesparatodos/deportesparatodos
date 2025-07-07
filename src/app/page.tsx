@@ -217,7 +217,7 @@ export default function HomePage() {
 
       const eventsWithStatus = events
         .map(e => {
-            if (currentHour >= 21 || currentHour < 3) {
+            if (currentHour >= 21 || currentHour < 6) {
               return { ...e, status: 'Desconocido' as const };
             }
 
