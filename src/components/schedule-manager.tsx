@@ -169,30 +169,34 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     .sort((a,b) => a.time.localeCompare(b.time))
                     .map((change) => (
                        <div
-                        key={change.id}
-                        className={cn(
-                          "flex items-center justify-between p-2 rounded-md text-sm group transition-colors bg-muted hover:bg-accent hover:text-accent-foreground",
-                          editingId === change.id && "ring-2 ring-primary"
-                        )}
-                      >
-                        {/* Text content */}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold">{change.time}</p>
-                          <p className="text-xs text-muted-foreground group-hover:text-accent-foreground truncate">
-                            Ventana {change.viewIndex + 1}: {change.name}
-                          </p>
+                          key={change.id}
+                          className={cn(
+                            "relative p-2 rounded-md text-sm group transition-colors bg-muted",
+                            editingId === change.id && "ring-2 ring-primary"
+                          )}
+                        >
+                          {/* Original content - will fade out on hover */}
+                          <div className="flex items-center justify-between group-hover:opacity-0 transition-opacity">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold">{change.time}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                Ventana {change.viewIndex + 1}: {change.name}
+                              </p>
+                            </div>
+                          </div>
+                      
+                          {/* Hover overlay with centered buttons */}
+                          <div className="absolute inset-0 hidden group-hover:flex items-center justify-center bg-accent/95 rounded-md transition-all">
+                            <Button variant="outline" size="sm" className="bg-background/80 hover:bg-background" onClick={() => handleEditClick(change)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Modificar
+                            </Button>
+                            <Button variant="destructive" size="sm" className="ml-2" onClick={() => handleRemoveChange(change.id)}>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </Button>
+                          </div>
                         </div>
-
-                        {/* Buttons container */}
-                        <div className="hidden group-hover:flex items-center">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-background/20" onClick={() => handleEditClick(change)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-background/20 text-destructive hover:text-destructive" onClick={() => handleRemoveChange(change.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
                     ))
                 ) : (
                   <p className="text-sm text-muted-foreground text-center pt-4">No hay cambios programados.</p>
