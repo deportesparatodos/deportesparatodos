@@ -21,6 +21,7 @@ import { ChannelListComponent, type Channel } from './channel-list';
 import { EventListComponent, type Event } from './event-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Exporting the type for use in other components
 export interface ScheduledChange {
@@ -74,6 +75,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const getChannelOrEventName = (url: string): string => {
     const eventMatch = events.flatMap(e => e.options.map((optionUrl, i) => ({ ...e, optionUrl, button: e.buttons[i] }))).find(item => item.optionUrl === url);
@@ -160,15 +162,45 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
 
         <div className="flex-grow overflow-hidden flex flex-col sm:flex-row gap-4 p-4">
           {/* Left Side: List of scheduled changes */}
-          <div className="w-full sm:w-1/2 flex flex-col border-b sm:border-b-0 sm:border-r pb-4 sm:pb-0 sm:pr-4">
+          <div className="w-full sm:w-1/2 flex flex-col border-b sm:border-b-0 sm:pb-0 sm:pr-4">
             <h3 className="text-lg font-semibold mb-2">Programados</h3>
             <ScrollArea className="flex-grow pr-2">
               <div className="space-y-2">
                 {scheduledChanges.length > 0 ? (
                   scheduledChanges
                     .sort((a,b) => a.time.localeCompare(b.time))
-                    .map((change) => (
-                       <div
+                    .map((change) => 
+                      isMobile ? (
+                        // Mobile View
+                        <div
+                          key={change.id}
+                          onClick={() => handleEditClick(change)}
+                          className={cn(
+                            "relative p-3 pr-12 rounded-md text-sm transition-colors bg-muted w-full max-w-xl cursor-pointer",
+                            editingId === change.id && "ring-2 ring-primary"
+                          )}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold">{change.time}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Ventana {change.viewIndex + 1}: {change.name}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-1/2 right-2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveChange(change.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        // Desktop View
+                        <div
                           key={change.id}
                           className={cn(
                             "relative p-3 rounded-md text-sm group transition-colors bg-muted w-full max-w-xl",
@@ -196,7 +228,8 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                             </div>
                           </div>
                         </div>
-                    ))
+                      )
+                    )
                 ) : (
                   <p className="text-sm text-muted-foreground text-center pt-4">No hay cambios programados.</p>
                 )}
