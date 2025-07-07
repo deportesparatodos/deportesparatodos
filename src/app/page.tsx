@@ -229,7 +229,13 @@ export default function HomePage() {
             if (isNaN(eventStart.getTime())) {
               return { ...e, status: 'Finalizado' as const };
             }
-            const eventEnd = addHours(eventStart, 3);
+            
+            let durationInHours = 3; // Default duration
+            const durationMatch = e.title.match(/(\d+)\s*(?:hs|horas)/i);
+            if (durationMatch && durationMatch[1]) {
+                durationInHours = parseInt(durationMatch[1], 10) + 1;
+            }
+            const eventEnd = addHours(eventStart, durationInHours);
             
             let status: Event['status'] = 'Próximo';
             if (isAfter(now, eventEnd)) {
@@ -240,20 +246,7 @@ export default function HomePage() {
             return { ...e, status };
         });
 
-      const ongoingOrUpcomingEvents = eventsWithStatus.filter(
-        e => e.status !== 'Finalizado'
-      );
-
-      const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3 };
-
-      ongoingOrUpcomingEvents.sort((a, b) => {
-          if (a.status !== b.status) {
-              return (statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4);
-          }
-          return a.time.localeCompare(b.time);
-      });
-
-      setProcessedEvents(ongoingOrUpcomingEvents);
+      setProcessedEvents(eventsWithStatus);
     };
 
     processAndSetEvents();

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
-import { Copy, CheckCircle2, Loader2, AlertTriangle, Tv, Search, X, RotateCw } from 'lucide-react';
+import { Copy, CheckCircle2, Loader2, AlertTriangle, Tv, Search, X, RotateCw, History } from 'lucide-react';
 import { cn, getUrlOrigin } from '@/lib/utils';
 import {
   Tooltip,
@@ -78,10 +78,16 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       }
     }
   };
+
+  const activeEvents = events.filter(e => e.status !== 'Finalizado');
+  const finishedEvents = events.filter(e => e.status === 'Finalizado').sort((a, b) => {
+      if (a.date !== b.date) return b.date.localeCompare(a.date);
+      return b.time.localeCompare(a.time);
+  });
   
   const { all: groupAll, enVivo: groupEnVivo, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
 
-  const allFilteredEvents = events.filter(event =>
+  const allFilteredEvents = activeEvents.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
@@ -391,7 +397,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   };
 
 
-  if (isLoading && !allFilteredEvents.length) {
+  if (isLoading && !events.length) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -415,100 +421,129 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
       <div className="flex-grow overflow-y-auto">
         <TooltipProvider delayDuration={300}>
-          {allFilteredEvents.length > 0 || eventGroups.length > 0 ? (
+          {allFilteredEvents.length > 0 || eventGroups.length > 0 || (finishedEvents.length > 0 && !searchTerm) ? (
             <div className="space-y-4">
-              {eventGroups.length > 0 && (
-                <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
-                  {eventGroups.map((group, index) => (
-                    <AccordionItem value={`${group.id}-events`} className={cn(
-                        "border-b-0",
-                        firstRenderedItem === 'group' && index === 0 && "mt-[16px]"
-                    )} key={group.id}>
-                      <Card className="bg-muted/50 overflow-hidden">
-                        <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
-                            <div className="flex w-full items-center">
-                                <div className="w-20 flex-shrink-0">
-                                    {group.startTime && (
-                                      <div className="flex flex-col items-center justify-center gap-1 text-center">
-                                        {(() => {
-                                            const allTimes = group.events.map(e => e.time);
-                                            const uniqueTimes = [...new Set(allTimes)];
-                                            
-                                            if (uniqueTimes.length === 1) {
-                                                return (
-                                                    <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
-                                                        {uniqueTimes[0]}
-                                                    </p>
-                                                );
-                                            }
-                                            const startTime = group.events[0].time;
-                                            const endTime = group.events[group.events.length - 1].time;
+              
+              {/* Active Events */}
+              {(allFilteredEvents.length > 0 || eventGroups.length > 0) && (
+                <>
+                  {eventGroups.length > 0 && (
+                    <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
+                      {eventGroups.map((group, index) => (
+                        <AccordionItem value={`${group.id}-events`} className={cn(
+                            "border-b-0",
+                            firstRenderedItem === 'group' && index === 0 && "mt-[16px]"
+                        )} key={group.id}>
+                          <Card className="bg-muted/50 overflow-hidden">
+                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex w-full items-center">
+                                    <div className="w-20 flex-shrink-0">
+                                        {group.startTime && (
+                                          <div className="flex flex-col items-center justify-center gap-1 text-center">
+                                            {(() => {
+                                                const allTimes = group.events.map(e => e.time);
+                                                const uniqueTimes = [...new Set(allTimes)];
+                                                
+                                                if (uniqueTimes.length === 1) {
+                                                    return (
+                                                        <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                            {uniqueTimes[0]}
+                                                        </p>
+                                                    );
+                                                }
+                                                const startTime = group.events[0].time;
+                                                const endTime = group.events[group.events.length - 1].time;
 
-                                            return (
-                                                <>
-                                                    <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
-                                                        {startTime}
-                                                    </p>
-                                                    <span className="text-xs font-mono text-muted-foreground">-</span>
-                                                    <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
-                                                        {endTime}
-                                                    </p>
-                                                </>
-                                            );
-                                        })()}
-                                      </div>
-                                    )}
-                                </div>
-                                <div className="flex-grow flex flex-col items-center justify-center gap-2">
-                                    {group.logo ? (
-                                      <>
-                                        {group.isLive && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                                return (
+                                                    <>
+                                                        <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                            {startTime}
+                                                        </p>
+                                                        <span className="text-xs font-mono text-muted-foreground">-</span>
+                                                        <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
+                                                            {endTime}
+                                                        </p>
+                                                    </>
+                                                );
+                                            })()}
+                                          </div>
                                         )}
-                                        <Image
-                                            src={group.logo}
-                                            alt={`${group.name} Logo`}
-                                            width={group.logoProps.width}
-                                            height={group.logoProps.height}
-                                            className={group.logoProps.className}
-                                            data-ai-hint={`${group.id} logo`}
-                                            unoptimized
-                                        />
-                                        <p className="font-semibold text-sm text-foreground mt-1">{group.name}</p>
-                                      </>
-                                    ) : (
-                                      <>
-                                         <p className="font-semibold text-lg text-foreground">{group.name}</p>
-                                          {group.isLive && (
-                                            <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">EN VIVO</Badge>
-                                          )}
-                                      </>
-                                    )}
+                                    </div>
+                                    <div className="flex-grow flex flex-col items-center justify-center gap-2">
+                                        {group.logo ? (
+                                          <>
+                                            {group.isLive && (
+                                                <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                            )}
+                                            <Image
+                                                src={group.logo}
+                                                alt={`${group.name} Logo`}
+                                                width={group.logoProps.width}
+                                                height={group.logoProps.height}
+                                                className={group.logoProps.className}
+                                                data-ai-hint={`${group.id} logo`}
+                                                unoptimized
+                                            />
+                                            <p className="font-semibold text-sm text-foreground mt-1">{group.name}</p>
+                                          </>
+                                        ) : (
+                                          <>
+                                             <p className="font-semibold text-lg text-foreground">{group.name}</p>
+                                              {group.isLive && (
+                                                <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">EN VIVO</Badge>
+                                              )}
+                                          </>
+                                        )}
+                                    </div>
+                                    <div className="w-20 flex-shrink-0" />
                                 </div>
-                                <div className="w-20 flex-shrink-0" />
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="p-0">
-                            <div className="space-y-4 p-4">
-                                {group.events.map(renderEventCard)}
-                            </div>
-                        </AccordionContent>
-                      </Card>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="space-y-4 p-4">
+                                    {group.events.map(renderEventCard)}
+                                </div>
+                            </AccordionContent>
+                          </Card>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
+                  {ungroupedEvents.map((event, index) => {
+                      const isFirstElementInList = firstRenderedItem === 'event' && index === 0;
+                      const card = renderEventCard(event, index);
+                      return (
+                          <div key={card.key} className={cn(
+                              isFirstElementInList && "mt-[16px]"
+                          )}>
+                              {card}
+                          </div>
+                      );
+                  })}
+                </>
               )}
-              {ungroupedEvents.map((event, index) => {
-                  const isFirstElementInList = firstRenderedItem === 'event' && index === 0;
-                  const card = renderEventCard(event, index);
-                  return (
-                      <div key={card.key} className={cn(
-                          isFirstElementInList && "mt-[16px]"
-                      )}>
-                          {card}
-                      </div>
-                  );
-              })}
+              
+              {/* Finished Events */}
+              {finishedEvents.length > 0 && !searchTerm && (
+                 <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="finished-events" className="border-b-0">
+                        <Card className="bg-muted/50 overflow-hidden">
+                            <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
+                                <div className="flex w-full items-center justify-between">
+                                    <div className="flex items-center gap-2 font-semibold text-foreground">
+                                        <History className="h-5 w-5" />
+                                        <span>Eventos Finalizados</span>
+                                    </div>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-0">
+                                <div className="space-y-4 p-4">
+                                    {finishedEvents.map(renderEventCard)}
+                                </div>
+                            </AccordionContent>
+                        </Card>
+                    </AccordionItem>
+                 </Accordion>
+              )}
             </div>
           ) : (
              <div className="flex items-center justify-center h-full">
