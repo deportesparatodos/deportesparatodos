@@ -295,6 +295,10 @@ export default function HomePage() {
         if (newEvent.buttons?.some((b: string) => b?.toLowerCase() === 'ecdf')) {
           newEvent.image = ecdfImage;
         }
+
+        if (!newEvent.image) {
+          newEvent.image = 'https://cdn-icons-png.flaticon.com/512/9192/9192710.png';
+        }
         
         return newEvent;
       });
