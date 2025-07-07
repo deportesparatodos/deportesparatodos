@@ -211,11 +211,16 @@ export default function HomePage() {
         return;
       }
       
-      const now = new Date();
       const timeZone = 'America/Argentina/Buenos_Aires';
+      const now = toZonedTime(new Date(), timeZone);
+      const currentHour = now.getHours();
 
       const eventsWithStatus = events
         .map(e => {
+            if (currentHour >= 21 || currentHour < 3) {
+              return { ...e, status: 'Desconocido' as const };
+            }
+
             const eventStart = toZonedTime(`${e.date}T${e.time}:00`, timeZone);
             if (isNaN(eventStart.getTime())) {
               return { ...e, status: 'Finalizado' as const };
@@ -235,11 +240,11 @@ export default function HomePage() {
         e => e.status !== 'Finalizado'
       );
 
-      const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2 };
+      const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3 };
 
       ongoingOrUpcomingEvents.sort((a, b) => {
           if (a.status !== b.status) {
-              return (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+              return (statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4);
           }
           return a.time.localeCompare(b.time);
       });

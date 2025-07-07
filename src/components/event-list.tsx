@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { FC } from 'react';
@@ -28,7 +29,7 @@ export interface Event {
   date: string;
   source: string;
   image?: string;
-  status: 'Próximo' | 'En Vivo' | 'Finalizado';
+  status: 'Próximo' | 'En Vivo' | 'Finalizado' | 'Desconocido';
 }
 
 interface EventGrouping {
@@ -306,10 +307,10 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
 
   if (ungroupedEvents.length > 1) {
-    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2 };
+    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3 };
     ungroupedEvents.sort((a, b) => {
         if (a.status !== b.status) {
-            return (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+            return (statusOrder[a.status] ?? 4) - (statusOrder[b.status] ?? 4);
         }
         return a.time.localeCompare(b.time);
     });
@@ -341,7 +342,8 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                     "text-xs font-bold border-0 rounded-none",
                     event.status === 'En Vivo' && 'bg-destructive text-destructive-foreground',
                     event.status === 'Próximo' && 'bg-muted-foreground text-background',
-                    event.status === 'Finalizado' && 'bg-black text-white'
+                    event.status === 'Finalizado' && 'bg-black text-white',
+                    event.status === 'Desconocido' && 'bg-yellow-500 text-yellow-950'
                   )}>{event.status}</Badge>
                 )}
               </div>
