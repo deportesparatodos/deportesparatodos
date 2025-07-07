@@ -168,21 +168,27 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                   scheduledChanges
                     .sort((a,b) => a.time.localeCompare(b.time))
                     .map((change) => (
-                      <div key={change.id} className={cn(
-                          "relative flex items-center p-2 bg-muted rounded-md text-sm group",
+                       <div
+                        key={change.id}
+                        className={cn(
+                          "flex items-center justify-between p-2 rounded-md text-sm group transition-colors bg-muted hover:bg-accent hover:text-accent-foreground",
                           editingId === change.id && "ring-2 ring-primary"
-                        )}>
-                        <div className="flex-1 min-w-0 pr-20">
+                        )}
+                      >
+                        {/* Text content */}
+                        <div className="flex-1 min-w-0">
                           <p className="font-bold">{change.time}</p>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-xs text-muted-foreground group-hover:text-accent-foreground truncate">
                             Ventana {change.viewIndex + 1}: {change.name}
                           </p>
                         </div>
-                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-muted">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(change)}>
+
+                        {/* Buttons container */}
+                        <div className="hidden group-hover:flex items-center">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-background/20" onClick={() => handleEditClick(change)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleRemoveChange(change.id)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-background/20 text-destructive hover:text-destructive" onClick={() => handleRemoveChange(change.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
