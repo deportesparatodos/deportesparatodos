@@ -171,7 +171,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                        <div
                           key={change.id}
                           className={cn(
-                            "relative p-2 rounded-md text-sm group transition-colors bg-muted w-full max-w-xl",
+                            "relative p-3 rounded-md text-sm group transition-colors bg-muted w-full max-w-xl",
                             editingId === change.id && "ring-2 ring-primary"
                           )}
                         >
@@ -190,7 +190,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                           <div className="flex items-center justify-between group-hover:opacity-0 transition-opacity">
                             <div className="flex-1 min-w-0">
                               <p className="font-bold">{change.time}</p>
-                              <p className="text-xs text-muted-foreground truncate">
+                              <p className="text-xs text-muted-foreground">
                                 Ventana {change.viewIndex + 1}: {change.name}
                               </p>
                             </div>
