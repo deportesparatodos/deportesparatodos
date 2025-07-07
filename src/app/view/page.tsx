@@ -18,17 +18,17 @@ import { type ScheduledChange } from '@/components/schedule-manager';
 
 
 const defaultEventGrouping = {
-  all: true,
-  enVivo: true,
-  otros: true,
-  f1: true,
-  mlb: true,
-  nba: true,
-  mundialDeClubes: true,
-  deportesDeCombate: true,
-  liga1: true,
-  ligaPro: true,
-  mls: true,
+  all: false,
+  enVivo: false,
+  otros: false,
+  f1: false,
+  mlb: false,
+  nba: false,
+  mundialDeClubes: false,
+  deportesDeCombate: false,
+  liga1: false,
+  ligaPro: false,
+  mls: false,
 };
 
 function normalizeEventTitleForKey(title: string): string {
