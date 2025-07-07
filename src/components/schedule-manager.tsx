@@ -75,7 +75,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const getChannelOrEventName = (url: string): string => {
-    const eventMatch = events.flatMap(e => e.options.map(optionUrl => ({ ...e, optionUrl }))).find(item => item.optionUrl === url);
+    const eventMatch = events.flatMap(e => e.options.map((optionUrl, i) => ({ ...e, optionUrl, button: e.buttons[i] }))).find(item => item.optionUrl === url);
     if (eventMatch) {
         return eventMatch.title;
     }
@@ -167,7 +167,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                   scheduledChanges
                     .sort((a,b) => a.time.localeCompare(b.time))
                     .map((change) => (
-                      <div key={change.id} className="flex items-center justify-between p-2 bg-muted rounded-md text-sm group">
+                      <div key={change.id} className="flex items-center p-2 bg-muted rounded-md text-sm group">
                         <div 
                           className="flex flex-col flex-grow overflow-hidden mr-2 cursor-pointer min-w-0"
                           onClick={() => handleEditClick(change)}
@@ -177,7 +177,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                             Ventana {change.viewIndex + 1}: {change.name}
                           </span>
                         </div>
-                        <Button variant="ghost" size="icon" className="flex-shrink-0 h-8 w-8" onClick={() => handleRemoveChange(change.id)}>
+                        <Button variant="ghost" size="icon" className="ml-auto flex-shrink-0 h-8 w-8" onClick={() => handleRemoveChange(change.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
