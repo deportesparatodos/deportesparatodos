@@ -226,8 +226,8 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                             <Trash2 className="h-4 w-4" />
                           </Button>
                           <div className="pr-10">
-                             <p className="font-bold text-lg">{change.time}</p>
-                             <p className="text-sm text-muted-foreground">Cantidad de Ventanas: {change.numCameras}</p>
+                              <p className="font-bold text-lg">{change.time}</p>
+                              <p className="text-sm text-muted-foreground">Cantidad de Ventanas: {change.numCameras}</p>
                           </div>
                       </div>
                     ))
@@ -245,13 +245,13 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                 <ScrollArea className="flex-grow pr-2 -mr-2">
                     <div className="space-y-4">
                         <div className='space-y-2'>
-                          <Label htmlFor="schedule-time">Hora</Label>
-                          <Input 
+                           <Label htmlFor="schedule-time">Hora:</Label>
+                           <Input 
                               id="schedule-time" 
                               type="time" 
                               value={editingChange.time || ''}
                               onChange={e => setEditingChange(prev => prev ? {...prev, time: e.target.value} : null)}
-                          />
+                           />
                         </div>
 
                         <div className="space-y-2">
