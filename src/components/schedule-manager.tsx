@@ -211,38 +211,24 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     .map((change) => (
                       <div
                         key={change.id}
-                        className="relative p-3 rounded-md text-sm transition-colors bg-muted w-full max-w-xl group"
+                        className="relative p-3 rounded-md text-sm transition-colors bg-muted w-full max-w-xl cursor-pointer hover:bg-accent"
+                        onClick={() => handleEditClick(change)}
                       >
-                         <div
-                            className="absolute inset-0 bg-accent/90 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+                         <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-1/2 right-2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveChange(change.id);
+                            }}
+                            aria-label="Eliminar cambio programado"
                           >
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-background"
-                              onClick={() => handleEditClick(change)}
-                            >
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Modificar
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleRemoveChange(change.id)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Eliminar
-                            </Button>
-                          </div>
-
-                        <div className="flex justify-between items-center group-hover:opacity-0 transition-opacity">
-                            <div className="flex-1 min-w-0 pr-4">
-                               <p className="font-bold text-base whitespace-nowrap">{change.time}</p>
-                                <p className="text-muted-foreground">
-                                    {change.numCameras} Ventanas: {change.names.filter(Boolean).join(', ')}
-                                </p>
-                            </div>
-                        </div>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <p className="font-bold text-base pr-10 whitespace-normal">
+                             {change.time}, {change.numCameras} {change.numCameras === 1 ? 'Ventana' : 'Ventanas'}
+                          </p>
                       </div>
                     ))
                 ) : (
@@ -260,6 +246,9 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     <h3 className="text-lg font-semibold">
                         {editingId ? 'Editando Diseño' : 'Nuevo Diseño'}
                     </h3>
+                    <Button variant="ghost" size="icon" onClick={handleCancelEdit} className="h-7 w-7">
+                        <X className="h-4 w-4" />
+                    </Button>
                 </div>
                 <ScrollArea className="flex-grow pr-2 -mr-2">
                     <div className="space-y-4">
@@ -308,7 +297,6 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     </div>
                 </ScrollArea>
                  <div className="flex justify-end gap-2 pt-4">
-                    <Button variant="outline" onClick={handleCancelEdit}>Cancelar</Button>
                     <Button onClick={handleSaveChange}>
                         <Save className="mr-2 h-4 w-4" /> Guardar
                     </Button>
