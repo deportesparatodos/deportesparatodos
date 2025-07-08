@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, Plus, Save, Search, Trash2, Pencil, X, ChevronDown } from 'lucide-react';
+import { Clock, Plus, Save, Search, Trash2, ArrowUp, ArrowDown, X, ChevronDown } from 'lucide-react';
 import { ChannelListComponent, type Channel } from './channel-list';
 import { EventListComponent, type Event } from './event-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -160,6 +160,27 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
     const num = parseInt(value, 10);
     setEditingChange(prev => prev ? { ...prev, numCameras: num } : null);
   };
+
+  const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
+    if (!editingChange) return;
+
+    const newUrls = [...editingChange.urls];
+    const newNames = [...editingChange.names];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (targetIndex < 0 || targetIndex >= editingChange.numCameras) {
+        return;
+    }
+
+    [newUrls[index], newUrls[targetIndex]] = [newUrls[targetIndex], newUrls[index]];
+    [newNames[index], newNames[targetIndex]] = [newNames[targetIndex], newNames[index]];
+
+    setEditingChange({
+        ...editingChange,
+        urls: newUrls,
+        names: newNames,
+    });
+  };
   
   const handleOpenPicker = (index: number) => {
     setPickerState({ open: true, viewIndex: index });
@@ -196,7 +217,6 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
         </DialogHeader>
 
         <div className="flex-grow overflow-hidden flex flex-col md:flex-row gap-6 p-4">
-          {/* Left Side: List of scheduled changes */}
           <div className="w-full md:w-2/5 flex flex-col">
             <Button onClick={handleAddNewClick} className="mb-4 w-full max-w-xl mx-auto">
               <Plus className="mr-2 h-4 w-4" />
@@ -238,8 +258,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
             </ScrollArea>
           </div>
 
-          {/* Right Side: Add/Edit Form */}
-          <div className="w-full md:w-3/5 flex flex-col border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
+          <div className="w-full md:w-3/5 flex flex-col border-t md:border-t-0 md:border-t-0 pt-4 md:pt-0 md:pl-6">
             {editingChange ? (
                 <>
                 <ScrollArea className="flex-grow pr-2 -mr-2">
@@ -273,15 +292,35 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                         
                         {Array.from({ length: editingChange.numCameras }).map((_, index) => (
                            <div key={index} className="flex items-center space-x-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => handleMoveUrl(index, 'up')}
+                                    disabled={index === 0}
+                                    aria-label="Mover hacia arriba"
+                                >
+                                    <ArrowUp className="h-4 w-4" />
+                                </Button>
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="relative flex-grow justify-between items-center overflow-hidden w-0 h-auto py-1.5"
+                                className="relative flex-grow justify-between items-center overflow-hidden w-0"
                                 onClick={() => handleOpenPicker(index)}
                               >
                                 <span className="whitespace-normal text-left text-sm">{editingChange.names[index] || "Elegir Canal…"}</span>
                                 <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
                               </Button>
+                               <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => handleMoveUrl(index, 'down')}
+                                    disabled={index === editingChange.numCameras - 1}
+                                    aria-label="Mover hacia abajo"
+                                >
+                                    <ArrowDown className="h-4 w-4" />
+                                </Button>
                            </div>
                         ))}
                     </div>
@@ -303,7 +342,6 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           </div>
         </div>
 
-        {/* Picker Dialog */}
         <Dialog open={pickerState.open} onOpenChange={(isOpen) => setPickerState(prev => ({...prev, open: isOpen}))}>
           <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
                 <DialogHeader className="p-4 border-b">
