@@ -213,30 +213,34 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                         key={change.id}
                         className="relative p-3 rounded-md text-sm transition-colors bg-muted w-full max-w-xl group"
                       >
-                        <div className="flex justify-between items-center">
+                         <div
+                            className="absolute inset-0 bg-accent/90 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-background"
+                              onClick={() => handleEditClick(change)}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Modificar
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleRemoveChange(change.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Eliminar
+                            </Button>
+                          </div>
+
+                        <div className="flex justify-between items-center group-hover:opacity-0 transition-opacity">
                             <div className="flex-1 min-w-0 pr-4">
-                              <p className="font-bold text-base">{change.time}</p>
-                              <p className="text-muted-foreground truncate">
-                                {change.numCameras} Ventanas: {change.names.filter(Boolean).join(', ')}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                                  onClick={() => handleEditClick(change)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
-                                  onClick={() => handleRemoveChange(change.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                               <p className="font-bold text-base whitespace-nowrap">{change.time}</p>
+                                <p className="text-muted-foreground">
+                                    {change.numCameras} Ventanas: {change.names.filter(Boolean).join(', ')}
+                                </p>
                             </div>
                         </div>
                       </div>
@@ -289,7 +293,6 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                           <Label>Configurar Vistas</Label>
                           {Array.from({ length: editingChange.numCameras }).map((_, index) => (
                              <div key={index} className="flex items-center space-x-2">
-                                <Label className="w-16 text-muted-foreground">V. {index + 1}</Label>
                                 <Button
                                   type="button"
                                   variant="outline"
