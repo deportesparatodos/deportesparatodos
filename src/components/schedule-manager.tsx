@@ -257,19 +257,20 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
               </div>
             </ScrollArea>
           </div>
-
-          <div className="w-full md:w-3/5 flex flex-col border-t md:border-t-0 md:border-t-0 pt-4 md:pt-0 md:pl-6">
+          
+          <div className="w-full md:w-3/5 flex flex-col border-t md:border-t-0 md:border-l md:border-border pt-4 md:pt-0 md:pl-8">
             {editingChange ? (
                 <>
                 <ScrollArea className="flex-grow pr-2 -mr-2">
                     <div className="space-y-4">
                         <div className='space-y-2'>
                            <Label htmlFor="schedule-time">Hora:</Label>
-                           <Input 
+                           <input
                               id="schedule-time" 
                               type="time" 
                               value={editingChange.time || ''}
                               onChange={e => setEditingChange(prev => prev ? {...prev, time: e.target.value} : null)}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                            />
                         </div>
 
