@@ -9,8 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -78,7 +76,6 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pickerState, setPickerState] = useState<{ open: boolean; viewIndex: number | null }>({ open: false, viewIndex: null });
   const [searchTerm, setSearchTerm] = useState("");
-  const isMobile = useIsMobile();
   
   const getChannelOrEventName = (url: string): string => {
     if (!url) return "Elegir Canal…";
@@ -206,7 +203,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full max-w-xl mx-auto">
+        <Button variant="outline" className="w-full">
           <Clock className="mr-2 h-4 w-4" />
           Programar Selección
         </Button>
@@ -258,7 +255,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
             </ScrollArea>
           </div>
           
-          <div className="w-full md:w-3/5 flex flex-col border-t md:border-t-0 md:border-l md:border-border pt-4 md:pt-0 md:pl-8">
+          <div className="w-full md:w-3/5 flex flex-col border-t md:border-t-0 md:border-l md:border-border pt-6 md:pt-0 md:pl-6">
             {editingChange ? (
                 <>
                 <ScrollArea className="flex-grow pr-2 -mr-2">
