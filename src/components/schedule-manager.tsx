@@ -185,21 +185,21 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
+        <Button variant="outline" className="w-full max-w-xl mx-auto">
           <Clock className="mr-2 h-4 w-4" />
           Programar Selección
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl h-[85vh] flex flex-col p-0">
+      <DialogContent className="w-full max-w-xl h-[85vh] flex flex-col p-0">
         <DialogHeader className="p-4 border-b shrink-0">
           <DialogTitle>Programar Diseños</DialogTitle>
         </DialogHeader>
 
         <div className="flex-grow overflow-hidden flex flex-col md:flex-row gap-6 p-4">
           {/* Left Side: List of scheduled changes */}
-          <div className="w-full md:w-1/3 flex flex-col">
+          <div className="w-full md:w-1/2 flex flex-col">
             <h3 className="text-lg font-semibold mb-2">Programados</h3>
-            <Button onClick={handleAddNewClick} className="mb-4">
+            <Button onClick={handleAddNewClick} className="mb-4 w-full">
               <Plus className="mr-2 h-4 w-4" />
               Programar Nuevo Diseño
             </Button>
@@ -211,7 +211,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     .map((change) => (
                       <div
                         key={change.id}
-                        className="relative p-3 rounded-md text-sm transition-colors bg-muted w-full max-w-xl cursor-pointer hover:bg-accent"
+                        className="relative p-3 rounded-md text-sm transition-colors bg-muted w-full max-w-xl cursor-pointer"
                         onClick={() => handleEditClick(change)}
                       >
                          <Button
@@ -226,9 +226,12 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                          <p className="font-bold text-base pr-10 whitespace-normal">
-                             {change.time}, {change.numCameras} {change.numCameras === 1 ? 'Ventana' : 'Ventanas'}
-                          </p>
+                          <div className="pr-10">
+                            <p className="font-bold text-lg">{change.time}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {change.numCameras} {change.numCameras === 1 ? 'Ventana' : 'Ventanas'}
+                            </p>
+                          </div>
                       </div>
                     ))
                 ) : (
@@ -239,7 +242,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           </div>
 
           {/* Right Side: Add/Edit Form */}
-          <div className="w-full md:w-2/3 flex flex-col border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
+          <div className="w-full md:w-1/2 flex flex-col border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
             {editingChange ? (
                 <>
                 <div className="flex items-center justify-between mb-4">
@@ -253,7 +256,6 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                 <ScrollArea className="flex-grow pr-2 -mr-2">
                     <div className="space-y-4">
                         <div>
-                        <Label htmlFor="schedule-time">Hora (24hs)</Label>
                         <Input 
                             id="schedule-time" 
                             type="time" 
