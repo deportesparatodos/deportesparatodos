@@ -190,14 +190,14 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           Programar Selección
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full max-w-xl h-[85vh] flex flex-col p-0">
+      <DialogContent className="w-full max-w-3xl h-[85vh] flex flex-col p-0">
         <DialogHeader className="p-4 border-b shrink-0">
           <DialogTitle>Programar Diseños</DialogTitle>
         </DialogHeader>
 
         <div className="flex-grow overflow-hidden flex flex-col md:flex-row gap-6 p-4">
           {/* Left Side: List of scheduled changes */}
-          <div className="w-full md:w-1/3 flex flex-col">
+          <div className="w-full md:w-2/5 flex flex-col">
             <Button onClick={handleAddNewClick} className="mb-4 w-full max-w-xl mx-auto">
               <Plus className="mr-2 h-4 w-4" />
               Programar Nuevo Diseño
@@ -210,7 +210,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     .map((change) => (
                       <div
                         key={change.id}
-                        className="relative p-3 rounded-md transition-colors bg-muted w-full max-w-xl cursor-pointer"
+                        className="relative p-3 rounded-md transition-colors bg-muted w-full max-w-xl mx-auto cursor-pointer"
                         onClick={() => handleEditClick(change)}
                       >
                          <Button
@@ -227,9 +227,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                           </Button>
                           <div className="pr-10">
                              <p className="font-bold text-lg">{change.time}</p>
-                             <p className="text-sm text-muted-foreground">
-                               {change.numCameras} {change.numCameras === 1 ? 'Ventana' : 'Ventanas'}
-                             </p>
+                             <p className="text-sm text-muted-foreground">Cantidad de Ventanas: {change.numCameras}</p>
                           </div>
                       </div>
                     ))
@@ -241,17 +239,20 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           </div>
 
           {/* Right Side: Add/Edit Form */}
-          <div className="w-full md:w-2/3 flex flex-col border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
+          <div className="w-full md:w-3/5 flex flex-col border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
             {editingChange ? (
                 <>
                 <ScrollArea className="flex-grow pr-2 -mr-2">
                     <div className="space-y-4">
-                        <Input 
-                            id="schedule-time" 
-                            type="time" 
-                            value={editingChange.time || ''}
-                            onChange={e => setEditingChange(prev => prev ? {...prev, time: e.target.value} : null)}
-                        />
+                        <div className='space-y-2'>
+                          <Label htmlFor="schedule-time">Hora</Label>
+                          <Input 
+                              id="schedule-time" 
+                              type="time" 
+                              value={editingChange.time || ''}
+                              onChange={e => setEditingChange(prev => prev ? {...prev, time: e.target.value} : null)}
+                          />
+                        </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="schedule-num-cameras">Configurar Vista:</Label>
@@ -275,10 +276,10 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="relative flex-grow justify-between items-center overflow-hidden w-0"
+                                className="relative flex-grow justify-between items-center overflow-hidden w-0 h-auto py-1.5"
                                 onClick={() => handleOpenPicker(index)}
                               >
-                                <span className="whitespace-normal text-left">{editingChange.names[index] || "Elegir Canal…"}</span>
+                                <span className="whitespace-normal text-left text-sm">{editingChange.names[index] || "Elegir Canal…"}</span>
                                 <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
                               </Button>
                            </div>
