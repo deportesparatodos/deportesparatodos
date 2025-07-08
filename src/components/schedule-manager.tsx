@@ -190,7 +190,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           Programar Selección
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
+      <DialogContent className="max-w-xl h-[85vh] flex flex-col p-0">
         <DialogHeader className="p-4 border-b shrink-0">
           <DialogTitle>Programar Diseños</DialogTitle>
         </DialogHeader>
@@ -242,9 +242,9 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           <div className="w-full md:w-2/3 flex flex-col border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
             {editingChange ? (
                 <>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">
-                        {editingId ? 'Editando Diseño' : 'Nuevo Diseño'}
+                      Configurar Vistas:
                     </h3>
                     <Button variant="ghost" size="icon" onClick={handleCancelEdit} className="h-7 w-7">
                         <X className="h-4 w-4" />
@@ -261,25 +261,22 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                             onChange={e => setEditingChange(prev => prev ? {...prev, time: e.target.value} : null)}
                         />
                         </div>
-                        <div>
-                        <Label htmlFor="schedule-num-cameras">Ventanas</Label>
-                        <Select onValueChange={handleFormNumCamerasChange} value={String(editingChange.numCameras)}>
-                            <SelectTrigger id="schedule-num-cameras">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="1">1 VENTANA</SelectItem>
-                                <SelectItem value="2">2 VENTANAS</SelectItem>
-                                <SelectItem value="3">3 VENTANAS</SelectItem>
-                                <SelectItem value="4">4 VENTANAS</SelectItem>
-                                <SelectItem value="6">6 VENTANAS</SelectItem>
-                                <SelectItem value="9">9 VENTANAS</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        </div>
 
                         <div className="space-y-2">
-                          <Label>Configurar Vistas</Label>
+                          <Select onValueChange={handleFormNumCamerasChange} value={String(editingChange.numCameras)}>
+                              <SelectTrigger id="schedule-num-cameras">
+                                  <SelectValue placeholder="Seleccionar cantidad de ventanas" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="1">1 VENTANA</SelectItem>
+                                  <SelectItem value="2">2 VENTANAS</SelectItem>
+                                  <SelectItem value="3">3 VENTANAS</SelectItem>
+                                  <SelectItem value="4">4 VENTANAS</SelectItem>
+                                  <SelectItem value="6">6 VENTANAS</SelectItem>
+                                  <SelectItem value="9">9 VENTANAS</SelectItem>
+                              </SelectContent>
+                          </Select>
+                          
                           {Array.from({ length: editingChange.numCameras }).map((_, index) => (
                              <div key={index} className="flex items-center space-x-2">
                                 <Button
@@ -288,7 +285,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                                   className="relative flex-grow justify-between items-center overflow-hidden w-0"
                                   onClick={() => handleOpenPicker(index)}
                                 >
-                                  <span className="truncate text-left">{editingChange.names[index] || "Elegir Canal…"}</span>
+                                  <span className="whitespace-normal text-left">{editingChange.names[index] || "Elegir Canal…"}</span>
                                   <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
                                 </Button>
                              </div>
