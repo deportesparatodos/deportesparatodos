@@ -17,7 +17,7 @@ import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
-import { ScheduleManager, type ScheduledChange } from './schedule-manager';
+import { ScheduleManager, type ScheduledLayoutChange } from './schedule-manager';
 
 export type CameraStatus = 'empty' | 'valid' | 'unknown' | 'inactive';
 
@@ -64,8 +64,8 @@ interface CameraConfigurationProps {
   setIsChatEnabled?: (enabled: boolean) => void;
   eventGrouping: EventGrouping;
   setEventGrouping?: Dispatch<SetStateAction<EventGrouping>>;
-  scheduledChanges?: ScheduledChange[];
-  setScheduledChanges?: Dispatch<SetStateAction<ScheduledChange[]>>;
+  scheduledChanges?: ScheduledLayoutChange[];
+  setScheduledChanges?: Dispatch<SetStateAction<ScheduledLayoutChange[]>>;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -627,6 +627,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 scheduledChanges={scheduledChanges}
                 setScheduledChanges={setScheduledChanges}
                 numCameras={numCameras}
+                cameraUrls={cameraUrls}
                 channels={channels}
                 events={events}
                 channelStatuses={channelStatuses}

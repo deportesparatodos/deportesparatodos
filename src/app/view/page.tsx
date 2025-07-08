@@ -14,7 +14,7 @@ import { addHours, isAfter } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { type ScheduledChange } from '@/components/schedule-manager';
+import { type ScheduledLayoutChange } from '@/components/schedule-manager';
 
 
 const defaultEventGrouping = {
@@ -207,7 +207,7 @@ function ViewPageContent() {
   const isMobile = useIsMobile();
   const [eventGrouping, setEventGrouping] = useState(defaultEventGrouping);
   const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
-  const [scheduledChanges, setScheduledChanges] = useState<ScheduledChange[]>([]);
+  const [scheduledChanges, setScheduledChanges] = useState<ScheduledLayoutChange[]>([]);
 
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -300,19 +300,21 @@ function ViewPageContent() {
       const dueChanges = scheduledChanges.filter(change => change.time === currentTime);
 
       if (dueChanges.length > 0) {
-        setUrls(currentUrls => {
-          const newUrls = [...currentUrls];
-          dueChanges.forEach(change => {
-            if (change.viewIndex < newUrls.length) {
-              newUrls[change.viewIndex] = change.url;
-            }
-          });
-          return newUrls;
-        });
+        const latestChange = dueChanges[dueChanges.length - 1]; // In case multiple are scheduled, take the last one
 
-        // Remove executed changes from state
+        setNumCameras(latestChange.numCameras);
+        
+        const newUrls = Array(9).fill('');
+        latestChange.urls.forEach((url, i) => {
+            if (i < newUrls.length) {
+                newUrls[i] = url;
+            }
+        });
+        setUrls(newUrls);
+
+        // Remove ALL executed changes from state
         setScheduledChanges(currentChanges => 
-          currentChanges.filter(change => !dueChanges.find(due => due.id === change.id))
+          currentChanges.filter(change => change.time !== currentTime)
         );
       }
     }, 10000); // Check every 10 seconds

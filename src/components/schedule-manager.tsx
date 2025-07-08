@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, type FC } from 'react';
+import { useState, type FC, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,19 +16,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, Plus, Save, Search, Trash2, Pencil } from 'lucide-react';
+import { Clock, Plus, Save, Search, Trash2, Pencil, X, ChevronDown } from 'lucide-react';
 import { ChannelListComponent, type Channel } from './channel-list';
 import { EventListComponent, type Event } from './event-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 // Exporting the type for use in other components
-export interface ScheduledChange {
+export interface ScheduledLayoutChange {
   id: string;
   time: string; // HH:mm format
-  viewIndex: number; // 0-based index
-  url: string;
-  name: string;
+  numCameras: number;
+  urls: string[];
+  names: string[];
 }
 
 // Copied from camera-configuration.tsx to avoid dependency issues
@@ -47,9 +49,10 @@ interface EventGrouping {
 }
 
 interface ScheduleManagerProps {
-  scheduledChanges: ScheduledChange[];
-  setScheduledChanges: (changes: ScheduledChange[]) => void;
+  scheduledChanges: ScheduledLayoutChange[];
+  setScheduledChanges: (changes: ScheduledLayoutChange[]) => void;
   numCameras: number;
+  cameraUrls: string[];
   channels: Channel[];
   events: Event[];
   channelStatuses: Record<string, 'online' | 'offline'>;
@@ -62,6 +65,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   scheduledChanges,
   setScheduledChanges,
   numCameras,
+  cameraUrls,
   channels,
   events,
   channelStatuses,
@@ -70,80 +74,113 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   eventGrouping,
 }) => {
   const [open, setOpen] = useState(false);
-  const [newChange, setNewChange] = useState<{ time: string; viewIndex: number | null; url: string; name: string } | null>(null);
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [editingChange, setEditingChange] = useState<Omit<ScheduledLayoutChange, 'id'> | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-
+  const [pickerState, setPickerState] = useState<{ open: boolean; viewIndex: number | null }>({ open: false, viewIndex: null });
+  const [searchTerm, setSearchTerm] = useState("");
+  const isMobile = useIsMobile();
+  
   const getChannelOrEventName = (url: string): string => {
+    if (!url) return "Elegir Canal…";
     const eventMatch = events.flatMap(e => e.options.map((optionUrl, i) => ({ ...e, optionUrl, button: e.buttons[i] }))).find(item => item.optionUrl === url);
     if (eventMatch) {
         return eventMatch.title;
     }
-
     const channel = channels.find(c => c.url === url);
     if (channel) {
         return channel.name.toUpperCase();
     }
-
     return "Enlace Personalizado";
   };
-  
-  const handleSelectContent = (url: string) => {
-    const name = getChannelOrEventName(url);
-    setNewChange(prev => ({ ...(prev || { time: '', viewIndex: null, url: '', name: '' }), url, name }));
-    setIsPickerOpen(false);
-    setSearchTerm('');
+
+  const handleAddNewClick = () => {
+    setEditingId(null);
+    setEditingChange({
+        time: '',
+        numCameras: numCameras,
+        urls: [...cameraUrls],
+        names: cameraUrls.map(url => getChannelOrEventName(url))
+    });
   };
 
-  const handleAddOrUpdateChange = () => {
-    if (!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url) {
-      return;
+  const handleEditClick = (change: ScheduledLayoutChange) => {
+    setEditingId(change.id);
+    const fullUrls = Array(9).fill('');
+    const fullNames = Array(9).fill('');
+    change.urls.forEach((url, i) => fullUrls[i] = url);
+    change.names.forEach((name, i) => fullNames[i] = name);
+
+    setEditingChange({
+        time: change.time,
+        numCameras: change.numCameras,
+        urls: fullUrls,
+        names: fullNames,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingChange(null);
+  }
+  
+  const handleSaveChange = () => {
+    if (!editingChange || !editingChange.time || !editingChange.numCameras) {
+        return;
     }
 
+    const changeToSave: ScheduledLayoutChange = {
+        id: editingId || crypto.randomUUID(),
+        time: editingChange.time,
+        numCameras: editingChange.numCameras,
+        urls: editingChange.urls.slice(0, editingChange.numCameras),
+        names: editingChange.names.slice(0, editingChange.numCameras),
+    };
+
     if (editingId) {
-      // Update existing change
-      setScheduledChanges(
-        scheduledChanges.map((change) =>
-          change.id === editingId
-            ? { ...change, ...newChange, id: editingId }
-            : change
-        )
-      );
+        setScheduledChanges(
+            scheduledChanges.map((change) =>
+                change.id === editingId ? changeToSave : change
+            )
+        );
     } else {
-      // Add new change
-      setScheduledChanges([
-        ...scheduledChanges,
-        { ...newChange, id: crypto.randomUUID(), viewIndex: newChange.viewIndex! },
-      ]);
+        setScheduledChanges([...scheduledChanges, changeToSave]);
     }
-    // Reset form state
-    setNewChange(null);
-    setEditingId(null);
+    
+    handleCancelEdit();
   };
 
   const handleRemoveChange = (id: string) => {
     setScheduledChanges(scheduledChanges.filter((change) => change.id !== id));
     if (editingId === id) {
-      setEditingId(null);
-      setNewChange(null);
+      handleCancelEdit();
     }
   };
 
-  const handleEditClick = (change: ScheduledChange) => {
-    setEditingId(change.id);
-    setNewChange({
-      time: change.time,
-      viewIndex: change.viewIndex,
-      url: change.url,
-      name: change.name,
-    });
+  const handleFormNumCamerasChange = (value: string) => {
+    const num = parseInt(value, 10);
+    setEditingChange(prev => prev ? { ...prev, numCameras: num } : null);
   };
   
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setNewChange(null);
-  }
+  const handleOpenPicker = (index: number) => {
+    setPickerState({ open: true, viewIndex: index });
+  };
+  
+  const handleSelectContent = (url: string) => {
+    if (pickerState.viewIndex === null || !editingChange) return;
+
+    const name = getChannelOrEventName(url);
+    const index = pickerState.viewIndex;
+
+    const newUrls = [...editingChange.urls];
+    const newNames = [...editingChange.names];
+    newUrls[index] = url;
+    newNames[index] = name;
+    
+    setEditingChange({ ...editingChange, urls: newUrls, names: newNames });
+    setPickerState({ open: false, viewIndex: null });
+    setSearchTerm('');
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -153,16 +190,20 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           Programar Selección
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
         <DialogHeader className="p-4 border-b shrink-0">
-          <DialogTitle>Programar Cambios</DialogTitle>
+          <DialogTitle>Programar Diseños</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-grow overflow-hidden flex flex-col sm:flex-row gap-4 p-4">
+        <div className="flex-grow overflow-hidden flex flex-col md:flex-row gap-6 p-4">
           {/* Left Side: List of scheduled changes */}
-          <div className="w-full sm:w-1/2 flex flex-col border-b sm:border-b-0 sm:pb-0 sm:pr-4">
+          <div className="w-full md:w-1/3 flex flex-col">
             <h3 className="text-lg font-semibold mb-2">Programados</h3>
-            <ScrollArea className="flex-grow pr-2">
+            <Button onClick={handleAddNewClick} className="mb-4">
+              <Plus className="mr-2 h-4 w-4" />
+              Programar Nuevo Diseño
+            </Button>
+            <ScrollArea className="flex-grow pr-2 -mr-2">
               <div className="space-y-2">
                 {scheduledChanges.length > 0 ? (
                   scheduledChanges
@@ -170,156 +211,160 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                     .map((change) => (
                       <div
                         key={change.id}
-                        onClick={() => handleEditClick(change)}
-                        className={cn(
-                          "relative p-3 pr-12 rounded-md text-sm transition-colors bg-muted w-full max-w-xl cursor-pointer",
-                          editingId === change.id && "ring-2 ring-primary"
-                        )}
+                        className="relative p-3 rounded-md text-sm transition-colors bg-muted w-full max-w-xl group"
                       >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold">{change.time}</p>
-                          <p className="text-muted-foreground">
-                            Ventana {change.viewIndex + 1}: {change.name}
-                          </p>
+                        <div className="flex justify-between items-center">
+                            <div className="flex-1 min-w-0 pr-4">
+                              <p className="font-bold text-base">{change.time}</p>
+                              <p className="text-muted-foreground truncate">
+                                {change.numCameras} Ventanas: {change.names.filter(Boolean).join(', ')}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                  onClick={() => handleEditClick(change)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
+                                  onClick={() => handleRemoveChange(change.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-1/2 right-2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:bg-destructive/20 hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveChange(change.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     ))
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center pt-4">No hay cambios programados.</p>
+                  <p className="text-sm text-muted-foreground text-center pt-4">No hay diseños programados.</p>
                 )}
               </div>
             </ScrollArea>
           </div>
 
-          {/* Right Side: Add new change */}
-          <div className="w-full sm:w-1/2 flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold">
-                    {editingId ? 'Editando Cambio' : 'Agregar Nuevo'}
-                </h3>
-                {editingId && (
-                    <Button variant="outline" size="sm" onClick={handleCancelEdit}>
-                        Cancelar
-                    </Button>
-                )}
-            </div>
-             <div className="space-y-4">
-                <div>
-                  <Label htmlFor="schedule-time">Hora (24hs)</Label>
-                  <Input 
-                    id="schedule-time" 
-                    type="time" 
-                    value={newChange?.time || ''}
-                    onChange={e => setNewChange(prev => ({...(prev || { url: '', name: '', viewIndex: null }), time: e.target.value}))}
-                  />
+          {/* Right Side: Add/Edit Form */}
+          <div className="w-full md:w-2/3 flex flex-col border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
+            {editingChange ? (
+                <>
+                <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">
+                        {editingId ? 'Editando Diseño' : 'Nuevo Diseño'}
+                    </h3>
                 </div>
-                 <div>
-                  <Label htmlFor="schedule-view">Ventana</Label>
-                  <Select
-                    value={newChange?.viewIndex !== null && newChange?.viewIndex !== undefined ? String(newChange.viewIndex) : ''}
-                    onValueChange={value => setNewChange(prev => ({...(prev || { url: '', name: '', time: ''}), viewIndex: parseInt(value, 10)}))}
-                  >
-                    <SelectTrigger id="schedule-view">
-                      <SelectValue placeholder="Seleccionar ventana..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: numCameras }).map((_, i) => (
-                        <SelectItem key={i} value={String(i)}>
-                          Ventana {i + 1}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <ScrollArea className="flex-grow pr-2 -mr-2">
+                    <div className="space-y-4">
+                        <div>
+                        <Label htmlFor="schedule-time">Hora (24hs)</Label>
+                        <Input 
+                            id="schedule-time" 
+                            type="time" 
+                            value={editingChange.time || ''}
+                            onChange={e => setEditingChange(prev => prev ? {...prev, time: e.target.value} : null)}
+                        />
+                        </div>
+                        <div>
+                        <Label htmlFor="schedule-num-cameras">Ventanas</Label>
+                        <Select onValueChange={handleFormNumCamerasChange} value={String(editingChange.numCameras)}>
+                            <SelectTrigger id="schedule-num-cameras">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="1">1 VENTANA</SelectItem>
+                                <SelectItem value="2">2 VENTANAS</SelectItem>
+                                <SelectItem value="3">3 VENTANAS</SelectItem>
+                                <SelectItem value="4">4 VENTANAS</SelectItem>
+                                <SelectItem value="6">6 VENTANAS</SelectItem>
+                                <SelectItem value="9">9 VENTANAS</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        </div>
 
-                <div>
-                    <Label>Canal / Evento</Label>
-                    <Dialog open={isPickerOpen} onOpenChange={setIsPickerOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left font-normal truncate">
-                                {newChange?.name || "Seleccionar contenido..."}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                             <DialogHeader className="p-4 border-b">
-                                <DialogTitle>Seleccionar un Canal o Evento</DialogTitle>
-                            </DialogHeader>
-                             <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden px-4 pb-4 pt-2">
-                                <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="channels">Canales</TabsTrigger>
-                                    <TabsTrigger value="events">Eventos</TabsTrigger>
-                                </TabsList>
-                                <div className="relative my-4">
-                                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                  <Input
-                                      type="text"
-                                      placeholder="Buscar..."
-                                      className="h-9 w-full pl-10"
-                                      value={searchTerm}
-                                      onChange={(e) => setSearchTerm(e.target.value)}
-                                  />
-                                </div>
-                                <TabsContent value="channels" className="flex-grow flex flex-col overflow-hidden mt-0 data-[state=inactive]:hidden">
-                                    <ScrollArea>
-                                        <ChannelListComponent 
-                                            channelStatuses={channelStatuses}
-                                            isLoading={isLoadingChannels}
-                                            onSelectChannel={handleSelectContent}
-                                            searchTerm={searchTerm}
-                                        />
-                                    </ScrollArea>
-                                </TabsContent>
-                                <TabsContent value="events" className="flex-grow flex flex-col overflow-hidden mt-0 data-[state=inactive]:hidden">
-                                    <ScrollArea>
-                                        <EventListComponent 
-                                            onSelectEvent={handleSelectContent}
-                                            events={events}
-                                            isLoading={isLoadingEvents}
-                                            error={null}
-                                            eventGrouping={eventGrouping}
-                                            searchTerm={searchTerm}
-                                        />
-                                    </ScrollArea>
-                                </TabsContent>
-                             </Tabs>
-                        </DialogContent>
-                    </Dialog>
+                        <div className="space-y-2">
+                          <Label>Configurar Vistas</Label>
+                          {Array.from({ length: editingChange.numCameras }).map((_, index) => (
+                             <div key={index} className="flex items-center space-x-2">
+                                <Label className="w-16 text-muted-foreground">V. {index + 1}</Label>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="relative flex-grow justify-between items-center overflow-hidden w-0"
+                                  onClick={() => handleOpenPicker(index)}
+                                >
+                                  <span className="truncate text-left">{editingChange.names[index] || "Elegir Canal…"}</span>
+                                  <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                                </Button>
+                             </div>
+                          ))}
+                        </div>
+                    </div>
+                </ScrollArea>
+                 <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" onClick={handleCancelEdit}>Cancelar</Button>
+                    <Button onClick={handleSaveChange}>
+                        <Save className="mr-2 h-4 w-4" /> Guardar
+                    </Button>
                 </div>
-             </div>
+                </>
+            ) : (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">Seleccione un diseño para editar o cree uno nuevo.</p>
+                </div>
+            )}
           </div>
         </div>
 
-        <DialogFooter className="p-4 border-t shrink-0 flex justify-end">
-            <div className="flex gap-2">
-                <Button onClick={handleAddOrUpdateChange} disabled={!newChange || !newChange.time || newChange.viewIndex === null || !newChange.url}>
-                   {editingId ? (
-                    <>
-                      <Save className="mr-2 h-4 w-4" /> Actualizar
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="mr-2 h-4 w-4" /> Agregar
-                    </>
-                  )}
-                </Button>
-                <DialogClose asChild>
-                  <Button type="button" variant="secondary">
-                    Cerrar
-                  </Button>
-                </DialogClose>
-            </div>
-        </DialogFooter>
+        {/* Picker Dialog */}
+        <Dialog open={pickerState.open} onOpenChange={(isOpen) => setPickerState(prev => ({...prev, open: isOpen}))}>
+          <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
+                <DialogHeader className="p-4 border-b">
+                  <DialogTitle>Seleccionar para Vista {pickerState.viewIndex !== null ? pickerState.viewIndex + 1 : ''}</DialogTitle>
+              </DialogHeader>
+                <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden px-4 pb-4 pt-2">
+                  <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="channels">Canales</TabsTrigger>
+                      <TabsTrigger value="events">Eventos</TabsTrigger>
+                  </TabsList>
+                  <div className="relative my-4">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Buscar..."
+                        className="h-9 w-full pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <TabsContent value="channels" className="flex-grow flex flex-col overflow-hidden mt-0 data-[state=inactive]:hidden">
+                      <ScrollArea>
+                          <ChannelListComponent 
+                              channelStatuses={channelStatuses}
+                              isLoading={isLoadingChannels}
+                              onSelectChannel={handleSelectContent}
+                              searchTerm={searchTerm}
+                          />
+                      </ScrollArea>
+                  </TabsContent>
+                  <TabsContent value="events" className="flex-grow flex flex-col overflow-hidden mt-0 data-[state=inactive]:hidden">
+                      <ScrollArea>
+                          <EventListComponent 
+                              onSelectEvent={handleSelectContent}
+                              events={events}
+                              isLoading={isLoadingEvents}
+                              error={null}
+                              eventGrouping={eventGrouping}
+                              searchTerm={searchTerm}
+                          />
+                      </ScrollArea>
+                  </TabsContent>
+                </Tabs>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
