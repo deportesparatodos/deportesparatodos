@@ -14,18 +14,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, Plus, Save, Search, Trash2, ArrowUp, ArrowDown, X, ChevronDown } from 'lucide-react';
+import { Clock, Plus, Save, Search, Trash2, ArrowUp, ArrowDown, X, ChevronDown, Calendar as CalendarIcon } from 'lucide-react';
 import { ChannelListComponent, type Channel } from './channel-list';
 import { EventListComponent, type Event } from './event-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 
 // Exporting the type for use in other components
 export interface ScheduledLayoutChange {
   id: string;
-  time: string; // HH:mm format
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
   numCameras: number;
   urls: string[];
   names: string[];
@@ -76,6 +81,23 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pickerState, setPickerState] = useState<{ open: boolean; viewIndex: number | null }>({ open: false, viewIndex: null });
   const [searchTerm, setSearchTerm] = useState("");
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    // Clean up past events when the dialog is opened
+    if (open) {
+        const now = new Date();
+        const upcomingChanges = scheduledChanges.filter(change => {
+            if (!change.date || !change.time) return false;
+            const scheduledDateTime = new Date(`${change.date}T${change.time}`);
+            return scheduledDateTime >= now;
+        });
+
+        if (upcomingChanges.length !== scheduledChanges.length) {
+            setScheduledChanges(upcomingChanges);
+        }
+    }
+  }, [open, scheduledChanges, setScheduledChanges]);
   
   const getChannelOrEventName = (url: string): string => {
     if (!url) return "Elegir Canal…";
@@ -94,6 +116,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
     setEditingId(null);
     setEditingChange({
         time: '',
+        date: format(new Date(), 'yyyy-MM-dd'),
         numCameras: numCameras,
         urls: [...cameraUrls],
         names: cameraUrls.map(url => getChannelOrEventName(url))
@@ -109,6 +132,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
 
     setEditingChange({
         time: change.time,
+        date: change.date || format(new Date(), 'yyyy-MM-dd'),
         numCameras: change.numCameras,
         urls: fullUrls,
         names: fullNames,
@@ -121,12 +145,13 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   }
   
   const handleSaveChange = () => {
-    if (!editingChange || !editingChange.time || !editingChange.numCameras) {
+    if (!editingChange || !editingChange.time || !editingChange.date || !editingChange.numCameras) {
         return;
     }
 
     const changeToSave: ScheduledLayoutChange = {
         id: editingId || crypto.randomUUID(),
+        date: editingChange.date,
         time: editingChange.time,
         numCameras: editingChange.numCameras,
         urls: editingChange.urls.slice(0, editingChange.numCameras),
@@ -203,7 +228,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
+        <Button variant="outline" className="w-full max-w-xl mx-auto">
           <Clock className="mr-2 h-4 w-4" />
           Programar Selección
         </Button>
@@ -223,7 +248,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
               <div className="space-y-2">
                 {scheduledChanges.length > 0 ? (
                   scheduledChanges
-                    .sort((a,b) => a.time.localeCompare(b.time))
+                    .sort((a,b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
                     .map((change) => (
                       <div
                         key={change.id}
@@ -242,9 +267,9 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                          <div className="pr-10">
-                              <p className="font-bold text-lg">{change.time}</p>
-                              <p className="text-sm text-muted-foreground">Cantidad de Ventanas: {change.numCameras}</p>
+                          <div className="pr-10 text-center">
+                            <p className="font-bold text-lg">{change.date ? format(new Date(change.date + 'T00:00:00'), 'EEE, dd MMM', { locale: es }) : ''} - {change.time}</p>
+                            <p className="text-sm text-muted-foreground">Cantidad de Ventanas: {change.numCameras}</p>
                           </div>
                       </div>
                     ))
@@ -260,15 +285,46 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                 <>
                 <ScrollArea className="flex-grow pr-2 -mr-2">
                     <div className="space-y-4">
-                        <div className='space-y-2'>
-                           <Label htmlFor="schedule-time">Hora:</Label>
-                           <input
-                              id="schedule-time" 
-                              type="time" 
-                              value={editingChange.time || ''}
-                              onChange={e => setEditingChange(prev => prev ? {...prev, time: e.target.value} : null)}
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                           />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className='space-y-2'>
+                              <Label htmlFor="schedule-date">Fecha:</Label>
+                              <Popover>
+                                  <PopoverTrigger asChild>
+                                      <Button
+                                          id="schedule-date"
+                                          variant={"outline"}
+                                          className={cn(
+                                              "w-full justify-start text-left font-normal",
+                                              !editingChange.date && "text-muted-foreground"
+                                          )}
+                                      >
+                                          <CalendarIcon className="mr-2 h-4 w-4" />
+                                          {editingChange.date ? format(new Date(editingChange.date + 'T00:00:00'), "PPP", { locale: es }) : <span>Seleccionar fecha</span>}
+                                      </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0 bg-background">
+                                      <Calendar
+                                          mode="single"
+                                          selected={editingChange.date ? new Date(editingChange.date + 'T00:00:00') : undefined}
+                                          onSelect={(day) =>
+                                              setEditingChange(prev => prev ? { ...prev, date: day ? format(day, 'yyyy-MM-dd') : '' } : null)
+                                          }
+                                          disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))}
+                                          initialFocus
+                                      />
+                                  </PopoverContent>
+                              </Popover>
+                          </div>
+                          <div className='space-y-2'>
+                              <Label htmlFor="schedule-time">Hora:</Label>
+                              <input
+                                  id="schedule-time"
+                                  type="time"
+                                  value={editingChange.time || ''}
+                                  onChange={e => setEditingChange(prev => prev ? { ...prev, time: e.target.value } : null)}
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                          </div>
                         </div>
 
                         <div className="space-y-2">

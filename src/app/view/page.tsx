@@ -269,9 +269,22 @@ function ViewPageContent() {
     const storedScheduledChanges = localStorage.getItem('scheduledChanges');
     if (storedScheduledChanges) {
         try {
-            setScheduledChanges(JSON.parse(storedScheduledChanges));
+            const parsedChanges: ScheduledLayoutChange[] = JSON.parse(storedScheduledChanges);
+            const now = new Date();
+
+            const upcomingChanges = parsedChanges.filter(change => {
+                if (!change.date || !change.time) return false; // Discard invalid/old entries
+                const scheduledDateTime = new Date(`${change.date}T${change.time}`);
+                return scheduledDateTime >= now;
+            });
+
+            setScheduledChanges(upcomingChanges);
+            
+            if (upcomingChanges.length !== parsedChanges.length) {
+                localStorage.setItem('scheduledChanges', JSON.stringify(upcomingChanges));
+            }
         } catch (e) {
-            console.error("Failed to parse scheduledChanges from localStorage", e);
+            console.error("Failed to parse or filter scheduledChanges from localStorage", e);
         }
     }
   }, []);
@@ -295,27 +308,33 @@ function ViewPageContent() {
 
     const intervalId = setInterval(() => {
       const now = new Date();
-      const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
       
-      const dueChanges = scheduledChanges.filter(change => change.time === currentTime);
+      const dueChanges = scheduledChanges.filter(change => {
+        if (!change.date || !change.time) return false;
+        const scheduledDateTime = new Date(`${change.date}T${change.time}`);
+        return now >= scheduledDateTime;
+      });
 
       if (dueChanges.length > 0) {
-        const latestChange = dueChanges[dueChanges.length - 1]; // In case multiple are scheduled, take the last one
+        dueChanges.sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
+        const changeToApply = dueChanges[dueChanges.length - 1];
 
-        setNumCameras(latestChange.numCameras);
+        setNumCameras(changeToApply.numCameras);
         
         const newUrls = Array(9).fill('');
-        latestChange.urls.forEach((url, i) => {
+        changeToApply.urls.forEach((url, i) => {
             if (i < newUrls.length) {
                 newUrls[i] = url;
             }
         });
         setUrls(newUrls);
 
-        // Remove ALL executed changes from state
-        setScheduledChanges(currentChanges => 
-          currentChanges.filter(change => change.time !== currentTime)
-        );
+        const upcomingChanges = scheduledChanges.filter(change => {
+          if (!change.date || !change.time) return false;
+          const scheduledDateTime = new Date(`${change.date}T${change.time}`);
+          return now < scheduledDateTime;
+        });
+        setScheduledChanges(upcomingChanges);
       }
     }, 10000); // Check every 10 seconds
 
