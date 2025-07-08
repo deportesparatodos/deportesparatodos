@@ -592,19 +592,30 @@ export default function HomePage() {
                           </div>
 
                           <div className="space-y-2">
-                              <Label htmlFor="border-color-input">Color de Bordes</Label>
-                              <div className="flex items-center gap-2">
-                                  <Input
-                                      id="border-color-input"
-                                      value={borderColor}
-                                      onChange={(e) => handleBorderColorChange(e.target.value)}
-                                      className="flex-grow"
-                                  />
-                                  <div
-                                      className="h-8 w-8 rounded-md border border-input"
-                                      style={{ backgroundColor: borderColor }}
-                                  />
-                              </div>
+                            <Label htmlFor="border-color-input">Color de Bordes</Label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    id="border-color-input"
+                                    value={borderColor}
+                                    onChange={(e) => handleBorderColorChange(e.target.value)}
+                                    className="flex-grow"
+                                />
+                                <div className="relative h-8 w-8 rounded-md border border-input overflow-hidden">
+                                    <div
+                                        className="h-full w-full"
+                                        style={{ backgroundColor: borderColor }}
+                                        aria-hidden="true"
+                                    />
+                                    <input
+                                        id="border-color-picker-home"
+                                        type="color"
+                                        value={borderColor}
+                                        onChange={(e) => handleBorderColorChange(e.target.value)}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        title="Seleccionar color"
+                                    />
+                                </div>
+                            </div>
                           </div>
 
                           <div className="space-y-2">
