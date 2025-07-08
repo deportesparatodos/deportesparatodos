@@ -216,7 +216,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
           <DialogTitle>Programar Diseños</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-grow overflow-hidden flex flex-col md:flex-row gap-6 p-4">
+        <div className="flex-grow overflow-y-auto md:overflow-hidden flex flex-col md:flex-row gap-6 p-4">
           <div className="w-full md:w-2/5 flex flex-col">
             <Button onClick={handleAddNewClick} className="mb-4 w-full max-w-xl mx-auto">
               <Plus className="mr-2 h-4 w-4" />
@@ -299,6 +299,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                                     onClick={() => handleMoveUrl(index, 'up')}
                                     disabled={index === 0}
                                     aria-label="Mover hacia arriba"
+                                    className="bg-background hover:bg-accent/50"
                                 >
                                     <ArrowUp className="h-4 w-4" />
                                 </Button>
@@ -318,6 +319,7 @@ export const ScheduleManager: FC<ScheduleManagerProps> = ({
                                     onClick={() => handleMoveUrl(index, 'down')}
                                     disabled={index === editingChange.numCameras - 1}
                                     aria-label="Mover hacia abajo"
+                                    className="bg-background hover:bg-accent/50"
                                 >
                                     <ArrowDown className="h-4 w-4" />
                                 </Button>
