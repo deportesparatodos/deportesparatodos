@@ -559,19 +559,30 @@ function ViewPageContent() {
   const numIframes = numCameras;
   let gridContainerClasses = "grid flex-grow w-full h-full";
 
-  if (numIframes === 1) {
-    gridContainerClasses += " grid-cols-1 grid-rows-1";
-  } else if (numIframes === 2) {
-    gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
-  } else if (numIframes === 3) {
-    gridContainerClasses += " grid-cols-2 grid-rows-2";
-  } else if (numIframes === 4) {
-    gridContainerClasses += " grid-cols-2 grid-rows-2";
-  } else if (numIframes <= 6) {
-    gridContainerClasses += " grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2";
-  } else {
-    gridContainerClasses += " grid-cols-3 grid-rows-3";
+  switch (numIframes) {
+    case 1:
+      gridContainerClasses += " grid-cols-1 grid-rows-1";
+      break;
+    case 2:
+      gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
+      break;
+    case 3:
+      // Special responsive layout for 3 windows
+      gridContainerClasses += " grid-cols-1 md:grid-cols-2 md:grid-rows-2";
+      break;
+    case 4:
+      gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-4 md:grid-rows-2";
+      break;
+    case 6:
+      gridContainerClasses += " grid-cols-1 md:grid-cols-3 grid-rows-6 md:grid-rows-2";
+      break;
+    case 9:
+      gridContainerClasses += " grid-cols-1 md:grid-cols-3 grid-rows-9 md:grid-rows-3";
+      break;
+    default:
+      gridContainerClasses += " grid-cols-1 grid-rows-1";
   }
+
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
@@ -845,11 +856,11 @@ function ViewPageContent() {
                 windowClasses.push("bg-red-500", "flex", "items-center", "justify-center", "text-destructive-foreground", "font-bold");
             }
              if (numIframes === 3) {
-              if (index === 0) {
-                windowClasses.push("row-span-1 col-span-2");
-              } else {
-                windowClasses.push("col-span-1 row-span-1");
-              }
+              // Special layout for 3 windows on desktop
+              windowClasses.push(
+                'md:col-span-1 md:row-span-1', // Default for all three on desktop
+                index === 0 ? 'md:col-span-2' : '' // First item spans two columns on desktop
+              );
             }
             
             return (
