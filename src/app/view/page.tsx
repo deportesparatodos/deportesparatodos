@@ -2,11 +2,11 @@
 "use client";
 
 import Link from 'next/link';
-import { X, Loader2, Menu, MessageSquare } from "lucide-react";
+import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings } from "lucide-react";
 import { Suspense, useState, useEffect } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
@@ -14,7 +14,9 @@ import { addHours, isAfter } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { type ScheduledLayoutChange } from '@/components/schedule-manager';
+import type { ScheduledLayoutChange } from '@/components/schedule-manager';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 
 
 const defaultEventGrouping = {
@@ -209,6 +211,8 @@ function ViewPageContent() {
   const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
   const [scheduledChanges, setScheduledChanges] = useState<ScheduledLayoutChange[]>([]);
 
+  const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
+  const [progress, setProgress] = useState(100);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   
@@ -227,9 +231,34 @@ function ViewPageContent() {
     });
   };
 
+  // Welcome Popup Timer
+  useEffect(() => {
+    if (welcomePopupOpen) {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev <= 0) {
+            clearInterval(interval);
+            setWelcomePopupOpen(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 100); // Update every 100ms for 10s total
+
+      return () => clearInterval(interval);
+    }
+  }, [welcomePopupOpen]);
+
   // Load from localStorage on mount
   useEffect(() => {
     setIsMounted(true);
+
+    const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcomePopup');
+    if (!hasSeenWelcome) {
+        setWelcomePopupOpen(true);
+        sessionStorage.setItem('hasSeenWelcomePopup', 'true');
+    }
+
     const storedUrls = localStorage.getItem('cameraUrls');
     if (storedUrls) {
       const parsedUrls = JSON.parse(storedUrls);
@@ -546,6 +575,100 @@ function ViewPageContent() {
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
+       <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+              <div className="relative">
+                  <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6"
+                      onClick={() => setWelcomePopupOpen(false)}
+                  >
+                      <X className="h-4 w-4" />
+                  </Button>
+              </div>
+              <DialogHeader className="p-6 pt-8 text-center">
+                  <DialogTitle>¡Bienvenido a la Sala de Control!</DialogTitle>
+              </DialogHeader>
+              <div className="px-6 pb-6 text-center text-sm text-muted-foreground">
+                  <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
+              </div>
+              <DialogFooter className="flex-row items-center justify-center gap-2 p-6 pt-0">
+                  <Dialog>
+                      <DialogTrigger asChild>
+                          <Button variant="outline"><HelpCircle className="mr-2 h-4 w-4" />Tutorial</Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl">
+                          <DialogHeader>
+                              <DialogTitle>Tutorial de Uso</DialogTitle>
+                          </DialogHeader>
+                          <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
+                              <p>¡Bienvenido a Deportes para Todos! Esta guía te ayudará a sacar el máximo provecho de la plataforma.</p>
+                              <h4 className="font-semibold text-foreground pt-2">Paso 1: Selecciona la cantidad de ventanas</h4>
+                              <p>Usa el menú desplegable en el centro de la pantalla para elegir cuántas transmisiones quieres ver simultáneamente. Puedes seleccionar entre 1, 2, 3, 4, 6 o 9 ventanas.</p>
+                              <h4 className="font-semibold text-foreground pt-2">Paso 2: Elige tus canales o eventos</h4>
+                              <p>Para cada una de las ventanas que seleccionaste, verás un botón que dice "Elegir Canal…". Haz clic en él para abrir un diálogo con dos pestañas:</p>
+                              <ul className="list-disc pl-6 space-y-1">
+                                  <li><strong>Canales:</strong> Una lista de canales de televisión disponibles 24/7. Puedes usar la barra de búsqueda para encontrar uno rápidamente.</li>
+                                  <li><strong>Eventos:</strong> Una lista de eventos deportivos en vivo o próximos a comenzar. Los eventos están agrupados por competición (puedes desactivar esto en la configuración).</li>
+                              </ul>
+                              <p>Simplemente haz clic en "Seleccionar" en el canal o evento que desees, y se asignará a esa ventana. También puedes pegar un enlace de video directamente desde el portapapeles.</p>
+                              <h4 className="font-semibold text-foreground pt-2">Paso 3: Inicia la vista</h4>
+                              <p>Una vez que hayas configurado todas tus ventanas, presiona el botón "Iniciar Vista". Esto te llevará a una nueva página donde verás todas tus transmisiones seleccionadas en la disposición que elegiste.</p>
+                              <h4 className="font-semibold text-foreground pt-2">Configuraciones Adicionales</h4>
+                              <p>En el menú principal (arriba a la izquierda) encontrarás la sección de "Configuración", donde puedes personalizar tu experiencia:</p>
+                              <ul className="list-disc pl-6 space-y-1">
+                                  <li><strong>Bordes:</strong> Ajusta el tamaño y el color de los bordes entre las ventanas de video.</li>
+                                  <li><strong>Chat:</strong> Activa o desactiva el chat en vivo en la página de visualización.</li>
+                                  <li><strong>Eventos:</strong> Activa o desactiva la agrupación de eventos por competición.</li>
+                              </ul>
+                              <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
+                              <ul className="list-disc pl-6 space-y-1">
+                                  <li>Puedes mover las ventanas hacia arriba o hacia abajo usando las flechas junto a cada selección.</li>
+                                  <li>Si un canal aparece como "Inactivo", es posible que no funcione.</li>
+                                  <li>Para cualquier problema, consulta las secciones de "Errores" o "Contacto" en el menú.</li>
+                              </ul>
+                          </div>
+                      </DialogContent>
+                  </Dialog>
+                  <Dialog>
+                      <DialogTrigger asChild>
+                          <Button variant="outline"><AlertCircle className="mr-2 h-4 w-4" />Errores</Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-3xl">
+                          <DialogHeader>
+                              <DialogTitle>Solución de Errores Comunes</DialogTitle>
+                          </DialogHeader>
+                          <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
+                              <p>En ocasiones, para reproducir los videos en esta página, es posible que necesites realizar una de las siguientes acciones. A continuación, te explicamos cuáles son y para qué sirven.</p>
+                              <h4 className="font-semibold text-foreground">Solución 1: Configurar el DNS de Cloudflare (1.1.1.1)</h4>
+                              <p>Si los videos no cargan o no se pueden reproducir, el primer paso que puedes intentar es cambiar el DNS de tu dispositivo.</p>
+                              <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
+                              <p>El DNS (Sistema de Nombres de Dominio) es como una agenda de contactos de internet que traduce los nombres de las páginas web (como www.ejemplo.com) a una dirección IP numérica que las computadoras pueden entender. A veces, el DNS que te asigna tu proveedor de internet puede ser lento o bloquear el acceso a ciertos contenidos.</p>
+                              <p>Al cambiar tu DNS a <strong>1.1.1.1</strong>, que es el servicio de DNS gratuito de Cloudflare, estás utilizando un servicio que a menudo es más rápido y privado. Esto puede resolver problemas de conexión y permitir que tu dispositivo acceda a los videos que antes no podía cargar.</p>
+                              <Separator className="my-4" />
+                              <h4 className="font-semibold text-foreground">Solución 2: Instalar la extensión "Reproductor MPD/M3U8/M3U/EPG"</h4>
+                              <p>Si cambiar el DNS no soluciona el problema, la otra alternativa es instalar una extensión en tu navegador Google Chrome.</p>
+                              <p><strong>Extensión:</strong> Reproductor MPD/M3U8/M3U/EPG</p>
+                              <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
+                              <p>Algunos videos en internet se transmiten en formatos especiales como M3U8 o MPD. No todos los navegadores web pueden reproducir estos formatos de forma nativa sin ayuda.</p>
+                              <p>Esta extensión de Chrome funciona como un reproductor de video especializado que le añade a tu navegador la capacidad de entender y decodificar estos formatos de transmisión. Al instalarla, le das a Chrome las herramientas necesarias para que pueda reproducir correctamente los videos de la página.</p>
+                              <Separator className="my-4" />
+                              <h4 className="font-semibold text-foreground">Otras Soluciones Rápidas</h4>
+                              <p>Si las soluciones anteriores no funcionan, aquí tienes otras acciones que puedes intentar y que resuelven problemas comunes:</p>
+                              <ul className="list-disc pl-6 space-y-2">
+                                  <li><strong>Cambiar de navegador:</strong> A veces, ciertos navegadores (o sus configuraciones) pueden causar conflictos. Prueba usar uno diferente como Google Chrome, Mozilla Firefox o Microsoft Edge para ver si el problema persiste.</li>
+                                  <li><strong>Desactivar Adblocker:</strong> Los bloqueadores de anuncios a veces pueden interferir con la carga de los reproductores de video. Intenta desactivar tu Adblocker temporalmente para este sitio y vuelve a cargar la página.</li>
+                                  <li><strong>Uso en dispositivos móviles:</strong> Esta plataforma está optimizada para su uso en computadoras de escritorio. Si bien puede funcionar en celulares o tabletas, la experiencia puede no ser la ideal y es más propensa a errores. Recomendamos usar una PC para una mejor estabilidad.</li>
+                                  <li><strong>Reiniciar el dispositivo:</strong> Un reinicio rápido de tu computadora o dispositivo puede solucionar problemas temporales de red, memoria o software que podrían estar afectando la reproducción.</li>
+                              </ul>
+                          </div>
+                      </DialogContent>
+                  </Dialog>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
       <div className="relative flex flex-col h-screen flex-grow">
         <div
           className={cn(
@@ -577,7 +700,7 @@ function ViewPageContent() {
               </SheetTrigger>
               <SheetContent side="left" className="w-full sm:w-96 flex flex-col p-0">
                  <SheetHeader className="p-4 py-3 border-b">
-                   <SheetTitle>Configuracion:</SheetTitle>
+                   <SheetTitle>Configuración:</SheetTitle>
                  </SheetHeader>
                  <div className="overflow-y-auto p-4 flex-grow">
                     {isLoadingEvents || isLoadingStatuses ? (
@@ -607,8 +730,7 @@ function ViewPageContent() {
                             gridGap={gridGap}
                             borderColor={borderColor}
                             handleGridGapChange={handleGridGapChange}
-                            handleBorderColorChange={handleBorderColorChange}
-                            handleRestoreDefaults={handleRestoreDefaults}
+                            handleBorderColorChange={handleRestoreDefaults}
                             isChatEnabled={isChatEnabled}
                             setIsChatEnabled={setIsChatEnabled}
                             eventGrouping={eventGrouping}
@@ -617,6 +739,85 @@ function ViewPageContent() {
                             setScheduledChanges={setScheduledChanges}
                       />
                     )}
+                 </div>
+                 <div className="p-4 border-t space-y-2 shrink-0">
+                     <Dialog>
+                          <DialogTrigger asChild>
+                              <Button variant="outline" className="justify-start w-full">
+                                  <HelpCircle className="mr-2 h-4 w-4" />
+                                  Tutorial
+                              </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-3xl">
+                              <DialogHeader>
+                                  <DialogTitle>Tutorial de Uso</DialogTitle>
+                              </DialogHeader>
+                              <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
+                                  <p>¡Bienvenido a Deportes para Todos! Esta guía te ayudará a sacar el máximo provecho de la plataforma.</p>
+                                  <h4 className="font-semibold text-foreground pt-2">Paso 1: Selecciona la cantidad de ventanas</h4>
+                                  <p>Usa el menú desplegable en el centro de la pantalla para elegir cuántas transmisiones quieres ver simultáneamente. Puedes seleccionar entre 1, 2, 3, 4, 6 o 9 ventanas.</p>
+                                  <h4 className="font-semibold text-foreground pt-2">Paso 2: Elige tus canales o eventos</h4>
+                                  <p>Para cada una de las ventanas que seleccionaste, verás un botón que dice "Elegir Canal…". Haz clic en él para abrir un diálogo con dos pestañas:</p>
+                                  <ul className="list-disc pl-6 space-y-1">
+                                      <li><strong>Canales:</strong> Una lista de canales de televisión disponibles 24/7. Puedes usar la barra de búsqueda para encontrar uno rápidamente.</li>
+                                      <li><strong>Eventos:</strong> Una lista de eventos deportivos en vivo o próximos a comenzar. Los eventos están agrupados por competición (puedes desactivar esto en la configuración).</li>
+                                  </ul>
+                                  <p>Simplemente haz clic en "Seleccionar" en el canal o evento que desees, y se asignará a esa ventana. También puedes pegar un enlace de video directamente desde el portapapeles.</p>
+                                  <h4 className="font-semibold text-foreground pt-2">Paso 3: Inicia la vista</h4>
+                                  <p>Una vez que hayas configurado todas tus ventanas, presiona el botón "Iniciar Vista". Esto te llevará a una nueva página donde verás todas tus transmisiones seleccionadas en la disposición que elegiste.</p>
+                                  <h4 className="font-semibold text-foreground pt-2">Configuraciones Adicionales</h4>
+                                  <p>En el menú principal (arriba a la izquierda) encontrarás la sección de "Configuración", donde puedes personalizar tu experiencia:</p>
+                                  <ul className="list-disc pl-6 space-y-1">
+                                      <li><strong>Bordes:</strong> Ajusta el tamaño y el color de los bordes entre las ventanas de video.</li>
+                                      <li><strong>Chat:</strong> Activa o desactiva el chat en vivo en la página de visualización.</li>
+                                      <li><strong>Eventos:</strong> Activa o desactiva la agrupación de eventos por competición.</li>
+                                  </ul>
+                                  <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
+                                  <ul className="list-disc pl-6 space-y-1">
+                                      <li>Puedes mover las ventanas hacia arriba o hacia abajo usando las flechas junto a cada selección.</li>
+                                      <li>Si un canal aparece como "Inactivo", es posible que no funcione.</li>
+                                      <li>Para cualquier problema, consulta las secciones de "Errores" o "Contacto" en el menú.</li>
+                                  </ul>
+                              </div>
+                          </DialogContent>
+                      </Dialog>
+                     <Dialog>
+                          <DialogTrigger asChild>
+                              <Button variant="outline" className="justify-start w-full">
+                                  <AlertCircle className="mr-2 h-4 w-4" />
+                                  Errores
+                              </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-3xl">
+                              <DialogHeader>
+                                  <DialogTitle>Solución de Errores Comunes</DialogTitle>
+                              </DialogHeader>
+                              <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
+                                  <p>En ocasiones, para reproducir los videos en esta página, es posible que necesites realizar una de las siguientes acciones. A continuación, te explicamos cuáles son y para qué sirven.</p>
+                                  <h4 className="font-semibold text-foreground">Solución 1: Configurar el DNS de Cloudflare (1.1.1.1)</h4>
+                                  <p>Si los videos no cargan o no se pueden reproducir, el primer paso que puedes intentar es cambiar el DNS de tu dispositivo.</p>
+                                  <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
+                                  <p>El DNS (Sistema de Nombres de Dominio) es como una agenda de contactos de internet que traduce los nombres de las páginas web (como www.ejemplo.com) a una dirección IP numérica que las computadoras pueden entender. A veces, el DNS que te asigna tu proveedor de internet puede ser lento o bloquear el acceso a ciertos contenidos.</p>
+                                  <p>Al cambiar tu DNS a <strong>1.1.1.1</strong>, que es el servicio de DNS gratuito de Cloudflare, estás utilizando un servicio que a menudo es más rápido y privado. Esto puede resolver problemas de conexión y permitir que tu dispositivo acceda a los videos que antes no podía cargar.</p>
+                                  <Separator className="my-4" />
+                                  <h4 className="font-semibold text-foreground">Solución 2: Instalar la extensión "Reproductor MPD/M3U8/M3U/EPG"</h4>
+                                  <p>Si cambiar el DNS no soluciona el problema, la otra alternativa es instalar una extensión en tu navegador Google Chrome.</p>
+                                  <p><strong>Extensión:</strong> Reproductor MPD/M3U8/M3U/EPG</p>
+                                  <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
+                                  <p>Algunos videos en internet se transmiten en formatos especiales como M3U8 o MPD. No todos los navegadores web pueden reproducir estos formatos de forma nativa sin ayuda.</p>
+                                  <p>Esta extensión de Chrome funciona como un reproductor de video especializado que le añade a tu navegador la capacidad de entender y decodificar estos formatos de transmisión. Al instalarla, le das a Chrome las herramientas necesarias para que pueda reproducir correctamente los videos de la página.</p>
+                                  <Separator className="my-4" />
+                                  <h4 className="font-semibold text-foreground">Otras Soluciones Rápidas</h4>
+                                  <p>Si las soluciones anteriores no funcionan, aquí tienes otras acciones que puedes intentar y que resuelven problemas comunes:</p>
+                                  <ul className="list-disc pl-6 space-y-2">
+                                      <li><strong>Cambiar de navegador:</strong> A veces, ciertos navegadores (o sus configuraciones) pueden causar conflictos. Prueba usar uno diferente como Google Chrome, Mozilla Firefox o Microsoft Edge para ver si el problema persiste.</li>
+                                      <li><strong>Desactivar Adblocker:</strong> Los bloqueadores de anuncios a veces pueden interferir con la carga de los reproductores de video. Intenta desactivar tu Adblocker temporalmente para este sitio y vuelve a cargar la página.</li>
+                                      <li><strong>Uso en dispositivos móviles:</strong> Esta plataforma está optimizada para su uso en computadoras de escritorio. Si bien puede funcionar en celulares o tabletas, la experiencia puede no ser la ideal y es más propensa a errores. Recomendamos usar una PC para una mejor estabilidad.</li>
+                                      <li><strong>Reiniciar el dispositivo:</strong> Un reinicio rápido de tu computadora o dispositivo puede solucionar problemas temporales de red, memoria o software que podrían estar afectando la reproducción.</li>
+                                  </ul>
+                              </div>
+                          </DialogContent>
+                      </Dialog>
                  </div>
               </SheetContent>
           </Sheet>
