@@ -6,7 +6,7 @@ import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mai
 import { Suspense, useState, useEffect } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
