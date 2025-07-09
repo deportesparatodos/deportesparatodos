@@ -653,7 +653,7 @@ function ViewPageContent() {
             
             return (
               <div
-                key={`${index}-${url}-${reloadCounters[index]}`}
+                key={`${url}-${reloadCounters[index]}`}
                 className={cn(windowClasses)}
               >
                 {url ? (
