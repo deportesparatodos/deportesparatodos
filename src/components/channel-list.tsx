@@ -30,7 +30,7 @@ const getAiHintForChannel = (channelName: string): string => {
 };
 
 const channelsData: Channel[] = [
-    { name: 'A24', url: 'https://www.youtube.com/embed/QGpHLgRnrx4?si=NBFgu_PSRDMaOdr1', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
+    { name: 'A24', url: 'https://www.youtube-nocookie.com/embed/QGpHLgRnrx4', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
     { name: 'A3SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/a3series.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnbtKSukxgLre37kBp2mHcm6FyWnotLCxKfA&s' },
     { name: 'AMC', url: 'https://embed.ksdjugfsddeports.fun/embed/amc.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/01/AMC_logo_2016.png' },
     { name: 'AMERICA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/americatv.html', logoUrl: 'https://yt3.googleusercontent.com/KRDAxhSJVhhRP7SACB06iIg7xczMDUur1iGWVlvAJ4XkxRCkY1qFOVqVo02bsnh7W1c9HjNA=s900-c-k-c0x00ffffff-no-rj' },
@@ -47,9 +47,9 @@ const channelsData: Channel[] = [
     { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg' },
     { name: 'Azteca Deportes', url: 'https://streamtpglobal.com/global1.php?stream=azteca_deportes', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aztecadeporteslogo.png/500px-Aztecadeporteslogo.png' },
     { name: 'BEIN SPORTS XTRA', url: 'https://embed.ksdjugfsddeports.fun/embed/beinsportsxtra.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRo8XMdf5W36gGOa4rhhzCYQoakNbrgrcr0g&s' },
-    { name: 'C5N', url: 'https://www.youtube.com/embed/jTDk5CswBVk?si=1j2k7zbPW2d1wPRs', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/C5N_Logo_2015.PNG/640px-C5N_Logo_2015.PNG' },
+    { name: 'C5N', url: 'https://www.youtube-nocookie.com/embed/jTDk5CswBVk', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/C5N_Logo_2015.PNG/640px-C5N_Logo_2015.PNG' },
     { name: 'CANAL SONY', url: 'https://embed.ksdjugfsddeports.fun/embed/sony.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8g4pgtD9NRV7Q3SMRX1XUcxAkSyd3qR23Mw&s' },
-    { name: 'CRONICA', url: 'https://www.youtube.com/embed/avly0uwZzOE?si=QoqQYotYxpJxAZyO', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Crónica_TV_logotipo_%282016%29.png' },
+    { name: 'CRONICA', url: 'https://www.youtube-nocookie.com/embed/avly0uwZzOE', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Crónica_TV_logotipo_%282016%29.png' },
     { name: 'CARTOON NETWORK', url: 'https://embed.ksdjugfsddeports.fun/embed/cartoonnetwork.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/80/Cartoon_Network_2010_logo.svg' },
     { name: 'CARTOONITO', url: 'https://embed.ksdjugfsddeports.fun/embed/cartoonito.html', logoUrl: 'https://cloudfront-us-east-1.images.arcpublishing.com/elespectador/Q5GZ2WZL6VHNVCFVJK72P7UIHA.jpg' },
     { name: 'CINECANAL', url: 'https://embed.ksdjugfsddeports.fun/embed/cinecanal.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e6/CinecanalLA.png' },
@@ -143,7 +143,7 @@ const channelsData: Channel[] = [
     { name: 'History', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeUhE', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
     { name: 'History 2', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeV8y', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_h2_m.png' },
     { name: 'ID INVESTIGATION', url: 'https://embed.ksdjugfsddeports.fun/embed/idinvestigation.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_investigation-discovery_m.png' },
-    { name: 'LN+', url: 'https://www.youtube.com/embed/OR9MH16MKrg?si=DIfW0Kw81r6pmy3s', logoUrl: 'https://resizer.glanacion.com/resizer/v2/logo-NXKF436PYFDRLJJB77LJU7JVQA.png?auth=488ab06bdc404368ff6d748c0a6349c1766ffb7e6650a305e2f3f8cc5043ac3d&width=161&quality=70&smart=false' },
+    { name: 'LN+', url: 'https://www.youtube-nocookie.com/embed/OR9MH16MKrg', logoUrl: 'https://resizer.glanacion.com/resizer/v2/logo-NXKF436PYFDRLJJB77LJU7JVQA.png?auth=488ab06bdc404368ff6d748c0a6349c1766ffb7e6650a305e2f3f8cc5043ac3d&width=161&quality=70&smart=false' },
     { name: 'LAS ESTRELLAS', url: 'https://embed.ksdjugfsddeports.fun/embed/lasestrellas.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Las_Estrellas_logo_%282016%29.svg/1200px-Las_Estrellas_logo_%282016%29.svg.png' },
     { name: 'LATINA', url: 'https://embed.ksdjugfsddeports.fun/embed/latina.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Latina_Television_-_Logotipo.png' },
     { name: 'LIFETIME', url: 'https://embed.ksdjugfsddeports.fun/embed/lifetime.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlzhF3e8RMJSa--VuME5MVRlPqytmzkekmOA&s' },
@@ -196,7 +196,7 @@ const channelsData: Channel[] = [
     { name: 'Sport TV 5 PT', url: 'https://streamtpglobal.com/global1.php?stream=sporttv5', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 6 PT', url: 'https://streamtpglobal.com/global1.php?stream=sporttv6', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'TLC', url: 'https://tvlibreonline.org/html/fl/?get=VExD', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/TLC_logo_%282023%29.svg' },
-    { name: 'TN', url: 'https://www.youtube.com/embed/cb12KmMMDJA?si=CsUytnnQFJxMs8fL', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TN_todo_noticias_logo.svg/1200px-TN_todo_noticias_logo.svg.png' },
+    { name: 'TN', url: 'https://www.youtube-nocookie.com/embed/cb12KmMMDJA', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TN_todo_noticias_logo.svg/1200px-TN_todo_noticias_logo.svg.png' },
     { name: 'TNT', url: 'https://tvlibreonline.org/html/fl/?get=VE5UX0hEX0FyZw==', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'TNT GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_1_gb', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'TNT 2 GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_2_gb', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
