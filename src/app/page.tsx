@@ -882,7 +882,7 @@ export default function HomePage() {
                 </DialogHeader>
                 <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
                   <p>
-                    En ocasiones, para reproducir los videos en esta página, es posible que necesites realizar una de las siguientes dos acciones. A continuación, te explicamos cuáles son y para qué sirven.
+                    En ocasiones, para reproducir los videos en esta página, es posible que necesites realizar una de las siguientes acciones. A continuación, te explicamos cuáles son y para qué sirven.
                   </p>
 
                   <h4 className="font-semibold text-foreground">Solución 1: Configurar el DNS de Cloudflare (1.1.1.1)</h4>
@@ -915,6 +915,27 @@ export default function HomePage() {
                   <p>
                     Esta extensión de Chrome funciona como un reproductor de video especializado que le añade a tu navegador la capacidad de entender y decodificar estos formatos de transmisión. Al instalarla, le das a Chrome las herramientas necesarias para que pueda reproducir correctamente los videos de la página.
                   </p>
+
+                  <Separator className="my-4" />
+
+                  <h4 className="font-semibold text-foreground">Otras Soluciones Rápidas</h4>
+                  <p>
+                      Si las soluciones anteriores no funcionan, aquí tienes otras acciones que puedes intentar y que resuelven problemas comunes:
+                  </p>
+                  <ul className="list-disc pl-6 space-y-2">
+                      <li>
+                          <strong>Cambiar de navegador:</strong> A veces, ciertos navegadores (o sus configuraciones) pueden causar conflictos. Prueba usar uno diferente como Google Chrome, Mozilla Firefox o Microsoft Edge para ver si el problema persiste.
+                      </li>
+                      <li>
+                          <strong>Desactivar Adblocker:</strong> Los bloqueadores de anuncios a veces pueden interferir con la carga de los reproductores de video. Intenta desactivar tu Adblocker temporalmente para este sitio y vuelve a cargar la página.
+                      </li>
+                      <li>
+                          <strong>Uso en dispositivos móviles:</strong> Esta plataforma está optimizada para su uso en computadoras de escritorio. Si bien puede funcionar en celulares o tabletas, la experiencia puede no ser la ideal y es más propensa a errores. Recomendamos usar una PC para una mejor estabilidad.
+                      </li>
+                      <li>
+                          <strong>Reiniciar el dispositivo:</strong> Un reinicio rápido de tu computadora o dispositivo puede solucionar problemas temporales de red, memoria o software que podrían estar afectando la reproducción.
+                      </li>
+                  </ul>
                 </div>
               </DialogContent>
             </Dialog>
