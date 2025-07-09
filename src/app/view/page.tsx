@@ -252,12 +252,7 @@ function ViewPageContent() {
   // Load from localStorage on mount
   useEffect(() => {
     setIsMounted(true);
-
-    const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcomePopup');
-    if (!hasSeenWelcome) {
-        setWelcomePopupOpen(true);
-        sessionStorage.setItem('hasSeenWelcomePopup', 'true');
-    }
+    setWelcomePopupOpen(true);
 
     const storedUrls = localStorage.getItem('cameraUrls');
     if (storedUrls) {
