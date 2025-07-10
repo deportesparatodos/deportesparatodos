@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings } from "lucide-react";
-import { Suspense, useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -662,7 +662,7 @@ function ViewPageContent() {
                               </ul>
                                <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
                               <ul className="list-disc pl-6 space-y-1">
-                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
+                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manually!</li>
                                    <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
                                    <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                               </ul>
@@ -677,29 +677,70 @@ function ViewPageContent() {
                           <DialogHeader>
                               <DialogTitle>Solución de Errores Comunes</DialogTitle>
                           </DialogHeader>
-                          <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
-                              <p>En ocasiones, para reproducir los videos en esta página, es posible que necesites realizar una de las siguientes acciones. A continuación, te explicamos cuáles son y para qué sirven.</p>
-                              <h4 className="font-semibold text-foreground">Solución 1: Configurar el DNS de Cloudflare (1.1.1.1)</h4>
-                              <p>Si los videos no cargan o no se pueden reproducir, el primer paso que puedes intentar es cambiar el DNS de tu dispositivo.</p>
-                              <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
-                              <p>El DNS (Sistema de Nombres de Dominio) es como una agenda de contactos de internet que traduce los nombres de las páginas web (como www.ejemplo.com) a una dirección IP numérica que las computadoras pueden entender. A veces, el DNS que te asigna tu proveedor de internet puede ser lento o bloquear el acceso a ciertos contenidos.</p>
-                              <p>Al cambiar tu DNS a <strong>1.1.1.1</strong>, que es el servicio de DNS gratuito de Cloudflare, estás utilizando un servicio que a menudo es más rápido y privado. Esto puede resolver problemas de conexión y permitir que tu dispositivo acceda a los videos que antes no podía cargar.</p>
-                              <Separator className="my-4" />
-                              <h4 className="font-semibold text-foreground">Solución 2: Instalar la extensión "Reproductor MPD/M3U8/M3U/EPG"</h4>
-                              <p>Si cambiar el DNS no soluciona el problema, la otra alternativa es instalar una extensión en tu navegador Google Chrome.</p>
-                              <p><strong>Extensión:</strong> Reproductor MPD/M3U8/M3U/EPG</p>
-                              <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
-                              <p>Algunos videos en internet se transmiten en formatos especiales como M3U8 o MPD. No todos los navegadores web pueden reproducir estos formatos de forma nativa sin ayuda.</p>
-                              <p>Esta extensión de Chrome funciona como un reproductor de video especializado que le añade a tu navegador la capacidad de entender y decodificar estos formatos de transmisión. Al instalarla, le das a Chrome las herramientas necesarias para que pueda reproducir correctamente los videos de la página.</p>
-                              <Separator className="my-4" />
-                              <h4 className="font-semibold text-foreground">Otras Soluciones Rápidas</h4>
-                              <p>Si las soluciones anteriores no funcionan, aquí tienes otras acciones que puedes intentar y que resuelven problemas comunes:</p>
-                              <ul className="list-disc pl-6 space-y-2">
-                                  <li><strong>Cambiar de navegador:</strong> A veces, ciertos navegadores (o sus configuraciones) pueden causar conflictos. Prueba usar uno diferente como Google Chrome, Mozilla Firefox o Microsoft Edge para ver si el problema persiste.</li>
-                                  <li><strong>Desactivar Adblocker:</strong> Los bloqueadores de anuncios a veces pueden interferir con la carga de los reproductores de video. Intenta desactivar tu Adblocker temporalmente para este sitio y vuelve a cargar la página.</li>
-                                  <li><strong>Uso en dispositivos móviles:</strong> Esta plataforma está optimizada para su uso en computadoras de escritorio. Si bien puede funcionar en celulares o tabletas, la experiencia puede no ser la ideal y es más propensa a errores. Recomendamos usar una PC para una mejor estabilidad.</li>
-                                  <li><strong>Reiniciar el dispositivo:</strong> Un reinicio rápido de tu computadora o dispositivo puede solucionar problemas temporales de red, memoria o software que podrían estar afectando la reproducción.</li>
-                              </ul>
+                          <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6 text-sm text-muted-foreground">
+                            <p>
+                                A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.
+                            </p>
+
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h4>
+                                <p>
+                                    <strong>El Problema:</strong> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.
+                                </p>
+                                <p>
+                                    <strong>La Solución:</strong> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (1.1.1.1) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-foreground">2. Instalar una Extensión de Reproductor de Video</h4>
+                                <p>
+                                    <strong>El Problema:</strong> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.
+                                </p>
+                                <p>
+                                    <strong>La Solución:</strong> Instalar una extensión como <a href="https://chrome.google.com/webstore/detail/reproductor-mpdm3u8m3uepg/iihllkdpdbhmhnhlfmplgpaannbceJjk" target="_blank" rel="noopener noreferrer" className="text-primary underline">"Reproductor MPD/M3U8/M3U/EPG"</a> (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-foreground">3. Cambiar de Navegador</h4>
+                                <p>
+                                    <strong>El Problema:</strong> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.
+                                </p>
+                                <p>
+                                    <strong>La Solución:</strong> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de <strong>Google Chrome</strong>, <strong>Mozilla Firefox</strong> o <strong>Microsoft Edge</strong>, ya que suelen tener la mejor compatibilidad con tecnologías de video web.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h4>
+                                <p>
+                                    <strong>El Problema:</strong> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.
+                                </p>
+                                <p>
+                                    <strong>La Solución:</strong> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. La mayoría de estas extensiones te permiten añadir sitios a una "lista blanca" para que no actúen sobre ellos. Recarga la página después de desactivarlo.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-foreground">5. Optimizar para Escritorio</h4>
+                                <p>
+                                    <strong>El Problema:</strong> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.
+                                </p>
+                                <p>
+                                    <strong>La Solución:</strong> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora. Esto asegura que haya suficientes recursos para manejar múltiples transmisiones de video simultáneamente.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-foreground">6. Reiniciar el Dispositivo y la Red</h4>
+                                <p>
+                                    <strong>El Problema:</strong> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.
+                                </p>
+                                <p>
+                                    <strong>La Solución:</strong> El clásico "apagar y volver a encender". Un reinicio rápido de tu computadora y de tu router puede solucionar problemas transitorios de red, memoria o software que podrían estar afectando la reproducción de video.
+                                </p>
+                            </div>
                           </div>
                       </DialogContent>
                   </Dialog>
@@ -848,7 +889,7 @@ function ViewPageContent() {
                                   </ul>
                                    <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
                                   <ul className="list-disc pl-6 space-y-1">
-                                      <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
+                                      <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manually!</li>
                                        <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
                                        <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                                   </ul>
@@ -866,29 +907,70 @@ function ViewPageContent() {
                               <DialogHeader>
                                   <DialogTitle>Solución de Errores Comunes</DialogTitle>
                               </DialogHeader>
-                              <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
-                                  <p>En ocasiones, para reproducir los videos en esta página, es posible que necesites realizar una de las siguientes acciones. A continuación, te explicamos cuáles son y para qué sirven.</p>
-                                  <h4 className="font-semibold text-foreground">Solución 1: Configurar el DNS de Cloudflare (1.1.1.1)</h4>
-                                  <p>Si los videos no cargan o no se pueden reproducir, el primer paso que puedes intentar es cambiar el DNS de tu dispositivo.</p>
-                                  <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
-                                  <p>El DNS (Sistema de Nombres de Dominio) es como una agenda de contactos de internet que traduce los nombres de las páginas web (como www.ejemplo.com) a una dirección IP numérica que las computadoras pueden entender. A veces, el DNS que te asigna tu proveedor de internet puede ser lento o bloquear el acceso a ciertos contenidos.</p>
-                                  <p>Al cambiar tu DNS a <strong>1.1.1.1</strong>, que es el servicio de DNS gratuito de Cloudflare, estás utilizando un servicio que a menudo es más rápido y privado. Esto puede resolver problemas de conexión y permitir que tu dispositivo acceda a los videos que antes no podía cargar.</p>
-                                  <Separator className="my-4" />
-                                  <h4 className="font-semibold text-foreground">Solución 2: Instalar la extensión "Reproductor MPD/M3U8/M3U/EPG"</h4>
-                                  <p>Si cambiar el DNS no soluciona el problema, la otra alternativa es instalar una extensión en tu navegador Google Chrome.</p>
-                                  <p><strong>Extensión:</strong> Reproductor MPD/M3U8/M3U/EPG</p>
-                                  <h5 className="font-semibold text-foreground pt-2">¿Qué es y para qué sirve?</h5>
-                                  <p>Algunos videos en internet se transmiten en formatos especiales como M3U8 o MPD. No todos los navegadores web pueden reproducir estos formatos de forma nativa sin ayuda.</p>
-                                  <p>Esta extensión de Chrome funciona como un reproductor de video especializado que le añade a tu navegador la capacidad de entender y decodificar estos formatos de transmisión. Al instalarla, le das a Chrome las herramientas necesarias para que pueda reproducir correctamente los videos de la página.</p>
-                                  <Separator className="my-4" />
-                                  <h4 className="font-semibold text-foreground">Otras Soluciones Rápidas</h4>
-                                  <p>Si las soluciones anteriores no funcionan, aquí tienes otras acciones que puedes intentar y que resuelven problemas comunes:</p>
-                                  <ul className="list-disc pl-6 space-y-2">
-                                      <li><strong>Cambiar de navegador:</strong> A veces, ciertos navegadores (o sus configuraciones) pueden causar conflictos. Prueba usar uno diferente como Google Chrome, Mozilla Firefox o Microsoft Edge para ver si el problema persiste.</li>
-                                      <li><strong>Desactivar Adblocker:</strong> Los bloqueadores de anuncios a veces pueden interferir con la carga de los reproductores de video. Intenta desactivar tu Adblocker temporalmente para este sitio y vuelve a cargar la página.</li>
-                                      <li><strong>Uso en dispositivos móviles:</strong> Esta plataforma está optimizada para su uso en computadoras de escritorio. Si bien puede funcionar en celulares o tabletas, la experiencia puede no ser la ideal y es más propensa a errores. Recomendamos usar una PC para una mejor estabilidad.</li>
-                                      <li><strong>Reiniciar el dispositivo:</strong> Un reinicio rápido de tu computadora o dispositivo puede solucionar problemas temporales de red, memoria o software que podrían estar afectando la reproducción.</li>
-                                  </ul>
+                              <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-6 text-sm text-muted-foreground">
+                                <p>
+                                    A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.
+                                </p>
+
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h4>
+                                    <p>
+                                        <strong>El Problema:</strong> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.
+                                    </p>
+                                    <p>
+                                        <strong>La Solución:</strong> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (1.1.1.1) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold text-foreground">2. Instalar una Extensión de Reproductor de Video</h4>
+                                    <p>
+                                        <strong>El Problema:</strong> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.
+                                    </p>
+                                    <p>
+                                        <strong>La Solución:</strong> Instalar una extensión como <a href="https://chrome.google.com/webstore/detail/reproductor-mpdm3u8m3uepg/iihllkdpdbhmhnhlfmplgpaannbceJjk" target="_blank" rel="noopener noreferrer" className="text-primary underline">"Reproductor MPD/M3U8/M3U/EPG"</a> (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold text-foreground">3. Cambiar de Navegador</h4>
+                                    <p>
+                                        <strong>El Problema:</strong> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.
+                                    </p>
+                                    <p>
+                                        <strong>La Solución:</strong> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de <strong>Google Chrome</strong>, <strong>Mozilla Firefox</strong> o <strong>Microsoft Edge</strong>, ya que suelen tener la mejor compatibilidad con tecnologías de video web.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h4>
+                                    <p>
+                                        <strong>El Problema:</strong> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.
+                                    </p>
+                                    <p>
+                                        <strong>La Solución:</strong> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. La mayoría de estas extensiones te permiten añadir sitios a una "lista blanca" para que no actúen sobre ellos. Recarga la página después de desactivarlo.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold text-foreground">5. Optimizar para Escritorio</h4>
+                                    <p>
+                                        <strong>El Problema:</strong> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.
+                                    </p>
+                                    <p>
+                                        <strong>La Solución:</strong> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora. Esto asegura que haya suficientes recursos para manejar múltiples transmisiones de video simultáneamente.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold text-foreground">6. Reiniciar el Dispositivo y la Red</h4>
+                                    <p>
+                                        <strong>El Problema:</strong> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.
+                                    </p>
+                                    <p>
+                                        <strong>La Solución:</strong> El clásico "apagar y volver a encender". Un reinicio rápido de tu computadora y de tu router puede solucionar problemas transitorios de red, memoria o software que podrían estar afectando la reproducción de video.
+                                    </p>
+                                </div>
                               </div>
                           </DialogContent>
                       </Dialog>
