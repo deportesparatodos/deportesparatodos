@@ -590,7 +590,7 @@ function ViewPageContent() {
               <DialogHeader className="p-6 pt-8 text-center">
                   <DialogTitle>¡Bienvenido a Deportes para Todos!</DialogTitle>
               </DialogHeader>
-              <div className="px-6 pb-6 text-center text-sm text-muted-foreground">
+              <div className="px-6 pb-6 text-sm text-muted-foreground">
                   <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
               </div>
               <DialogFooter className="flex-row items-center justify-center gap-2 p-6 pt-0">
