@@ -2,11 +2,11 @@
 "use client";
 
 import Link from 'next/link';
-import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings } from "lucide-react";
+import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings, DialogTrigger } from "lucide-react";
 import { Suspense, useState, useEffect } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
@@ -234,6 +234,7 @@ function ViewPageContent() {
   // Welcome Popup Timer
   useEffect(() => {
     if (welcomePopupOpen) {
+      setProgress(100); // Reset progress on open
       const interval = setInterval(() => {
         setProgress((prev) => {
           if (prev <= 0) {
@@ -927,4 +928,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
