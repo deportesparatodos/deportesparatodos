@@ -2,11 +2,12 @@
 "use client";
 
 import Link from 'next/link';
-import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings } from "lucide-react";
-import { Suspense, useState, useEffect } from 'react';
+import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings, PictureInPicture2 } from "lucide-react";
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
@@ -205,11 +206,14 @@ function ViewPageContent() {
   const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  const [isPipEnabled, setIsPipEnabled] = useState<boolean>(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobile = useIsMobile();
   const [eventGrouping, setEventGrouping] = useState(defaultEventGrouping);
   const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
   const [scheduledChanges, setScheduledChanges] = useState<ScheduledLayoutChange[]>([]);
+
+  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
   const [progress, setProgress] = useState(100);
@@ -229,6 +233,16 @@ function ViewPageContent() {
       newCounters[index] = (newCounters[index] || 0) + 1;
       return newCounters;
     });
+  };
+
+  const handlePipRequest = async (index: number) => {
+    if (iframeRefs.current[index] && document.pictureInPictureEnabled) {
+      try {
+        await iframeRefs.current[index]?.requestPictureInPicture();
+      } catch (error) {
+        console.error("Error al activar Picture-in-Picture:", error);
+      }
+    }
   };
 
   // Welcome Popup Timer
@@ -280,6 +294,10 @@ function ViewPageContent() {
     if (storedChatEnabled) {
       setIsChatEnabled(JSON.parse(storedChatEnabled));
     }
+    const storedPipEnabled = localStorage.getItem('isPipEnabled');
+    if (storedPipEnabled) {
+      setIsPipEnabled(JSON.parse(storedPipEnabled));
+    }
     const storedEventGrouping = localStorage.getItem('eventGrouping');
     if (storedEventGrouping) {
       try {
@@ -322,10 +340,11 @@ function ViewPageContent() {
       localStorage.setItem('gridGap', gridGap.toString());
       localStorage.setItem('borderColor', borderColor);
       localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
+      localStorage.setItem('isPipEnabled', JSON.stringify(isPipEnabled));
       localStorage.setItem('eventGrouping', JSON.stringify(eventGrouping));
       localStorage.setItem('scheduledChanges', JSON.stringify(scheduledChanges));
     }
-  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, scheduledChanges, isMounted]);
+  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, isPipEnabled, eventGrouping, scheduledChanges, isMounted]);
 
   // Scheduler Execution Logic
   useEffect(() => {
@@ -533,6 +552,10 @@ function ViewPageContent() {
     return () => clearInterval(timerId);
   }, [events]);
 
+  useEffect(() => {
+    iframeRefs.current = iframeRefs.current.slice(0, numCameras);
+  }, [numCameras]);
+
   if (!isMounted) {
     return <Loading />;
   }
@@ -680,6 +703,27 @@ function ViewPageContent() {
               : { top: `${gridGap}px`, right: `${gridGap}px` }
           }
         >
+          {isPipEnabled && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="bg-transparent hover:bg-accent/80 text-white h-10 w-10"
+                  aria-label="Activar Picture-in-Picture"
+                >
+                  <PictureInPicture2 className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {urlsToDisplay.map((url, index) => url && (
+                  <DropdownMenuItem key={index} onSelect={() => handlePipRequest(index)}>
+                    Activar PiP en Ventana {index + 1}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           {isChatEnabled && (
             <Button 
               size="icon" 
@@ -732,6 +776,8 @@ function ViewPageContent() {
                             handleBorderColorChange={handleRestoreDefaults}
                             isChatEnabled={isChatEnabled}
                             setIsChatEnabled={setIsChatEnabled}
+                            isPipEnabled={isPipEnabled}
+                            setIsPipEnabled={setIsPipEnabled}
                             eventGrouping={eventGrouping}
                             setEventGrouping={setEventGrouping}
                             scheduledChanges={scheduledChanges}
@@ -858,6 +904,7 @@ function ViewPageContent() {
               >
                 {url ? (
                   <iframe
+                    ref={el => (iframeRefs.current[index] = el)}
                     src={url}
                     title={`Stream ${index + 1}`}
                     className="w-full h-full border-0"
