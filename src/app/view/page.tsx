@@ -599,35 +599,72 @@ function ViewPageContent() {
                       <DialogTrigger asChild>
                           <Button variant="outline"><HelpCircle className="mr-2 h-4 w-4" />Tutorial</Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-3xl">
+                       <DialogContent className="max-w-3xl">
                           <DialogHeader>
-                              <DialogTitle>Tutorial de Uso</DialogTitle>
+                              <DialogTitle>Guía Completa de Uso</DialogTitle>
                           </DialogHeader>
                           <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
-                              <p>¡Bienvenido a Deportes para Todos! Esta guía te ayudará a sacar el máximo provecho de la plataforma.</p>
-                              <h4 className="font-semibold text-foreground pt-2">Paso 1: Selecciona la cantidad de ventanas</h4>
-                              <p>Usa el menú desplegable en el centro de la pantalla para elegir cuántas transmisiones quieres ver simultáneamente. Puedes seleccionar entre 1, 2, 3, 4, 6 o 9 ventanas.</p>
-                              <h4 className="font-semibold text-foreground pt-2">Paso 2: Elige tus canales o eventos</h4>
-                              <p>Para cada una de las ventanas que seleccionaste, verás un botón que dice "Elegir Canal…". Haz clic en él para abrir un diálogo con dos pestañas:</p>
-                              <ul className="list-disc pl-6 space-y-1">
-                                  <li><strong>Canales:</strong> Una lista de canales de televisión disponibles 24/7. Puedes usar la barra de búsqueda para encontrar uno rápidamente.</li>
-                                  <li><strong>Eventos:</strong> Una lista de eventos deportivos en vivo o próximos a comenzar. Los eventos están agrupados por competición (puedes desactivar esto en la configuración).</li>
+                              <p>
+                                  ¡Bienvenido a <strong>Deportes para Todos</strong>! Esta guía detallada te convertirá en un experto en el uso de la plataforma para que no te pierdas ni un segundo de la acción.
+                              </p>
+
+                              <h4 className="font-semibold text-foreground pt-2">Paso 1: Configura tu Espacio de Visualización</h4>
+                              <p>
+                                  Lo primero es decidir cuántas transmisiones quieres ver. Usa el menú desplegable que dice <strong>"Seleccionar cantidad de ventanas"</strong> para elegir entre 1, 2, 3, 4, 6 o 9 ventanas simultáneas. Tu selección determinará cuántos espacios de video se mostrarán.
+                              </p>
+
+                              <h4 className="font-semibold text-foreground pt-2">Paso 2: Asigna Canales y Eventos a tus Vistas</h4>
+                              <p>
+                                  Para cada ventana disponible, verás un botón que dice <strong>"Elegir Canal…"</strong>. Al hacer clic, se abrirá un diálogo con varias opciones:
+                              </p>
+                              <ul className="list-disc pl-6 space-y-2">
+                                  <li>
+                                      <strong>Pestaña "Canales":</strong> Aquí encontrarás una lista de canales de TV disponibles 24/7. Puedes usar la barra de búsqueda para encontrar uno rápidamente. Junto a cada canal verás un indicador de estado:
+                                      <ul className="list-decimal pl-6 mt-1">
+                                          <li><span className="text-green-500 font-bold">Verde:</span> El canal está activo y funcionando.</li>
+                                          <li><span className="text-red-500 font-bold">Rojo:</span> El canal está inactivo o podría no funcionar.</li>
+                                          <li><span className="text-gray-500 font-bold">Gris:</span> Estado desconocido, podría funcionar o no.</li>
+                                      </ul>
+                                  </li>
+                                  <li><strong>Pestaña "Eventos":</strong> Una agenda con los partidos y eventos del día. Puedes buscar por equipo, liga o deportista. Los eventos también muestran su estado: "En Vivo", "Próximo" o "Finalizado".</li>
+                                  <li>
+                                      <strong>Pegar Enlace:</strong> Si tienes un enlace de video compatible (M3U8, MPD, etc.), puedes pegarlo directamente usando el botón <strong className="text-foreground">"Pega aqui tu enlace!"</strong> que aparece al principio de la lista de canales.
+                                  </li>
                               </ul>
-                              <p>Simplemente haz clic en "Seleccionar" en el canal o evento que desees, y se asignará a esa ventana. También puedes pegar un enlace de video directamente desde el portapapeles.</p>
-                              <h4 className="font-semibold text-foreground pt-2">Paso 3: Inicia la vista</h4>
-                              <p>Una vez que hayas configurado todas tus ventanas, presiona el botón "Iniciar Vista". Esto te llevará a una nueva página donde verás todas tus transmisiones seleccionadas en la disposición que elegiste.</p>
-                              <h4 className="font-semibold text-foreground pt-2">Configuraciones Adicionales</h4>
-                              <p>En el menú principal (arriba a la izquierda) encontrarás la sección de "Configuración", donde puedes personalizar tu experiencia:</p>
+                              <p>
+                                  Simplemente haz clic en <strong>"Seleccionar"</strong> en el canal o evento que desees para asignarlo a la ventana activa.
+                              </p>
+
+                              <h4 className="font-semibold text-foreground pt-2">Paso 3: Gestiona tus Vistas</h4>
+                              <p>
+                                  Una vez que has asignado contenido a una vista, tienes varias herramientas para gestionarla:
+                              </p>
                               <ul className="list-disc pl-6 space-y-1">
-                                  <li><strong>Bordes:</strong> Ajusta el tamaño y el color de los bordes entre las ventanas de video.</li>
-                                  <li><strong>Chat:</strong> Activa o desactiva el chat en vivo en la página de visualización.</li>
-                                  <li><strong>Eventos:</strong> Activa o desactiva la agrupación de eventos por competición.</li>
+                                  <li><strong>Flechas (Arriba/Abajo):</strong> Reordena las ventanas a tu gusto.</li>
+                                  <li><strong>Botón "X":</strong> Limpia la selección de una ventana para dejarla vacía.</li>
+                                  <li><strong>Botón de Recarga (en la página de visualización):</strong> Si una transmisión se congela o falla, usa este botón para recargarla sin afectar las demás.</li>
                               </ul>
-                              <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
+
+                              <h4 className="font-semibold text-foreground pt-2">Paso 4: Inicia la Sala de Control</h4>
+                              <p>
+                                  Cuando tengas todo listo, presiona el gran botón <strong>"Iniciar Vista"</strong>. Serás redirigido a la página de visualización donde verás todas tus selecciones en la cuadrícula que configuraste.
+                              </p>
+
+                              <h4 className="font-semibold text-foreground pt-2">Configuraciones Avanzadas (Menú <Settings className="inline-block h-4 w-4" />)</h4>
+                              <p>
+                                  Personaliza aún más tu experiencia desde el menú de Configuración:
+                              </p>
                               <ul className="list-disc pl-6 space-y-1">
-                                  <li>Puedes mover las ventanas hacia arriba o hacia abajo usando las flechas junto a cada selección.</li>
-                                  <li>Si un canal aparece como "Inactivo", es posible que no funcione.</li>
-                                  <li>Para cualquier problema, consulta las secciones de "Errores" o "Contacto" en el menú.</li>
+                                  <li><strong>Bordes:</strong> Ajusta el grosor y el color del espacio entre las ventanas de video para una mejor separación visual.</li>
+                                  <li><strong>Chat:</strong> Activa o desactiva el chat en vivo global, disponible en la página de visualización.</li>
+                                  <li><strong>Eventos:</strong> Controla cómo se agrupan los eventos en la lista. Puedes agruparlos por competición (F1, NBA, etc.) o verlos todos juntos.</li>
+                                   <li><strong>Programar Selección:</strong> ¿Un partido empieza más tarde? Puedes programar un cambio de diseño para una fecha y hora específicas. La aplicación cambiará automáticamente las ventanas y canales a la hora programada.</li>
+                              </ul>
+                               <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
+                              <ul className="list-disc pl-6 space-y-1">
+                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
+                                   <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
+                                   <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                               </ul>
                           </div>
                       </DialogContent>
@@ -750,33 +787,70 @@ function ViewPageContent() {
                           </DialogTrigger>
                           <DialogContent className="max-w-3xl">
                               <DialogHeader>
-                                  <DialogTitle>Tutorial de Uso</DialogTitle>
+                                  <DialogTitle>Guía Completa de Uso</DialogTitle>
                               </DialogHeader>
                               <div className="max-h-[70vh] overflow-y-auto pr-4 space-y-4 text-sm text-muted-foreground">
-                                  <p>¡Bienvenido a Deportes para Todos! Esta guía te ayudará a sacar el máximo provecho de la plataforma.</p>
-                                  <h4 className="font-semibold text-foreground pt-2">Paso 1: Selecciona la cantidad de ventanas</h4>
-                                  <p>Usa el menú desplegable en el centro de la pantalla para elegir cuántas transmisiones quieres ver simultáneamente. Puedes seleccionar entre 1, 2, 3, 4, 6 o 9 ventanas.</p>
-                                  <h4 className="font-semibold text-foreground pt-2">Paso 2: Elige tus canales o eventos</h4>
-                                  <p>Para cada una de las ventanas que seleccionaste, verás un botón que dice "Elegir Canal…". Haz clic en él para abrir un diálogo con dos pestañas:</p>
-                                  <ul className="list-disc pl-6 space-y-1">
-                                      <li><strong>Canales:</strong> Una lista de canales de televisión disponibles 24/7. Puedes usar la barra de búsqueda para encontrar uno rápidamente.</li>
-                                      <li><strong>Eventos:</strong> Una lista de eventos deportivos en vivo o próximos a comenzar. Los eventos están agrupados por competición (puedes desactivar esto en la configuración).</li>
+                                  <p>
+                                      ¡Bienvenido a <strong>Deportes para Todos</strong>! Esta guía detallada te convertirá en un experto en el uso de la plataforma para que no te pierdas ni un segundo de la acción.
+                                  </p>
+
+                                  <h4 className="font-semibold text-foreground pt-2">Paso 1: Configura tu Espacio de Visualización</h4>
+                                  <p>
+                                      Lo primero es decidir cuántas transmisiones quieres ver. Usa el menú desplegable que dice <strong>"Seleccionar cantidad de ventanas"</strong> para elegir entre 1, 2, 3, 4, 6 o 9 ventanas simultáneas. Tu selección determinará cuántos espacios de video se mostrarán.
+                                  </p>
+
+                                  <h4 className="font-semibold text-foreground pt-2">Paso 2: Asigna Canales y Eventos a tus Vistas</h4>
+                                  <p>
+                                      Para cada ventana disponible, verás un botón que dice <strong>"Elegir Canal…"</strong>. Al hacer clic, se abrirá un diálogo con varias opciones:
+                                  </p>
+                                  <ul className="list-disc pl-6 space-y-2">
+                                      <li>
+                                          <strong>Pestaña "Canales":</strong> Aquí encontrarás una lista de canales de TV disponibles 24/7. Puedes usar la barra de búsqueda para encontrar uno rápidamente. Junto a cada canal verás un indicador de estado:
+                                          <ul className="list-decimal pl-6 mt-1">
+                                              <li><span className="text-green-500 font-bold">Verde:</span> El canal está activo y funcionando.</li>
+                                              <li><span className="text-red-500 font-bold">Rojo:</span> El canal está inactivo o podría no funcionar.</li>
+                                              <li><span className="text-gray-500 font-bold">Gris:</span> Estado desconocido, podría funcionar o no.</li>
+                                          </ul>
+                                      </li>
+                                      <li><strong>Pestaña "Eventos":</strong> Una agenda con los partidos y eventos del día. Puedes buscar por equipo, liga o deportista. Los eventos también muestran su estado: "En Vivo", "Próximo" o "Finalizado".</li>
+                                      <li>
+                                          <strong>Pegar Enlace:</strong> Si tienes un enlace de video compatible (M3U8, MPD, etc.), puedes pegarlo directamente usando el botón <strong className="text-foreground">"Pega aqui tu enlace!"</strong> que aparece al principio de la lista de canales.
+                                      </li>
                                   </ul>
-                                  <p>Simplemente haz clic en "Seleccionar" en el canal o evento que desees, y se asignará a esa ventana. También puedes pegar un enlace de video directamente desde el portapapeles.</p>
-                                  <h4 className="font-semibold text-foreground pt-2">Paso 3: Inicia la vista</h4>
-                                  <p>Una vez que hayas configurado todas tus ventanas, presiona el botón "Iniciar Vista". Esto te llevará a una nueva página donde verás todas tus transmisiones seleccionadas en la disposición que elegiste.</p>
-                                  <h4 className="font-semibold text-foreground pt-2">Configuraciones Adicionales</h4>
-                                  <p>En el menú principal (arriba a la izquierda) encontrarás la sección de "Configuración", donde puedes personalizar tu experiencia:</p>
+                                  <p>
+                                      Simplemente haz clic en <strong>"Seleccionar"</strong> en el canal o evento que desees para asignarlo a la ventana activa.
+                                  </p>
+
+                                  <h4 className="font-semibold text-foreground pt-2">Paso 3: Gestiona tus Vistas</h4>
+                                  <p>
+                                      Una vez que has asignado contenido a una vista, tienes varias herramientas para gestionarla:
+                                  </p>
                                   <ul className="list-disc pl-6 space-y-1">
-                                      <li><strong>Bordes:</strong> Ajusta el tamaño y el color de los bordes entre las ventanas de video.</li>
-                                      <li><strong>Chat:</strong> Activa o desactiva el chat en vivo en la página de visualización.</li>
-                                      <li><strong>Eventos:</strong> Activa o desactiva la agrupación de eventos por competición.</li>
+                                      <li><strong>Flechas (Arriba/Abajo):</strong> Reordena las ventanas a tu gusto.</li>
+                                      <li><strong>Botón "X":</strong> Limpia la selección de una ventana para dejarla vacía.</li>
+                                      <li><strong>Botón de Recarga (en la página de visualización):</strong> Si una transmisión se congela o falla, usa este botón para recargarla sin afectar las demás.</li>
                                   </ul>
-                                  <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
+
+                                  <h4 className="font-semibold text-foreground pt-2">Paso 4: Inicia la Sala de Control</h4>
+                                  <p>
+                                      Cuando tengas todo listo, presiona el gran botón <strong>"Iniciar Vista"</strong>. Serás redirigido a la página de visualización donde verás todas tus selecciones en la cuadrícula que configuraste.
+                                  </p>
+
+                                  <h4 className="font-semibold text-foreground pt-2">Configuraciones Avanzadas (Menú <Settings className="inline-block h-4 w-4" />)</h4>
+                                  <p>
+                                      Personaliza aún más tu experiencia desde el menú de Configuración:
+                                  </p>
                                   <ul className="list-disc pl-6 space-y-1">
-                                      <li>Puedes mover las ventanas hacia arriba o hacia abajo usando las flechas junto a cada selección.</li>
-                                      <li>Si un canal aparece como "Inactivo", es posible que no funcione.</li>
-                                      <li>Para cualquier problema, consulta las secciones de "Errores" o "Contacto" en el menú.</li>
+                                      <li><strong>Bordes:</strong> Ajusta el grosor y el color del espacio entre las ventanas de video para una mejor separación visual.</li>
+                                      <li><strong>Chat:</strong> Activa o desactiva el chat en vivo global, disponible en la página de visualización.</li>
+                                      <li><strong>Eventos:</strong> Controla cómo se agrupan los eventos en la lista. Puedes agruparlos por competición (F1, NBA, etc.) o verlos todos juntos.</li>
+                                       <li><strong>Programar Selección:</strong> ¿Un partido empieza más tarde? Puedes programar un cambio de diseño para una fecha y hora específicas. La aplicación cambiará automáticamente las ventanas y canales a la hora programada.</li>
+                                  </ul>
+                                   <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
+                                  <ul className="list-disc pl-6 space-y-1">
+                                      <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
+                                       <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
+                                       <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                                   </ul>
                               </div>
                           </DialogContent>
