@@ -426,7 +426,7 @@ function ViewPageContent() {
       const data = await response.json();
 
       const filteredData = data.filter((event: any) => 
-          event.time && !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
+          event.time && event.time !== 'NaN:NaN' && !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
       );
 
       const processedData = filteredData.map((event: any) => {
