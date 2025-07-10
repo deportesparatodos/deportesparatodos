@@ -585,14 +585,6 @@ function ViewPageContent() {
           <DialogContent className="sm:max-w-md p-0">
               <div className="relative">
                   <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
-                  <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 h-6 w-6"
-                      onClick={() => setWelcomePopupOpen(false)}
-                  >
-                      <X className="h-4 w-4" />
-                  </Button>
               </div>
               <DialogHeader className="p-6 pt-8 text-center">
                   <DialogTitle>¡Bienvenido a la Sala de Control!</DialogTitle>
@@ -935,3 +927,4 @@ export default function Page() {
     </Suspense>
   );
 }
+
