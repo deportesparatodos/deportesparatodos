@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
-import { addHours, isAfter } from 'date-fns';
+import { addHours, isAfter, format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -424,9 +424,14 @@ function ViewPageContent() {
         throw new Error('No se pudieron cargar los eventos.');
       }
       const data = await response.json();
+      
+      const timeZone = 'America/Argentina/Buenos_Aires';
+      const today = format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd');
 
       const filteredData = data.filter((event: any) => 
-          event.time && event.time !== 'NaN:NaN' && !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
+          event.time && event.time !== 'NaN:NaN' &&
+          event.date === today &&
+          !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
       );
 
       const processedData = filteredData.map((event: any) => {
@@ -1142,5 +1147,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    

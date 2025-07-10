@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Menu, X, HelpCircle, FileText, Mail, AlertCircle, Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
-import { addHours, isAfter } from 'date-fns';
+import { addHours, isAfter, format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Label } from '@/components/ui/label';
@@ -310,8 +310,13 @@ export default function HomePage() {
       }
       const data = await response.json();
       
+      const timeZone = 'America/Argentina/Buenos_Aires';
+      const today = format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd');
+
       const filteredData = data.filter((event: any) => 
-          event.time && event.time !== 'NaN:NaN' && !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
+          event.time && event.time !== 'NaN:NaN' &&
+          event.date === today &&
+          !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
       );
 
       const processedData = filteredData.map((event: any) => {
@@ -864,7 +869,7 @@ export default function HomePage() {
                       </ul>
                        <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
                       <ul className="list-disc pl-6 space-y-1">
-                          <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manually!</li>
+                          <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
                            <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
                            <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                       </ul>
@@ -1138,5 +1143,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
