@@ -698,7 +698,7 @@ function ViewPageContent() {
                                     <strong>El Problema:</strong> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.
                                 </p>
                                 <p>
-                                    <strong>La Solución:</strong> Instalar una extensión como <a href="https://chrome.google.com/webstore/detail/reproductor-mpdm3u8m3uepg/iihllkdpdbhmhnhlfmplgpaannbceJjk" target="_blank" rel="noopener noreferrer" className="text-primary underline">"Reproductor MPD/M3U8/M3U/EPG"</a> (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.
+                                    <strong>La Solución:</strong> Instalar una extensión como <a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">"Reproductor MPD/M3U8/M3U/EPG"</a> (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.
                                 </p>
                             </div>
 
@@ -928,7 +928,7 @@ function ViewPageContent() {
                                         <strong>El Problema:</strong> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.
                                     </p>
                                     <p>
-                                        <strong>La Solución:</strong> Instalar una extensión como <a href="https://chrome.google.com/webstore/detail/reproductor-mpdm3u8m3uepg/iihllkdpdbhmhnhlfmplgpaannbceJjk" target="_blank" rel="noopener noreferrer" className="text-primary underline">"Reproductor MPD/M3U8/M3U/EPG"</a> (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.
+                                        <strong>La Solución:</strong> Instalar una extensión como <a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">"Reproductor MPD/M3U8/M3U/EPG"</a> (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.
                                     </p>
                                 </div>
 
