@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings } from "lucide-react";
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -210,6 +210,8 @@ function ViewPageContent() {
   const [eventGrouping, setEventGrouping] = useState(defaultEventGrouping);
   const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
   const [scheduledChanges, setScheduledChanges] = useState<ScheduledLayoutChange[]>([]);
+  
+  const [initialUrlIdentifiers, setInitialUrlIdentifiers] = useState<string[]>([]);
 
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
   const [progress, setProgress] = useState(100);
@@ -230,6 +232,9 @@ function ViewPageContent() {
       newCounters[index] = (newCounters[index] || 0) + 1;
       return newCounters;
     });
+    const newIdentifiers = [...initialUrlIdentifiers];
+    newIdentifiers[index] = crypto.randomUUID();
+    setInitialUrlIdentifiers(newIdentifiers);
   };
 
   // Welcome Popup Timer
@@ -260,10 +265,12 @@ function ViewPageContent() {
     if (storedUrls) {
       const parsedUrls = JSON.parse(storedUrls);
       const newUrls = Array(9).fill('');
+      const identifiers = Array(9).fill(null).map(() => crypto.randomUUID());
       parsedUrls.slice(0, 9).forEach((url: string, i: number) => {
         newUrls[i] = url;
       });
       setUrls(newUrls);
+      setInitialUrlIdentifiers(identifiers);
     }
     const storedNumCameras = localStorage.getItem('numCameras');
     if (storedNumCameras) {
@@ -348,12 +355,15 @@ function ViewPageContent() {
         setNumCameras(changeToApply.numCameras);
         
         const newUrls = Array(9).fill('');
+        const newIdentifiers = Array(9).fill(null).map(() => crypto.randomUUID());
         changeToApply.urls.forEach((url, i) => {
             if (i < newUrls.length) {
                 newUrls[i] = url;
             }
         });
         setUrls(newUrls);
+        setInitialUrlIdentifiers(newIdentifiers);
+
 
         const upcomingChanges = scheduledChanges.filter(change => {
           if (!change.date || !change.time) return false;
@@ -533,14 +543,23 @@ function ViewPageContent() {
 
     return () => clearInterval(timerId);
   }, [events]);
+  
+  const urlsToDisplay = useMemo(() => {
+      const activeUrls = urls.slice(0, numCameras);
+      const identifiers = initialUrlIdentifiers.slice(0, numCameras);
+      return activeUrls.map((url, index) => ({
+          url,
+          id: identifiers[index] || crypto.randomUUID(),
+          reloadKey: reloadCounters[index] || 0,
+      }));
+  }, [urls, numCameras, initialUrlIdentifiers, reloadCounters]);
+
 
   if (!isMounted) {
     return <Loading />;
   }
   
-  const urlsToDisplay = urls.slice(0, numCameras);
-
-  if (urlsToDisplay.filter(url => url && url.trim() !== "").length === 0) {
+  if (urlsToDisplay.filter(item => item.url && item.url.trim() !== "").length === 0) {
     return (
       <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
         <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
@@ -662,7 +681,7 @@ function ViewPageContent() {
                               </ul>
                                <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
                               <ul className="list-disc pl-6 space-y-1">
-                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manually!</li>
+                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
                                    <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
                                    <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                               </ul>
@@ -790,7 +809,19 @@ function ViewPageContent() {
                             numCameras={numCameras}
                             setNumCameras={setNumCameras}
                             cameraUrls={urls}
-                            setCameraUrls={setUrls}
+                            setCameraUrls={(action) => {
+                                const newUrls = typeof action === 'function' ? action(urls) : action;
+                                setUrls(newUrls);
+                                const newIdentifiers = Array(9).fill(null).map(() => crypto.randomUUID());
+                                newUrls.forEach((url, i) => {
+                                  if (url !== urls[i]) {
+                                    newIdentifiers[i] = crypto.randomUUID();
+                                  } else {
+                                    newIdentifiers[i] = initialUrlIdentifiers[i];
+                                  }
+                                });
+                                setInitialUrlIdentifiers(newIdentifiers);
+                            }}
                             messages={[]}
                             setMessages={() => {}}
                             handleStartView={() => {}}
@@ -889,7 +920,7 @@ function ViewPageContent() {
                                   </ul>
                                    <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
                                   <ul className="list-disc pl-6 space-y-1">
-                                      <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manually!</li>
+                                      <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
                                        <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
                                        <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                                   </ul>
@@ -994,10 +1025,10 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {urlsToDisplay.map((url: string, index: number) => {
+          {urlsToDisplay.map((item, index: number) => {
             
             const windowClasses: string[] = ["overflow-hidden", "relative", "bg-background"];
-            if (!url) {
+            if (!item.url) {
                 windowClasses.push("bg-red-500", "flex", "items-center", "justify-center", "text-destructive-foreground", "font-bold");
             }
              if (numIframes === 3) {
@@ -1010,12 +1041,12 @@ function ViewPageContent() {
             
             return (
               <div
-                key={`${url}-${reloadCounters[index]}`}
+                key={`${item.id}-${item.reloadKey}`}
                 className={cn(windowClasses)}
               >
-                {url ? (
+                {item.url ? (
                   <iframe
-                    src={url}
+                    src={item.url}
                     title={`Stream ${index + 1}`}
                     className="w-full h-full border-0"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
