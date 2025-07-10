@@ -148,7 +148,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
 
   const handleNumCamerasChange = (value: string) => {
-    setNumCameras(parseInt(value, 10));
+    const newNum = parseInt(value, 10);
+    setNumCameras(newNum);
     // When number of cameras changes, reset order
     if (onReorder) {
         onReorder(Array.from({ length: 9 }, (_, i) => i));
@@ -175,7 +176,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     
     const newOrder = [...viewOrder];
     
-    const actualIndex = viewOrder.indexOf(visualIndex);
+    const actualIndex = newOrder.indexOf(visualIndex);
     const targetActualIndex = direction === 'up' ? actualIndex - 1 : actualIndex + 1;
 
     if (targetActualIndex < 0 || targetActualIndex >= numCameras) {
@@ -206,10 +207,17 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     }
   };
 
-  const displayedCameras = Array.from({ length: numCameras }, (_, i) => i);
-    if (viewOrder && onReorder) {
-        displayedCameras.sort((a, b) => viewOrder.indexOf(a) - viewOrder.indexOf(b));
+  const getRenderOrder = () => {
+    const baseOrder = Array.from({ length: numCameras }, (_, i) => i);
+    if (!viewOrder || !onReorder) {
+      return baseOrder;
     }
+    // Filter viewOrder to only include active cameras and then use it for sorting
+    const activeViewOrder = viewOrder.slice(0, numCameras);
+    return baseOrder.sort((a,b) => activeViewOrder.indexOf(a) - activeViewOrder.indexOf(b));
+  }
+  
+  const renderOrder = getRenderOrder();
 
   return (
     <>
@@ -459,7 +467,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             </Select>
 
           <div className="space-y-3">
-          {displayedCameras.map((cameraIndex, visualIndex) => {
+          {renderOrder.map((cameraIndex, visualIndex) => {
             const displayStatus = getDisplayStatus(cameraUrls[cameraIndex] || '');
             const hasContent = !!(cameraUrls[cameraIndex] && cameraUrls[cameraIndex].trim() !== '');
 
@@ -469,7 +477,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={() => handleMoveUrl(cameraIndex, 'up')}
-                    disabled={visualIndex === 0}
+                    disabled={visualIndex === 0 || !onReorder}
                     aria-label="Mover URL hacia arriba"
                     className="bg-background hover:bg-accent/50"
                     type="button" 
@@ -607,7 +615,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     variant="outline"
                     size="icon"
                     onClick={() => handleMoveUrl(cameraIndex, 'down')}
-                    disabled={visualIndex === numCameras - 1}
+                    disabled={visualIndex === numCameras - 1 || !onReorder}
                     aria-label="Mover URL hacia abajo"
                     className="bg-background hover:bg-accent/50"
                     type="button"
