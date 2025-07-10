@@ -213,6 +213,7 @@ function ViewPageContent() {
 
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
   const [progress, setProgress] = useState(100);
+  const [isSubDialogOpen, setIsSubDialogOpen] = useState(false);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   
@@ -233,9 +234,9 @@ function ViewPageContent() {
 
   // Welcome Popup Timer
   useEffect(() => {
-    if (welcomePopupOpen) {
-      setProgress(100); // Reset progress on open
-      const interval = setInterval(() => {
+    let interval: NodeJS.Timeout;
+    if (welcomePopupOpen && !isSubDialogOpen) {
+      interval = setInterval(() => {
         setProgress((prev) => {
           if (prev <= 0) {
             clearInterval(interval);
@@ -245,15 +246,15 @@ function ViewPageContent() {
           return prev - 1;
         });
       }, 100); // Update every 100ms for 10s total
-
-      return () => clearInterval(interval);
     }
-  }, [welcomePopupOpen]);
+    return () => clearInterval(interval);
+  }, [welcomePopupOpen, isSubDialogOpen]);
 
   // Load from localStorage on mount
   useEffect(() => {
     setIsMounted(true);
     setWelcomePopupOpen(true);
+    setProgress(100);
 
     const storedUrls = localStorage.getItem('cameraUrls');
     if (storedUrls) {
@@ -590,11 +591,11 @@ function ViewPageContent() {
               <DialogHeader className="p-6 pt-8 text-center">
                   <DialogTitle>¡Bienvenido a Deportes para Todos!</DialogTitle>
               </DialogHeader>
-              <div className="px-6 pb-6 text-sm text-muted-foreground">
+              <div className="px-6 pb-6 text-sm text-muted-foreground text-left">
                   <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
               </div>
               <DialogFooter className="flex-row items-center justify-center gap-2 p-6 pt-0">
-                  <Dialog>
+                  <Dialog onOpenChange={(open) => setIsSubDialogOpen(open)}>
                       <DialogTrigger asChild>
                           <Button variant="outline"><HelpCircle className="mr-2 h-4 w-4" />Tutorial</Button>
                       </DialogTrigger>
@@ -631,7 +632,7 @@ function ViewPageContent() {
                           </div>
                       </DialogContent>
                   </Dialog>
-                  <Dialog>
+                  <Dialog onOpenChange={(open) => setIsSubDialogOpen(open)}>
                       <DialogTrigger asChild>
                           <Button variant="outline"><AlertCircle className="mr-2 h-4 w-4" />Errores</Button>
                       </DialogTrigger>
