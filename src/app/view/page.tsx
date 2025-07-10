@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings } from "lucide-react";
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -570,6 +570,7 @@ function ViewPageContent() {
       const activeUrls = urls.slice(0, numCameras);
       return activeUrls.map((url, index) => ({
           url,
+          originalIndex: index,
           reloadKey: reloadCounters[index] || 0,
       }));
   }, [urls, numCameras, reloadCounters]);
@@ -1040,7 +1041,8 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {urlsToDisplay.map((item, index: number) => {
+          {urlsToDisplay.map((item, index) => {
+            const visualOrder = viewOrder.indexOf(item.originalIndex);
             
             const windowClasses: string[] = ["overflow-hidden", "relative", "bg-background"];
             if (!item.url) {
@@ -1050,18 +1052,18 @@ function ViewPageContent() {
               // Special layout for 3 windows on desktop
               windowClasses.push(
                 'md:col-span-1 md:row-span-1', // Default for all three on desktop
-                index === 0 ? 'md:col-span-2' : '' // First item spans two columns on desktop
+                visualOrder === 0 ? 'md:col-span-2' : '' // First visual item spans two columns on desktop
               );
             }
             
             return (
               <div
-                key={`${item.url}-${reloadCounters[index]}`}
-                className={cn(windowClasses, getOrderClass(viewOrder[index] + 1))}
+                key={`${item.originalIndex}-${item.url}`}
+                className={cn(windowClasses, getOrderClass(visualOrder + 1))}
               >
                 {item.url ? (
                   <iframe
-                    src={item.url}
+                    src={`${item.url}?reload=${item.reloadKey}`}
                     title={`Stream ${index + 1}`}
                     className="w-full h-full border-0"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
