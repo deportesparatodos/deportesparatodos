@@ -588,7 +588,7 @@ function ViewPageContent() {
                   <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
               </div>
               <DialogHeader className="p-6 pt-8 text-center">
-                  <DialogTitle>¡Bienvenido a la Sala de Control!</DialogTitle>
+                  <DialogTitle>¡Bienvenido a Deportes para Todos!</DialogTitle>
               </DialogHeader>
               <div className="px-6 pb-6 text-center text-sm text-muted-foreground">
                   <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
