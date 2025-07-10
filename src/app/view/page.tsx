@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings } from "lucide-react";
-import { Suspense, useState, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -424,7 +424,12 @@ function ViewPageContent() {
         throw new Error('No se pudieron cargar los eventos.');
       }
       const data = await response.json();
-      const processedData = data.map((event: any) => {
+
+      const filteredData = data.filter((event: any) => 
+          !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
+      );
+
+      const processedData = filteredData.map((event: any) => {
         const newButtons = [...(event.buttons || [])];
         const newOptions = (event.options || []).map((option: string, index: number) => {
           let currentOption = option;
@@ -702,7 +707,7 @@ function ViewPageContent() {
                               </ul>
                                <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
                               <ul className="list-disc pl-6 space-y-1">
-                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manually!</li>
+                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
                                    <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
                                    <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                               </ul>
@@ -1041,7 +1046,7 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {urlsToDisplay.map((item, index) => {
+          {urlsToDisplay.map((item) => {
             const visualOrder = viewOrder.indexOf(item.originalIndex);
             
             const windowClasses: string[] = ["overflow-hidden", "relative", "bg-background"];
@@ -1051,8 +1056,8 @@ function ViewPageContent() {
              if (numIframes === 3) {
               // Special layout for 3 windows on desktop
               windowClasses.push(
-                'md:col-span-1 md:row-span-1', // Default for all three on desktop
-                visualOrder === 0 ? 'md:col-span-2' : '' // First visual item spans two columns on desktop
+                'md:col-span-1 md:row-span-1',
+                visualOrder === 0 ? 'md:col-span-2' : ''
               );
             }
             
@@ -1062,13 +1067,13 @@ function ViewPageContent() {
 
             return (
               <div
-                key={`${item.originalIndex}-${item.url}`}
+                key={`${item.originalIndex}-${item.reloadKey}`}
                 className={cn(windowClasses, getOrderClass(visualOrder + 1))}
               >
                 {item.url ? (
                   <iframe
                     src={iframeSrc}
-                    title={`Stream ${index + 1}`}
+                    title={`Stream ${item.originalIndex + 1}`}
                     className="w-full h-full border-0"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen

@@ -309,7 +309,12 @@ export default function HomePage() {
         throw new Error('No se pudieron cargar los eventos.');
       }
       const data = await response.json();
-      const processedData = data.map((event: any) => {
+      
+      const filteredData = data.filter((event: any) => 
+          !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
+      );
+
+      const processedData = filteredData.map((event: any) => {
         const newButtons = [...(event.buttons || [])];
         const newOptions = (event.options || []).map((option: string, index: number) => {
           let currentOption = option;
