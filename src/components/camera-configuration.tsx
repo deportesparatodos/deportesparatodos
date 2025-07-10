@@ -4,7 +4,7 @@
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw, Search, Loader2, PictureInPicture2 } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw, Search, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -62,8 +62,6 @@ interface CameraConfigurationProps {
   hideBorderConfigButton?: boolean;
   isChatEnabled?: boolean;
   setIsChatEnabled?: (enabled: boolean) => void;
-  isPipEnabled?: boolean;
-  setIsPipEnabled?: (enabled: boolean) => void;
   eventGrouping: EventGrouping;
   setEventGrouping?: Dispatch<SetStateAction<EventGrouping>>;
   scheduledChanges?: ScheduledLayoutChange[];
@@ -97,8 +95,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   hideBorderConfigButton = false,
   isChatEnabled,
   setIsChatEnabled,
-  isPipEnabled,
-  setIsPipEnabled,
   eventGrouping,
   setEventGrouping,
   scheduledChanges,
@@ -284,9 +280,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         </div>
                       </AccordionContent>
                     </AccordionItem>
-                    {(isChatEnabled !== undefined && setIsChatEnabled) && (isPipEnabled !== undefined && setIsPipEnabled) && (
+                    {(isChatEnabled !== undefined && setIsChatEnabled) && (
                       <AccordionItem value="item-2" className="border rounded-md px-1">
-                        <AccordionTrigger className="p-3 hover:no-underline">Chat & PiP</AccordionTrigger>
+                        <AccordionTrigger className="p-3 hover:no-underline">Chat</AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-4 pt-2 px-3 pb-3">
                             <div className="flex items-center justify-between rounded-lg border p-4">
@@ -300,19 +296,6 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                 id="chat-switch-view"
                                 checked={isChatEnabled}
                                 onCheckedChange={setIsChatEnabled}
-                              />
-                            </div>
-                            <div className="flex items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <Label htmlFor="pip-switch-view" className="text-base">Activar PiP</Label>
-                                <p className="text-sm text-muted-foreground">
-                                  Muestra el botón para Picture-in-Picture.
-                                </p>
-                              </div>
-                              <Switch
-                                id="pip-switch-view"
-                                checked={isPipEnabled}
-                                onCheckedChange={setIsPipEnabled}
                               />
                             </div>
                           </div>

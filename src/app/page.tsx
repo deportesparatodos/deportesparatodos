@@ -11,7 +11,7 @@ import { channels } from '@/components/channel-list';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Menu, X, HelpCircle, FileText, Mail, AlertCircle, Settings, PictureInPicture2 } from 'lucide-react';
+import { Menu, X, HelpCircle, FileText, Mail, AlertCircle, Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import type { Event } from '@/components/event-list';
 import { addHours, isAfter } from 'date-fns';
@@ -222,7 +222,6 @@ export default function HomePage() {
   const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#18181b');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
-  const [isPipEnabled, setIsPipEnabled] = useState<boolean>(true);
   const [eventGrouping, setEventGrouping] = useState(defaultEventGrouping);
 
 
@@ -423,12 +422,6 @@ export default function HomePage() {
     } else {
       setIsChatEnabled(true);
     }
-    const storedPipEnabled = localStorage.getItem('isPipEnabled');
-    if (storedPipEnabled) {
-      setIsPipEnabled(JSON.parse(storedPipEnabled));
-    } else {
-      setIsPipEnabled(true);
-    }
      const storedEventGrouping = localStorage.getItem('eventGrouping');
     if (storedEventGrouping) {
       try {
@@ -449,10 +442,9 @@ export default function HomePage() {
       localStorage.setItem('gridGap', gridGap.toString());
       localStorage.setItem('borderColor', borderColor);
       localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
-      localStorage.setItem('isPipEnabled', JSON.stringify(isPipEnabled));
       localStorage.setItem('eventGrouping', JSON.stringify(eventGrouping));
     }
-  }, [cameraUrls, numCameras, gridGap, borderColor, isChatEnabled, isPipEnabled, eventGrouping, isMounted]);
+  }, [cameraUrls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, isMounted]);
 
   const handleGridGapChange = (value: number[]) => {
     const newGap = value[0];
@@ -646,7 +638,7 @@ export default function HomePage() {
                       </AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-2" className="border rounded-md px-1">
-                      <AccordionTrigger className="p-3 hover:no-underline">Chat & PiP</AccordionTrigger>
+                      <AccordionTrigger className="p-3 hover:no-underline">Chat</AccordionTrigger>
                       <AccordionContent>
                         <div className="space-y-4 pt-2 px-3 pb-3">
                           <div className="flex items-center justify-between rounded-lg border p-4">
@@ -660,19 +652,6 @@ export default function HomePage() {
                               id="chat-switch"
                               checked={isChatEnabled}
                               onCheckedChange={setIsChatEnabled}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <Label htmlFor="pip-switch" className="text-base">Activar Pantalla en Pantalla</Label>
-                              <p className="text-sm text-muted-foreground">
-                                Muestra el botón para el modo Picture-in-Picture en la vista.
-                              </p>
-                            </div>
-                            <Switch
-                              id="pip-switch"
-                              checked={isPipEnabled}
-                              onCheckedChange={setIsPipEnabled}
                             />
                           </div>
                         </div>
@@ -1111,8 +1090,8 @@ export default function HomePage() {
                 handleRestoreDefaults={handleRestoreDefaults}
                 hideBorderConfigButton={true}
                 eventGrouping={eventGrouping}
-                isPipEnabled={isPipEnabled}
-                setIsPipEnabled={setIsPipEnabled}
+                isChatEnabled={isChatEnabled}
+                setIsChatEnabled={setIsChatEnabled}
               />
             </div>
         </div>
