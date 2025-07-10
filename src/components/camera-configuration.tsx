@@ -66,6 +66,8 @@ interface CameraConfigurationProps {
   setEventGrouping?: Dispatch<SetStateAction<EventGrouping>>;
   scheduledChanges?: ScheduledLayoutChange[];
   setScheduledChanges?: Dispatch<SetStateAction<ScheduledLayoutChange[]>>;
+  viewOrder?: number[];
+  onReorder?: (order: number[]) => void;
 }
 
 export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
@@ -99,6 +101,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   setEventGrouping,
   scheduledChanges,
   setScheduledChanges,
+  viewOrder,
+  onReorder,
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -145,6 +149,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 
   const handleNumCamerasChange = (value: string) => {
     setNumCameras(parseInt(value, 10));
+    // When number of cameras changes, reset order
+    if (onReorder) {
+        onReorder(Array.from({ length: 9 }, (_, i) => i));
+    }
   };
 
   const handleUrlChange = (index: number, value: string) => {
@@ -162,25 +170,22 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     handleUrlChange(index, '');
   };
 
-  const handleMoveUrl = (index: number, direction: 'up' | 'down') => {
-    const newUrls = [...cameraUrls];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  const handleMoveUrl = (visualIndex: number, direction: 'up' | 'down') => {
+    if (!onReorder || !viewOrder) return;
+    
+    const newOrder = [...viewOrder];
+    
+    const actualIndex = viewOrder.indexOf(visualIndex);
+    const targetActualIndex = direction === 'up' ? actualIndex - 1 : actualIndex + 1;
 
-    if (targetIndex < 0 || targetIndex >= numCameras) {
-      return;
+    if (targetActualIndex < 0 || targetActualIndex >= numCameras) {
+        return;
     }
+    
+    [newOrder[actualIndex], newOrder[targetActualIndex]] = [newOrder[targetActualIndex], newOrder[actualIndex]];
+    onReorder(newOrder);
+};
 
-    for (let i = 0; i < numCameras; i++) {
-        if (newUrls[i] === undefined) newUrls[i] = '';
-    }
-
-    [newUrls[index], newUrls[targetIndex]] = [newUrls[targetIndex], newUrls[index]];
-    setCameraUrls(newUrls);
-    if (!hideStartButton) {
-      setMessages([]);
-      setAcknowledged(false);
-    }
-  };
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -200,6 +205,11 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       setDialogOpenForIndex(null); // Close dialog
     }
   };
+
+  const displayedCameras = Array.from({ length: numCameras }, (_, i) => i);
+    if (viewOrder && onReorder) {
+        displayedCameras.sort((a, b) => viewOrder.indexOf(a) - viewOrder.indexOf(b));
+    }
 
   return (
     <>
@@ -449,17 +459,17 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             </Select>
 
           <div className="space-y-3">
-          {Array.from({ length: numCameras }).map((_, index) => {
-            const displayStatus = getDisplayStatus(cameraUrls[index] || '');
-            const hasContent = !!(cameraUrls[index] && cameraUrls[index].trim() !== '');
+          {displayedCameras.map((cameraIndex, visualIndex) => {
+            const displayStatus = getDisplayStatus(cameraUrls[cameraIndex] || '');
+            const hasContent = !!(cameraUrls[cameraIndex] && cameraUrls[cameraIndex].trim() !== '');
 
             return (
-              <div key={index} className="flex items-center space-x-2">
+              <div key={cameraIndex} className="flex items-center space-x-2">
                 <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleMoveUrl(index, 'up')}
-                    disabled={index === 0}
+                    onClick={() => handleMoveUrl(cameraIndex, 'up')}
+                    disabled={visualIndex === 0}
                     aria-label="Mover URL hacia arriba"
                     className="bg-background hover:bg-accent/50"
                     type="button" 
@@ -467,8 +477,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                     <ArrowUp className="h-4 w-4" />
                 </Button>
                 
-                <Dialog open={dialogOpenForIndex === index} onOpenChange={(isOpen) => {
-                  setDialogOpenForIndex(isOpen ? index : null);
+                <Dialog open={dialogOpenForIndex === cameraIndex} onOpenChange={(isOpen) => {
+                  setDialogOpenForIndex(isOpen ? cameraIndex : null);
                   if (!isOpen) setSearchTerm('');
                 }}>
                   <DialogTrigger asChild>
@@ -476,7 +486,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       type="button"
                       variant="outline"
                       className="relative flex-grow justify-between items-center overflow-hidden w-0"
-                      aria-label={`Seleccionar entrada para Vista ${index + 1}`}
+                      aria-label={`Seleccionar entrada para Vista ${visualIndex + 1}`}
                     >
                       <span className={cn(
                         "truncate text-left",
@@ -494,8 +504,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                               role="button"
                               aria-label="Limpiar entrada"
                               tabIndex={0}
-                              onClick={(e) => handleClearUrl(e, index)}
-                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClearUrl(e, index); } }}
+                              onClick={(e) => handleClearUrl(e, cameraIndex)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClearUrl(e, cameraIndex); } }}
                               className="p-1 rounded-full hover:bg-muted z-10"
                            >
                               <X className="h-4 w-4 opacity-50 flex-shrink-0 hover:opacity-100" />
@@ -507,7 +517,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
                       <DialogHeader className="p-4 border-b">
-                          <DialogTitle>Seleccionar una entrada para la Vista {index + 1}</DialogTitle>
+                          <DialogTitle>Seleccionar una entrada para la Vista {visualIndex + 1}</DialogTitle>
                       </DialogHeader>
                       <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden px-4 pb-4 pt-2">
                           <TabsList className="grid w-full grid-cols-2">
@@ -596,8 +606,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleMoveUrl(index, 'down')}
-                    disabled={index === numCameras - 1}
+                    onClick={() => handleMoveUrl(cameraIndex, 'down')}
+                    disabled={visualIndex === numCameras - 1}
                     aria-label="Mover URL hacia abajo"
                     className="bg-background hover:bg-accent/50"
                     type="button"
@@ -609,7 +619,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => onReloadCamera(index)}
+                    onClick={() => onReloadCamera(cameraIndex)}
                     aria-label="Recargar vista"
                     className="bg-background hover:bg-accent/50"
                     type="button"

@@ -197,6 +197,21 @@ function mergeDuplicateEvents(events: Omit<Event, 'status'>[]): Omit<Event, 'sta
   return mergedEvents;
 }
 
+const getOrderClass = (order: number) => {
+    switch (order) {
+        case 1: return "order-1";
+        case 2: return "order-2";
+        case 3: return "order-3";
+        case 4: return "order-4";
+        case 5: return "order-5";
+        case 6: return "order-6";
+        case 7: return "order-7";
+        case 8: return "order-8";
+        case 9: return "order-9";
+        default: return "order-none";
+    }
+};
+
 function ViewPageContent() {
   // State is now driven by localStorage to sync with home page
   const [urls, setUrls] = useState<string[]>(Array(9).fill(''));
@@ -211,8 +226,6 @@ function ViewPageContent() {
   const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
   const [scheduledChanges, setScheduledChanges] = useState<ScheduledLayoutChange[]>([]);
   
-  const [initialUrlIdentifiers, setInitialUrlIdentifiers] = useState<string[]>([]);
-
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
   const [progress, setProgress] = useState(100);
   const [isSubDialogOpen, setIsSubDialogOpen] = useState(false);
@@ -225,6 +238,7 @@ function ViewPageContent() {
   const [processedEvents, setProcessedEvents] = useState<Event[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
   const handleReloadCamera = (index: number) => {
     setReloadCounters(prevCounters => {
@@ -232,9 +246,6 @@ function ViewPageContent() {
       newCounters[index] = (newCounters[index] || 0) + 1;
       return newCounters;
     });
-    const newIdentifiers = [...initialUrlIdentifiers];
-    newIdentifiers[index] = crypto.randomUUID();
-    setInitialUrlIdentifiers(newIdentifiers);
   };
 
   // Welcome Popup Timer
@@ -265,12 +276,10 @@ function ViewPageContent() {
     if (storedUrls) {
       const parsedUrls = JSON.parse(storedUrls);
       const newUrls = Array(9).fill('');
-      const identifiers = Array(9).fill(null).map(() => crypto.randomUUID());
       parsedUrls.slice(0, 9).forEach((url: string, i: number) => {
         newUrls[i] = url;
       });
       setUrls(newUrls);
-      setInitialUrlIdentifiers(identifiers);
     }
     const storedNumCameras = localStorage.getItem('numCameras');
     if (storedNumCameras) {
@@ -320,6 +329,17 @@ function ViewPageContent() {
             console.error("Failed to parse or filter scheduledChanges from localStorage", e);
         }
     }
+    const storedViewOrder = localStorage.getItem('viewOrder');
+    if (storedViewOrder) {
+        try {
+            const parsedOrder = JSON.parse(storedViewOrder);
+            if(Array.isArray(parsedOrder) && parsedOrder.length === 9) {
+                setViewOrder(parsedOrder);
+            }
+        } catch(e) {
+            console.error("Failed to parse viewOrder from localStorage", e);
+        }
+    }
   }, []);
 
   // Save to localStorage on change
@@ -332,8 +352,9 @@ function ViewPageContent() {
       localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
       localStorage.setItem('eventGrouping', JSON.stringify(eventGrouping));
       localStorage.setItem('scheduledChanges', JSON.stringify(scheduledChanges));
+      localStorage.setItem('viewOrder', JSON.stringify(viewOrder));
     }
-  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, scheduledChanges, isMounted]);
+  }, [urls, numCameras, gridGap, borderColor, isChatEnabled, eventGrouping, scheduledChanges, viewOrder, isMounted]);
 
   // Scheduler Execution Logic
   useEffect(() => {
@@ -355,15 +376,16 @@ function ViewPageContent() {
         setNumCameras(changeToApply.numCameras);
         
         const newUrls = Array(9).fill('');
-        const newIdentifiers = Array(9).fill(null).map(() => crypto.randomUUID());
         changeToApply.urls.forEach((url, i) => {
             if (i < newUrls.length) {
                 newUrls[i] = url;
             }
         });
         setUrls(newUrls);
-        setInitialUrlIdentifiers(newIdentifiers);
-
+        
+        // Reset order on scheduled change
+        const defaultOrder = Array.from({ length: 9 }, (_, i) => i);
+        setViewOrder(defaultOrder);
 
         const upcomingChanges = scheduledChanges.filter(change => {
           if (!change.date || !change.time) return false;
@@ -546,13 +568,11 @@ function ViewPageContent() {
   
   const urlsToDisplay = useMemo(() => {
       const activeUrls = urls.slice(0, numCameras);
-      const identifiers = initialUrlIdentifiers.slice(0, numCameras);
       return activeUrls.map((url, index) => ({
           url,
-          id: identifiers[index] || crypto.randomUUID(),
           reloadKey: reloadCounters[index] || 0,
       }));
-  }, [urls, numCameras, initialUrlIdentifiers, reloadCounters]);
+  }, [urls, numCameras, reloadCounters]);
 
 
   if (!isMounted) {
@@ -812,15 +832,8 @@ function ViewPageContent() {
                             setCameraUrls={(action) => {
                                 const newUrls = typeof action === 'function' ? action(urls) : action;
                                 setUrls(newUrls);
-                                const newIdentifiers = Array(9).fill(null).map(() => crypto.randomUUID());
-                                newUrls.forEach((url, i) => {
-                                  if (url !== urls[i]) {
-                                    newIdentifiers[i] = crypto.randomUUID();
-                                  } else {
-                                    newIdentifiers[i] = initialUrlIdentifiers[i];
-                                  }
-                                });
-                                setInitialUrlIdentifiers(newIdentifiers);
+                                // When URLs change from here, reset the order
+                                setViewOrder(Array.from({ length: 9 }, (_, i) => i));
                             }}
                             messages={[]}
                             setMessages={() => {}}
@@ -846,6 +859,8 @@ function ViewPageContent() {
                             setEventGrouping={setEventGrouping}
                             scheduledChanges={scheduledChanges}
                             setScheduledChanges={setScheduledChanges}
+                            viewOrder={viewOrder}
+                            onReorder={setViewOrder}
                       />
                     )}
                  </div>
@@ -1041,8 +1056,8 @@ function ViewPageContent() {
             
             return (
               <div
-                key={`${item.id}-${item.reloadKey}`}
-                className={cn(windowClasses)}
+                key={`${item.url}-${reloadCounters[index]}`}
+                className={cn(windowClasses, getOrderClass(viewOrder[index] + 1))}
               >
                 {item.url ? (
                   <iframe
