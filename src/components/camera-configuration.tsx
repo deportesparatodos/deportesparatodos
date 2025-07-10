@@ -171,21 +171,20 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     handleUrlChange(index, '');
   };
 
-  const handleMoveUrl = (visualIndex: number, direction: 'up' | 'down') => {
-    if (!onReorder || !viewOrder) return;
-    
-    const newOrder = [...viewOrder];
-    
-    const actualIndex = newOrder.indexOf(visualIndex);
-    const targetActualIndex = direction === 'up' ? actualIndex - 1 : actualIndex + 1;
+  const handleMoveUrl = (currentIndexInVisualOrder: number, direction: 'up' | 'down') => {
+      if (!onReorder || !viewOrder) return;
+      
+      const newOrder = [...viewOrder];
+      const targetIndexInVisualOrder = direction === 'up' ? currentIndexInVisualOrder - 1 : currentIndexInVisualOrder + 1;
 
-    if (targetActualIndex < 0 || targetActualIndex >= numCameras) {
-        return;
-    }
-    
-    [newOrder[actualIndex], newOrder[targetActualIndex]] = [newOrder[targetActualIndex], newOrder[actualIndex]];
-    onReorder(newOrder);
-};
+      if (targetIndexInVisualOrder < 0 || targetIndexInVisualOrder >= numCameras) {
+          return;
+      }
+      
+      // Swap the real indices in the viewOrder array
+      [newOrder[currentIndexInVisualOrder], newOrder[targetIndexInVisualOrder]] = [newOrder[targetIndexInVisualOrder], newOrder[currentIndexInVisualOrder]];
+      onReorder(newOrder);
+  };
 
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -206,18 +205,9 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
       setDialogOpenForIndex(null); // Close dialog
     }
   };
-
-  const getRenderOrder = () => {
-    const baseOrder = Array.from({ length: numCameras }, (_, i) => i);
-    if (!viewOrder || !onReorder) {
-      return baseOrder;
-    }
-    // Filter viewOrder to only include active cameras and then use it for sorting
-    const activeViewOrder = viewOrder.slice(0, numCameras);
-    return baseOrder.sort((a,b) => activeViewOrder.indexOf(a) - activeViewOrder.indexOf(b));
-  }
   
-  const renderOrder = getRenderOrder();
+  const visualOrderArray = viewOrder ? viewOrder.slice(0, numCameras) : Array.from({ length: numCameras }, (_, i) => i);
+
 
   return (
     <>
@@ -467,7 +457,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
             </Select>
 
           <div className="space-y-3">
-          {renderOrder.map((cameraIndex, visualIndex) => {
+          {visualOrderArray.map((cameraIndex, visualIndex) => {
             const displayStatus = getDisplayStatus(cameraUrls[cameraIndex] || '');
             const hasContent = !!(cameraUrls[cameraIndex] && cameraUrls[cameraIndex].trim() !== '');
 
@@ -476,7 +466,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleMoveUrl(cameraIndex, 'up')}
+                    onClick={() => handleMoveUrl(visualIndex, 'up')}
                     disabled={visualIndex === 0 || !onReorder}
                     aria-label="Mover URL hacia arriba"
                     className="bg-background hover:bg-accent/50"
@@ -614,7 +604,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleMoveUrl(cameraIndex, 'down')}
+                    onClick={() => handleMoveUrl(visualIndex, 'down')}
                     disabled={visualIndex === numCameras - 1 || !onReorder}
                     aria-label="Mover URL hacia abajo"
                     className="bg-background hover:bg-accent/50"
