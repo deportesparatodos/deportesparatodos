@@ -683,7 +683,7 @@ function ViewPageContent() {
                                   <li><strong>Flechas (Arriba/Abajo):</strong> Reordena las ventanas a tu gusto.</li>
                                   <li><strong>Botón "X":</strong> Limpia la selección de una ventana para dejarla vacía.</li>
                                   <li><strong>Botón de Recarga (en la página de visualización):</strong> Si una transmisión se congela o falla, usa este botón para recargarla sin afectar las demás.</li>
-                              </ul>
+                                  </ul>
 
                               <h4 className="font-semibold text-foreground pt-2">Paso 4: Inicia la Sala de Control</h4>
                               <p>
@@ -702,7 +702,7 @@ function ViewPageContent() {
                               </ul>
                                <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
                               <ul className="list-disc pl-6 space-y-1">
-                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
+                                  <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manually!</li>
                                    <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
                                    <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                               </ul>
@@ -1056,6 +1056,10 @@ function ViewPageContent() {
               );
             }
             
+            const iframeSrc = item.url 
+              ? `${item.url}${item.url.includes('?') ? '&' : '?'}reload=${item.reloadKey}`
+              : '';
+
             return (
               <div
                 key={`${item.originalIndex}-${item.url}`}
@@ -1063,7 +1067,7 @@ function ViewPageContent() {
               >
                 {item.url ? (
                   <iframe
-                    src={`${item.url}?reload=${item.reloadKey}`}
+                    src={iframeSrc}
                     title={`Stream ${index + 1}`}
                     className="w-full h-full border-0"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
@@ -1133,3 +1137,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    
