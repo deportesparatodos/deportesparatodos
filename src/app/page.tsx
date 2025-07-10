@@ -311,7 +311,7 @@ export default function HomePage() {
       const data = await response.json();
       
       const filteredData = data.filter((event: any) => 
-          !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
+          event.time && !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
       );
 
       const processedData = filteredData.map((event: any) => {
@@ -864,7 +864,7 @@ export default function HomePage() {
                       </ul>
                        <h4 className="font-semibold text-foreground pt-2">Consejos Útiles</h4>
                       <ul className="list-disc pl-6 space-y-1">
-                          <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manualmente!</li>
+                          <li>La aplicación guarda automáticamente tus selecciones de canales y configuraciones, ¡no necesitas guardarlas manually!</li>
                            <li>Si un video no carga, prueba recargando la vista específica o consulta la sección de "Errores" para soluciones comunes como cambiar el DNS.</li>
                            <li>Para cualquier problema o sugerencia, no dudes en usar la opción de "Contacto".</li>
                       </ul>
