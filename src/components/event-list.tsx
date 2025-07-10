@@ -354,7 +354,9 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                 )}
               </div>
               <div className="flex-shrink-0">
-                <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md">{event.time}</p>
+                <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md">
+                    {event.status === 'En Vivo' ? 'AHORA' : event.time}
+                </p>
               </div>
             </div>
             <div className="mt-3">
@@ -443,7 +445,12 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                             {(() => {
                                                 const allTimes = group.events.map(e => e.time);
                                                 const uniqueTimes = [...new Set(allTimes)];
+                                                const isLive = group.events.some(e => e.status === 'En Vivo');
                                                 
+                                                if (isLive) {
+                                                   return <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">AHORA</p>
+                                                }
+
                                                 if (uniqueTimes.length === 1) {
                                                     return (
                                                         <p className="text-sm font-semibold text-primary px-2 py-1 bg-background rounded-md w-full">
