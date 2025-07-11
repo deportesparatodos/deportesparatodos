@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 
 export interface Event {
@@ -350,6 +357,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
   const renderEventCard = (event: Event, eventIndex: number) => {
     const imageSrc = event.image;
+    const isMotorsport = event.image === motorImage;
 
     return (
       <Card key={`${event.title}-${eventIndex}`} className="bg-muted/50 overflow-hidden">
@@ -377,6 +385,28 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                     event.status === 'Finalizado' && 'bg-black text-white',
                     event.status === 'Desconocido' && 'bg-yellow-500 text-yellow-950'
                   )}>{event.status}</Badge>
+                )}
+                 {isMotorsport && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                       <Badge variant="outline" className="text-xs font-bold border-yellow-500/50 bg-yellow-500/10 text-yellow-700 cursor-pointer hover:bg-yellow-500/20 rounded-none">
+                          <AlertTriangle className="h-3 w-3 mr-1"/>
+                          Aviso
+                       </Badge>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Aviso sobre Eventos de Motor</DialogTitle>
+                      </DialogHeader>
+                      <p className="text-sm text-muted-foreground">
+                        Este evento puede no estar en vivo, a veces, ni siquiera es de hoy, pero aparece en el listado.
+                        En caso de querer ver este tipo de eventos, revisar la página de la categoría y sus calendarios 
+                        para ver qué evento hay realmente hoy (P1, P2, P3, QUALY, CARRERA, ETC), y el horario al que se 
+                        transmite, cuando llegue ese horario y sea la fecha, podrá ver el evento sin problemas. 
+                        Disculpe los inconvenientes.
+                      </p>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
               <div className="flex-shrink-0">
