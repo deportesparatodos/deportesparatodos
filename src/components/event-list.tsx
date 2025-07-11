@@ -399,13 +399,18 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                       <DialogHeader>
                         <DialogTitle>Aviso sobre Eventos de Motor</DialogTitle>
                       </DialogHeader>
-                      <p className="text-sm text-muted-foreground">
-                        Este evento puede no estar en vivo, a veces, ni siquiera es de hoy, pero aparece en el listado.
-                        En caso de querer ver este tipo de eventos, revisar la página de la categoría y sus calendarios 
-                        para ver qué evento hay realmente hoy (P1, P2, P3, QUALY, CARRERA, ETC), y el horario al que se 
-                        transmite, cuando llegue ese horario y sea la fecha, podrá ver el evento sin problemas. 
-                        Disculpe los inconvenientes.
-                      </p>
+                       <div className="text-sm text-muted-foreground space-y-4">
+                        <p>
+                          Este evento puede no estar en vivo, a veces, ni siquiera es de hoy, pero aparece en el listado.
+                          En caso de querer ver este tipo de eventos, revisar la página de la categoría y sus calendarios 
+                          para ver qué evento hay realmente hoy (P1, P2, P3, QUALY, CARRERA, ETC), y el horario al que se 
+                          transmite, cuando llegue ese horario y sea la fecha, podrá ver el evento sin problemas. 
+                          Disculpe los inconvenientes.
+                        </p>
+                        <p>
+                            Un calendario recomendado es <a href="https://www.motorsport.com/all/schedule/2025/live/" target="_blank" rel="noopener noreferrer" className="text-primary underline">este</a>, el cual además puedes agregar a tu calendario (Google, Outlook, Apple, etc).
+                        </p>
+                       </div>
                     </DialogContent>
                   </Dialog>
                 )}
@@ -552,13 +557,18 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                                     <DialogHeader>
                                                       <DialogTitle>Aviso sobre Eventos de Motor</DialogTitle>
                                                     </DialogHeader>
-                                                    <p className="text-sm text-muted-foreground">
-                                                      Este evento puede no estar en vivo, a veces, ni siquiera es de hoy, pero aparece en el listado.
-                                                      En caso de querer ver este tipo de eventos, revisar la página de la categoría y sus calendarios 
-                                                      para ver qué evento hay realmente hoy (P1, P2, P3, QUALY, CARRERA, ETC), y el horario al que se 
-                                                      transmite, cuando llegue ese horario y sea la fecha, podrá ver el evento sin problemas. 
-                                                      Disculpe los inconvenientes.
-                                                    </p>
+                                                    <div className="text-sm text-muted-foreground space-y-4">
+                                                      <p>
+                                                        Este evento puede no estar en vivo, a veces, ni siquiera es de hoy, pero aparece en el listado.
+                                                        En caso de querer ver este tipo de eventos, revisar la página de la categoría y sus calendarios 
+                                                        para ver qué evento hay realmente hoy (P1, P2, P3, QUALY, CARRERA, ETC), y el horario al que se 
+                                                        transmite, cuando llegue ese horario y sea la fecha, podrá ver el evento sin problemas. 
+                                                        Disculpe los inconvenientes.
+                                                      </p>
+                                                      <p>
+                                                          Un calendario recomendado es <a href="https://www.motorsport.com/all/schedule/2025/live/" target="_blank" rel="noopener noreferrer" className="text-primary underline">este</a>, el cual además puedes agregar a tu calendario (Google, Outlook, Apple, etc).
+                                                      </p>
+                                                    </div>
                                                   </DialogContent>
                                                 </Dialog>
                                               )}
