@@ -1074,9 +1074,13 @@ function ViewPageContent() {
               );
             }
             
-            const iframeSrc = item.url 
+            let iframeSrc = item.url 
               ? `${item.url}${item.url.includes('?') ? '&' : '?'}reload=${item.reloadKey}`
               : '';
+
+            if (iframeSrc.includes("youtube-nocookie.com")) {
+                iframeSrc += `&autoplay=1`;
+            }
 
             return (
               <div
