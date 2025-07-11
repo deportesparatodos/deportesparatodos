@@ -28,6 +28,7 @@ const defaultEventGrouping = {
   nba: false,
   mundialDeClubes: false,
   deportesDeCombate: false,
+  deportesDeMotor: false,
   liga1: false,
   ligaPro: false,
   mls: false,

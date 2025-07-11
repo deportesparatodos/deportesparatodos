@@ -45,6 +45,7 @@ interface EventGrouping {
     nba: boolean;
     mundialDeClubes: boolean;
     deportesDeCombate: boolean;
+    deportesDeMotor: boolean;
     liga1: boolean;
     ligaPro: boolean;
     mls: boolean;

@@ -40,6 +40,7 @@ interface EventGrouping {
     nba: boolean;
     mundialDeClubes: boolean;
     deportesDeCombate: boolean;
+    deportesDeMotor: boolean;
     liga1: boolean;
     ligaPro: boolean;
     mls: boolean;
@@ -85,7 +86,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       return b.time.localeCompare(a.time);
   });
   
-  const { all: groupAll, enVivo: groupEnVivo, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
+  const { all: groupAll, enVivo: groupEnVivo, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, deportesDeMotor: groupMotor, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
 
   const allFilteredEvents = activeEvents.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -93,23 +94,32 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   
   const liveEvents = allFilteredEvents.filter(event => event.status === 'En Vivo');
 
+  const motorImage = 'https://images.vexels.com/media/users/3/139434/isolated/preview/4bcbe9b4d3e6f6e4c1207c142a98c2d8-carrera-de-coches-de-carreras-de-ferrari.png';
+  const deportesDeMotorEvents = groupAll && groupMotor ? allFilteredEvents.filter(event =>
+      event.image === motorImage
+  ) : [];
+
   const mundialDeClubesEvents = groupAll && groupMundial ? allFilteredEvents.filter(event =>
-    event.image === 'https://p.alangulotv.live/copamundialdeclubes'
+    event.image === 'https://p.alangulotv.live/copamundialdeclubes' &&
+    !deportesDeMotorEvents.includes(event)
   ) : [];
 
   const nbaEvents = groupAll && groupNba ? allFilteredEvents.filter(event =>
     (event.title.toLowerCase().includes('nba') || event.image === 'https://p.alangulotv.live/nba') &&
+    !deportesDeMotorEvents.includes(event) &&
     !mundialDeClubesEvents.includes(event)
   ) : [];
   
   const f1Events = groupAll && groupF1 ? allFilteredEvents.filter(event => 
     (event.title.toLowerCase().includes('f1') || event.title.toLowerCase().includes('formula 1')) &&
+    !deportesDeMotorEvents.includes(event) &&
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event)
   ) : [];
 
   const mlbEvents = groupAll && groupMlb ? allFilteredEvents.filter(event => 
     (event.title.toLowerCase().includes('mlb') || event.image === 'https://p.alangulotv.live/mlb') && 
+    !deportesDeMotorEvents.includes(event) &&
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
     !f1Events.includes(event)
@@ -124,6 +134,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
   const deportesDeCombateEvents = groupAll && groupCombate ? allFilteredEvents.filter(event => 
     (combatKeywords.some(keyword => event.title.toLowerCase().includes(keyword)) || (event.image && combatImages.includes(event.image))) &&
+    !deportesDeMotorEvents.includes(event) &&
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
     !f1Events.includes(event) && 
@@ -135,6 +146,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
   const liga1Events = groupAll && groupLiga1 ? allFilteredEvents.filter(event =>
     (event.image === liga1Image || event.buttons.some(b => b && liga1Keywords.includes(b.toLowerCase()))) &&
+    !deportesDeMotorEvents.includes(event) &&
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
     !f1Events.includes(event) &&
@@ -145,6 +157,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   const ligaProImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg/1200px-Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg.png';
   const ligaProEvents = groupAll && groupLigaPro ? allFilteredEvents.filter(event =>
     (event.title.toLowerCase().includes('primera a') || event.image === ligaProImage) &&
+    !deportesDeMotorEvents.includes(event) &&
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
     !f1Events.includes(event) &&
@@ -163,6 +176,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           (mlsKeywords.some(keyword => event.title.toLowerCase().includes(keyword))) ||
           (event.buttons.some(b => b && b.toLowerCase() === mlsButton))
       ) &&
+      !deportesDeMotorEvents.includes(event) &&
       !mundialDeClubesEvents.includes(event) &&
       !nbaEvents.includes(event) &&
       !f1Events.includes(event) &&
@@ -174,6 +188,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
 
   const otherEvents = allFilteredEvents.filter(event => 
+    !deportesDeMotorEvents.includes(event) &&
     !mundialDeClubesEvents.includes(event) &&
     !nbaEvents.includes(event) &&
     !f1Events.includes(event) && 
@@ -186,6 +201,17 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
 
   const eventGroups = [];
   
+  if (deportesDeMotorEvents.length > 0) {
+      eventGroups.push({
+          id: 'deportes-de-motor',
+          name: 'Deportes de Motor',
+          events: deportesDeMotorEvents,
+          isLive: deportesDeMotorEvents.some(e => e.status === 'En Vivo'),
+          startTime: deportesDeMotorEvents[0].time,
+          logo: motorImage,
+          logoProps: { width: 60, height: 60, className: 'object-contain' }
+      });
+  }
   if (mlsEvents.length > 0) {
       eventGroups.push({
           id: 'mls',

@@ -29,6 +29,7 @@ interface EventGrouping {
     nba: boolean;
     mundialDeClubes: boolean;
     deportesDeCombate: boolean;
+    deportesDeMotor: boolean;
     liga1: boolean;
     ligaPro: boolean;
     mls: boolean;
@@ -111,7 +112,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
     setEventGrouping?.(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'enVivo' | 'otros' | 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'enVivo' | 'otros' | 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'deportesDeMotor' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
     setEventGrouping?.(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -224,7 +225,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 <DialogHeader className="p-4 py-3 border-b shrink-0">
                     <DialogTitle>Configuración:</DialogTitle>
                 </DialogHeader>
-                <div className="overflow-y-auto p-4 flex-grow">
+                <div className="overflow-y-auto p-4">
                   <Accordion type="multiple" className="w-full space-y-4" defaultValue={[]}>
                     <AccordionItem value="item-1" className="border rounded-md px-1">
                       <AccordionTrigger className="p-3 hover:no-underline">Bordes</AccordionTrigger>
@@ -388,6 +389,16 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                 disabled={!eventGrouping.all}
                               />
                             </div>
+                            <Separator/>
+                               <div className="flex items-center justify-between">
+                                <Label htmlFor="group-motor-switch-view" className="text-base">Agrupar Deportes de Motor</Label>
+                                <Switch
+                                  id="group-motor-switch-view"
+                                  checked={eventGrouping.deportesDeMotor}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('deportesDeMotor', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
                             <Separator/>
                             <div className="flex items-center justify-between">
                               <Label htmlFor="group-combate-switch-view" className="text-base">Agrupar Deportes de Combate</Label>

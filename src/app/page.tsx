@@ -32,6 +32,7 @@ const defaultEventGrouping = {
   nba: false,
   mundialDeClubes: false,
   deportesDeCombate: false,
+  deportesDeMotor: false,
   liga1: false,
   ligaPro: false,
   mls: false,
@@ -472,7 +473,7 @@ export default function HomePage() {
     setEventGrouping(prev => ({ ...prev, all: checked }));
   };
 
-  const handleIndividualGroupingChange = (key: 'enVivo' | 'otros' | 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
+  const handleIndividualGroupingChange = (key: 'enVivo' | 'otros' | 'f1' | 'mlb' | 'nba' | 'mundialDeClubes' | 'deportesDeCombate' | 'deportesDeMotor' | 'liga1' | 'ligaPro' | 'mls', checked: boolean) => {
     setEventGrouping(prev => ({ ...prev, [key]: checked }));
   };
 
@@ -738,6 +739,16 @@ export default function HomePage() {
                                   id="group-mundial-switch"
                                   checked={eventGrouping.mundialDeClubes}
                                   onCheckedChange={(checked) => handleIndividualGroupingChange('mundialDeClubes', checked)}
+                                  disabled={!eventGrouping.all}
+                                />
+                              </div>
+                              <Separator/>
+                               <div className="flex items-center justify-between">
+                                <Label htmlFor="group-motor-switch" className="text-base">Agrupar Deportes de Motor</Label>
+                                <Switch
+                                  id="group-motor-switch"
+                                  checked={eventGrouping.deportesDeMotor}
+                                  onCheckedChange={(checked) => handleIndividualGroupingChange('deportesDeMotor', checked)}
                                   disabled={!eventGrouping.all}
                                 />
                               </div>
