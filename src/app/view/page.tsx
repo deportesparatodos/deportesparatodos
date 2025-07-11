@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
-import { addHours, isAfter, format } from 'date-fns';
+import { addHours, isAfter, format, parseISO, isValid } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -87,20 +87,26 @@ function normalizeEventTitleForKey(title: string): string {
         'washington wizards': 'wizards',
     };
 
+    // Apply main replacements first
     for (const [key, value] of Object.entries(replacements)) {
-        // Escape special regex characters in the key
         const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         normalized = normalized.replace(new RegExp(escapedKey, 'g'), value);
     }
-
+    
     // 4. Split by 'vs', normalize each team, sort, and join
-    const teams = normalized
-        .split(/\s+vs\.?\s+/) // Handles ' vs ' and ' vs. ' with surrounding spaces
+    let teams = normalized.split(/\s+vs\.?\s+/);
+
+    // If 'vs' is not found, try splitting by space for cases like "TeamA TeamB"
+    if (teams.length === 1) {
+        teams = normalized.split(/\s+/);
+    }
+
+    teams = teams
         .map(team => team.replace(/[^a-z0-9]/g, '')) // Remove all non-alphanumeric
-        .filter(Boolean);
+        .filter(Boolean); // Remove empty strings
 
     if (teams.length < 2) {
-        // Fallback for titles that don't contain 'vs'
+        // Fallback for titles that don't contain enough parts
         return normalized.replace(/[^a-z0-9]/g, '');
     }
 
@@ -535,8 +541,13 @@ function ViewPageContent() {
             }
             
             // Calculate start and end times for all other events
-            const eventStart = toZonedTime(`${e.date}T${e.time}:00`, timeZone);
-            if (isNaN(eventStart.getTime())) {
+            let eventStartStr = `${e.date}T${e.time}:00`;
+            if (e.time.match(/^\d{10}$/)) { // Check if time is a unix timestamp
+                 eventStartStr = new Date(parseInt(e.time, 10) * 1000).toISOString();
+            }
+            const eventStart = toZonedTime(parseISO(eventStartStr), timeZone);
+
+            if (!isValid(eventStart)) {
               return { ...e, status: 'Finalizado' as const };
             }
             
