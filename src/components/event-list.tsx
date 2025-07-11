@@ -124,6 +124,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     !nbaEvents.includes(event)
   ) : [];
 
+  const mlbImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Major_League_Baseball_logo.svg/1200px-Major_League_Baseball_logo.svg.png';
   const mlbEvents = groupAll && groupMlb ? allFilteredEvents.filter(event => 
     (event.title.toLowerCase().includes('mlb') || event.image === 'https://p.alangulotv.live/mlb') && 
     !deportesDeMotorEvents.includes(event) &&
@@ -292,7 +293,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
           events: mlbEvents,
           isLive: mlbEvents.some(e => e.status === 'En Vivo'),
           startTime: mlbEvents[0].time,
-          logo: mlbEvents[0].image || "https://p.alangulotv.live/mlb",
+          logo: mlbImage,
           logoProps: { width: 60, height: 34, className: 'object-contain' }
       });
   }
@@ -644,3 +645,5 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     </div>
   );
 };
+
+    
