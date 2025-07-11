@@ -90,7 +90,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   const activeEvents = events.filter(e => e.status !== 'Finalizado');
   const finishedEvents = events.filter(e => e.status === 'Finalizado').sort((a, b) => {
       if (a.date !== b.date) return b.date.localeCompare(a.date);
-      return b.time.localeCompare(a.time);
+      return b.time.localeCompare(b.time);
   });
   
   const { all: groupAll, enVivo: groupEnVivo, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, deportesDeMotor: groupMotor, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
@@ -535,9 +535,33 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                                     <div className="flex-grow flex flex-col items-center justify-center gap-2">
                                         {group.logo ? (
                                           <>
-                                            {group.isLive && (
-                                                <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                              {group.isLive && (
+                                                  <Badge className="text-xs font-bold border-0 rounded-none bg-destructive text-destructive-foreground">En Vivo</Badge>
+                                              )}
+                                              {group.id === 'deportes-de-motor' && (
+                                                <Dialog>
+                                                  <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                    <Badge variant="outline" className="text-xs font-bold border-yellow-500/50 bg-yellow-500/10 text-yellow-700 cursor-pointer hover:bg-yellow-500/20 rounded-none">
+                                                        <AlertTriangle className="h-3 w-3 mr-1"/>
+                                                        Aviso
+                                                    </Badge>
+                                                  </DialogTrigger>
+                                                  <DialogContent>
+                                                    <DialogHeader>
+                                                      <DialogTitle>Aviso sobre Eventos de Motor</DialogTitle>
+                                                    </DialogHeader>
+                                                    <p className="text-sm text-muted-foreground">
+                                                      Este evento puede no estar en vivo, a veces, ni siquiera es de hoy, pero aparece en el listado.
+                                                      En caso de querer ver este tipo de eventos, revisar la página de la categoría y sus calendarios 
+                                                      para ver qué evento hay realmente hoy (P1, P2, P3, QUALY, CARRERA, ETC), y el horario al que se 
+                                                      transmite, cuando llegue ese horario y sea la fecha, podrá ver el evento sin problemas. 
+                                                      Disculpe los inconvenientes.
+                                                    </p>
+                                                  </DialogContent>
+                                                </Dialog>
+                                              )}
+                                            </div>
                                             <Image
                                                 src={group.logo}
                                                 alt={`${group.name} Logo`}
