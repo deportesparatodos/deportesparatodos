@@ -534,13 +534,22 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                         "max-w-3xl flex flex-col p-0 transition-all duration-300",
                         isFullscreen ? "h-screen w-screen max-w-full rounded-none" : "h-[80vh]"
                       )}
+                      hideClose={true}
                   >
                       <DialogHeader className="p-4 border-b flex flex-row items-center justify-between">
                           <DialogTitle>Seleccionar una entrada para la Vista {visualIndex + 1}</DialogTitle>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFullscreen(!isFullscreen)}>
-                              {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                              <span className="sr-only">{isFullscreen ? 'Salir de pantalla completa' : 'Poner en pantalla completa'}</span>
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFullscreen(!isFullscreen)}>
+                                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                                <span className="sr-only">{isFullscreen ? 'Salir de pantalla completa' : 'Poner en pantalla completa'}</span>
+                            </Button>
+                            <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <X className="h-4 w-4" />
+                                    <span className="sr-only">Cerrar</span>
+                                </Button>
+                            </DialogTrigger>
+                          </div>
                       </DialogHeader>
                       <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden px-4 pb-4 pt-2">
                           <TabsList className="grid w-full grid-cols-2">
