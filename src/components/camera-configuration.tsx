@@ -4,7 +4,7 @@
 import type { Dispatch, FC, SetStateAction } from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw, Search, Loader2 } from 'lucide-react';
+import { AlertTriangle, Tv, ArrowUp, ArrowDown, ChevronDown, X, Settings, RefreshCcw, Search, Loader2, Maximize, Minimize } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { ChannelListComponent, type Channel } from './channel-list';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -107,6 +107,8 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
 }) => {
   const [dialogOpenForIndex, setDialogOpenForIndex] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
 
   const handleMasterGroupingChange = (checked: boolean) => {
     setEventGrouping?.(prev => ({ ...prev, all: checked }));
@@ -488,7 +490,10 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                 
                 <Dialog open={dialogOpenForIndex === cameraIndex} onOpenChange={(isOpen) => {
                   setDialogOpenForIndex(isOpen ? cameraIndex : null);
-                  if (!isOpen) setSearchTerm('');
+                  if (!isOpen) {
+                    setSearchTerm('');
+                    setIsFullscreen(false);
+                  }
                 }}>
                   <DialogTrigger asChild>
                     <Button
@@ -524,9 +529,18 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       </div>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0">
-                      <DialogHeader className="p-4 border-b">
+                  <DialogContent 
+                      className={cn(
+                        "max-w-3xl flex flex-col p-0 transition-all duration-300",
+                        isFullscreen ? "h-screen w-screen max-w-full rounded-none" : "h-[80vh]"
+                      )}
+                  >
+                      <DialogHeader className="p-4 border-b flex flex-row items-center justify-between">
                           <DialogTitle>Seleccionar una entrada para la Vista {visualIndex + 1}</DialogTitle>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFullscreen(!isFullscreen)}>
+                              {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                              <span className="sr-only">{isFullscreen ? 'Salir de pantalla completa' : 'Poner en pantalla completa'}</span>
+                          </Button>
                       </DialogHeader>
                       <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden px-4 pb-4 pt-2">
                           <TabsList className="grid w-full grid-cols-2">
