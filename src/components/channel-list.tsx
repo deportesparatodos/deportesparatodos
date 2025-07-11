@@ -143,7 +143,7 @@ const channelsData: Channel[] = [
     { name: 'History', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeUhE', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
     { name: 'History 2', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeV8y', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_h2_m.png' },
     { name: 'ID INVESTIGATION', url: 'https://embed.ksdjugfsddeports.fun/embed/idinvestigation.html', logoUrl: 'https://cdn.mitvstatic.com/channels/ar_investigation-discovery_m.png' },
-    { name: 'LN+', url: 'https://www.youtube-nocookie.com/embed/OR9MH16MKrg', logoUrl: 'https://resizer.glanacion.com/resizer/v2/logo-NXKF436PYFDRLJJB77LJU7JVQA.png?auth=488ab06bdc404368ff6d748c0a6349c1766ffb7e6650a305e2f3f8cc5043ac3d&width=161&quality=70&smart=false' },
+    { name: 'LN+', url: 'https://www.youtube.com/embed/5f__Ls4_VYQ?si=FM4LD7VKjzS2hg0x', logoUrl: 'https://resizer.glanacion.com/resizer/v2/logo-NXKF436PYFDRLJJB77LJU7JVQA.png?auth=488ab06bdc404368ff6d748c0a6349c1766ffb7e6650a305e2f3f8cc5043ac3d&width=161&quality=70&smart=false' },
     { name: 'LAS ESTRELLAS', url: 'https://embed.ksdjugfsddeports.fun/embed/lasestrellas.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Las_Estrellas_logo_%282016%29.svg/1200px-Las_Estrellas_logo_%282016%29.svg.png' },
     { name: 'LATINA', url: 'https://embed.ksdjugfsddeports.fun/embed/latina.html', logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Latina_Television_-_Logotipo.png' },
     { name: 'LIFETIME', url: 'https://embed.ksdjugfsddeports.fun/embed/lifetime.html', logoUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlzhF3e8RMJSa--VuME5MVRlPqytmzkekmOA&s' },
