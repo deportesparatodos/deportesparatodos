@@ -310,12 +310,8 @@ export default function HomePage() {
       }
       const data = await response.json();
       
-      const timeZone = 'America/Argentina/Buenos_Aires';
-      const today = format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd');
-
       const filteredData = data.filter((event: any) => 
           event.time && event.time !== 'NaN:NaN' &&
-          event.date === today &&
           !event.options?.some((opt: string) => opt?.includes('/offline/offline.php'))
       );
 
