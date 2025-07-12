@@ -48,7 +48,13 @@ export default function LiveEventsPage() {
           status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
         })).filter(e => e.status.toLowerCase() === 'en vivo');
 
-        processedEvents.sort((a, b) => a.time.localeCompare(b.time));
+        processedEvents.sort((a, b) => {
+            const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
+            const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
+            if (aIsEmbedStream && !bIsEmbedStream) return 1;
+            if (!aIsEmbedStream && bIsEmbedStream) return -1;
+            return a.time.localeCompare(b.time);
+        });
 
         setLiveEvents(processedEvents);
     } catch (error) {

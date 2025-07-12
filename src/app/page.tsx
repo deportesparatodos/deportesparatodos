@@ -99,7 +99,15 @@ export default function HomePage() {
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels } = useMemo(() => {
      if (searchTerm) return filteredEvents;
 
-     const live = events.filter((e) => e.status.toLowerCase() === 'en vivo').sort((a,b) => a.time.localeCompare(b.time));
+     const live = events.filter((e) => e.status.toLowerCase() === 'en vivo');
+     live.sort((a,b) => {
+        const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
+        const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
+        if (aIsEmbedStream && !bIsEmbedStream) return 1;
+        if (!aIsEmbedStream && bIsEmbedStream) return -1;
+        return a.time.localeCompare(b.time);
+     });
+
      const upcoming = events.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
      const unknown = events.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time));
      const finished = events.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
@@ -220,7 +228,7 @@ export default function HomePage() {
             <div className="flex items-center gap-6">
                 <Link href="/" className="shrink-0">
                     <Image
-                        src="https://i.ibb.co/BVLhxp2k/deportes-para-todos.png"
+                        src="https://i.ibb.co/dHPWxr8/depete.jpg"
                         alt="Deportes Para Todos Logo"
                         width={150}
                         height={37.5}
