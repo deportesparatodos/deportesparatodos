@@ -89,8 +89,10 @@ export default function HomePage() {
     live.sort((a,b) => {
         const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
         const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
+
         if (aIsEmbedStream && !bIsEmbedStream) return 1;
         if (!aIsEmbedStream && bIsEmbedStream) return -1;
+        
         return a.time.localeCompare(b.time);
     });
 
@@ -231,7 +233,7 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-        <header className="sticky top-0 z-30 flex h-20 w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:px-8">
+        <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:px-8">
             <div className="flex items-center gap-6">
                 <Link href="/" className="shrink-0 py-2">
                     <Image

@@ -163,9 +163,9 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-30 flex h-20 w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:px-8">
+      <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:px-8">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.push('/')}>
+          <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
             <ArrowLeft />
           </Button>
           <h1 className="text-2xl font-bold capitalize">{categoryName}</h1>
