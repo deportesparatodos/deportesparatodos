@@ -38,19 +38,7 @@ async function getCategoryEvents(categoryName: string): Promise<Event[]> {
           status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
         }));
 
-        const timeZone = 'America/New_York'; // Or another appropriate timezone
-        const todayEvents = processedEvents.filter(e => {
-            try {
-                // Ensure date is treated as a specific day, not midnight UTC
-                const eventDate = toZonedTime(e.date, timeZone);
-                return isToday(eventDate);
-            } catch (error) {
-                console.error("Invalid date for event:", e.title, e.date);
-                return false;
-            }
-        });
-
-        const filtered = todayEvents.filter(
+        const filtered = processedEvents.filter(
           (event) => event.category.toLowerCase() === categoryName.toLowerCase()
         );
 

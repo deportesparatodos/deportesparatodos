@@ -73,52 +73,21 @@ export default function HomePage() {
   }, [selectedEvents, activeWindow]);
 
 
-  const todayEvents = useMemo(() => {
-    const timeZone = 'America/New_York';
-    return events.filter(e => {
-        try {
-            // The API date is a string like "2025-07-12"
-            const eventDate = toZonedTime(e.date, timeZone);
-            return isToday(eventDate);
-        } catch (error) {
-            console.error("Invalid date for event:", e.title, e.date);
-            return false;
-        }
-    });
-  }, [events]);
-
-  const liveEvents = useMemo(() => todayEvents.filter((e) => e.status.toLowerCase() === 'en vivo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
-  const upcomingEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Próximo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
-  const unknownEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
-  const finishedEvents = useMemo(() => {
-    // Filter all events from the original list, not just today's
-    const allFinished = events.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
-    
-    const timeZone = 'America/New_York';
-    const todayFinished = allFinished.filter(e => {
-        try {
-            const eventDate = toZonedTime(e.date, timeZone);
-            return isToday(eventDate);
-        } catch (error) {
-            return false;
-        }
-    });
-    // Exclude today's finished events from the rest to avoid duplication
-    const otherFinished = allFinished.filter(e => !todayFinished.includes(e));
-
-    return [...todayFinished, ...otherFinished];
-  }, [events]);
+  const liveEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'en vivo').sort((a,b) => a.time.localeCompare(b.time)), [events]);
+  const upcomingEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time)), [events]);
+  const unknownEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time)), [events]);
+  const finishedEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time)), [events]);
 
 
   const categories = useMemo(() => {
       const categorySet = new Set<string>();
-      todayEvents.forEach((event) => {
+      events.forEach((event) => {
         if (event.category) {
             categorySet.add(event.category);
         }
       });
       return Array.from(categorySet);
-  }, [todayEvents]);
+  }, [events]);
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...selectedEvents];
