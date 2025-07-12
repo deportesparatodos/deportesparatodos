@@ -37,7 +37,7 @@ export default function HomePage() {
     const fetchEvents = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('https://api.sport-tv-guide.live/api/get_events');
+        const response = await fetch('https://agenda-dpt.vercel.app/api/events');
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
