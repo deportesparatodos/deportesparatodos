@@ -206,6 +206,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+       {
+        protocol: 'https',
+        hostname: 'streamed.su',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   typescript: {

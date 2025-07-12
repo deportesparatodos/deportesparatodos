@@ -153,11 +153,16 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
                                     </div>
                                     <div className="relative w-28 h-auto aspect-video rounded-md overflow-hidden">
                                             <Image
-                                            src={event.image || 'https://placehold.co/160x90.png'}
+                                            src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
                                             alt={event.title}
                                             width={160}
                                             height={90}
                                             className="object-cover"
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                target.onerror = null; 
+                                                target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                                            }}
                                         />
                                     </div>
                                     <p className="text-sm font-semibold flex-grow truncate">{event.title}</p>
@@ -208,5 +213,3 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
     </div>
   );
 }
-
-    

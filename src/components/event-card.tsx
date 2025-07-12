@@ -21,15 +21,20 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
 
   return (
     <div 
-      className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
+      className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border"
       onClick={onClick}
     >
       <div className="relative w-full aspect-video">
         <Image
-          src={event.image || 'https://placehold.co/600x400.png'}
+          src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
           alt={event.title}
           layout="fill"
           objectFit="cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null; 
+            target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+          }}
         />
         {selection.isSelected && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -54,5 +59,3 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
     </div>
   );
 };
-
-    

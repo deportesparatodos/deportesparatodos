@@ -25,9 +25,9 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
-import { toZonedTime } from 'date-fns-tz';
-import { isToday } from 'date-fns';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
+import { channels } from '@/components/channel-list';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function HomePage() {
   const router = useRouter();
@@ -212,11 +212,16 @@ export default function HomePage() {
                                         </div>
                                         <div className="relative w-28 h-auto aspect-video rounded-md overflow-hidden">
                                              <Image
-                                                src={event.image || 'https://placehold.co/160x90.png'}
+                                                src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
                                                 alt={event.title}
                                                 width={160}
                                                 height={90}
                                                 className="object-cover"
+                                                onError={(e) => {
+                                                  const target = e.target as HTMLImageElement;
+                                                  target.onerror = null; 
+                                                  target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                                                }}
                                             />
                                         </div>
                                         <p className="text-sm font-semibold flex-grow truncate">{event.title}</p>
@@ -268,6 +273,41 @@ export default function HomePage() {
                         </Carousel>
                     </div>
                 )}
+
+                 <div className="w-full space-y-4">
+                    <h2 className="text-2xl font-bold">Canales</h2>
+                    <Carousel
+                        opts={{
+                            align: "start",
+                            dragFree: true,
+                            slidesToScroll: 'auto',
+                        }}
+                        className="w-full relative px-12"
+                    >
+                        <CarouselContent className="-ml-4 py-4">
+                        {channels.map((channel, index) => (
+                            <CarouselItem key={index} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
+                                <Card className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border">
+                                    <div className="relative w-full aspect-video flex items-center justify-center p-4">
+                                        <Image
+                                            src={channel.logo}
+                                            alt={`${channel.name} logo`}
+                                            width={120}
+                                            height={67.5}
+                                            objectFit="contain"
+                                        />
+                                    </div>
+                                    <div className="p-3 bg-card">
+                                        <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
+                                    </div>
+                                </Card>
+                            </CarouselItem>
+                        ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+                        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+                    </Carousel>
+                </div>
                 
                 <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                 <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
@@ -290,5 +330,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

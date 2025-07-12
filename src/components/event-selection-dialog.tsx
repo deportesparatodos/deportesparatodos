@@ -47,10 +47,15 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         <DialogHeader>
           <div className="relative w-full aspect-video rounded-t-lg overflow-hidden mb-4">
             <Image
-              src={event.image || 'https://placehold.co/600x400.png'}
+              src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
               alt={event.title}
               layout="fill"
               objectFit="cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; 
+                target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+              }}
             />
           </div>
           <DialogTitle className="text-center text-lg font-bold">{event.title}</DialogTitle>
@@ -94,5 +99,3 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     </Dialog>
   );
 };
-
-    
