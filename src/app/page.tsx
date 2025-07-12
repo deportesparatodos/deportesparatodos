@@ -7,7 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Loader2, Tv } from 'lucide-react';
-import type { Event } from '@/components/event-list'; 
+import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
   Carousel,
@@ -17,6 +17,8 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { cn } from '@/lib/utils';
+import { toZonedTime } from 'date-fns-tz';
+import { isToday } from 'date-fns';
 
 
 export default function HomePage() {
@@ -66,9 +68,21 @@ export default function HomePage() {
   }, [selectedEvents, activeWindow]);
 
 
-  const liveEvents = useMemo(() => events.filter((e) => e.status === 'En Vivo').sort((a,b) => a.time.localeCompare(b.time)), [events]);
-  const upcomingEvents = useMemo(() => events.filter((e) => e.status === 'Próximo').sort((a,b) => a.time.localeCompare(b.time)), [events]);
-  const unknownEvents = useMemo(() => events.filter((e) => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time)), [events]);
+  const todayEvents = useMemo(() => {
+    const timeZone = 'America/New_York';
+    return events.filter(e => {
+        try {
+            const eventDate = toZonedTime(e.date, timeZone);
+            return isToday(eventDate);
+        } catch (error) {
+            return false; // Ignore events with invalid dates
+        }
+    });
+  }, [events]);
+
+  const liveEvents = useMemo(() => todayEvents.filter((e) => e.status === 'En Vivo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
+  const upcomingEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Próximo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
+  const unknownEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
   const finishedEvents = useMemo(() => events.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time)), [events]);
   const categories = useMemo(() => {
     const allCategories = events.map((e) => e.category);
@@ -172,7 +186,7 @@ export default function HomePage() {
                           align: "start",
                           dragFree: true,
                         }}
-                        className="w-full relative"
+                        className="w-full relative px-12"
                       >
                         <CarouselContent className="-ml-4">
                           {categories.map((category) => (
@@ -185,15 +199,15 @@ export default function HomePage() {
                               </CarouselItem>
                           ))}
                         </CarouselContent>
-                        <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
-                        <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
+                        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+                        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
                       </Carousel>
                 </div>
                 
-                <EventCarousel title="En Vivo" events={liveEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection}/>
-                <EventCarousel title="Próximos" events={upcomingEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection}/>
-                <EventCarousel title="Estado Desconocido" events={unknownEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection}/>
-                <EventCarousel title="Finalizados" events={finishedEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection}/>
+                <EventCarousel title="En Vivo" events={liveEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow}/>
+                <EventCarousel title="Próximos" events={upcomingEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow}/>
+                <EventCarousel title="Estado Desconocido" events={unknownEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow}/>
+                <EventCarousel title="Finalizados" events={finishedEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow}/>
             </div>
         </main>
     </div>

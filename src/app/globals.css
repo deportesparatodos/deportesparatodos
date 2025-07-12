@@ -28,7 +28,7 @@
     --accent: 0 0% 60%;
     --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --ring: 0 0% 60%;
@@ -66,7 +66,7 @@
     --accent: 0 0% 60%;
     --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --ring: 0 0% 60%;
@@ -117,10 +117,12 @@
 
 @layer utilities {
   .event-card-hover-container .event-card-options {
-    @apply invisible opacity-0 scale-95;
+    @apply invisible opacity-0;
+    max-height: 0;
   }
   .event-card-hover-container:hover .event-card-options {
-    @apply visible opacity-100 scale-100;
+    @apply visible opacity-100;
+    max-height: 500px; /* Adjust as needed */
   }
 }
     
