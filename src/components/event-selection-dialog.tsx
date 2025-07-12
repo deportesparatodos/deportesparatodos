@@ -36,7 +36,10 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
 }) => {
   if (!event) return null;
 
-  const timeDisplay = event.status === 'En Vivo' ? 'AHORA' : event.status === 'Desconocido' ? '--:--' : event.time;
+  const timeDisplay = 
+    event.status.toLowerCase() === 'en vivo' ? 'AHORA' : 
+    (event.status.toLowerCase() === 'desconocido' || event.status.toLowerCase() === 'finalizado') ? '--:--' : 
+    event.time;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -53,12 +56,12 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
           <DialogTitle className="text-center text-lg font-bold">{event.title}</DialogTitle>
            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1">
                 <p className="font-semibold">{timeDisplay}</p>
-                {event.status && event.status !== 'Próximo' && (
+                {event.status && event.status.toLowerCase() !== 'próximo' && (
                     <Badge className={cn(
                         "text-xs font-bold border-0 h-5",
-                        event.status === 'En Vivo' && 'bg-red-600 text-white',
-                        event.status === 'Finalizado' && 'bg-black text-white',
-                        event.status === 'Desconocido' && 'bg-yellow-500 text-black'
+                        event.status.toLowerCase() === 'en vivo' && 'bg-red-600 text-white',
+                        event.status.toLowerCase() === 'finalizado' && 'bg-black text-white',
+                        event.status.toLowerCase() === 'desconocido' && 'bg-yellow-500 text-black'
                     )}>{event.status}</Badge>
                 )}
             </div>
@@ -91,3 +94,5 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     </Dialog>
   );
 };
+
+    

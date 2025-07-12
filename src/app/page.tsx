@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Loader2, Tv } from 'lucide-react';
+import { Loader2, Tv, X, Menu } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -16,6 +16,14 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
 import { toZonedTime } from 'date-fns-tz';
 import { isToday } from 'date-fns';
@@ -26,12 +34,12 @@ export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
-  const [activeWindow, setActiveWindow] = useState(0);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -61,16 +69,11 @@ export default function HomePage() {
       if (storedSelectedEvents) {
         setSelectedEvents(JSON.parse(storedSelectedEvents));
       }
-      const storedActiveWindow = localStorage.getItem('activeWindow');
-      if (storedActiveWindow) {
-        setActiveWindow(parseInt(storedActiveWindow, 10));
-      }
   }, []);
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-    localStorage.setItem('activeWindow', activeWindow.toString());
-  }, [selectedEvents, activeWindow]);
+  }, [selectedEvents]);
 
 
   const liveEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'en vivo').sort((a,b) => a.time.localeCompare(b.time)), [events]);
@@ -86,38 +89,40 @@ export default function HomePage() {
             categorySet.add(event.category);
         }
       });
-      return Array.from(categorySet);
+      const filteredCategories = Array.from(categorySet).filter(category => 
+        events.some(event => event.category === category)
+      );
+      return filteredCategories;
   }, [events]);
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...selectedEvents];
     const eventWithSelection = { ...event, selectedOption: optionUrl };
-
-    const targetIndex = isModification ? modificationIndex! : activeWindow;
-    newSelectedEvents[targetIndex] = eventWithSelection;
-    setSelectedEvents(newSelectedEvents);
-
-    if (!isModification) {
-        let nextWindow = (activeWindow + 1) % 9;
-        for(let i=0; i<9; i++) {
-            if (!newSelectedEvents[nextWindow]) {
-                break;
-            }
-            nextWindow = (nextWindow + 1) % 9;
-        }
-        setActiveWindow(nextWindow);
+    
+    let targetIndex = -1;
+    if (isModification && modificationIndex !== null) {
+        targetIndex = modificationIndex;
+    } else {
+        targetIndex = newSelectedEvents.findIndex(e => e === null);
+    }
+    
+    if (targetIndex !== -1) {
+        newSelectedEvents[targetIndex] = eventWithSelection;
+        setSelectedEvents(newSelectedEvents);
+    } else {
+        // Handle case where all 9 slots are full, maybe show a toast
+        console.log("All selection slots are full.");
     }
     
     setDialogOpen(false);
     setIsModification(false);
     setModificationIndex(null);
   };
-
+  
   const handleEventRemove = (windowIndex: number) => {
     const newSelectedEvents = [...selectedEvents];
     newSelectedEvents[windowIndex] = null;
     setSelectedEvents(newSelectedEvents);
-    setActiveWindow(windowIndex);
     setDialogOpen(false);
     setIsModification(false);
     setModificationIndex(null);
@@ -152,6 +157,7 @@ export default function HomePage() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
+    setSheetOpen(false); // Close sheet before opening dialog
     setDialogEvent(event);
     setIsModification(true);
     setModificationIndex(index);
@@ -180,59 +186,50 @@ export default function HomePage() {
                         data-ai-hint="logo"
                     />
                 </Link>
-                {selectedEvents.filter(Boolean).length > 0 && (
-                     <div className="hidden md:flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-muted-foreground">Seleccionados:</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {[...Array(9)].map((_, i) => {
-                                const event = selectedEvents[i];
-                                if (event) {
-                                    return (
-                                        <Button
-                                            key={i}
-                                            onClick={() => openDialogForModification(event, i)}
-                                            variant="outline"
-                                            className="w-10 h-10 p-0"
-                                        >
-                                            {i + 1}
-                                        </Button>
-                                    );
-                                }
-                                return (
-                                     <Button
-                                        key={i}
-                                        onClick={() => setActiveWindow(i)}
-                                        variant={activeWindow === i ? 'default' : 'outline'}
-                                        className="w-10 h-10"
-                                    >
-                                        {i + 1}
-                                    </Button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
             </div>
 
-            <div className="flex items-center gap-4">
-                 {selectedEvents.filter(Boolean).length === 0 && (
-                     <div className="hidden md:flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-muted-foreground">Ventana Activa:</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {[...Array(9)].map((_, i) => (
-                                <Button
-                                    key={i}
-                                    onClick={() => setActiveWindow(i)}
-                                    variant={activeWindow === i ? 'default' : 'outline'}
-                                    className="w-10 h-10"
-                                >
-                                    {i + 1}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                <Button
+            <div className="flex items-center gap-2">
+                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                    <SheetTrigger asChild>
+                         <Button
+                            variant="outline"
+                            disabled={selectedEvents.filter(Boolean).length === 0}
+                        >
+                            <Menu className="mr-2 h-4 w-4" />
+                            Eventos Seleccionados
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                        <SheetHeader>
+                            <SheetTitle>Tus Eventos Seleccionados</SheetTitle>
+                        </SheetHeader>
+                        <ScrollArea className="h-[calc(100%-4rem)] mt-4">
+                            <div className="space-y-4 pr-4">
+                                {selectedEvents.map((event, index) => event && (
+                                     <div key={index} className="flex items-center gap-4 cursor-pointer" onClick={() => openDialogForModification(event, index)}>
+                                        <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                                            {index + 1}
+                                        </div>
+                                        <div className="relative w-28 h-auto aspect-video rounded-md overflow-hidden">
+                                             <Image
+                                                src={event.image || 'https://placehold.co/160x90.png'}
+                                                alt={event.title}
+                                                width={160}
+                                                height={90}
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                        <p className="text-sm font-semibold flex-grow truncate">{event.title}</p>
+                                    </div>
+                                ))}
+                                {selectedEvents.filter(Boolean).length === 0 && (
+                                    <p className="text-muted-foreground text-center pt-8">No has seleccionado ningún evento.</p>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </SheetContent>
+                </Sheet>
+                 <Button
                     onClick={handleStartView}
                     disabled={selectedEvents.filter(Boolean).length === 0}
                     className="bg-green-600 hover:bg-green-700 text-white"
@@ -248,7 +245,7 @@ export default function HomePage() {
                 {categories.length > 0 && (
                     <div className="w-full space-y-4">
                         <h2 className="text-2xl font-bold">Categorías</h2>
-                        <Carousel
+                         <Carousel
                             opts={{
                             align: "start",
                             dragFree: true,
@@ -287,9 +284,11 @@ export default function HomePage() {
                 onSelect={handleEventSelect}
                 isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
-                windowNumber={isModification ? modificationIndex! + 1 : activeWindow + 1}
+                windowNumber={(isModification ? modificationIndex : selectedEvents.findIndex(e => e === null))! + 1}
             />
         )}
     </div>
   );
 }
+
+    

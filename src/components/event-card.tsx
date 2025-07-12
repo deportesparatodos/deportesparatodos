@@ -15,8 +15,8 @@ interface EventCardProps {
 
 export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => {
   const timeDisplay = 
-    event.status === 'En Vivo' ? 'AHORA' : 
-    (event.status === 'Desconocido' || event.status === 'Finalizado') ? '--:--' : 
+    event.status.toLowerCase() === 'en vivo' ? 'AHORA' : 
+    (event.status.toLowerCase() === 'desconocido' || event.status.toLowerCase() === 'finalizado') ? '--:--' : 
     event.time;
 
   return (
@@ -41,12 +41,12 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
         <h3 className="font-bold truncate text-sm">{event.title}</h3>
         <div className="flex items-center justify-between text-xs mt-1">
           <p className="text-muted-foreground font-semibold">{timeDisplay}</p>
-          {event.status && event.status !== 'Próximo' && (
+          {event.status && event.status.toLowerCase() !== 'próximo' && (
             <Badge className={cn(
                 "text-xs font-bold border-0 h-5",
-                event.status === 'En Vivo' && 'bg-red-600 text-white',
-                event.status === 'Finalizado' && 'bg-black text-white',
-                event.status === 'Desconocido' && 'bg-yellow-500 text-black'
+                event.status.toLowerCase() === 'en vivo' && 'bg-red-600 text-white',
+                event.status.toLowerCase() === 'finalizado' && 'bg-black text-white',
+                event.status.toLowerCase() === 'desconocido' && 'bg-yellow-500 text-black'
             )}>{event.status}</Badge>
           )}
         </div>
@@ -54,3 +54,5 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
     </div>
   );
 };
+
+    
