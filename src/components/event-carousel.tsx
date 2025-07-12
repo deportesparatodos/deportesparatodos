@@ -32,7 +32,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, onSelect,
           align: "start",
           dragFree: true,
         }}
-        className="w-full"
+        className="w-full relative"
       >
         <CarouselContent className="-ml-4">
           {events.map((event, index) => (
@@ -45,11 +45,9 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, onSelect,
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="ml-14" />
-        <CarouselNext className="mr-14" />
+        <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
+        <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
       </Carousel>
     </div>
   );
 };
-
-    

@@ -202,8 +202,8 @@ export default function HomePage() {
                             </CarouselItem>
                         ))}
                         </CarouselContent>
-                        <CarouselPrevious className="ml-14" />
-                        <CarouselNext className="mr-14" />
+                        <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
+                        <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
                     </Carousel>
                 </div>
                 
