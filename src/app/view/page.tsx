@@ -1099,7 +1099,7 @@ function ViewPageContent() {
                     className="w-full h-full border-0"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
-                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
+                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                   />
                 ) : (
                   "ELEGIR CANAL/EVENTO..."
