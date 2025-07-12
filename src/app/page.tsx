@@ -257,8 +257,8 @@ export default function HomePage() {
 
       const eventsWithStatus = events
         .map(e => {
-            // Force 'En Vivo' for embedrun.store links
-            if (e.options.some(opt => opt.includes('embedrun.store'))) {
+            // Force 'En Vivo' for embedrun.store and embedstreams.top links
+            if (e.options.some(opt => opt.includes('embedrun.store') || opt.includes('embedstreams.top'))) {
                 return { ...e, status: 'En Vivo' as const };
             }
 
@@ -358,6 +358,11 @@ export default function HomePage() {
         const ecdfImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg/1200px-Football_of_Ecuador_-_Liga_Pro_logo_%28mini%29.svg.png';
         if (newEvent.buttons?.some((b: string) => b?.toLowerCase() === 'ecdf')) {
           newEvent.image = ecdfImage;
+        }
+
+        // Force image for embedstreams.top
+        if (newEvent.options.some((opt: string) => opt.startsWith('https://embedstreams.top'))) {
+            newEvent.image = 'https://cdn-icons-png.flaticon.com/512/9192/9192710.png';
         }
 
         if (!newEvent.image) {

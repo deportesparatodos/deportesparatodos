@@ -471,6 +471,11 @@ function ViewPageContent() {
           newEvent.image = ecdfImage;
         }
 
+        // Force image for embedstreams.top
+        if (newEvent.options.some((opt: string) => opt.startsWith('https://embedstreams.top'))) {
+            newEvent.image = 'https://cdn-icons-png.flaticon.com/512/9192/9192710.png';
+        }
+
         if (!newEvent.image) {
           newEvent.image = 'https://cdn-icons-png.flaticon.com/512/9192/9192710.png';
         }
@@ -530,8 +535,8 @@ function ViewPageContent() {
 
       const eventsWithStatus = events
         .map(e => {
-            // Force 'En Vivo' for embedrun.store links
-            if (e.options.some(opt => opt.includes('embedrun.store'))) {
+            // Force 'En Vivo' for embedrun.store and embedstreams.top links
+            if (e.options.some(opt => opt.includes('embedrun.store') || opt.includes('embedstreams.top'))) {
                 return { ...e, status: 'En Vivo' as const };
             }
 
@@ -1094,6 +1099,7 @@ function ViewPageContent() {
                     className="w-full h-full border-0"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
+                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
                   />
                 ) : (
                   "ELEGIR CANAL/EVENTO..."
