@@ -87,7 +87,7 @@ export default function HomePage() {
     });
   }, [events]);
 
-  const liveEvents = useMemo(() => todayEvents.filter((e) => e.status === 'En Vivo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
+  const liveEvents = useMemo(() => todayEvents.filter((e) => e.status.toLowerCase() === 'en vivo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
   const upcomingEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Próximo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
   const unknownEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
   const finishedEvents = useMemo(() => {
