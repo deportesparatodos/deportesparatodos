@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import type { FC } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
@@ -382,9 +382,10 @@ interface ChannelListProps {
   isLoading: boolean;
   onSelectChannel?: (url: string) => void;
   searchTerm: string;
+  selectedUrl?: string | null;
 }
 
-export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, isLoading, onSelectChannel, searchTerm }) => {
+export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, isLoading, onSelectChannel, searchTerm, selectedUrl }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const [pasteError, setPasteError] = useState(false);
   const isSelectMode = !!onSelectChannel;
@@ -441,9 +442,19 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
     }
   };
 
-  const filteredChannels = channels.filter(channel =>
-    channel.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredChannels = useMemo(() => {
+    const filtered = channels.filter(channel =>
+      channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (selectedUrl) {
+      const selectedItem = filtered.find(c => c.url === selectedUrl);
+      if (selectedItem) {
+        return [selectedItem, ...filtered.filter(c => c.url !== selectedUrl)];
+      }
+    }
+    return filtered;
+  }, [searchTerm, selectedUrl]);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -491,9 +502,10 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
 
                 const status = getStreamStatus(channel.url);
                 const origin = getUrlOrigin(channel.url);
+                const isSelected = channel.url === selectedUrl;
 
                 return (
-                <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                <li key={channel.url} className={cn("flex items-center justify-between p-3 rounded-md", isSelected ? 'bg-muted' : 'bg-muted/50')}>
                   <div className="flex items-center flex-1 truncate mr-2">
                     {!isLoading && (
                       <span

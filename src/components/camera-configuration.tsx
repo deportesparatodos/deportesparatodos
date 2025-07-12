@@ -210,6 +210,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
   };
   
   const visualOrderArray = viewOrder ? viewOrder.slice(0, numCameras) : Array.from({ length: numCameras }, (_, i) => i);
+  const currentUrlForDialog = dialogOpenForIndex !== null ? cameraUrls[dialogOpenForIndex] : null;
 
 
   return (
@@ -536,7 +537,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                       )}
                       hideClose={true}
                   >
-                      <DialogHeader className="p-4 border-b flex flex-row items-center justify-between">
+                      <div className="p-4 border-b flex items-center justify-between shrink-0">
                           <DialogTitle>Seleccionar una entrada para la Vista {visualIndex + 1}</DialogTitle>
                           <div className="flex items-center gap-2">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsFullscreen(!isFullscreen)}>
@@ -550,7 +551,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                 </Button>
                             </DialogTrigger>
                           </div>
-                      </DialogHeader>
+                      </div>
                       <Tabs defaultValue="channels" className="w-full flex-grow flex flex-col overflow-hidden px-4 pb-4 pt-2">
                           <TabsList className="grid w-full grid-cols-2">
                               <TabsTrigger value="channels">Canales</TabsTrigger>
@@ -583,6 +584,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                       isLoading={isLoadingChannelStatuses || false}
                                       onSelectChannel={handleSelectChannel}
                                       searchTerm={searchTerm}
+                                      selectedUrl={currentUrlForDialog}
                                   />
                               </div>
                           </TabsContent>
@@ -628,6 +630,7 @@ export const CameraConfigurationComponent: FC<CameraConfigurationProps> = ({
                                       error={eventsError}
                                       eventGrouping={eventGrouping}
                                       searchTerm={searchTerm}
+                                      selectedUrl={currentUrlForDialog}
                                   />
                               </div>
                           </TabsContent>

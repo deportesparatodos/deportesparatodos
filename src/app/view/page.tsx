@@ -1097,9 +1097,8 @@ function ViewPageContent() {
                     src={iframeSrc}
                     title={`Stream ${item.originalIndex + 1}`}
                     className="w-full h-full border-0"
-                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                     allowFullScreen
-                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                   />
                 ) : (
                   "ELEGIR CANAL/EVENTO..."

@@ -2,7 +2,7 @@
 "use client";
 
 import type { FC } from 'react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,9 +65,10 @@ interface EventListComponentProps {
   error: string | null;
   eventGrouping: EventGrouping;
   searchTerm: string;
+  selectedUrl?: string | null;
 }
 
-export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, eventGrouping, searchTerm }) => {
+export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent, events, isLoading, error, eventGrouping, searchTerm, selectedUrl }) => {
   const [copiedStates, setCopiedStates] = useState<CopiedStates>({});
   const isSelectMode = !!onSelectEvent;
 
@@ -95,9 +96,18 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   
   const { all: groupAll, enVivo: groupEnVivo, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, deportesDeMotor: groupMotor, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
 
-  const allFilteredEvents = activeEvents.filter(event =>
-    event.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const allFilteredEvents = useMemo(() => {
+    const filtered = activeEvents.filter(event =>
+      event.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    if (selectedUrl) {
+      const selectedEvent = filtered.find(e => e.options.includes(selectedUrl));
+      if (selectedEvent) {
+          return [selectedEvent, ...filtered.filter(e => e !== selectedEvent)];
+      }
+    }
+    return filtered;
+  }, [activeEvents, searchTerm, selectedUrl]);
   
   const liveEvents = allFilteredEvents.filter(event => event.status === 'En Vivo');
 
@@ -359,9 +369,10 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   const renderEventCard = (event: Event, eventIndex: number) => {
     const imageSrc = event.image;
     const isMotorsport = event.image === motorImage;
+    const isSelected = !!selectedUrl && event.options.includes(selectedUrl);
 
     return (
-      <Card key={`${event.title}-${eventIndex}`} className="bg-muted/50 overflow-hidden">
+      <Card key={`${event.title}-${eventIndex}`} className={cn("overflow-hidden", isSelected ? "bg-muted" : "bg-muted/50")}>
         <div className="flex items-center gap-4 p-4">
           {imageSrc && (
             <Image
@@ -429,12 +440,13 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                   const buttonLabel = event.buttons[channelIndex] || 'Canal';
                   const Icon = isSelectMode ? Tv : (isCopied ? CheckCircle2 : Copy);
                   const origin = getUrlOrigin(url);
+                  const isButtonSelected = url === selectedUrl;
 
                   return (
                     <Tooltip key={`${event.title}-${eventIndex}-${channelIndex}`}>
                       <TooltipTrigger asChild>
                         <Button
-                          variant="outline"
+                          variant={isButtonSelected ? "secondary" : "outline"}
                           size="sm"
                           className={cn(
                             "transition-all duration-200 h-auto whitespace-normal justify-start text-left py-1.5",
@@ -655,5 +667,3 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     </div>
   );
 };
-
-    
