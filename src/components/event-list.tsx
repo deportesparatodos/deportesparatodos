@@ -511,7 +511,12 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
         <TooltipProvider delayDuration={300}>
             <div className="space-y-4">
               {/* Pinned Selected Event */}
-              {selectedEventInfo && renderEventCard(selectedEventInfo.event, -1, true)}
+              {selectedEventInfo && (
+                  <div>
+                      <h3 className="text-sm font-semibold text-muted-foreground text-center mb-2">Seleccionado</h3>
+                      {renderEventCard(selectedEventInfo.event, -1, true)}
+                  </div>
+              )}
 
               {/* Active Events */}
               {hasActiveResults && (

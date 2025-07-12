@@ -443,124 +443,142 @@ export const ChannelListComponent: FC<ChannelListProps> = ({ channelStatuses, is
   };
 
   const filteredChannels = useMemo(() => {
-    const filtered = channels.filter(channel =>
+    return channels.filter(channel =>
       channel.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+  }, [searchTerm]);
 
-    if (selectedUrl) {
-      const selectedItem = filtered.find(c => c.url === selectedUrl);
-      if (selectedItem) {
-        return [selectedItem, ...filtered.filter(c => c.url !== selectedUrl)];
-      }
+  const selectedChannel = useMemo(() => {
+    if (!selectedUrl) return null;
+    return filteredChannels.find(c => c.url === selectedUrl);
+  }, [selectedUrl, filteredChannels]);
+
+  const otherChannels = useMemo(() => {
+    if (selectedChannel) {
+        return filteredChannels.filter(c => c.url !== selectedUrl);
     }
-    return filtered;
-  }, [searchTerm, selectedUrl]);
+    return filteredChannels;
+  }, [filteredChannels, selectedChannel]);
+
+
+  const renderChannelItem = (channel: Channel, isSelected: boolean) => {
+    if (channel.url === 'paste-action') {
+      return (
+        <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+          <div className="flex items-center flex-1 truncate mr-2">
+            {channel.logoUrl && (
+              <Image
+                src={channel.logoUrl}
+                alt={`${channel.name} logo`}
+                width={24}
+                height={24}
+                data-ai-hint="paste icon"
+                className="mr-2 rounded-sm object-contain flex-shrink-0"
+                unoptimized
+              />
+            )}
+            <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
+          </div>
+          <Button
+            size="sm"
+            onClick={handlePaste}
+            className={cn(
+              "transition-colors duration-300 w-[140px]",
+              pasteError 
+                ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground border border-destructive" 
+                : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
+            )}
+          >
+            {pasteError ? (
+              <><AlertCircle className="mr-2 h-4 w-4" /> Error</>
+            ) : (
+              <><ClipboardPaste className="mr-2 h-4 w-4" /> Pegar</>
+            )}
+          </Button>
+        </li>
+      );
+    }
+
+    const status = getStreamStatus(channel.url);
+    const origin = getUrlOrigin(channel.url);
+    const isCopied = copiedStates[channel.url];
+
+    return (
+      <li key={channel.url} className={cn("flex items-center justify-between p-3 rounded-md", isSelected ? 'bg-muted' : 'bg-muted/50')}>
+        <div className="flex items-center flex-1 truncate mr-2">
+          {!isLoading && (
+            <span
+              title={status === 'active' ? 'Activo' : status === 'inactive' ? 'Desconocido' : 'Desconocido'}
+              className={cn("h-2.5 w-2.5 rounded-full mr-3 flex-shrink-0", {
+                'bg-green-500': status === 'active',
+                'bg-red-500': status === 'inactive',
+                'bg-gray-400': status === 'unknown',
+              })}
+            />
+          )}
+          {channel.logoUrl && (
+            <Image
+              src={channel.logoUrl}
+              alt={`${channel.name} logo`}
+              width={24}
+              height={24}
+              data-ai-hint={getAiHintForChannel(channel.name)}
+              className="mr-2 rounded-sm object-contain flex-shrink-0"
+              unoptimized
+            />
+          )}
+          <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              onClick={isSelectMode && onSelectChannel ? () => onSelectChannel(channel.url) : () => handleCopy(channel.url)}
+              className={cn(
+                "transition-colors duration-300 w-[140px]",
+                isSelected 
+                  ? 'bg-background text-foreground'
+                  : 'bg-background/50',
+                !isSelectMode && isCopied && "border-green-500 bg-green-500/10 text-green-600 hover:text-green-600"
+              )}
+            >
+              {isSelectMode ? (
+                "Seleccionar"
+              ) : (
+                <>
+                  {isCopied ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                  {isCopied ? "¡Copiado!" : "Copiar Enlace"}
+                </>
+              )}
+            </Button>
+          </TooltipTrigger>
+          {origin && (
+            <TooltipContent>
+              <p>{origin}</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </li>
+    )
+  };
+
 
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex flex-col h-full w-full bg-card text-card-foreground">
         <div className="overflow-y-auto flex-grow">
           {filteredChannels.length > 0 ? (
-            <ul className="space-y-3">
-              {filteredChannels.map((channel) => {
-                if (channel.url === 'paste-action') {
-                  return (
-                    <li key={channel.url} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                      <div className="flex items-center flex-1 truncate mr-2">
-                        {channel.logoUrl && (
-                          <Image
-                            src={channel.logoUrl}
-                            alt={`${channel.name} logo`}
-                            width={24}
-                            height={24}
-                            data-ai-hint="paste icon"
-                            className="mr-2 rounded-sm object-contain flex-shrink-0"
-                            unoptimized
-                          />
-                        )}
-                        <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={handlePaste}
-                        className={cn(
-                          "transition-colors duration-300 w-[140px]",
-                          pasteError 
-                            ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground border border-destructive" 
-                            : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
-                        )}
-                      >
-                        {pasteError ? (
-                          <><AlertCircle className="mr-2 h-4 w-4" /> Error</>
-                        ) : (
-                          <><ClipboardPaste className="mr-2 h-4 w-4" /> Pegar</>
-                        )}
-                      </Button>
-                    </li>
-                  );
-                }
-
-                const status = getStreamStatus(channel.url);
-                const origin = getUrlOrigin(channel.url);
-                const isSelected = channel.url === selectedUrl;
-
-                return (
-                <li key={channel.url} className={cn("flex items-center justify-between p-3 rounded-md", isSelected ? 'bg-muted' : 'bg-muted/50')}>
-                  <div className="flex items-center flex-1 truncate mr-2">
-                    {!isLoading && (
-                      <span
-                        title={status === 'active' ? 'Activo' : status === 'inactive' ? 'Desconocido' : 'Desconocido'}
-                        className={cn("h-2.5 w-2.5 rounded-full mr-3 flex-shrink-0", {
-                          'bg-green-500': status === 'active',
-                          'bg-red-500': status === 'inactive',
-                          'bg-gray-400': status === 'unknown',
-                        })}
-                      />
-                    )}
-                    {channel.logoUrl && (
-                      <Image
-                        src={channel.logoUrl}
-                        alt={`${channel.name} logo`}
-                        width={24}
-                        height={24}
-                        data-ai-hint={getAiHintForChannel(channel.name)}
-                        className="mr-2 rounded-sm object-contain flex-shrink-0"
-                        unoptimized
-                      />
-                    )}
-                    <span className="text-foreground truncate" title={channel.name}>{channel.name}</span>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="sm"
-                        onClick={isSelectMode && onSelectChannel ? () => onSelectChannel(channel.url) : () => handleCopy(channel.url)}
-                        className={cn(
-                          "transition-colors duration-300 w-[140px]",
-                          !isSelectMode && copiedStates[channel.url]
-                            ? "bg-green-500 hover:bg-green-600 text-white border border-green-500 hover:border-green-600"
-                            : "border border-input bg-background hover:bg-accent hover:text-accent-foreground text-foreground"
-                        )}
-                      >
-                        {isSelectMode ? (
-                          "Seleccionar"
-                        ) : (
-                          <>
-                            {copiedStates[channel.url] ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                            {copiedStates[channel.url] ? "¡Copiado!" : "Copiar Enlace"}
-                          </>
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    {origin && (
-                      <TooltipContent>
-                        <p>{origin}</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </li>
-              )})}
-            </ul>
+            <div className="space-y-4">
+              {selectedChannel && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground text-center mb-2">Seleccionado</h3>
+                  {renderChannelItem(selectedChannel, true)}
+                </div>
+              )}
+              <ul className="space-y-3">
+                {otherChannels.map((channel) => renderChannelItem(channel, false))}
+              </ul>
+            </div>
           ) : (
             <p className="text-muted-foreground p-3">
               {searchTerm ? `No se encontraron canales para "${searchTerm}".` : "No hay canales disponibles."}
