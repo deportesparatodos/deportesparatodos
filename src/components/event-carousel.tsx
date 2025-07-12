@@ -10,6 +10,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { EventCard } from './event-card';
+import type { Channel } from './channel-list';
+import { Card } from './ui/card';
+import Image from 'next/image';
 
 export interface Event {
   time: string;
@@ -27,19 +30,23 @@ export interface Event {
 
 interface EventCarouselProps {
   title: string;
-  events: Event[];
-  onCardClick: (event: Event) => void;
-  getEventSelection: (event: Event) => { isSelected: boolean; window: number | null };
+  events?: Event[];
+  channels?: Channel[];
+  onCardClick?: (event: Event) => void;
+  onChannelClick?: (channel: Channel) => void;
+  getEventSelection?: (event: Event) => { isSelected: boolean; window: number | null };
 }
 
-export const EventCarousel: FC<EventCarouselProps> = ({ title, events, onCardClick, getEventSelection }) => {
+export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection }) => {
 
-  if (events.length === 0) {
+  const hasContent = (events && events.length > 0) || (channels && channels.length > 0);
+
+  if (!hasContent) {
     return null;
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-2">
         <div className="flex items-center justify-between">
              <h2 className="text-2xl font-bold">{title}</h2>
         </div>
@@ -52,13 +59,39 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, onCardCli
             className="w-full relative px-12"
         >
             <CarouselContent className="-ml-4 py-4">
-            {events.map((event, index) => (
-                <CarouselItem key={`${event.title}-${index}`} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
+            {events && onCardClick && getEventSelection && events.map((event, index) => (
+                <CarouselItem key={`event-${event.title}-${index}`} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
                 <EventCard 
                     event={event} 
                     selection={getEventSelection(event)}
                     onClick={() => onCardClick(event)}
                 />
+                </CarouselItem>
+            ))}
+             {channels && onChannelClick && channels.map((channel, index) => (
+                <CarouselItem key={`channel-${index}`} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
+                    <Card 
+                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
+                        onClick={() => onChannelClick(channel)}
+                    >
+                        <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
+                            <Image
+                                src={channel.logo}
+                                alt={`${channel.name} logo`}
+                                width={120}
+                                height={67.5}
+                                className="object-contain max-h-full max-w-full"
+                                onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null; 
+                                    target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                                }}
+                            />
+                        </div>
+                        <div className="p-3 bg-card">
+                            <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
+                        </div>
+                    </Card>
                 </CarouselItem>
             ))}
             </CarouselContent>
@@ -68,3 +101,5 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, onCardCli
     </div>
   );
 };
+
+    

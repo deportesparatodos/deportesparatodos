@@ -235,7 +235,7 @@ export default function HomePage() {
             <div className="flex items-center gap-6">
                 <Link href="/" className="shrink-0">
                     <Image
-                        src="https://i.ibb.co/BVLhxp2/deportes-para-todos.png"
+                        src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
                         width={150}
                         height={37.5}
@@ -303,7 +303,7 @@ export default function HomePage() {
         </header>
 
         <main className="flex-grow overflow-y-auto p-4 md:p-8">
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <div className="w-full">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -363,81 +363,36 @@ export default function HomePage() {
                     </div>
                 ) : (
                     <>
-                        {categories.length > 0 && (
-                            <div className="w-full">
-                                 <Carousel
-                                    opts={{
-                                    align: "start",
-                                    dragFree: true,
-                                    }}
-                                    className="w-full relative px-12"
-                                >
-                                    <CarouselContent className="-ml-4">
-                                        <CarouselItem className="basis-auto pl-4">
-                                            <Link href={`/events/live`}>
-                                                <Button variant="secondary" className="h-12 px-6 text-lg">
-                                                    En Vivo
-                                                </Button>
-                                            </Link>
-                                        </CarouselItem>
-                                         <CarouselItem className="basis-auto pl-4">
-                                            <Link href={`/events/channels`}>
-                                                <Button variant="secondary" className="h-12 px-6 text-lg">
-                                                    Canales
-                                                </Button>
-                                            </Link>
-                                        </CarouselItem>
-                                    {categories.map((category) => (
-                                        <CarouselItem key={category} className="basis-auto pl-4">
-                                            <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
-                                                <Button variant="secondary" className="h-12 px-6 text-lg">
-                                                    {category}
-                                                </Button>
-                                            </Link>
-                                        </CarouselItem>
-                                    ))}
-                                    </CarouselContent>
-                                    <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-                                    <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
-                                </Carousel>
-                            </div>
-                        )}
-
-                        <div className="w-full space-y-4">
-                            <h2 className="text-2xl font-bold">Canales</h2>
-                            <Carousel
+                        <div className="w-full mt-2">
+                             <Carousel
                                 opts={{
-                                    align: "start",
-                                    dragFree: true,
-                                    slidesToScroll: 'auto',
+                                align: "start",
+                                dragFree: true,
                                 }}
                                 className="w-full relative px-12"
                             >
-                                <CarouselContent className="-ml-4 py-4">
-                                {filteredChannels.map((channel, index) => (
-                                    <CarouselItem key={index} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
-                                        <Card 
-                                            className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
-                                            onClick={() => handleChannelClick(channel)}
-                                        >
-                                            <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
-                                                <Image
-                                                    src={channel.logo}
-                                                    alt={`${channel.name} logo`}
-                                                    width={120}
-                                                    height={67.5}
-                                                    className="object-contain max-h-full max-w-full"
-                                                    onError={(e) => {
-                                                        const target = e.target as HTMLImageElement;
-                                                        target.onerror = null; 
-                                                        target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="p-3 bg-card">
-                                                <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
-                                            </div>
-                                        </Card>
+                                <CarouselContent className="-ml-4">
+                                    <CarouselItem className="basis-auto pl-4">
+                                        <Link href={`/events/live`}>
+                                            <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                En Vivo
+                                            </Button>
+                                        </Link>
+                                    </CarouselItem>
+                                     <CarouselItem className="basis-auto pl-4">
+                                        <Link href={`/events/channels`}>
+                                            <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                Canales
+                                            </Button>
+                                        </Link>
+                                    </CarouselItem>
+                                {categories.map((category) => (
+                                    <CarouselItem key={category} className="basis-auto pl-4">
+                                        <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
+                                            <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                {category}
+                                            </Button>
+                                        </Link>
                                     </CarouselItem>
                                 ))}
                                 </CarouselContent>
@@ -447,6 +402,9 @@ export default function HomePage() {
                         </div>
                         
                         <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+
+                        <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
+
                         <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                         <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                         <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
@@ -469,3 +427,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
