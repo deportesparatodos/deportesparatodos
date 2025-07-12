@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-list';
-import { addHours, isAfter, format, parseISO, isValid } from 'date-fns';
+import { addHours, isAfter, parseISO, isValid } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -338,5 +338,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    

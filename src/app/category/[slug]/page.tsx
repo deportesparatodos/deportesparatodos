@@ -17,8 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { toZonedTime, isAfter, parseISO, isValid, format } from 'date-fns';
-import { addHours } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+import { addHours, isAfter, parseISO, isValid } from 'date-fns';
 
 
 function CategoryPage() {
@@ -222,5 +222,3 @@ function CategoryPage() {
 }
 
 export default CategoryPage;
-
-    

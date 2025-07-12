@@ -7,8 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Loader2, Tv } from 'lucide-react';
-import { toZonedTime, isAfter, parseISO, isValid, format } from 'date-fns';
-import { addHours } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+import { isAfter, parseISO, isValid, addHours } from 'date-fns';
 import type { Event } from '@/components/event-list'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -246,5 +246,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
