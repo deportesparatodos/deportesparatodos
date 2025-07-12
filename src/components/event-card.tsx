@@ -14,7 +14,10 @@ interface EventCardProps {
 }
 
 export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => {
-  const timeDisplay = event.status === 'En Vivo' ? 'AHORA' : event.status === 'Desconocido' ? '--:--' : event.time;
+  const timeDisplay = 
+    event.status === 'En Vivo' ? 'AHORA' : 
+    (event.status === 'Desconocido' || event.status === 'Finalizado') ? '--:--' : 
+    event.time;
 
   return (
     <div 
