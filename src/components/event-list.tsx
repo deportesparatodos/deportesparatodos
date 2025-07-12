@@ -96,18 +96,26 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
   
   const { all: groupAll, enVivo: groupEnVivo, f1: groupF1, mlb: groupMlb, mundialDeClubes: groupMundial, nba: groupNba, deportesDeCombate: groupCombate, deportesDeMotor: groupMotor, liga1: groupLiga1, ligaPro: groupLigaPro, mls: groupMls, otros: groupOtros } = eventGrouping;
 
+  const selectedEventInfo = useMemo(() => {
+    if (!selectedUrl) return null;
+    const event = events.find(e => e.options.includes(selectedUrl));
+    if (event) {
+        return { event, url: selectedUrl };
+    }
+    return null;
+  }, [selectedUrl, events]);
+
+
   const allFilteredEvents = useMemo(() => {
     const filtered = activeEvents.filter(event =>
       event.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    if (selectedUrl) {
-      const selectedEvent = filtered.find(e => e.options.includes(selectedUrl));
-      if (selectedEvent) {
-          return [selectedEvent, ...filtered.filter(e => e !== selectedEvent)];
-      }
+    // Exclude the selected event from the main list if it exists
+    if (selectedEventInfo) {
+      return filtered.filter(e => e !== selectedEventInfo.event);
     }
     return filtered;
-  }, [activeEvents, searchTerm, selectedUrl]);
+  }, [activeEvents, searchTerm, selectedEventInfo]);
   
   const liveEvents = allFilteredEvents.filter(event => event.status === 'En Vivo');
 
@@ -366,13 +374,12 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
     });
   }
 
-  const renderEventCard = (event: Event, eventIndex: number) => {
+  const renderEventCard = (event: Event, eventIndex: number, isSelectedEventCard: boolean = false) => {
     const imageSrc = event.image;
     const isMotorsport = event.image === motorImage;
-    const isSelected = !!selectedUrl && event.options.includes(selectedUrl);
 
     return (
-      <Card key={`${event.title}-${eventIndex}`} className={cn("overflow-hidden", isSelected ? "bg-muted" : "bg-muted/50")}>
+      <Card key={`${event.title}-${eventIndex}`} className={cn("overflow-hidden", isSelectedEventCard ? "bg-muted" : "bg-muted/50")}>
         <div className="flex items-center gap-4 p-4">
           {imageSrc && (
             <Image
@@ -446,10 +453,13 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                     <Tooltip key={`${event.title}-${eventIndex}-${channelIndex}`}>
                       <TooltipTrigger asChild>
                         <Button
-                          variant={isButtonSelected ? "secondary" : "outline"}
+                          variant={"outline"}
                           size="sm"
                           className={cn(
                             "transition-all duration-200 h-auto whitespace-normal justify-start text-left py-1.5",
+                             isButtonSelected 
+                               ? 'bg-background text-foreground hover:bg-background/90' 
+                               : 'bg-background/50',
                             !isSelectMode && isCopied && "border-green-500 bg-green-500/10 text-green-600 hover:text-green-600"
                           )}
                           onClick={() => handleAction(url)}
@@ -490,26 +500,26 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
       </div>
     );
   }
-
-  const firstRenderedItem = eventGroups.length > 0 ? 'group' : (ungroupedEvents.length > 0 ? 'event' : null);
+  
+  const hasActiveResults = eventGroups.length > 0 || ungroupedEvents.length > 0;
+  const hasFinishedResults = finishedEvents.length > 0 && !searchTerm;
+  const noResults = !selectedEventInfo && !hasActiveResults && !hasFinishedResults;
 
   return (
     <div className="h-full w-full bg-card text-card-foreground flex flex-col">
       <div className="flex-grow overflow-y-auto">
         <TooltipProvider delayDuration={300}>
-          {allFilteredEvents.length > 0 || eventGroups.length > 0 || (finishedEvents.length > 0 && !searchTerm) ? (
             <div className="space-y-4">
-              
+              {/* Pinned Selected Event */}
+              {selectedEventInfo && renderEventCard(selectedEventInfo.event, -1, true)}
+
               {/* Active Events */}
-              {(allFilteredEvents.length > 0 || eventGroups.length > 0) && (
+              {hasActiveResults && (
                 <>
                   {eventGroups.length > 0 && (
                     <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
-                      {eventGroups.map((group, index) => (
-                        <AccordionItem value={`${group.id}-events`} className={cn(
-                            "border-b-0",
-                            firstRenderedItem === 'group' && index === 0 && "mt-[16px]"
-                        )} key={group.id}>
+                      {eventGroups.map((group) => (
+                        <AccordionItem value={`${group.id}-events`} className="border-b-0" key={group.id}>
                           <Card className="bg-muted/50 overflow-hidden">
                             <AccordionTrigger className="p-4 hover:no-underline data-[state=open]:border-b">
                                 <div className="flex w-full items-center">
@@ -610,7 +620,7 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                             </AccordionTrigger>
                             <AccordionContent className="p-0">
                                 <div className="space-y-4 p-4">
-                                    {group.events.map(renderEventCard)}
+                                    {group.events.map((event, index) => renderEventCard(event, index))}
                                 </div>
                             </AccordionContent>
                           </Card>
@@ -618,22 +628,12 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                       ))}
                     </Accordion>
                   )}
-                  {ungroupedEvents.map((event, index) => {
-                      const isFirstElementInList = firstRenderedItem === 'event' && index === 0;
-                      const card = renderEventCard(event, index);
-                      return (
-                          <div key={card.key} className={cn(
-                              isFirstElementInList && "mt-[16px]"
-                          )}>
-                              {card}
-                          </div>
-                      );
-                  })}
+                  {ungroupedEvents.map((event, index) => renderEventCard(event, index))}
                 </>
               )}
               
               {/* Finished Events */}
-              {finishedEvents.length > 0 && !searchTerm && (
+              {hasFinishedResults && (
                  <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="finished-events" className="border-b-0">
                         <Card className="bg-muted/50 overflow-hidden">
@@ -647,21 +647,22 @@ export const EventListComponent: FC<EventListComponentProps> = ({ onSelectEvent,
                             </AccordionTrigger>
                             <AccordionContent className="p-0">
                                 <div className="space-y-4 p-4">
-                                    {finishedEvents.map(renderEventCard)}
+                                    {finishedEvents.map((event, index) => renderEventCard(event, index))}
                                 </div>
                             </AccordionContent>
                         </Card>
                     </AccordionItem>
                  </Accordion>
               )}
+
+              {noResults && (
+                 <div className="flex items-center justify-center h-full pt-10">
+                    <p className="text-muted-foreground text-center">
+                        {searchTerm ? `No se encontraron eventos para "${searchTerm}".` : "No hay eventos disponibles."}
+                    </p>
+                </div>
+              )}
             </div>
-          ) : (
-             <div className="flex items-center justify-center h-full">
-                <p className="text-muted-foreground text-center">
-                    {searchTerm ? `No se encontraron eventos para "${searchTerm}".` : "No hay eventos disponibles."}
-                </p>
-            </div>
-          )}
         </TooltipProvider>
       </div>
     </div>
