@@ -30,6 +30,7 @@ import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { EventCard } from '@/components/event-card';
 
 
 export default function HomePage() {
@@ -81,39 +82,45 @@ export default function HomePage() {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
   }, [selectedEvents]);
 
-  const filteredEvents = useMemo(() => {
-    if (!searchTerm) return { liveEvents: [], upcomingEvents: [], unknownEvents: [], finishedEvents: [], filteredChannels: channels };
+  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults } = useMemo(() => {
+    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
 
-    const lowercasedFilter = searchTerm.toLowerCase();
-    
-    const liveEvents = events.filter((e) => e.status.toLowerCase() === 'en vivo' && e.title.toLowerCase().includes(lowercasedFilter));
-    const upcomingEvents = events.filter((e) => e.status.toLowerCase() === 'próximo' && e.title.toLowerCase().includes(lowercasedFilter));
-    const unknownEvents = events.filter((e) => e.status.toLowerCase() === 'desconocido' && e.title.toLowerCase().includes(lowercasedFilter));
-    const finishedEvents = events.filter((e) => e.status.toLowerCase() === 'finalizado' && e.title.toLowerCase().includes(lowercasedFilter));
-    const filteredChannels = channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
-
-    return { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels };
-  }, [events, searchTerm]);
-
-
-  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels } = useMemo(() => {
-     if (searchTerm) return filteredEvents;
-
-     const live = events.filter((e) => e.status.toLowerCase() === 'en vivo');
-     live.sort((a,b) => {
+    const live = events.filter((e) => e.status.toLowerCase() === 'en vivo');
+    live.sort((a,b) => {
         const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
         const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
         if (aIsEmbedStream && !bIsEmbedStream) return 1;
         if (!aIsEmbedStream && bIsEmbedStream) return -1;
         return a.time.localeCompare(b.time);
-     });
+    });
 
-     const upcoming = events.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
-     const unknown = events.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time));
-     const finished = events.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
-     
-     return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents: finished, filteredChannels: channels };
-  }, [events, searchTerm, filteredEvents]);
+    const upcoming = events.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
+    const unknown = events.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time));
+    const finished = events.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+
+    let searchResults: (Event | Channel)[] = [];
+    if (searchTerm) {
+        const lowercasedFilter = searchTerm.toLowerCase();
+        
+        const filteredEvents = events.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
+        const sChannels = channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
+
+        filteredEvents.sort((a, b) => {
+            return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
+        });
+
+        searchResults = [...filteredEvents, ...sChannels];
+    }
+
+    return { 
+        liveEvents: live, 
+        upcomingEvents: upcoming, 
+        unknownEvents: unknown, 
+        finishedEvents: finished, 
+        filteredChannels: channels,
+        searchResults
+    };
+  }, [events, searchTerm]);
 
 
   const categories = useMemo(() => {
@@ -295,9 +302,9 @@ export default function HomePage() {
             </div>
         </header>
 
-        <main className="flex-grow overflow-y-auto">
-            <div className="space-y-12 p-4 md:p-8">
-                 <div className="w-full">
+        <main className="flex-grow overflow-y-auto p-4 md:p-8">
+            <div className="space-y-6">
+                <div className="w-full">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input 
@@ -313,93 +320,138 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                {categories.length > 0 && (
-                    <div className="w-full mt-2">
-                         <Carousel
-                            opts={{
-                            align: "start",
-                            dragFree: true,
-                            }}
-                            className="w-full relative px-12"
-                        >
-                            <CarouselContent className="-ml-4">
-                                <CarouselItem className="basis-auto pl-4">
-                                    <Link href={`/events/live`}>
-                                        <Button variant="secondary" className="h-12 px-6 text-lg">
-                                            En Vivo
-                                        </Button>
-                                    </Link>
-                                </CarouselItem>
-                                 <CarouselItem className="basis-auto pl-4">
-                                    <Link href={`/events/channels`}>
-                                        <Button variant="secondary" className="h-12 px-6 text-lg">
-                                            Canales
-                                        </Button>
-                                    </Link>
-                                </CarouselItem>
-                            {categories.map((category) => (
-                                <CarouselItem key={category} className="basis-auto pl-4">
-                                    <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
-                                        <Button variant="secondary" className="h-12 px-6 text-lg">
-                                            {category}
-                                        </Button>
-                                    </Link>
-                                </CarouselItem>
-                            ))}
-                            </CarouselContent>
-                            <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-                            <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
-                        </Carousel>
+                {searchTerm ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
+                        {searchResults.map((item, index) => {
+                            if ('url' in item) { // It's a Channel
+                                return (
+                                    <Card 
+                                        key={`search-channel-${index}`}
+                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
+                                        onClick={() => handleChannelClick(item)}
+                                    >
+                                        <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
+                                            <Image
+                                                src={item.logo}
+                                                alt={`${item.name} logo`}
+                                                width={120}
+                                                height={67.5}
+                                                className="object-contain max-h-full max-w-full"
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.onerror = null; 
+                                                    target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="p-3 bg-card">
+                                            <h3 className="font-bold truncate text-sm text-center">{item.name}</h3>
+                                        </div>
+                                    </Card>
+                                );
+                            } else { // It's an Event
+                                return (
+                                    <EventCard
+                                      key={`search-event-${index}`}
+                                      event={item}
+                                      selection={getEventSelection(item)}
+                                      onClick={() => openDialogForEvent(item)}
+                                    />
+                                );
+                            }
+                        })}
                     </div>
-                )}
-
-                 <div className="w-full space-y-4">
-                    <h2 className="text-2xl font-bold">Canales</h2>
-                    <Carousel
-                        opts={{
-                            align: "start",
-                            dragFree: true,
-                            slidesToScroll: 'auto',
-                        }}
-                        className="w-full relative px-12"
-                    >
-                        <CarouselContent className="-ml-4 py-4">
-                        {filteredChannels.map((channel, index) => (
-                            <CarouselItem key={index} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
-                                <Card 
-                                    className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
-                                    onClick={() => handleChannelClick(channel)}
+                ) : (
+                    <>
+                        {categories.length > 0 && (
+                            <div className="w-full">
+                                 <Carousel
+                                    opts={{
+                                    align: "start",
+                                    dragFree: true,
+                                    }}
+                                    className="w-full relative px-12"
                                 >
-                                    <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
-                                        <Image
-                                            src={channel.logo}
-                                            alt={`${channel.name} logo`}
-                                            width={120}
-                                            height={67.5}
-                                            className="object-contain max-h-full max-w-full"
-                                            onError={(e) => {
-                                                const target = e.target as HTMLImageElement;
-                                                target.onerror = null; 
-                                                target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="p-3 bg-card">
-                                        <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
-                                    </div>
-                                </Card>
-                            </CarouselItem>
-                        ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-                        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
-                    </Carousel>
-                </div>
-                
-                <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                    <CarouselContent className="-ml-4">
+                                        <CarouselItem className="basis-auto pl-4">
+                                            <Link href={`/events/live`}>
+                                                <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                    En Vivo
+                                                </Button>
+                                            </Link>
+                                        </CarouselItem>
+                                         <CarouselItem className="basis-auto pl-4">
+                                            <Link href={`/events/channels`}>
+                                                <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                    Canales
+                                                </Button>
+                                            </Link>
+                                        </CarouselItem>
+                                    {categories.map((category) => (
+                                        <CarouselItem key={category} className="basis-auto pl-4">
+                                            <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
+                                                <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                    {category}
+                                                </Button>
+                                            </Link>
+                                        </CarouselItem>
+                                    ))}
+                                    </CarouselContent>
+                                    <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+                                    <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+                                </Carousel>
+                            </div>
+                        )}
+
+                        <div className="w-full space-y-4">
+                            <h2 className="text-2xl font-bold">Canales</h2>
+                            <Carousel
+                                opts={{
+                                    align: "start",
+                                    dragFree: true,
+                                    slidesToScroll: 'auto',
+                                }}
+                                className="w-full relative px-12"
+                            >
+                                <CarouselContent className="-ml-4 py-4">
+                                {filteredChannels.map((channel, index) => (
+                                    <CarouselItem key={index} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
+                                        <Card 
+                                            className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
+                                            onClick={() => handleChannelClick(channel)}
+                                        >
+                                            <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
+                                                <Image
+                                                    src={channel.logo}
+                                                    alt={`${channel.name} logo`}
+                                                    width={120}
+                                                    height={67.5}
+                                                    className="object-contain max-h-full max-w-full"
+                                                    onError={(e) => {
+                                                        const target = e.target as HTMLImageElement;
+                                                        target.onerror = null; 
+                                                        target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className="p-3 bg-card">
+                                                <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
+                                            </div>
+                                        </Card>
+                                    </CarouselItem>
+                                ))}
+                                </CarouselContent>
+                                <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+                                <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+                            </Carousel>
+                        </div>
+                        
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                    </>
+                )}
             </div>
         </main>
         
@@ -417,7 +469,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
-
-    
