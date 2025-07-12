@@ -16,10 +16,10 @@ interface EventCardProps {
 
 export const EventCard: FC<EventCardProps> = ({ event, onSelect, selection }) => {
   return (
-    <div className="group relative aspect-[2/3] w-full overflow-hidden rounded-lg">
+    <div className="group relative aspect-video w-full overflow-hidden rounded-lg">
       <div className="absolute inset-0">
         <Image
-          src={event.image || 'https://placehold.co/400x600.png'}
+          src={event.image || 'https://placehold.co/600x400.png'}
           alt={event.title}
           layout="fill"
           objectFit="cover"
@@ -69,5 +69,3 @@ export const EventCard: FC<EventCardProps> = ({ event, onSelect, selection }) =>
     </div>
   );
 };
-
-    

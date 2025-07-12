@@ -16,13 +16,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from '@/lib/utils';
 
 
@@ -141,13 +134,13 @@ export default function HomePage() {
                              <h3 className="text-sm font-semibold text-muted-foreground">Seleccionados:</h3>
                             <div className="flex -space-x-4">
                                 {selectedEvents.map((event, index) => event && (
-                                    <div key={index} className="relative h-12 w-12 rounded-full border-2 border-primary ring-2 ring-background">
+                                    <div key={index} className="relative h-12 w-12 rounded-md border-2 border-primary ring-2 ring-background aspect-square">
                                         <Image
-                                            src={event.image || 'https://placehold.co/100x150.png'}
+                                            src={event.image || 'https://placehold.co/100x100.png'}
                                             alt={event.title}
                                             layout="fill"
                                             objectFit="cover"
-                                            className="rounded-full"
+                                            className="rounded-md"
                                         />
                                     </div>
                                 ))}
@@ -158,16 +151,6 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-4">
-                <Select onValueChange={(val) => setActiveWindow(parseInt(val))} value={activeWindow.toString()}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Ventana de Destino" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <SelectItem key={i} value={i.toString()}>Ventana {i + 1}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <Button
                     onClick={handleStartView}
                     disabled={selectedEvents.filter(Boolean).length === 0}
@@ -202,8 +185,8 @@ export default function HomePage() {
                             </CarouselItem>
                         ))}
                         </CarouselContent>
-                        <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
-                        <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
+                        <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2" />
+                        <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2" />
                     </Carousel>
                 </div>
                 
