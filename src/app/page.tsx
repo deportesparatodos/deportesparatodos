@@ -20,7 +20,6 @@ import { cn } from '@/lib/utils';
 import { toZonedTime } from 'date-fns-tz';
 import { isToday } from 'date-fns';
 
-
 export default function HomePage() {
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
@@ -36,11 +35,11 @@ export default function HomePage() {
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
-        const data: Omit<Event, 'status'> & { status: string }[] = await response.json();
+        const data: Event[] = await response.json();
         
         const processedEvents = data.map(e => ({
           ...e,
-          status: e.status.charAt(0).toUpperCase() + e.status.slice(1) as Event['status'],
+          status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
         }));
 
         setEvents(processedEvents);
@@ -75,7 +74,7 @@ export default function HomePage() {
             const eventDate = toZonedTime(e.date, timeZone);
             return isToday(eventDate);
         } catch (error) {
-            return false; // Ignore events with invalid dates
+            return false;
         }
     });
   }, [events]);
@@ -83,11 +82,30 @@ export default function HomePage() {
   const liveEvents = useMemo(() => todayEvents.filter((e) => e.status === 'En Vivo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
   const upcomingEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Próximo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
   const unknownEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
-  const finishedEvents = useMemo(() => events.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time)), [events]);
-  const categories = useMemo(() => {
-    const allCategories = events.map((e) => e.category);
-    return [...new Set(allCategories)];
+  const finishedEvents = useMemo(() => {
+    const allFinished = events.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    const todayFinished = allFinished.filter(e => {
+        const timeZone = 'America/New_York';
+        try {
+            const eventDate = toZonedTime(e.date, timeZone);
+            return isToday(eventDate);
+        } catch (error) {
+            return false;
+        }
+    });
+    const otherFinished = allFinished.filter(e => !todayFinished.includes(e));
+    return [...todayFinished, ...otherFinished];
   }, [events]);
+
+  const categories = useMemo(() => {
+      const categorySet = new Set<string>();
+      todayEvents.forEach((event) => {
+        if (event.category) {
+            categorySet.add(event.category);
+        }
+      });
+      return Array.from(categorySet);
+  }, [todayEvents]);
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...selectedEvents];
@@ -103,6 +121,13 @@ export default function HomePage() {
         nextWindow = (nextWindow + 1) % 9;
     }
     setActiveWindow(nextWindow);
+  };
+
+  const handleEventRemove = (windowIndex: number) => {
+    const newSelectedEvents = [...selectedEvents];
+    newSelectedEvents[windowIndex] = null;
+    setSelectedEvents(newSelectedEvents);
+    setActiveWindow(windowIndex);
   };
   
   const getEventSelection = (event: Event) => {
@@ -178,36 +203,37 @@ export default function HomePage() {
 
         <main className="flex-grow overflow-y-auto">
             <div className="space-y-12 p-4 md:p-8">
-                {/* Categories Carousel */}
-                <div className="w-full space-y-4">
-                    <h2 className="text-2xl font-bold">Categorías</h2>
-                     <Carousel
-                        opts={{
-                          align: "start",
-                          dragFree: true,
-                        }}
-                        className="w-full relative px-12"
-                      >
-                        <CarouselContent className="-ml-4">
-                          {categories.map((category) => (
-                              <CarouselItem key={category} className="basis-auto pl-4">
-                                  <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
-                                      <Button variant="secondary" className="h-12 px-6 text-lg">
-                                          {category}
-                                      </Button>
-                                  </Link>
-                              </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-                        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
-                      </Carousel>
-                </div>
+                {categories.length > 0 && (
+                    <div className="w-full space-y-4">
+                        <h2 className="text-2xl font-bold">Categorías</h2>
+                        <Carousel
+                            opts={{
+                            align: "start",
+                            dragFree: true,
+                            }}
+                            className="w-full relative px-12"
+                        >
+                            <CarouselContent className="-ml-4">
+                            {categories.map((category) => (
+                                <CarouselItem key={category} className="basis-auto pl-4">
+                                    <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
+                                        <Button variant="secondary" className="h-12 px-6 text-lg">
+                                            {category}
+                                        </Button>
+                                    </Link>
+                                </CarouselItem>
+                            ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+                            <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+                        </Carousel>
+                    </div>
+                )}
                 
-                <EventCarousel title="En Vivo" events={liveEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow}/>
-                <EventCarousel title="Próximos" events={upcomingEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow}/>
-                <EventCarousel title="Estado Desconocido" events={unknownEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow}/>
-                <EventCarousel title="Finalizados" events={finishedEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow}/>
+                <EventCarousel title="En Vivo" events={liveEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow} setActiveWindow={setActiveWindow} selectedEvents={selectedEvents} onEventRemove={handleEventRemove} />
+                <EventCarousel title="Próximos" events={upcomingEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow} setActiveWindow={setActiveWindow} selectedEvents={selectedEvents} onEventRemove={handleEventRemove} />
+                <EventCarousel title="Estado Desconocido" events={unknownEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow} setActiveWindow={setActiveWindow} selectedEvents={selectedEvents} onEventRemove={handleEventRemove} />
+                <EventCarousel title="Finalizados" events={finishedEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow} setActiveWindow={setActiveWindow} selectedEvents={selectedEvents} onEventRemove={handleEventRemove} />
             </div>
         </main>
     </div>

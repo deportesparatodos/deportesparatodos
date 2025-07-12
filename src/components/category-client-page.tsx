@@ -3,21 +3,26 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { EventCard } from '@/components/event-card';
-import type { Event } from '@/components/event-list'; 
+import type { Event } from '@/components/event-carousel'; 
 import { Loader2, ArrowLeft, Tv } from 'lucide-react';
+import { EventSelectionDialog } from './event-selection-dialog';
 
 export function CategoryClientPage({ initialEvents, categoryName }: { initialEvents: Event[], categoryName: string }) {
   const router = useRouter();
 
-  const [categoryEvents, setCategoryEvents] = useState<Event[]>(initialEvents);
-  const [isLoading, setIsLoading] = useState(false); // Already loaded on server
+  const [categoryEvents] = useState<Event[]>(initialEvents);
+  const [isLoading] = useState(false);
 
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [activeWindow, setActiveWindow] = useState(0);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  const [isModification, setIsModification] = useState(false);
+  const [modificationIndex, setModificationIndex] = useState<number | null>(null);
 
   useEffect(() => {
      const storedSelectedEvents = localStorage.getItem('selectedEvents');
@@ -39,17 +44,35 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...selectedEvents];
     const eventWithSelection = { ...event, selectedOption: optionUrl };
-    newSelectedEvents[activeWindow] = eventWithSelection;
+
+    const targetIndex = isModification ? modificationIndex! : activeWindow;
+    newSelectedEvents[targetIndex] = eventWithSelection;
     setSelectedEvents(newSelectedEvents);
-    // Move to the next empty window or cycle back
-    let nextWindow = (activeWindow + 1) % 9;
-    for(let i=0; i<9; i++) {
-        if (!newSelectedEvents[nextWindow]) {
-            break;
+
+    if (!isModification) {
+        let nextWindow = (activeWindow + 1) % 9;
+        for(let i=0; i<9; i++) {
+            if (!newSelectedEvents[nextWindow]) {
+                break;
+            }
+            nextWindow = (nextWindow + 1) % 9;
         }
-        nextWindow = (nextWindow + 1) % 9;
+        setActiveWindow(nextWindow);
     }
-    setActiveWindow(nextWindow);
+    
+    setDialogOpen(false);
+    setIsModification(false);
+    setModificationIndex(null);
+  };
+
+  const handleEventRemove = (windowIndex: number) => {
+    const newSelectedEvents = [...selectedEvents];
+    newSelectedEvents[windowIndex] = null;
+    setSelectedEvents(newSelectedEvents);
+    setActiveWindow(windowIndex);
+    setDialogOpen(false);
+    setIsModification(false);
+    setModificationIndex(null);
   };
   
   const getEventSelection = (event: Event) => {
@@ -66,6 +89,14 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
     localStorage.setItem('numCameras', selectedEvents.filter(Boolean).length.toString());
     router.push('/view');
   };
+
+  const openDialogForEvent = (event: Event) => {
+    setDialogEvent(event);
+    setIsModification(false);
+    setModificationIndex(null);
+    setDialogOpen(true);
+  };
+
 
   if (isLoading) {
     return (
@@ -86,6 +117,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
         </div>
         <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2">
+                 <h3 className="text-sm font-semibold text-muted-foreground">Seleccionados:</h3>
                 {selectedEvents.filter(Boolean).length > 0 && (
                     <div className="flex -space-x-4">
                         {selectedEvents.map((event, index) => event && (
@@ -119,13 +151,24 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
             <EventCard
               key={`${event.title}-${index}`}
               event={event}
-              onSelect={handleEventSelect}
               selection={getEventSelection(event)}
-              activeWindow={activeWindow}
+              onClick={() => openDialogForEvent(event)}
             />
           ))}
         </div>
       </main>
+
+      {dialogEvent && (
+        <EventSelectionDialog
+          isOpen={dialogOpen}
+          onOpenChange={setDialogOpen}
+          event={dialogEvent}
+          onSelect={handleEventSelect}
+          isModification={isModification}
+          onRemove={() => handleEventRemove(modificationIndex!)}
+          windowNumber={isModification ? modificationIndex! + 1 : activeWindow + 1}
+        />
+      )}
     </div>
   );
 }

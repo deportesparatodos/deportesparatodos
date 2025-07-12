@@ -3,25 +3,26 @@
 
 import type { FC } from 'react';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Event } from './event-carousel';
 
 interface EventCardProps {
   event: Event;
-  onSelect: (event: Event, optionUrl: string) => void;
   selection: { isSelected: boolean; window: number | null };
-  activeWindow: number;
+  onClick: () => void;
 }
 
-export const EventCard: FC<EventCardProps> = ({ event, onSelect, selection, activeWindow }) => {
+export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => {
   const timeDisplay = event.status === 'En Vivo' ? 'AHORA' : event.status === 'Desconocido' ? '--:--' : event.time;
 
   return (
-    <div className="relative event-card-hover-container group">
+    <div 
+      className="relative group cursor-pointer"
+      onClick={onClick}
+    >
       <div 
-        className="w-full overflow-hidden rounded-lg transition-transform duration-300 ease-in-out aspect-video group-hover:scale-105"
+        className="w-full overflow-hidden rounded-lg transition-transform duration-300 ease-in-out aspect-video"
       >
         <div className="relative w-full h-full">
           <Image
@@ -41,7 +42,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onSelect, selection, acti
                 <h3 className="font-bold truncate text-sm">{event.title}</h3>
                 <div className="flex items-center justify-between text-xs mt-1">
                 <p className="text-muted-foreground font-semibold">{timeDisplay}</p>
-                {event.status !== 'Próximo' && (
+                {event.status && event.status !== 'Próximo' && (
                     <Badge className={cn(
                         "text-xs font-bold border-0 h-5",
                         event.status === 'En Vivo' && 'bg-red-600 text-white',
@@ -51,28 +52,6 @@ export const EventCard: FC<EventCardProps> = ({ event, onSelect, selection, acti
                 )}
                 </div>
             </div>
-        </div>
-      </div>
-      
-      {/* Hover options overlay */}
-      <div className={cn(
-        "event-card-options absolute inset-0 bg-black/70 flex flex-col items-center justify-center p-4 rounded-lg transition-all duration-300 ease-in-out",
-        `group-hover:h-[${Math.max(100, 40 * event.options.length)}%]` // Adjust height based on options
-      )}>
-        <div className="flex flex-col gap-2 w-full">
-            {event.options.map((option, index) => (
-            <Button
-                key={index}
-                size="sm"
-                className="w-full bg-secondary hover:bg-primary hover:text-primary-foreground"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onSelect(event, option);
-                }}
-            >
-                {`Ventana ${activeWindow + 1}: ${event.buttons[index] || `Opción ${index + 1}`}`}
-            </Button>
-            ))}
         </div>
       </div>
     </div>
