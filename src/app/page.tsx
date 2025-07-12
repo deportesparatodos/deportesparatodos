@@ -228,7 +228,7 @@ export default function HomePage() {
             <div className="flex items-center gap-6">
                 <Link href="/" className="shrink-0">
                     <Image
-                        src="https://i.ibb.co/dHPWxr8/depete.jpg"
+                        src="https://i.ibb.co/BVLhxp2/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
                         width={150}
                         height={37.5}
@@ -417,5 +417,7 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
 
     

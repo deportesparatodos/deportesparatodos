@@ -76,7 +76,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
           {event.options.map((option, index) => (
             <Button
               key={index}
-              className="w-full bg-background hover:bg-primary hover:text-primary-foreground"
+              className="w-full bg-background hover:bg-primary hover:text-primary-foreground text-white"
               onClick={() => onSelect(event, option)}
             >
               {`Ventana ${windowNumber}: ${event.buttons[index] || `Opción ${index + 1}`}`}
@@ -99,3 +99,5 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     </Dialog>
   );
 };
+
+    
