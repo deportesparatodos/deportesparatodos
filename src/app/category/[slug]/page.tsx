@@ -38,7 +38,7 @@ function CategoryPage() {
     const fetchEvents = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('https://deportes-para-todos-api.vercel.app/api/events');
+        const response = await fetch('https://api.sport-tv-guide.live/api/get_events');
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
@@ -222,3 +222,5 @@ function CategoryPage() {
 }
 
 export default CategoryPage;
+
+    

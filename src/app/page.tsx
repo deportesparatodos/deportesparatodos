@@ -39,7 +39,7 @@ export default function HomePage() {
     const fetchEvents = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('https://deportes-para-todos-api.vercel.app/api/events');
+        const response = await fetch('https://api.sport-tv-guide.live/api/get_events');
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
@@ -246,3 +246,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
