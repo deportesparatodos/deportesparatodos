@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Loader2, Tv, X, Menu } from 'lucide-react';
+import { Loader2, Tv, X, Menu, Search, RotateCw } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -29,6 +29,8 @@ import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+
 
 export default function HomePage() {
   const router = useRouter();
@@ -41,46 +43,69 @@ export default function HomePage() {
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchEvents = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      const data: Event[] = await response.json();
+      
+      const processedEvents = data.map(e => ({
+        ...e,
+        category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
+        status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
+      }));
+
+      setEvents(processedEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('https://agenda-dpt.vercel.app/api/events');
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        const data: Event[] = await response.json();
-        
-        const processedEvents = data.map(e => ({
-          ...e,
-          status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
-        }));
-
-        setEvents(processedEvents);
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchEvents();
 
       const storedSelectedEvents = localStorage.getItem('selectedEvents');
       if (storedSelectedEvents) {
         setSelectedEvents(JSON.parse(storedSelectedEvents));
       }
-  }, []);
+  }, [fetchEvents]);
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
   }, [selectedEvents]);
 
+  const filteredEvents = useMemo(() => {
+    if (!searchTerm) return { liveEvents: [], upcomingEvents: [], unknownEvents: [], finishedEvents: [], filteredChannels: channels };
 
-  const liveEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'en vivo').sort((a,b) => a.time.localeCompare(b.time)), [events]);
-  const upcomingEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time)), [events]);
-  const unknownEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time)), [events]);
-  const finishedEvents = useMemo(() => events.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time)), [events]);
+    const lowercasedFilter = searchTerm.toLowerCase();
+    
+    const liveEvents = events.filter((e) => e.status.toLowerCase() === 'en vivo' && e.title.toLowerCase().includes(lowercasedFilter));
+    const upcomingEvents = events.filter((e) => e.status.toLowerCase() === 'próximo' && e.title.toLowerCase().includes(lowercasedFilter));
+    const unknownEvents = events.filter((e) => e.status.toLowerCase() === 'desconocido' && e.title.toLowerCase().includes(lowercasedFilter));
+    const finishedEvents = events.filter((e) => e.status.toLowerCase() === 'finalizado' && e.title.toLowerCase().includes(lowercasedFilter));
+    const filteredChannels = channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
+
+    return { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels };
+  }, [events, searchTerm]);
+
+
+  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels } = useMemo(() => {
+     if (searchTerm) return filteredEvents;
+
+     const live = events.filter((e) => e.status.toLowerCase() === 'en vivo').sort((a,b) => a.time.localeCompare(b.time));
+     const upcoming = events.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
+     const unknown = events.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time));
+     const finished = events.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+     
+     return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents: finished, filteredChannels: channels };
+  }, [events, searchTerm, filteredEvents]);
 
 
   const categories = useMemo(() => {
@@ -152,7 +177,7 @@ export default function HomePage() {
       setModificationIndex(selection.window! - 1);
     } else {
       setIsModification(false);
-      setModificationIndex(null);
+      setModificationIndex(selectedEvents.findIndex(e => e === null)); // Target first empty slot
     }
     setDialogOpen(true);
   };
@@ -181,7 +206,7 @@ export default function HomePage() {
     setDialogOpen(true);
   }
 
-  if (isLoading) {
+  if (isLoading && events.length === 0) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -264,6 +289,22 @@ export default function HomePage() {
 
         <main className="flex-grow overflow-y-auto">
             <div className="space-y-12 p-4 md:p-8">
+                 <div className="mb-8 w-full">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input 
+                            type="text"
+                            placeholder="Buscar evento o canal..."
+                            className="w-full pl-10 pr-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={fetchEvents}>
+                             <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
+                </div>
+
                 {categories.length > 0 && (
                     <div className="w-full space-y-4">
                         <h2 className="text-2xl font-bold">Categorías</h2>
@@ -275,6 +316,20 @@ export default function HomePage() {
                             className="w-full relative px-12"
                         >
                             <CarouselContent className="-ml-4">
+                                <CarouselItem className="basis-auto pl-4">
+                                    <Link href={`/events/live`}>
+                                        <Button variant="secondary" className="h-12 px-6 text-lg">
+                                            En Vivo
+                                        </Button>
+                                    </Link>
+                                </CarouselItem>
+                                 <CarouselItem className="basis-auto pl-4">
+                                    <Link href={`/events/channels`}>
+                                        <Button variant="secondary" className="h-12 px-6 text-lg">
+                                            Canales
+                                        </Button>
+                                    </Link>
+                                </CarouselItem>
                             {categories.map((category) => (
                                 <CarouselItem key={category} className="basis-auto pl-4">
                                     <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
@@ -302,19 +357,19 @@ export default function HomePage() {
                         className="w-full relative px-12"
                     >
                         <CarouselContent className="-ml-4 py-4">
-                        {channels.map((channel, index) => (
+                        {filteredChannels.map((channel, index) => (
                             <CarouselItem key={index} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
                                 <Card 
                                     className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
                                     onClick={() => handleChannelClick(channel)}
                                 >
-                                    <div className="relative w-full aspect-video flex items-center justify-center p-4">
+                                    <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
                                         <Image
                                             src={channel.logo}
                                             alt={`${channel.name} logo`}
                                             width={120}
                                             height={67.5}
-                                            objectFit="contain"
+                                            className="object-contain max-h-full max-w-full"
                                             onError={(e) => {
                                                 const target = e.target as HTMLImageElement;
                                                 target.onerror = null; 
@@ -349,7 +404,7 @@ export default function HomePage() {
                 onSelect={handleEventSelect}
                 isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
-                windowNumber={(isModification ? modificationIndex : selectedEvents.findIndex(e => e === null))! + 1}
+                windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
             />
         )}
     </div>

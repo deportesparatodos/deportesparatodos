@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { EventCard } from '@/components/event-card';
 import type { Event } from '@/components/event-carousel'; 
 import { Loader2, ArrowLeft, Tv, Menu, Search, RotateCw } from 'lucide-react';
-import { EventSelectionDialog } from './event-selection-dialog';
+import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import {
   Sheet,
   SheetContent,
@@ -19,11 +19,11 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from '@/components/ui/input';
 
-export function CategoryClientPage({ initialEvents, categoryName }: { initialEvents: Event[], categoryName: string }) {
+export default function LiveEventsPage() {
   const router = useRouter();
 
-  const [categoryEvents, setCategoryEvents] = useState<Event[]>(initialEvents);
-  const [isLoading, setIsLoading] = useState(false);
+  const [liveEvents, setLiveEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
 
@@ -34,7 +34,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchCategoryEvents = useCallback(async () => {
+  const fetchLiveEvents = useCallback(async () => {
     setIsLoading(true);
     try {
         const response = await fetch('https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
@@ -45,55 +45,44 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
         
         const processedEvents = data.map(e => ({
           ...e,
-          category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
           status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
-        }));
+        })).filter(e => e.status.toLowerCase() === 'en vivo');
 
-        const filtered = processedEvents.filter(
-          (event) => event.category.toLowerCase() === categoryName.toLowerCase()
-        );
+        processedEvents.sort((a, b) => a.time.localeCompare(b.time));
 
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
-        filtered.sort((a, b) => {
-            if (a.status !== b.status) {
-                return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
-            }
-            return a.time.localeCompare(b.time);
-        });
-        setCategoryEvents(filtered);
+        setLiveEvents(processedEvents);
     } catch (error) {
-        console.error('Error fetching events:', error);
+        console.error('Error fetching live events:', error);
     } finally {
         setIsLoading(false);
     }
-  }, [categoryName]);
-
+  }, []);
+  
   useEffect(() => {
+     fetchLiveEvents();
      const storedSelectedEvents = localStorage.getItem('selectedEvents');
       if (storedSelectedEvents) {
         setSelectedEvents(JSON.parse(storedSelectedEvents));
       }
-  }, []);
+  }, [fetchLiveEvents]);
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
   }, [selectedEvents]);
 
   const filteredEvents = useMemo(() => {
-    return categoryEvents.filter(event => 
+    return liveEvents.filter(event => 
       event.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [categoryEvents, searchTerm]);
+  }, [liveEvents, searchTerm]);
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...selectedEvents];
     const eventWithSelection = { ...event, selectedOption: optionUrl };
 
-    let targetIndex = -1;
-    if (isModification && modificationIndex !== null) {
-        targetIndex = modificationIndex;
-    } else {
-        targetIndex = newSelectedEvents.findIndex(e => e === null);
+    let targetIndex = modificationIndex;
+    if (targetIndex === null) {
+      targetIndex = newSelectedEvents.findIndex(e => e === null);
     }
     
     if (targetIndex !== -1) {
@@ -104,8 +93,6 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
     }
     
     setDialogOpen(false);
-    setIsModification(false);
-    setModificationIndex(null);
   };
 
   const handleEventRemove = (windowIndex: number) => {
@@ -113,8 +100,6 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
     newSelectedEvents[windowIndex] = null;
     setSelectedEvents(newSelectedEvents);
     setDialogOpen(false);
-    setIsModification(false);
-    setModificationIndex(null);
   };
   
   const getEventSelection = (event: Event) => {
@@ -140,7 +125,9 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
       setModificationIndex(selection.window! - 1);
     } else {
       setIsModification(false);
-      setModificationIndex(selectedEvents.findIndex(e => e === null));
+      // find first empty slot
+      const firstEmptySlot = selectedEvents.findIndex(e => e === null);
+      setModificationIndex(firstEmptySlot !== -1 ? firstEmptySlot : 0);
     }
     setDialogOpen(true);
   };
@@ -153,6 +140,14 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
     setDialogOpen(true);
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-30 flex h-20 w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:px-8">
@@ -160,7 +155,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
           <Button variant="outline" size="icon" onClick={() => router.push('/')}>
             <ArrowLeft />
           </Button>
-          <h1 className="text-2xl font-bold capitalize">{categoryName}</h1>
+          <h1 className="text-2xl font-bold capitalize">En Vivo</h1>
         </div>
         <div className="flex items-center gap-2">
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -225,17 +220,16 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
                     type="text"
-                    placeholder="Buscar en esta categoría..."
+                    placeholder="Buscar evento en vivo..."
                     className="w-full pl-10 pr-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                 <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={fetchCategoryEvents}>
-                     <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={fetchLiveEvents}>
+                    <RotateCw className="h-4 w-4" />
                 </Button>
             </div>
         </div>
-
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
           {filteredEvents.map((event, index) => (
             <EventCard
@@ -246,11 +240,6 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
             />
           ))}
         </div>
-         {isLoading && categoryEvents.length > 0 && (
-          <div className="flex w-full items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
       </main>
 
       {dialogEvent && (
@@ -261,7 +250,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
           onSelect={handleEventSelect}
           isModification={isModification}
           onRemove={() => handleEventRemove(modificationIndex!)}
-          windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
+          windowNumber={(modificationIndex ?? 0) + 1}
         />
       )}
     </div>

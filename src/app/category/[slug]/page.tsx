@@ -1,8 +1,6 @@
 
 import { CategoryClientPage } from '@/components/category-client-page';
 import type { Event } from '@/components/event-carousel';
-import { toZonedTime } from 'date-fns-tz';
-import { isToday } from 'date-fns';
 
 // This function runs at build time to fetch all possible categories
 export async function generateStaticParams() {
@@ -13,7 +11,10 @@ export async function generateStaticParams() {
         return [];
     }
     const events: Event[] = await response.json();
-    const categories = [...new Set(events.map((e) => e.category))];
+    const categories = [...new Set(events.map((e) => {
+        if (e.category.toLowerCase() === 'other') return 'Otros';
+        return e.category;
+    }))];
     
     return categories.map((category) => ({
       slug: category.toLowerCase().replace(/ /g, '-'),
@@ -27,7 +28,7 @@ export async function generateStaticParams() {
 // This function runs on the server for each category page
 async function getCategoryEvents(categoryName: string): Promise<Event[]> {
     try {
-        const response = await fetch('https://agenda-dpt.vercel.app/api/events');
+        const response = await fetch('https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
@@ -35,6 +36,7 @@ async function getCategoryEvents(categoryName: string): Promise<Event[]> {
         
         const processedEvents = data.map(e => ({
           ...e,
+          category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
           status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
         }));
 

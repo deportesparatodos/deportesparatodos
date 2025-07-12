@@ -1,14 +1,12 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { EventCard } from '@/components/event-card';
-import type { Event } from '@/components/event-carousel'; 
 import { Loader2, ArrowLeft, Tv, Menu, Search, RotateCw } from 'lucide-react';
-import { EventSelectionDialog } from './event-selection-dialog';
+import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import {
   Sheet,
   SheetContent,
@@ -17,16 +15,16 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Event } from '@/components/event-carousel';
+import { channels as allChannels } from '@/components/channel-list';
+import type { Channel } from '@/components/channel-list';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
-export function CategoryClientPage({ initialEvents, categoryName }: { initialEvents: Event[], categoryName: string }) {
+export default function ChannelsPage() {
   const router = useRouter();
-
-  const [categoryEvents, setCategoryEvents] = useState<Event[]>(initialEvents);
-  const [isLoading, setIsLoading] = useState(false);
-
+  const [channels] = useState<Channel[]>(allChannels);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [isModification, setIsModification] = useState(false);
@@ -34,95 +32,77 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchCategoryEvents = useCallback(async () => {
-    setIsLoading(true);
-    try {
-        const response = await fetch('https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        const data: Event[] = await response.json();
-        
-        const processedEvents = data.map(e => ({
-          ...e,
-          category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
-          status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
-        }));
-
-        const filtered = processedEvents.filter(
-          (event) => event.category.toLowerCase() === categoryName.toLowerCase()
-        );
-
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
-        filtered.sort((a, b) => {
-            if (a.status !== b.status) {
-                return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
-            }
-            return a.time.localeCompare(b.time);
-        });
-        setCategoryEvents(filtered);
-    } catch (error) {
-        console.error('Error fetching events:', error);
-    } finally {
-        setIsLoading(false);
-    }
-  }, [categoryName]);
-
   useEffect(() => {
-     const storedSelectedEvents = localStorage.getItem('selectedEvents');
-      if (storedSelectedEvents) {
-        setSelectedEvents(JSON.parse(storedSelectedEvents));
-      }
+    const storedSelectedEvents = localStorage.getItem('selectedEvents');
+    if (storedSelectedEvents) {
+      setSelectedEvents(JSON.parse(storedSelectedEvents));
+    }
   }, []);
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
   }, [selectedEvents]);
 
-  const filteredEvents = useMemo(() => {
-    return categoryEvents.filter(event => 
-      event.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredChannels = useMemo(() => {
+    return channels.filter(channel => 
+      channel.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [categoryEvents, searchTerm]);
+  }, [channels, searchTerm]);
+
+  const handleChannelClick = (channel: Channel) => {
+    const channelAsEvent: Event = {
+      title: channel.name,
+      options: [channel.url],
+      buttons: ['Ver canal'],
+      time: '',
+      category: 'Canal',
+      language: '',
+      date: '',
+      source: '',
+      status: 'En Vivo',
+      image: channel.logo,
+    };
+    openDialogForEvent(channelAsEvent);
+  };
+
+  const openDialogForEvent = (event: Event) => {
+    setDialogEvent(event);
+    const targetIndex = selectedEvents.findIndex(e => e === null);
+    if (targetIndex !== -1) {
+      setIsModification(false);
+      setModificationIndex(targetIndex);
+    } else {
+      // If all are full, allow modifying the first one
+      setIsModification(true);
+      setModificationIndex(0);
+    }
+    setDialogOpen(true);
+  };
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...selectedEvents];
     const eventWithSelection = { ...event, selectedOption: optionUrl };
 
-    let targetIndex = -1;
-    if (isModification && modificationIndex !== null) {
-        targetIndex = modificationIndex;
-    } else {
-        targetIndex = newSelectedEvents.findIndex(e => e === null);
+    let targetIndex = modificationIndex;
+    if (targetIndex === null) {
+      targetIndex = newSelectedEvents.findIndex(e => e === null);
     }
-    
-    if (targetIndex !== -1) {
-        newSelectedEvents[targetIndex] = eventWithSelection;
-        setSelectedEvents(newSelectedEvents);
-    } else {
-        console.log("All selection slots are full.");
-    }
-    
-    setDialogOpen(false);
-    setIsModification(false);
-    setModificationIndex(null);
-  };
 
+    if (targetIndex !== -1) {
+      newSelectedEvents[targetIndex] = eventWithSelection;
+      setSelectedEvents(newSelectedEvents);
+    } else {
+      console.log("All selection slots are full.");
+    }
+
+    setDialogOpen(false);
+  };
+  
   const handleEventRemove = (windowIndex: number) => {
     const newSelectedEvents = [...selectedEvents];
     newSelectedEvents[windowIndex] = null;
     setSelectedEvents(newSelectedEvents);
     setDialogOpen(false);
-    setIsModification(false);
-    setModificationIndex(null);
-  };
-  
-  const getEventSelection = (event: Event) => {
-    const selection = selectedEvents.map((se, i) => se && se.title === event.title ? i : null).filter(i => i !== null);
-    if (selection.length > 0) {
-      return { isSelected: true, window: selection[0]! + 1 };
-    }
-    return { isSelected: false, window: null };
   };
 
   const handleStartView = () => {
@@ -132,21 +112,8 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
     router.push('/view');
   };
 
-  const openDialogForEvent = (event: Event) => {
-    setDialogEvent(event);
-    const selection = getEventSelection(event);
-    if(selection.isSelected) {
-      setIsModification(true);
-      setModificationIndex(selection.window! - 1);
-    } else {
-      setIsModification(false);
-      setModificationIndex(selectedEvents.findIndex(e => e === null));
-    }
-    setDialogOpen(true);
-  };
-
   const openDialogForModification = (event: Event, index: number) => {
-    setSheetOpen(false); // Close sheet before opening dialog
+    setSheetOpen(false);
     setDialogEvent(event);
     setIsModification(true);
     setModificationIndex(index);
@@ -160,7 +127,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
           <Button variant="outline" size="icon" onClick={() => router.push('/')}>
             <ArrowLeft />
           </Button>
-          <h1 className="text-2xl font-bold capitalize">{categoryName}</h1>
+          <h1 className="text-2xl font-bold capitalize">Canales</h1>
         </div>
         <div className="flex items-center gap-2">
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -185,7 +152,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
                                         {index + 1}
                                     </div>
                                     <div className="relative w-28 h-auto aspect-video rounded-md overflow-hidden">
-                                            <Image
+                                        <Image
                                             src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
                                             alt={event.title}
                                             width={160}
@@ -225,32 +192,43 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
                     type="text"
-                    placeholder="Buscar en esta categoría..."
+                    placeholder="Buscar canal..."
                     className="w-full pl-10 pr-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                 <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={fetchCategoryEvents}>
-                     <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { /* No-op, visual only */ }}>
+                    <RotateCw className="h-4 w-4" />
                 </Button>
             </div>
         </div>
-
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
-          {filteredEvents.map((event, index) => (
-            <EventCard
-              key={`${event.title}-${index}`}
-              event={event}
-              selection={getEventSelection(event)}
-              onClick={() => openDialogForEvent(event)}
-            />
+          {filteredChannels.map((channel, index) => (
+             <Card 
+                key={index}
+                className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
+                onClick={() => handleChannelClick(channel)}
+            >
+                <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
+                    <Image
+                        src={channel.logo}
+                        alt={`${channel.name} logo`}
+                        width={120}
+                        height={67.5}
+                        className="object-contain max-h-full max-w-full"
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null; 
+                            target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                        }}
+                    />
+                </div>
+                <div className="p-3 bg-card">
+                    <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
+                </div>
+            </Card>
           ))}
         </div>
-         {isLoading && categoryEvents.length > 0 && (
-          <div className="flex w-full items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
       </main>
 
       {dialogEvent && (
@@ -261,7 +239,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
           onSelect={handleEventSelect}
           isModification={isModification}
           onRemove={() => handleEventRemove(modificationIndex!)}
-          windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
+          windowNumber={(modificationIndex ?? 0) + 1}
         />
       )}
     </div>
