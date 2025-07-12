@@ -7,8 +7,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Loader2, Tv } from 'lucide-react';
-import { toZonedTime } from 'date-fns-tz';
-import { isAfter, parseISO, isValid, addHours } from 'date-fns';
 import type { Event } from '@/components/event-list'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -43,42 +41,14 @@ export default function HomePage() {
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
-        const data: Event[] = await response.json();
+        const data: Omit<Event, 'status'> & { status: string }[] = await response.json();
         
-        const timeZone = 'America/Argentina/Buenos_Aires';
-        const now = toZonedTime(new Date(), timeZone);
-        
-        const eventsWithStatus = data.map(e => {
-            if (e.options.some(opt => opt.includes('embedrun.store') || opt.includes('embedstreams.top'))) {
-                return { ...e, status: 'En Vivo' as const };
-            }
-            if (e.title.includes('24/7')) {
-              return { ...e, status: 'En Vivo' as const };
-            }
-            let eventStartStr = `${e.date}T${e.time}:00`;
-            if (e.time.match(/^\d{10}$/)) {
-                 eventStartStr = new Date(parseInt(e.time, 10) * 1000).toISOString();
-            }
-            const eventStart = toZonedTime(parseISO(eventStartStr), timeZone);
-            if (!isValid(eventStart)) {
-              return { ...e, status: 'Finalizado' as const };
-            }
-            let durationInHours = 3;
-            const durationMatch = e.title.match(/(\d+)\s*(?:hs|horas)/i);
-            if (durationMatch && durationMatch[1]) {
-                durationInHours = parseInt(durationMatch[1], 10) + 1;
-            }
-            const eventEnd = addHours(eventStart, durationInHours);
-            if (isAfter(now, eventEnd)) return { ...e, status: 'Finalizado' as const };
-            if (isAfter(now, eventStart)) return { ...e, status: 'En Vivo' as const };
+        const processedEvents = data.map(e => ({
+          ...e,
+          status: e.status.charAt(0).toUpperCase() + e.status.slice(1) as Event['status'],
+        }));
 
-            const currentHour = now.getHours();
-            if (currentHour >= 21 || currentHour < 6) return { ...e, status: 'Desconocido' as const };
-
-            return { ...e, status: 'Próximo' as const };
-        });
-
-        setEvents(eventsWithStatus);
+        setEvents(processedEvents);
       } catch (error) {
         console.error('Error fetching events:', error);
       } finally {
@@ -246,5 +216,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
