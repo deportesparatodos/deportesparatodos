@@ -12,18 +12,19 @@ interface EventCardProps {
   event: Event;
   onSelect: (event: Event, optionUrl: string) => void;
   selection: { isSelected: boolean; window: number | null };
+  activeWindow: number;
 }
 
-export const EventCard: FC<EventCardProps> = ({ event, onSelect, selection }) => {
+export const EventCard: FC<EventCardProps> = ({ event, onSelect, selection, activeWindow }) => {
   return (
-    <div className="relative event-card-hover-container">
+    <div className="relative event-card-hover-container group">
       <div 
         className={cn(
-          "group w-full overflow-hidden rounded-lg transition-all duration-300 ease-in-out",
-          "hover:scale-110 hover:z-10 hover:shadow-2xl"
+          "w-full overflow-hidden rounded-lg transition-all duration-300 ease-in-out aspect-video",
+          "group-hover:scale-110 group-hover:z-10 group-hover:shadow-2xl"
         )}
       >
-        <div className="relative aspect-video">
+        <div className="relative w-full h-full">
           <Image
             src={event.image || 'https://placehold.co/600x400.png'}
             alt={event.title}
@@ -70,7 +71,7 @@ export const EventCard: FC<EventCardProps> = ({ event, onSelect, selection }) =>
                         onSelect(event, option);
                     }}
                 >
-                    {event.buttons[index] || `Opción ${index + 1}`}
+                    {`Ventana ${activeWindow + 1}: ${event.buttons[index] || `Opción ${index + 1}`}`}
                 </Button>
                 ))}
             </div>
