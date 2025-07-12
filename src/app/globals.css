@@ -115,4 +115,12 @@
   }
 }
 
+@layer utilities {
+  .event-card-hover-container .event-card-options {
+    @apply invisible opacity-0 scale-95;
+  }
+  .event-card-hover-container:hover .event-card-options {
+    @apply visible opacity-100 scale-100;
+  }
+}
     

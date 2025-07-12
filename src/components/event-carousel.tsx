@@ -31,10 +31,11 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, onSelect,
         opts={{
           align: "start",
           dragFree: true,
+          slidesToScroll: 'auto',
         }}
         className="w-full relative"
       >
-        <CarouselContent className="-ml-4">
+        <CarouselContent className="-ml-4 py-4">
           {events.map((event, index) => (
             <CarouselItem key={`${event.title}-${index}`} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
               <EventCard 
@@ -45,8 +46,8 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, onSelect,
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2" />
-        <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2" />
+        <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
+        <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
       </Carousel>
     </div>
   );

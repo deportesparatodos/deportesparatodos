@@ -134,7 +134,7 @@ export default function HomePage() {
                              <h3 className="text-sm font-semibold text-muted-foreground">Seleccionados:</h3>
                             <div className="flex -space-x-4">
                                 {selectedEvents.map((event, index) => event && (
-                                    <div key={index} className="relative h-12 w-12 rounded-md border-2 border-primary ring-2 ring-background aspect-square">
+                                    <div key={index} className="relative h-12 w-auto rounded-md border-2 border-primary ring-2 ring-background aspect-video">
                                         <Image
                                             src={event.image || 'https://placehold.co/100x100.png'}
                                             alt={event.title}
@@ -167,27 +167,27 @@ export default function HomePage() {
                 {/* Categories Carousel */}
                 <div className="w-full space-y-4">
                     <h2 className="text-2xl font-bold">Categorías</h2>
-                    <Carousel
+                     <Carousel
                         opts={{
-                        align: "start",
-                        dragFree: true,
+                          align: "start",
+                          dragFree: true,
                         }}
-                        className="w-full"
-                    >
+                        className="w-full relative"
+                      >
                         <CarouselContent className="-ml-4">
-                        {categories.map((category) => (
-                            <CarouselItem key={category} className="basis-auto pl-4">
-                                <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
-                                    <Button variant="secondary" className="h-12 px-6 text-lg">
-                                        {category}
-                                    </Button>
-                                </Link>
-                            </CarouselItem>
-                        ))}
+                          {categories.map((category) => (
+                              <CarouselItem key={category} className="basis-auto pl-4">
+                                  <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
+                                      <Button variant="secondary" className="h-12 px-6 text-lg">
+                                          {category}
+                                      </Button>
+                                  </Link>
+                              </CarouselItem>
+                          ))}
                         </CarouselContent>
-                        <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2" />
-                        <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2" />
-                    </Carousel>
+                        <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
+                        <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
+                      </Carousel>
                 </div>
                 
                 <EventCarousel title="En Vivo" events={liveEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection}/>
