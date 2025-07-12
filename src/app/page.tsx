@@ -120,11 +120,12 @@ export default function HomePage() {
       const categorySet = new Set<string>();
       events.forEach((event) => {
         if (event.category) {
-            categorySet.add(event.category);
+            const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
+            categorySet.add(category);
         }
       });
       const filteredCategories = Array.from(categorySet).filter(category => 
-        events.some(event => event.category === category)
+        events.some(event => (event.category.toLowerCase() === 'other' ? 'Otros' : event.category) === category)
       );
       return filteredCategories;
   }, [events]);
@@ -144,7 +145,6 @@ export default function HomePage() {
         newSelectedEvents[targetIndex] = eventWithSelection;
         setSelectedEvents(newSelectedEvents);
     } else {
-        // Handle case where all 9 slots are full, maybe show a toast
         console.log("All selection slots are full.");
     }
     
@@ -297,7 +297,7 @@ export default function HomePage() {
 
         <main className="flex-grow overflow-y-auto">
             <div className="space-y-12 p-4 md:p-8">
-                 <div className="mb-8 w-full">
+                 <div className="w-full">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input 
@@ -314,8 +314,7 @@ export default function HomePage() {
                 </div>
 
                 {categories.length > 0 && (
-                    <div className="w-full space-y-4">
-                        <h2 className="text-2xl font-bold">Categorías</h2>
+                    <div className="w-full mt-2">
                          <Carousel
                             opts={{
                             align: "start",
@@ -418,3 +417,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
