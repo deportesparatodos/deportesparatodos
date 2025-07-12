@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toZonedTime } from 'date-fns-tz';
 import { isToday } from 'date-fns';
+import { EventSelectionDialog } from '@/components/event-selection-dialog';
 
 export default function HomePage() {
   const router = useRouter();
@@ -26,6 +27,11 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [activeWindow, setActiveWindow] = useState(0);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  const [isModification, setIsModification] = useState(false);
+  const [modificationIndex, setModificationIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -71,9 +77,11 @@ export default function HomePage() {
     const timeZone = 'America/New_York';
     return events.filter(e => {
         try {
+            // The API date is a string like "2025-07-12"
             const eventDate = toZonedTime(e.date, timeZone);
             return isToday(eventDate);
         } catch (error) {
+            console.error("Invalid date for event:", e.title, e.date);
             return false;
         }
     });
@@ -83,9 +91,11 @@ export default function HomePage() {
   const upcomingEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Próximo').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
   const unknownEvents = useMemo(() => todayEvents.filter((e) => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time)), [todayEvents]);
   const finishedEvents = useMemo(() => {
+    // Filter all events from the original list, not just today's
     const allFinished = events.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    
+    const timeZone = 'America/New_York';
     const todayFinished = allFinished.filter(e => {
-        const timeZone = 'America/New_York';
         try {
             const eventDate = toZonedTime(e.date, timeZone);
             return isToday(eventDate);
@@ -93,9 +103,12 @@ export default function HomePage() {
             return false;
         }
     });
+    // Exclude today's finished events from the rest to avoid duplication
     const otherFinished = allFinished.filter(e => !todayFinished.includes(e));
+
     return [...todayFinished, ...otherFinished];
   }, [events]);
+
 
   const categories = useMemo(() => {
       const categorySet = new Set<string>();
@@ -110,17 +123,25 @@ export default function HomePage() {
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...selectedEvents];
     const eventWithSelection = { ...event, selectedOption: optionUrl };
-    newSelectedEvents[activeWindow] = eventWithSelection;
+
+    const targetIndex = isModification ? modificationIndex! : activeWindow;
+    newSelectedEvents[targetIndex] = eventWithSelection;
     setSelectedEvents(newSelectedEvents);
-    // Move to the next empty window or cycle back
-    let nextWindow = (activeWindow + 1) % 9;
-    for(let i=0; i<9; i++) {
-        if (!newSelectedEvents[nextWindow]) {
-            break;
+
+    if (!isModification) {
+        let nextWindow = (activeWindow + 1) % 9;
+        for(let i=0; i<9; i++) {
+            if (!newSelectedEvents[nextWindow]) {
+                break;
+            }
+            nextWindow = (nextWindow + 1) % 9;
         }
-        nextWindow = (nextWindow + 1) % 9;
+        setActiveWindow(nextWindow);
     }
-    setActiveWindow(nextWindow);
+    
+    setDialogOpen(false);
+    setIsModification(false);
+    setModificationIndex(null);
   };
 
   const handleEventRemove = (windowIndex: number) => {
@@ -128,6 +149,9 @@ export default function HomePage() {
     newSelectedEvents[windowIndex] = null;
     setSelectedEvents(newSelectedEvents);
     setActiveWindow(windowIndex);
+    setDialogOpen(false);
+    setIsModification(false);
+    setModificationIndex(null);
   };
   
   const getEventSelection = (event: Event) => {
@@ -144,6 +168,26 @@ export default function HomePage() {
     localStorage.setItem('numCameras', selectedEvents.filter(Boolean).length.toString());
     router.push('/view');
   };
+  
+  const openDialogForEvent = (event: Event) => {
+    setDialogEvent(event);
+    const selection = getEventSelection(event);
+    if(selection.isSelected) {
+      setIsModification(true);
+      setModificationIndex(selection.window! - 1);
+    } else {
+      setIsModification(false);
+      setModificationIndex(null);
+    }
+    setDialogOpen(true);
+  };
+  
+  const openDialogForModification = (event: Event, index: number) => {
+    setDialogEvent(event);
+    setIsModification(true);
+    setModificationIndex(index);
+    setDialogOpen(true);
+  }
 
   if (isLoading) {
     return (
@@ -168,28 +212,57 @@ export default function HomePage() {
                     />
                 </Link>
                 {selectedEvents.filter(Boolean).length > 0 && (
-                    <div className="hidden md:flex items-center gap-2">
-                         <div className="flex items-center gap-2">
-                             <h3 className="text-sm font-semibold text-muted-foreground">Seleccionados:</h3>
-                            <div className="flex -space-x-4">
-                                {selectedEvents.map((event, index) => event && (
-                                    <div key={index} className="relative h-12 w-auto rounded-md border-2 border-primary ring-2 ring-background aspect-video">
-                                        <Image
-                                            src={event.image || 'https://placehold.co/100x100.png'}
-                                            alt={event.title}
-                                            layout="fill"
-                                            objectFit="cover"
-                                            className="rounded-md"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
+                     <div className="hidden md:flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-muted-foreground">Seleccionados:</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {[...Array(9)].map((_, i) => {
+                                const event = selectedEvents[i];
+                                if (event) {
+                                    return (
+                                        <Button
+                                            key={i}
+                                            onClick={() => openDialogForModification(event, i)}
+                                            variant="outline"
+                                            className="w-10 h-10 p-0"
+                                        >
+                                            {i + 1}
+                                        </Button>
+                                    );
+                                }
+                                return (
+                                     <Button
+                                        key={i}
+                                        onClick={() => setActiveWindow(i)}
+                                        variant={activeWindow === i ? 'default' : 'outline'}
+                                        className="w-10 h-10"
+                                    >
+                                        {i + 1}
+                                    </Button>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
             </div>
 
             <div className="flex items-center gap-4">
+                 {selectedEvents.filter(Boolean).length === 0 && (
+                     <div className="hidden md:flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-muted-foreground">Ventana Activa:</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {[...Array(9)].map((_, i) => (
+                                <Button
+                                    key={i}
+                                    onClick={() => setActiveWindow(i)}
+                                    variant={activeWindow === i ? 'default' : 'outline'}
+                                    className="w-10 h-10"
+                                >
+                                    {i + 1}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                )}
                 <Button
                     onClick={handleStartView}
                     disabled={selectedEvents.filter(Boolean).length === 0}
@@ -230,12 +303,24 @@ export default function HomePage() {
                     </div>
                 )}
                 
-                <EventCarousel title="En Vivo" events={liveEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow} setActiveWindow={setActiveWindow} selectedEvents={selectedEvents} onEventRemove={handleEventRemove} />
-                <EventCarousel title="Próximos" events={upcomingEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow} setActiveWindow={setActiveWindow} selectedEvents={selectedEvents} onEventRemove={handleEventRemove} />
-                <EventCarousel title="Estado Desconocido" events={unknownEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow} setActiveWindow={setActiveWindow} selectedEvents={selectedEvents} onEventRemove={handleEventRemove} />
-                <EventCarousel title="Finalizados" events={finishedEvents} onSelect={handleEventSelect} getEventSelection={getEventSelection} activeWindow={activeWindow} setActiveWindow={setActiveWindow} selectedEvents={selectedEvents} onEventRemove={handleEventRemove} />
+                <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
             </div>
         </main>
+        
+        {dialogEvent && (
+            <EventSelectionDialog
+                isOpen={dialogOpen}
+                onOpenChange={setDialogOpen}
+                event={dialogEvent}
+                onSelect={handleEventSelect}
+                isModification={isModification}
+                onRemove={() => handleEventRemove(modificationIndex!)}
+                windowNumber={isModification ? modificationIndex! + 1 : activeWindow + 1}
+            />
+        )}
     </div>
   );
 }
