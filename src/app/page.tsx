@@ -49,7 +49,7 @@ export default function HomePage() {
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
+      const response = await fetch('https://cors-anywhere.herokuapp.com/https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
@@ -106,12 +106,20 @@ export default function HomePage() {
         
         const filteredEvents = events.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
+        
+        const combinedResults = [...filteredEvents, ...sChannels];
 
-        filteredEvents.sort((a, b) => {
-            return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
+        combinedResults.sort((a, b) => {
+            const statusA = 'status' in a ? (a as Event).status : 'Channel';
+            const statusB = 'status' in b ? (b as Event).status : 'Channel';
+
+            const orderA = statusA === 'Channel' ? 5 : (statusOrder[statusA] ?? 6);
+            const orderB = statusB === 'Channel' ? 5 : (statusOrder[statusB] ?? 6);
+
+            return orderA - orderB;
         });
-
-        searchResults = [...filteredEvents, ...sChannels];
+        
+        searchResults = combinedResults;
     }
 
     return { 
@@ -305,7 +313,7 @@ export default function HomePage() {
         </header>
 
         <main className="flex-grow overflow-y-auto p-4 md:p-8">
-            <div className="space-y-4">
+            <div className="space-y-2">
                 <div className="w-full">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -323,7 +331,7 @@ export default function HomePage() {
                 </div>
 
                 {searchTerm ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
                         {searchResults.map((item, index) => {
                             if ('url' in item) { // It's a Channel
                                 return (
@@ -365,7 +373,7 @@ export default function HomePage() {
                     </div>
                 ) : (
                     <>
-                        <div className="w-full mt-2">
+                        <div className="w-full pt-1 pb-1">
                              <Carousel
                                 opts={{
                                 align: "start",

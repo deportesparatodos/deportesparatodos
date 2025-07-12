@@ -37,7 +37,7 @@ export default function LiveEventsPage() {
   const fetchLiveEvents = useCallback(async () => {
     setIsLoading(true);
     try {
-        const response = await fetch('https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
+        const response = await fetch('https://cors-anywhere.herokuapp.com/https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
