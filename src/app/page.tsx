@@ -233,7 +233,7 @@ export default function HomePage() {
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
         <header className="sticky top-0 z-30 flex h-20 w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:px-8">
             <div className="flex items-center gap-6">
-                <Link href="/" className="shrink-0">
+                <Link href="/" className="shrink-0 py-2">
                     <Image
                         src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
@@ -427,5 +427,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
