@@ -212,7 +212,7 @@ export default function LiveEventsPage() {
             <Button
                 onClick={handleStartView}
                 disabled={selectedEvents.filter(Boolean).length === 0}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white my-[5px]"
             >
                 <Tv className="mr-2 h-4 w-4" />
                 Iniciar Vista ({selectedEvents.filter(Boolean).length})
