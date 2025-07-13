@@ -51,7 +51,7 @@ export function CameraConfigurationComponent({ events, order, onOrderChange, eve
                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
                         {currentIndex + 1}
                     </div>
-                  <div className="relative w-24 h-auto aspect-video rounded-md overflow-hidden">
+                  <div className="relative w-24 h-auto aspect-video rounded-md overflow-hidden flex-shrink-0">
                     <Image
                       src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
                       alt={event.title}
@@ -65,8 +65,8 @@ export function CameraConfigurationComponent({ events, order, onOrderChange, eve
                       }}
                     />
                   </div>
-                  <p className="text-sm font-semibold flex-grow truncate">{event.title}</p>
-                  <div className="flex flex-col gap-1">
+                  <p className="text-sm font-semibold flex-grow">{event.title}</p>
+                  <div className="flex flex-col gap-1 flex-shrink-0">
                     <Button 
                       variant="ghost" 
                       size="icon" 
