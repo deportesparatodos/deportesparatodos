@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -47,6 +47,9 @@ import { Badge } from '@/components/ui/badge';
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isReplaceMode = searchParams.get('replace') === 'true';
+
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
@@ -88,14 +91,16 @@ export default function HomePage() {
     fetchEvents();
 
       const storedSelectedEvents = localStorage.getItem('selectedEvents');
-      if (storedSelectedEvents) {
+      if (storedSelectedEvents && !isReplaceMode) {
         setSelectedEvents(JSON.parse(storedSelectedEvents));
       }
-  }, [fetchEvents]);
+  }, [fetchEvents, isReplaceMode]);
 
   useEffect(() => {
-    localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-  }, [selectedEvents]);
+    if (!isReplaceMode) {
+        localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
+    }
+  }, [selectedEvents, isReplaceMode]);
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
@@ -166,9 +171,14 @@ export default function HomePage() {
   }, [events]);
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
-    const newSelectedEvents = [...selectedEvents];
     const eventWithSelection = { ...event, selectedOption: optionUrl };
-    
+
+    if (isReplaceMode) {
+        window.parent.postMessage({ type: 'REPLACE_EVENT', newEvent: eventWithSelection }, '*');
+        return;
+    }
+
+    const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
     if (isModification && modificationIndex !== null) {
         targetIndex = modificationIndex;
@@ -198,6 +208,7 @@ export default function HomePage() {
   };
   
   const getEventSelection = (event: Event) => {
+    if (isReplaceMode) return { isSelected: false, window: null };
     const selection = selectedEvents.map((se, i) => se && se.title === event.title ? i : null).filter(i => i !== null);
     if (selection.length > 0) {
       return { isSelected: true, window: selection[0]! + 1 };
@@ -214,13 +225,15 @@ export default function HomePage() {
   
   const openDialogForEvent = (event: Event) => {
     setDialogEvent(event);
-    const selection = getEventSelection(event);
-    if(selection.isSelected) {
-      setIsModification(true);
-      setModificationIndex(selection.window! - 1);
-    } else {
-      setIsModification(false);
-      setModificationIndex(selectedEvents.findIndex(e => e === null)); // Target first empty slot
+    if (!isReplaceMode) {
+        const selection = getEventSelection(event);
+        if(selection.isSelected) {
+          setIsModification(true);
+          setModificationIndex(selection.window! - 1);
+        } else {
+          setIsModification(false);
+          setModificationIndex(selectedEvents.findIndex(e => e === null)); // Target first empty slot
+        }
     }
     setDialogOpen(true);
   };
@@ -242,6 +255,7 @@ export default function HomePage() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
+    if (isReplaceMode) return;
     setSheetOpen(false); // Close sheet before opening dialog
     setDialogEvent(event);
     setIsModification(true);
@@ -261,11 +275,12 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-        <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-2 md:px-8 backdrop-blur-sm">
+        {!isReplaceMode && (
+         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-2 md:px-8 backdrop-blur-sm">
             <div className="flex items-center gap-2">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="ml-[-8px] rounded-none">
+                        <Button variant="ghost" size="icon" className="rounded-none">
                             <Menu />
                         </Button>
                     </SheetTrigger>
@@ -371,12 +386,6 @@ export default function HomePage() {
                                             <p>Deportes para Todos no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.</p>
                                             <p>Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.</p>
                                             <p>Nos reservamos el derecho de incluir o remover campañas publicitarias en cualquier momento, y recomendamos a los usuarios consultar la política de privacidad de cada plataforma externa a la que accedan desde este sitio.</p>
-                                            <h3 className="font-bold text-foreground">Relación con los dueños del contenido:</h3>
-                                            <p>Deportes para Todos no tiene relación alguna con los titulares de los derechos de las transmisiones embebidas, ni con las plataformas que los alojan. Todo el contenido audiovisual visualizado mediante iframes es responsabilidad exclusiva del sitio externo que lo provee.</p>
-                                            <h3 className="font-bold text-foreground">Mecanismos de seguridad:</h3>
-                                            <p>No se utilizan mecanismos técnicos para eludir bloqueos, restricciones regionales (geobloqueos) ni sistemas de autenticación de las plataformas externas.</p>
-                                            <h3 className="font-bold text-foreground">Cookies y datos del usuario:</h3>
-                                            <p>Este sitio puede utilizar cookies de terceros para ofrecer una mejor experiencia de usuario, realizar estadísticas anónimas de uso o mostrar anuncios relevantes. Al navegar por Deportes para Todos usted acepta este uso de cookies. Recomendamos consultar las políticas de privacidad de los servicios externos vinculados a este sitio.</p>
                                             <p>El contenido patrocinado relacionado con plataformas de iGaming está destinado únicamente a usuarios mayores de 18 años. Deportes para Todos no se responsabiliza por el acceso a dichas plataformas por parte de menores de edad.</p>
                                             <p>This Site is affiliated with Monumetric (dba for The Blogger Network, LLC) for the purposes of placing advertising on the Site, and Monumetric will collect and use certain data for advertising purposes. To learn more about Monumetric’s data usage, click here: <a href="https://www.monumetric.com/publisher-advertising-privacy-policy/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Publisher Advertising Privacy</a></p>
                                             <h3 className="font-bold text-foreground">Notificaciones de derechos de autor:</h3>
@@ -561,9 +570,25 @@ export default function HomePage() {
                 </Button>
             </div>
         </header>
+        )}
 
-        <main className="flex-grow overflow-y-auto p-4 md:p-8">
+        <main className={cn("flex-grow overflow-y-auto p-4 md:p-8", isReplaceMode && "pt-0")}>
             <div className="space-y-2">
+                 {isReplaceMode && (
+                    <div className="relative mb-4">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Buscar evento o canal para reemplazar..."
+                            className="w-full pl-10 pr-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={fetchEvents}>
+                            <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
+                )}
                 {searchTerm ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
                         {searchResults.map((item, index) => {
@@ -607,6 +632,7 @@ export default function HomePage() {
                     </div>
                 ) : (
                     <>
+                        {!isReplaceMode && (
                         <div className="w-full space-y-4 pt-1 pb-1">
                              <Carousel
                                 opts={{
@@ -649,6 +675,7 @@ export default function HomePage() {
                                 </CarouselContent>
                             </Carousel>
                         </div>
+                        )}
                         
                         {isMobile ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 pt-4">
@@ -691,7 +718,7 @@ export default function HomePage() {
                 onOpenChange={setDialogOpen}
                 event={dialogEvent}
                 onSelect={handleEventSelect}
-                isModification={isModification}
+                isModification={isModification && !isReplaceMode}
                 onRemove={() => handleEventRemove(modificationIndex!)}
                 windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
             />

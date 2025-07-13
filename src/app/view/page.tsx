@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { X, Loader2, Menu, MessageSquare, Settings } from "lucide-react";
+import { X, Loader2, MessageSquare } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -43,12 +43,41 @@ function ViewPageContent() {
 
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
+  const [isReplaceDialogOpen, setReplaceDialogOpen] = useState(false);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
+
   const handleReloadCamera = (index: number) => {
     setReloadCounters(prevCounters => {
       const newCounters = [...prevCounters];
       newCounters[index] = (newCounters[index] || 0) + 1;
       return newCounters;
     });
+  };
+
+  const handleRemoveCamera = (indexToRemove: number) => {
+    setSelectedEvents(prevEvents => {
+        const newEvents = [...prevEvents];
+        newEvents[indexToRemove] = null;
+        localStorage.setItem('selectedEvents', JSON.stringify(newEvents));
+        
+        setViewOrder(prevOrder => {
+            const newOrder = prevOrder.filter(i => i !== indexToRemove);
+            while(newOrder.length < 9) {
+                const missingIndex = Array.from({length: 9}, (_, i) => i).find(i => !newOrder.includes(i));
+                if(missingIndex !== undefined) newOrder.push(missingIndex);
+                else break;
+            }
+            localStorage.setItem('viewOrder', JSON.stringify(newOrder));
+            return newOrder;
+        });
+
+        return newEvents;
+    });
+  };
+
+  const handleOpenReplaceDialog = (index: number) => {
+    setReplaceIndex(index);
+    setReplaceDialogOpen(true);
   };
 
   useEffect(() => {
@@ -106,33 +135,71 @@ function ViewPageContent() {
             console.error("Failed to parse viewOrder from localStorage", e);
         }
     }
-  }, []);
+
+    const handleMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) {
+            return;
+        }
+
+        if (event.data.type === 'REPLACE_EVENT' && replaceIndex !== null) {
+            const { newEvent } = event.data;
+            
+            setSelectedEvents(prevEvents => {
+                const newEvents = [...prevEvents];
+                newEvents[replaceIndex] = newEvent;
+                localStorage.setItem('selectedEvents', JSON.stringify(newEvents));
+                return newEvents;
+            });
+            
+            setReplaceDialogOpen(false);
+            setReplaceIndex(null);
+        }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => {
+        window.removeEventListener('message', handleMessage);
+    };
+
+  }, [replaceIndex]);
 
   const handleOrderChange = (newOrder: number[]) => {
-    setViewOrder(newOrder);
-    localStorage.setItem('viewOrder', JSON.stringify(newOrder));
+    const fullNewOrder = [...newOrder];
+    const presentIndexes = new Set(newOrder);
+    for(let i=0; i<9; i++) {
+        if(!presentIndexes.has(i)) {
+            fullNewOrder.push(i);
+        }
+    }
+    setViewOrder(fullNewOrder);
+    localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
   };
 
   const activeEvents = useMemo(() => {
-    return selectedEvents.filter(event => event !== null) as Event[];
-  }, [selectedEvents]);
+    return viewOrder
+      .map(index => selectedEvents[index])
+      .filter(event => event !== null) as Event[];
+  }, [selectedEvents, viewOrder]);
 
   const numCameras = activeEvents.length;
 
   const urlsToDisplay = useMemo(() => {
-      return activeEvents.map((event, index) => ({
+      return viewOrder.map(originalIndex => {
+        const event = selectedEvents[originalIndex];
+        if (!event) return null;
+        return {
           url: (event as any).selectedOption,
-          originalIndex: selectedEvents.findIndex(e => e?.title === event.title && (e as any).selectedOption === (event as any).selectedOption),
-          reloadKey: reloadCounters[index] || 0,
-      }));
-  }, [activeEvents, selectedEvents, reloadCounters]);
+          originalIndex: originalIndex,
+          reloadKey: reloadCounters[originalIndex] || 0,
+        };
+      }).filter(item => item !== null);
+  }, [selectedEvents, viewOrder, reloadCounters]);
 
 
   if (!isMounted) {
     return <Loading />;
   }
   
-  if (urlsToDisplay.filter(item => item.url && item.url.trim() !== "").length === 0) {
+  if (urlsToDisplay.filter(item => item?.url && item.url.trim() !== "").length === 0) {
     return (
       <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
         <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
@@ -145,10 +212,9 @@ function ViewPageContent() {
     );
   }
 
-  const numIframes = numCameras;
   let gridContainerClasses = "grid flex-grow w-full h-full";
 
-  switch (numIframes) {
+  switch (numCameras) {
     case 1:
       gridContainerClasses += " grid-cols-1 grid-rows-1";
       break;
@@ -190,6 +256,17 @@ function ViewPageContent() {
               </div>
           </DialogContent>
       </Dialog>
+
+      <Dialog open={isReplaceDialogOpen} onOpenChange={setReplaceDialogOpen}>
+        <DialogContent className="p-0 border-0 w-[95vw] h-[90vh] max-w-[95vw] flex flex-col">
+            <DialogHeader className="p-2 border-b">
+                <DialogTitle>Selecciona un nuevo evento para la ventana {replaceIndex !== null ? replaceIndex + 1 : ''}</DialogTitle>
+            </DialogHeader>
+            <iframe src="/?replace=true" className="w-full h-full border-0" title="Reemplazar evento" />
+        </DialogContent>
+      </Dialog>
+
+
       <div className="relative flex flex-col h-screen flex-grow">
         <div
           className={cn(
@@ -204,10 +281,12 @@ function ViewPageContent() {
         >
           
           <CameraConfigurationComponent
-             events={activeEvents}
              order={viewOrder.filter(i => selectedEvents[i] !== null)}
              onOrderChange={handleOrderChange}
              eventDetails={selectedEvents}
+             onReload={handleReloadCamera}
+             onRemove={handleRemoveCamera}
+             onReplace={handleOpenReplaceDialog}
           />
 
           {isChatEnabled && (
@@ -239,33 +318,27 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {urlsToDisplay.map((item) => {
-            if (!item.url) return null;
-
-            const logicalIndex = item.originalIndex;
-            const eventData = selectedEvents[logicalIndex];
-
-            // Find the current visual position of this item
-            const visualOrder = viewOrder.indexOf(logicalIndex);
-
+          {urlsToDisplay.map((item, visualIndex) => {
+            if (!item || !item.url) return null;
+            
             const windowClasses: string[] = ["overflow-hidden", "relative", "bg-black"];
-             if (numIframes === 3) {
+             if (numCameras === 3) {
                 if (isMobile) {
                     windowClasses.push('col-span-1', 'row-span-1');
                 } else {
                     windowClasses.push(
                         'md:col-span-1 md:row-span-1',
-                        visualOrder === 0 ? 'md:col-span-2' : ''
+                        visualIndex === 0 ? 'md:col-span-2' : ''
                     );
                 }
             }
-             if (numIframes >= 5 && numIframes <=6) {
+             if (numCameras >= 5 && numCameras <=6) {
                 if(isMobile) {
                     windowClasses.push('col-span-1', 'row-span-1');
                 } else {
                      windowClasses.push(
                         'md:col-span-1 md:row-span-1',
-                        visualOrder === 0 || visualOrder === 1 ? 'md:col-span-3 md:row-span-1' : 'md:col-span-2 md:row-span-1'
+                        visualIndex === 0 || visualIndex === 1 ? 'md:col-span-3 md:row-span-1' : 'md:col-span-2 md:row-span-1'
                     );
                 }
             }
@@ -281,7 +354,7 @@ function ViewPageContent() {
             return (
               <div
                 key={`${item.originalIndex}-${item.reloadKey}`}
-                className={cn(windowClasses, getOrderClass(visualOrder + 1))}
+                className={cn(windowClasses)}
               >
                 <iframe
                   src={iframeSrc}
