@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -21,7 +21,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { 
     Dialog,
@@ -120,17 +119,7 @@ export default function HomePage() {
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-    // Also save order when selection changes to keep it in sync
-    const activeIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
-    const newOrder = [...new Set([...viewOrder.filter(i => activeIndexes.includes(i)), ...activeIndexes])];
-     while(newOrder.length < 9) {
-        const missing = Array.from({length: 9}, (_,i) => i).find(i => !newOrder.includes(i));
-        if (missing !== undefined) newOrder.push(missing);
-        else break;
-    }
-    setViewOrder(newOrder);
-    localStorage.setItem('viewOrder', JSON.stringify(newOrder));
-  }, [selectedEvents, viewOrder]);
+  }, [selectedEvents]);
   
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
@@ -311,7 +300,7 @@ export default function HomePage() {
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="rounded-none">
-                            <Menu />
+                            <X className="h-6 w-6" />
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="p-0">
@@ -734,3 +723,5 @@ export default function HomePage() {
         )}
     </div>
   );
+  
+    
