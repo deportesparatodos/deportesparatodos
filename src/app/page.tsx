@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Loader2, Tv, X, Menu, Search, RotateCw } from 'lucide-react';
+import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -266,21 +266,22 @@ export default function HomePage() {
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left">
-                        <SheetHeader className="items-center">
+                        <SheetHeader className="items-center border-b border-border pb-4">
                             <Image
                                 src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                                 alt="Deportes Para Todos Logo"
-                                width={150}
-                                height={37.5}
+                                width={200}
+                                height={50}
                                 priority
-                                className="mb-4"
                             />
-                            <SheetTitle>Menú</SheetTitle>
                         </SheetHeader>
                         <div className="py-4 space-y-2">
                              <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start">Aviso Legal</Button>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
+                                        <FileText />
+                                        Aviso Legal
+                                    </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-2xl">
                                     <DialogHeader>
@@ -340,7 +341,10 @@ export default function HomePage() {
                             </Dialog>
                              <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start">Errores y Soluciones</Button>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
+                                        <AlertCircle />
+                                        Errores y Soluciones
+                                    </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-2xl">
                                     <DialogHeader>
@@ -588,3 +592,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
