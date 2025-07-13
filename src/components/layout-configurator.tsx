@@ -6,9 +6,8 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowUp, ArrowDown, RotateCw, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -16,6 +15,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { cn } from '@/lib/utils';
 
 interface LayoutConfiguratorProps {
   gridGap: number;
@@ -152,10 +152,14 @@ export function LayoutConfigurator({
                           </div>
                           
                           <div className="flex-grow flex flex-col gap-2">
-                              <p className="text-sm font-semibold break-words cursor-pointer" onClick={() => onModify(event, originalIndex)}>
+                              <p className={cn(
+                                "text-sm font-semibold break-words",
+                                !isViewPage && "cursor-pointer"
+                               )} 
+                                onClick={() => !isViewPage && onModify(event, originalIndex)}>
                                 {event.title}
                               </p>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center justify-center gap-1">
                                   <Button 
                                     variant="ghost" 
                                     size="icon" 
@@ -200,6 +204,14 @@ export function LayoutConfigurator({
                    {activeEventsCount === 0 && (
                       <p className="text-muted-foreground text-center pt-8">No hay eventos seleccionados.</p>
                   )}
+                   {isViewPage && (
+                     <Button asChild variant="outline" className="w-full mt-4">
+                        <Link href="/">
+                          <Plus className="mr-2 h-4 w-4" />
+                          Añadir Evento
+                        </Link>
+                      </Button>
+                   )}
                 </div>
            </AccordionContent>
         </AccordionItem>
@@ -207,3 +219,5 @@ export function LayoutConfigurator({
     </div>
   );
 }
+
+    

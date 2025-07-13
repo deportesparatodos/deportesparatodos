@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
@@ -125,9 +125,7 @@ export default function HomePage() {
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-  }, [selectedEvents]);
-  
-  useEffect(() => {
+    
     const activeEventIndexes = selectedEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
     const currentOrderActive = viewOrder.filter(i => activeEventIndexes.includes(i));
     const newOrder = [...currentOrderActive];
@@ -142,7 +140,8 @@ export default function HomePage() {
         setViewOrder(newOrder);
         localStorage.setItem('viewOrder', JSON.stringify(newOrder));
     }
-  }, [selectedEvents]); // Removed viewOrder from dependencies to fix infinite loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEvents]); 
 
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
@@ -215,7 +214,7 @@ export default function HomePage() {
       const categorySet = new Set<string>();
       events.forEach((event) => {
         if (event.category) {
-            const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
+            const category = event.category.toLowerCase() === 'other' ? 'Otros' : e.category;
             categorySet.add(category);
         }
       });
@@ -667,8 +666,8 @@ export default function HomePage() {
                                 <div className="flex items-center justify-between mb-2">
                                     <h2 className="text-2xl font-bold">Categorías</h2>
                                     <div className="flex items-center gap-2">
-                                        <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0" />
-                                        <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0" />
+                                        <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
+                                        <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
                                     </div>
                                 </div>
                                 <CarouselContent className="-ml-4">
@@ -750,4 +749,6 @@ export default function HomePage() {
   );
   
 }
+    
+
     
