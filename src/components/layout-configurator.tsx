@@ -66,7 +66,7 @@ export function LayoutConfigurator({
 
   return (
     <div className="flex flex-col h-full">
-      <Accordion type="multiple" defaultValue={['item-1', 'item-2', 'item-3']} className="w-full space-y-4">
+      <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
         <AccordionItem value="item-1" className="border rounded-lg px-4">
           <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
           <AccordionContent className="pt-2">
@@ -138,14 +138,13 @@ export function LayoutConfigurator({
         <AccordionItem value="item-3" className="border rounded-lg px-4">
           <AccordionTrigger>Eventos Seleccionados ({activeEventsCount})</AccordionTrigger>
            <AccordionContent className="pt-2">
-             <ScrollArea className="h-64">
-                <div className="space-y-4 pr-4">
+             <div className="space-y-4 pr-1">
                   {order.map((originalIndex, currentIndex) => {
                     const event = eventDetails[originalIndex];
                     if (!event) return null;
 
                     return (
-                      <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50 cursor-pointer" onClick={() => onModify(event, originalIndex)}>
+                      <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
                          <div 
                             className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
                          >
@@ -153,7 +152,7 @@ export function LayoutConfigurator({
                           </div>
                           
                           <div className="flex-grow flex flex-col gap-2">
-                              <p className="text-sm font-semibold break-words">
+                              <p className="text-sm font-semibold break-words cursor-pointer" onClick={() => onModify(event, originalIndex)}>
                                 {event.title}
                               </p>
                               <div className="flex items-center gap-1">
@@ -202,7 +201,6 @@ export function LayoutConfigurator({
                       <p className="text-muted-foreground text-center pt-8">No hay eventos seleccionados.</p>
                   )}
                 </div>
-              </ScrollArea>
            </AccordionContent>
         </AccordionItem>
       </Accordion>

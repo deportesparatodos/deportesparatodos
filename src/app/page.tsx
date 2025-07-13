@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -96,7 +96,12 @@ export default function HomePage() {
 
       const storedSelectedEvents = localStorage.getItem('selectedEvents');
       if (storedSelectedEvents) {
-        setSelectedEvents(JSON.parse(storedSelectedEvents));
+        try {
+            const parsedEvents = JSON.parse(storedSelectedEvents);
+            if(Array.isArray(parsedEvents)) {
+                setSelectedEvents(parsedEvents);
+            }
+        } catch (e) { console.error("Failed to parse selectedEvents from localStorage", e); }
       }
        const storedViewOrder = localStorage.getItem('viewOrder');
       if (storedViewOrder) {
@@ -120,6 +125,16 @@ export default function HomePage() {
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
+    const activeEventIndexes = selectedEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
+    const currentOrderActive = viewOrder.filter(i => activeEventIndexes.includes(i));
+    const newOrder = [...currentOrderActive];
+    for (let i = 0; i < 9; i++) {
+        if(!newOrder.includes(i)) {
+            newOrder.push(i);
+        }
+    }
+    setViewOrder(newOrder);
+    localStorage.setItem('viewOrder', JSON.stringify(newOrder));
   }, [selectedEvents]);
   
   const handleOrderChange = (newOrder: number[]) => {
@@ -301,7 +316,7 @@ export default function HomePage() {
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="rounded-none">
-                            <X className="h-6 w-6" />
+                            <Menu className="h-6 w-6" />
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="p-0">
@@ -496,7 +511,6 @@ export default function HomePage() {
                         </div>
                     </SheetContent>
                 </Sheet>
-
                 <Link href="/" className="shrink-0 ml-2">
                     <Image
                         src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
@@ -543,31 +557,33 @@ export default function HomePage() {
                             Personaliza la vista y gestiona tus eventos seleccionados.
                         </DialogDescription>
                         </DialogHeader>
-                        <LayoutConfigurator
-                            gridGap={gridGap}
-                            onGridGapChange={(value) => {
-                                setGridGap(value);
-                                localStorage.setItem('gridGap', value.toString());
-                            }}
-                            borderColor={borderColor}
-                            onBorderColorChange={(value) => {
-                                setBorderColor(value);
-                                localStorage.setItem('borderColor', value);
-                            }}
-                            isChatEnabled={isChatEnabled}
-                            onIsChatEnabledChange={(value) => {
-                                setIsChatEnabled(value);
-                                localStorage.setItem('isChatEnabled', JSON.stringify(value));
-                            }}
-                            
-                            order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                            onOrderChange={handleOrderChange}
-                            eventDetails={selectedEvents}
-                            onRemove={handleEventRemove}
-                            onReload={() => {}} 
-                            onModify={openDialogForModification}
-                            isViewPage={false}
-                        />
+                        <ScrollArea className="pr-4 -mr-4">
+                           <LayoutConfigurator
+                                gridGap={gridGap}
+                                onGridGapChange={(value) => {
+                                    setGridGap(value);
+                                    localStorage.setItem('gridGap', value.toString());
+                                }}
+                                borderColor={borderColor}
+                                onBorderColorChange={(value) => {
+                                    setBorderColor(value);
+                                    localStorage.setItem('borderColor', value);
+                                }}
+                                isChatEnabled={isChatEnabled}
+                                onIsChatEnabledChange={(value) => {
+                                    setIsChatEnabled(value);
+                                    localStorage.setItem('isChatEnabled', JSON.stringify(value));
+                                }}
+                                
+                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                onOrderChange={handleOrderChange}
+                                eventDetails={selectedEvents}
+                                onRemove={handleEventRemove}
+                                onReload={() => {}} 
+                                onModify={openDialogForModification}
+                                isViewPage={false}
+                            />
+                        </ScrollArea>
                     </DialogContent>
                 </Dialog>
 
@@ -725,4 +741,5 @@ export default function HomePage() {
     </div>
   );
   
+}
     

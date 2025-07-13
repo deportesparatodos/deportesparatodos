@@ -86,7 +86,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             <Button
               key={index}
               variant={selectedOptionUrl === option ? 'default' : 'secondary'}
-              className="w-full"
+              className="w-full border border-border hover:scale-105 transition-transform duration-200"
               onClick={() => onSelect(event, option)}
             >
               {event.buttons[index] || `Opción ${index + 1}`}
