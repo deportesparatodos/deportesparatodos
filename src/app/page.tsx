@@ -31,6 +31,7 @@ import {
     DialogDescription,
     DialogFooter,
     DialogClose,
+    DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
@@ -134,13 +135,12 @@ export default function HomePage() {
         }
     }
     
-    // Only update and save if the order has actually changed
-    if (JSON.stringify(newOrder) !== JSON.stringify(viewOrder)) {
+    const stringifiedNewOrder = JSON.stringify(newOrder);
+    if (stringifiedNewOrder !== localStorage.getItem('viewOrder')) {
         setViewOrder(newOrder);
-        localStorage.setItem('viewOrder', JSON.stringify(newOrder));
+        localStorage.setItem('viewOrder', stringifiedNewOrder);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedEvents]); 
+  }, [selectedEvents, viewOrder]); 
 
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
