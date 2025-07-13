@@ -9,11 +9,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import { channels as allChannels } from '@/components/channel-list';
-import type { Event } from '@/components/event-list';
+import type { Event } from '@/components/event-carousel';
 import { addHours, isAfter, parseISO, isValid } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import type { ScheduledLayoutChange } from '@/components/schedule-manager';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
@@ -338,5 +338,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    

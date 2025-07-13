@@ -31,6 +31,7 @@ import type { Channel } from '@/components/channel-list';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { EventCard } from '@/components/event-card';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 
 export default function HomePage() {
@@ -45,6 +46,7 @@ export default function HomePage() {
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const isMobile = useIsMobile(650);
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
@@ -82,8 +84,8 @@ export default function HomePage() {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
   }, [selectedEvents]);
 
-  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults } = useMemo(() => {
-    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
+  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
+    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
 
     const live = events.filter((e) => e.status.toLowerCase() === 'en vivo');
     live.sort((a,b) => {
@@ -99,6 +101,8 @@ export default function HomePage() {
     const upcoming = events.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
     const unknown = events.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time));
     const finished = events.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    
+    const allSorted = [...live, ...unknown, ...upcoming, ...finished];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -128,7 +132,8 @@ export default function HomePage() {
         unknownEvents: unknown, 
         finishedEvents: finished, 
         filteredChannels: channels,
-        searchResults
+        searchResults,
+        allSortedEvents: allSorted
     };
   }, [events, searchTerm]);
 
@@ -304,7 +309,7 @@ export default function HomePage() {
                  <Button
                     onClick={handleStartView}
                     disabled={selectedEvents.filter(Boolean).length === 0}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-green-600 hover:bg-green-700 text-white my-[10px]"
                 >
                     <Tv className="mr-2 h-4 w-4" />
                     Iniciar Vista ({selectedEvents.filter(Boolean).length})
@@ -338,12 +343,12 @@ export default function HomePage() {
                                     <Card 
                                         key={`search-channel-${index}`}
                                         className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-[150px] flex flex-col"
-                                        onClick={() => handleChannelClick(item)}
+                                        onClick={() => handleChannelClick(item as Channel)}
                                     >
                                         <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10">
                                             <Image
-                                                src={item.logo}
-                                                alt={`${item.name} logo`}
+                                                src={(item as Channel).logo}
+                                                alt={`${(item as Channel).name} logo`}
                                                 width={120}
                                                 height={67.5}
                                                 className="object-contain max-h-full max-w-full"
@@ -355,7 +360,7 @@ export default function HomePage() {
                                             />
                                         </div>
                                         <div className="p-3 bg-card">
-                                            <h3 className="font-bold truncate text-sm text-center">{item.name}</h3>
+                                            <h3 className="font-bold truncate text-sm text-center">{(item as Channel).name}</h3>
                                         </div>
                                     </Card>
                                 );
@@ -363,9 +368,9 @@ export default function HomePage() {
                                 return (
                                     <EventCard
                                       key={`search-event-${index}`}
-                                      event={item}
-                                      selection={getEventSelection(item)}
-                                      onClick={() => openDialogForEvent(item)}
+                                      event={item as Event}
+                                      selection={getEventSelection(item as Event)}
+                                      onClick={() => openDialogForEvent(item as Event)}
                                     />
                                 );
                             }
@@ -411,13 +416,26 @@ export default function HomePage() {
                             </Carousel>
                         </div>
                         
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-
-                        <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
-
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        {isMobile ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 pt-4">
+                                {allSortedEvents.map((event, index) => (
+                                    <EventCard
+                                        key={`mobile-event-${index}`}
+                                        event={event}
+                                        selection={getEventSelection(event)}
+                                        onClick={() => openDialogForEvent(event)}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <>
+                                <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
+                                <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                            </>
+                        )}
                     </>
                 )}
             </div>
