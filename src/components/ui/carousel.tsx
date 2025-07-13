@@ -103,6 +103,10 @@ const Carousel = React.forwardRef<
       if (!api) {
         return
       }
+      
+      if (setApi) {
+        setApi(api);
+      }
 
       onSelect(api)
       api.on("reInit", onSelect)
@@ -111,7 +115,7 @@ const Carousel = React.forwardRef<
       return () => {
         api?.off("select", onSelect)
       }
-    }, [api, onSelect])
+    }, [api, onSelect, setApi])
 
     return (
       <CarouselContext.Provider
@@ -201,7 +205,7 @@ const CarouselPrevious = React.forwardRef<
       className={cn(
         "absolute h-8 w-8 rounded-md z-10",
         orientation === "horizontal"
-          ? "left-0 top-1/2 -translate-y-1/2 -translate-x-1/2"
+          ? "left-0 top-1/2 -translate-y-1/2"
           : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
@@ -230,7 +234,7 @@ const CarouselNext = React.forwardRef<
       className={cn(
         "absolute h-8 w-8 rounded-md z-10",
         orientation === "horizontal"
-          ? "right-0 top-1/2 -translate-y-1/2 translate-x-1/2"
+          ? "right-0 top-1/2 -translate-y-1/2"
           : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}

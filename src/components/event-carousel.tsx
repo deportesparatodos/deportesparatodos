@@ -1,18 +1,20 @@
 
 'use client';
 
-import type { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import { EventCard } from './event-card';
 import type { Channel } from './channel-list';
 import { Card } from './ui/card';
 import Image from 'next/image';
+import { Button } from './ui/button';
 
 export interface Event {
   time: string;
@@ -38,6 +40,30 @@ interface EventCarouselProps {
 }
 
 export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection }) => {
+  const [api, setApi] = useState<CarouselApi>()
+  const [canScrollPrev, setCanScrollPrev] = useState(false)
+  const [canScrollNext, setCanScrollNext] = useState(false)
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+
+    const onSelect = (api: CarouselApi) => {
+        setCanScrollPrev(api.canScrollPrev())
+        setCanScrollNext(api.canScrollNext())
+    }
+
+    onSelect(api)
+    api.on("select", onSelect)
+    api.on("reInit", onSelect)
+
+    return () => {
+      api.off("select", onSelect)
+      api.off("reInit", onSelect)
+    }
+  }, [api])
+
 
   const hasContent = (events && events.length > 0) || (channels && channels.length > 0);
 
@@ -49,16 +75,31 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     <div className="w-full space-y-2">
         <div className="flex items-center justify-between">
              <h2 className="text-2xl font-bold">{title}</h2>
+             <div className="flex items-center gap-2">
+                <CarouselPrevious 
+                    variant="outline"
+                    className="static -translate-x-0 -translate-y-0"
+                    onClick={() => api?.scrollPrev()}
+                    disabled={!canScrollPrev}
+                />
+                <CarouselNext
+                    variant="outline"
+                    className="static -translate-x-0 -translate-y-0"
+                    onClick={() => api?.scrollNext()}
+                    disabled={!canScrollNext}
+                />
+             </div>
         </div>
         <Carousel
+            setApi={setApi}
             opts={{
             align: "start",
             dragFree: true,
             slidesToScroll: 'auto',
             }}
-            className="w-full relative px-12"
+            className="w-full"
         >
-            <CarouselContent className="-ml-4 py-4">
+            <CarouselContent className="-ml-4">
             {events && onCardClick && getEventSelection && events.map((event, index) => (
                 <CarouselItem key={`event-${event.title}-${index}`} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
                 <EventCard 
@@ -95,8 +136,6 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                 </CarouselItem>
             ))}
             </CarouselContent>
-            <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-            <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
         </Carousel>
     </div>
   );

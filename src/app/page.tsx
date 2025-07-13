@@ -15,6 +15,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import {
   Sheet,
@@ -58,6 +59,7 @@ export default function HomePage() {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const isMobile = useIsMobile(650);
+  const [categoriesApi, setCategoriesApi] = useState<CarouselApi>()
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
@@ -594,15 +596,33 @@ export default function HomePage() {
                     </div>
                 ) : (
                     <>
-                        <div className="w-full pt-1 pb-1">
+                        <div className="w-full space-y-2 pt-1 pb-1">
+                             <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-bold">Categorías</h2>
+                                <div className="flex items-center gap-2">
+                                    <CarouselPrevious
+                                        variant="outline"
+                                        className="static -translate-x-0 -translate-y-0"
+                                        onClick={() => categoriesApi?.scrollPrev()}
+                                        disabled={!categoriesApi?.canScrollPrev()}
+                                    />
+                                    <CarouselNext
+                                        variant="outline"
+                                        className="static -translate-x-0 -translate-y-0"
+                                        onClick={() => categoriesApi?.scrollNext()}
+                                        disabled={!categoriesApi?.canScrollNext()}
+                                    />
+                                </div>
+                             </div>
                              <Carousel
+                                setApi={setCategoriesApi}
                                 opts={{
                                 align: "start",
                                 dragFree: true,
                                 }}
-                                className="w-full relative px-12"
+                                className="w-full"
                             >
-                                <CarouselContent className="-ml-4 my-[5px]">
+                                <CarouselContent className="-ml-4">
                                     <CarouselItem className="basis-auto pl-4">
                                         <Link href={`/events/live`}>
                                             <Button variant="secondary" className="h-12 px-6 text-lg">
@@ -627,8 +647,6 @@ export default function HomePage() {
                                     </CarouselItem>
                                 ))}
                                 </CarouselContent>
-                                <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-                                <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
                             </Carousel>
                         </div>
                         
