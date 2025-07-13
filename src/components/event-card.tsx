@@ -16,12 +16,7 @@ interface EventCardProps {
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => {
-  const timeDisplay = (() => {
-    const status = event.status.toLowerCase();
-    if (status === 'en vivo') return 'AHORA';
-    if (status === 'próximo' && isValidTimeFormat(event.time)) return event.time;
-    return '--:--';
-  })();
+  const timeDisplay = isValidTimeFormat(event.time) ? event.time : '--:--';
 
   return (
     <div 
@@ -50,10 +45,11 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
         <h3 className="font-bold truncate text-sm">{event.title}</h3>
         <div className="flex items-center justify-between text-xs mt-1">
           <p className="text-muted-foreground font-semibold">{timeDisplay}</p>
-          {event.status && event.status.toLowerCase() !== 'próximo' && (
+          {event.status && (
             <Badge className={cn(
                 "text-xs font-bold border-0 h-5",
                 event.status.toLowerCase() === 'en vivo' && 'bg-red-600 text-white',
+                event.status.toLowerCase() === 'próximo' && 'bg-blue-600 text-white',
                 event.status.toLowerCase() === 'finalizado' && 'bg-black text-white',
                 event.status.toLowerCase() === 'desconocido' && 'bg-yellow-500 text-black'
             )}>{event.status}</Badge>
