@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { X, Loader2, MessageSquare } from "lucide-react";
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo, useCallback } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
@@ -36,26 +36,21 @@ function ViewPageContent() {
   };
 
   const handleRemoveCamera = (indexToRemove: number) => {
-    setSelectedEvents(prevEvents => {
-        const newEvents = [...prevEvents];
-        newEvents[indexToRemove] = null;
-        localStorage.setItem('selectedEvents', JSON.stringify(newEvents));
-        
-        setViewOrder(prevOrder => {
-            const currentActiveOrder = prevOrder.filter(i => newEvents[i] !== null);
-            const newOrder = [...currentActiveOrder];
-             // Add back the non-active indices to preserve the full order array length
-            for (let i = 0; i < 9; i++) {
-                if (!newOrder.includes(i) && newEvents[i] === null) {
-                    newOrder.push(i);
-                }
-            }
-            localStorage.setItem('viewOrder', JSON.stringify(newOrder));
-            return newOrder;
-        });
+    const newEvents = [...selectedEvents];
+    newEvents[indexToRemove] = null;
+    
+    const newOrder = viewOrder.filter(i => newEvents[i] !== null);
+    for (let i = 0; i < 9; i++) {
+        if (!newOrder.includes(i) && newEvents[i] === null) {
+            newOrder.push(i);
+        }
+    }
+    
+    setSelectedEvents(newEvents);
+    setViewOrder(newOrder);
 
-        return newEvents;
-    });
+    localStorage.setItem('selectedEvents', JSON.stringify(newEvents));
+    localStorage.setItem('viewOrder', JSON.stringify(newOrder));
   };
 
   useEffect(() => {
@@ -77,7 +72,13 @@ function ViewPageContent() {
 
   useEffect(() => {
     setIsMounted(true);
-    setWelcomePopupOpen(true);
+    
+    const hasVisited = localStorage.getItem('hasVisitedViewPage');
+    if (!hasVisited) {
+        setWelcomePopupOpen(true);
+        localStorage.setItem('hasVisitedViewPage', 'true');
+    }
+
     setProgress(100);
 
     const storedEvents = localStorage.getItem('selectedEvents');
@@ -128,31 +129,59 @@ function ViewPageContent() {
   };
 
   const activeEvents = useMemo(() => {
-    return viewOrder
-      .map(index => selectedEvents[index])
-      .filter(event => event !== null) as Event[];
-  }, [selectedEvents, viewOrder]);
+      return selectedEvents.map((event, index) => event ? { ...event, originalIndex: index } : null)
+                   .filter(Boolean) as (Event & { originalIndex: number })[];
+  }, [selectedEvents]);
 
   const numCameras = activeEvents.length;
 
-  const urlsToDisplay = useMemo(() => {
-      return viewOrder.map(originalIndex => {
-        const event = selectedEvents[originalIndex];
-        if (!event) return null;
-        return {
-          url: (event as any).selectedOption,
-          originalIndex: originalIndex,
-          reloadKey: reloadCounters[originalIndex] || 0,
-        };
-      }).filter(item => item !== null);
-  }, [selectedEvents, viewOrder, reloadCounters]);
+  const getGridClasses = useCallback((count: number) => {
+    if (isMobile) {
+        return `grid-cols-1 grid-rows-${count}`;
+    }
+    switch (count) {
+        case 1: return 'grid-cols-1 grid-rows-1';
+        case 2: return 'grid-cols-2 grid-rows-1';
+        case 3: return 'grid-cols-2 grid-rows-2'; // Will be handled by item spans
+        case 4: return 'grid-cols-2 grid-rows-2';
+        case 5: return 'grid-cols-3 grid-rows-2'; // Will be handled by item spans
+        case 6: return 'grid-cols-3 grid-rows-2';
+        case 7: return 'grid-cols-3 grid-rows-3'; // etc
+        case 8: return 'grid-cols-3 grid-rows-3';
+        case 9: return 'grid-cols-3 grid-rows-3';
+        default: return 'grid-cols-1 grid-rows-1';
+    }
+  }, [isMobile]);
+  
+  const getItemClasses = useCallback((index: number, count: number) => {
+      if (isMobile) return '';
+      if (count === 3 && index === 0) return 'col-span-2';
+      if (count === 5) {
+          if (index < 3) return 'row-start-1';
+          if (index >= 3) return 'row-start-2';
+      }
+      if (count === 7 && index < 3) return 'row-start-1';
+      if (count === 8) {
+          if(index < 3) return 'row-start-1';
+          if(index >=3 && index < 6) return 'row-start-2';
+          if(index >=6) return 'row-start-3';
+      }
+      return '';
+  }, [isMobile]);
+
+  const orderedActiveEvents = useMemo(() => {
+      const eventMap = new Map(activeEvents.map(e => [e.originalIndex, e]));
+      return viewOrder
+          .map(originalIndex => eventMap.get(originalIndex))
+          .filter(Boolean) as (Event & { originalIndex: number })[];
+  }, [activeEvents, viewOrder]);
 
 
   if (!isMounted) {
     return <Loading />;
   }
   
-  if (urlsToDisplay.filter(item => item?.url && item.url.trim() !== "").length === 0) {
+  if (numCameras === 0) {
     return (
       <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
         <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
@@ -164,15 +193,6 @@ function ViewPageContent() {
       </div>
     );
   }
-
-  const getGridClasses = (count: number) => {
-    if (count <= 1) return 'grid-cols-1 grid-rows-1';
-    if (count === 2) return 'grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1';
-    if (count <= 4) return 'grid-cols-1 md:grid-cols-2 grid-rows-4 md:grid-rows-2';
-    if (count <= 6) return 'grid-cols-1 md:grid-cols-3 grid-rows-6 md:grid-rows-2';
-    if (count <= 9) return 'grid-cols-1 md:grid-cols-3 grid-rows-9 md:grid-rows-3';
-    return 'grid-cols-1 grid-rows-1';
-  };
   
   const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
 
@@ -180,7 +200,7 @@ function ViewPageContent() {
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
-          <DialogContent className="sm:max-w-md p-0" hideClose>
+           <DialogContent className="sm:max-w-md p-0" hideClose>
               <DialogHeader className="sr-only">
                   <DialogTitle>Bienvenida</DialogTitle>
               </DialogHeader>
@@ -215,7 +235,8 @@ function ViewPageContent() {
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}
-             onModify={() => {}} // No-op, functionality removed
+             onModify={() => {}} 
+             isViewPage={true}
              gridGap={gridGap}
              onGridGapChange={(value) => {
                  setGridGap(value);
@@ -262,13 +283,19 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {urlsToDisplay.map((item, visualIndex) => {
-            if (!item || !item.url) return null;
+          {activeEvents.map((event, index) => {
+            const visualIndex = orderedActiveEvents.findIndex(e => e.originalIndex === event.originalIndex);
+            if (!event || !event.selectedOption) return null;
+
+            const windowClasses = cn(
+                "overflow-hidden", 
+                "relative", 
+                "bg-black",
+                getItemClasses(visualIndex, numCameras)
+            );
             
-            const windowClasses: string[] = ["overflow-hidden", "relative", "bg-black"];
-            
-            let iframeSrc = item.url 
-              ? `${item.url}${item.url.includes('?') ? '&' : '?'}reload=${item.reloadKey}`
+            let iframeSrc = event.selectedOption 
+              ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[event.originalIndex] || 0}`
               : '';
 
             if (iframeSrc.includes("youtube-nocookie.com")) {
@@ -277,12 +304,13 @@ function ViewPageContent() {
 
             return (
               <div
-                key={`${item.originalIndex}-${item.reloadKey}`}
-                className={cn(windowClasses)}
+                key={event.originalIndex}
+                className={windowClasses}
+                style={{ order: visualIndex }}
               >
                 <iframe
                   src={iframeSrc}
-                  title={`Stream ${item.originalIndex + 1}`}
+                  title={`Stream ${event.originalIndex + 1}`}
                   className="w-full h-full border-0"
                   allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                   allowFullScreen
