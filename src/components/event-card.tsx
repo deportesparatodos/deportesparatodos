@@ -16,7 +16,12 @@ interface EventCardProps {
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => {
-  const timeDisplay = isValidTimeFormat(event.time) ? event.time : '--:--';
+  const timeDisplay =
+    event.status.toLowerCase() === 'en vivo'
+      ? 'AHORA'
+      : isValidTimeFormat(event.time)
+      ? event.time
+      : '--:--';
 
   return (
     <div 
