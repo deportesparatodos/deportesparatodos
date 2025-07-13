@@ -52,12 +52,12 @@ export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
+  const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -66,6 +66,7 @@ export default function HomePage() {
   const [gridGap, setGridGap] = useState<number>(2);
   const [borderColor, setBorderColor] = useState<string>('#000000');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
@@ -97,6 +98,15 @@ export default function HomePage() {
       if (storedSelectedEvents) {
         setSelectedEvents(JSON.parse(storedSelectedEvents));
       }
+       const storedViewOrder = localStorage.getItem('viewOrder');
+      if (storedViewOrder) {
+        try {
+            const parsedOrder = JSON.parse(storedViewOrder);
+            if(Array.isArray(parsedOrder) && parsedOrder.length === 9) {
+                setViewOrder(parsedOrder);
+            }
+        } catch(e) { console.error("Failed to parse viewOrder from localStorage", e); }
+      }
       const storedGap = localStorage.getItem('gridGap');
       if (storedGap) setGridGap(parseInt(storedGap, 10));
 
@@ -110,7 +120,30 @@ export default function HomePage() {
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-  }, [selectedEvents]);
+    // Also save order when selection changes to keep it in sync
+    const activeIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
+    const newOrder = [...new Set([...viewOrder.filter(i => activeIndexes.includes(i)), ...activeIndexes])];
+     while(newOrder.length < 9) {
+        const missing = Array.from({length: 9}, (_,i) => i).find(i => !newOrder.includes(i));
+        if (missing !== undefined) newOrder.push(missing);
+        else break;
+    }
+    setViewOrder(newOrder);
+    localStorage.setItem('viewOrder', JSON.stringify(newOrder));
+  }, [selectedEvents, viewOrder]);
+  
+  const handleOrderChange = (newOrder: number[]) => {
+    const fullNewOrder = [...newOrder];
+    const presentIndexes = new Set(newOrder);
+    for(let i=0; i<9; i++) {
+        if(!presentIndexes.has(i)) {
+            fullNewOrder.push(i);
+        }
+    }
+    setViewOrder(fullNewOrder);
+    localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
+  };
+
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
@@ -207,9 +240,6 @@ export default function HomePage() {
     const newSelectedEvents = [...selectedEvents];
     newSelectedEvents[windowIndex] = null;
     setSelectedEvents(newSelectedEvents);
-    setDialogOpen(false);
-    setIsModification(false);
-    setModificationIndex(null);
   };
   
   const getEventSelection = (event: Event) => {
@@ -257,7 +287,7 @@ export default function HomePage() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
-    setSheetOpen(false); // Close sheet before opening dialog
+    setConfigDialogOpen(false); // Close sheet before opening dialog
     setDialogEvent(event);
     setIsModification(true);
     setModificationIndex(index);
@@ -326,13 +356,13 @@ export default function HomePage() {
 
                                             <h3 className="font-bold text-foreground">3. Gestionar tus Eventos Seleccionados</h3>
                                             <ul className="list-disc pl-5 space-y-1">
-                                                <li><span className="font-semibold">Botón "Eventos Seleccionados":</span> En la esquina superior derecha, este botón te muestra cuántos eventos has elegido. Haz clic para abrir un panel y ver tu lista.</li>
-                                                <li><span className="font-semibold">Modificar o Eliminar:</span> Desde el panel de seleccionados, puedes hacer clic en un evento para cambiar la fuente de transmisión o para eliminarlo de tu selección.</li>
+                                                <li><span className="font-semibold">Botón "Configuración" (rueda dentada):</span> En la esquina superior derecha, este botón abre un panel donde puedes ver y gestionar tus eventos elegidos.</li>
+                                                <li><span className="font-semibold">Modificar o Eliminar:</span> Desde este panel, puedes hacer clic en un evento para cambiar la fuente de transmisión o para eliminarlo de tu selección. También puedes reordenar los eventos.</li>
                                             </ul>
 
                                             <h3 className="font-bold text-foreground">4. Iniciar la Vista Múltiple</h3>
                                             <ul className="list-disc pl-5 space-y-1">
-                                                <li><span className="font-semibold">Botón "Iniciar Vista":</span> Una vez que hayas seleccionado al menos un evento, este botón (de color verde) se activará. Haz clic en él para ir a la pantalla de visualización.</li>
+                                                <li><span className="font-semibold">Botón "Play":</span> Una vez que hayas seleccionado al menos un evento, este botón se activará. Haz clic en él para ir a la pantalla de visualización.</li>
                                                 <li><span className="font-semibold">Cuadrícula Dinámica:</span> La pantalla se dividirá automáticamente para mostrar todos los eventos que seleccionaste. La cuadrícula se adapta de 1 a 9 ventanas.</li>
                                             </ul>
 
@@ -510,17 +540,17 @@ export default function HomePage() {
                     {isSearchOpen ? <X /> : <Search />}
                 </Button>
 
-                <Dialog>
+                <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
                     <DialogTrigger asChild>
                         <Button variant="ghost" size="icon">
                             <Settings />
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-h-[90vh] flex flex-col">
                         <DialogHeader>
-                        <DialogTitle>Configuración de Vista</DialogTitle>
+                        <DialogTitle>Configuración y Eventos</DialogTitle>
                         <DialogDescription>
-                            Personaliza la apariencia de la cuadrícula de visualización. Los cambios se guardarán automáticamente.
+                            Personaliza la vista y gestiona tus eventos seleccionados.
                         </DialogDescription>
                         </DialogHeader>
                         <LayoutConfigurator
@@ -539,55 +569,17 @@ export default function HomePage() {
                                 setIsChatEnabled(value);
                                 localStorage.setItem('isChatEnabled', JSON.stringify(value));
                             }}
+                            
+                            order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                            onOrderChange={handleOrderChange}
+                            eventDetails={selectedEvents}
+                            onRemove={handleEventRemove}
+                            onReload={() => {}} 
+                            onModify={openDialogForModification}
+                            isViewPage={false}
                         />
                     </DialogContent>
                 </Dialog>
-
-                <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                    <SheetTrigger asChild>
-                         <Button
-                            variant="outline"
-                            disabled={selectedEventsCount === 0}
-                        >
-                            <Menu className="mr-2 h-4 w-4" />
-                            <span className="hidden md:inline">Seleccionados</span>
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent>
-                        <SheetHeader>
-                            <SheetTitle>Tus Eventos Seleccionados</SheetTitle>
-                        </SheetHeader>
-                        <ScrollArea className="h-[calc(100%-4rem)] mt-4">
-                            <div className="space-y-4 pr-4">
-                                {selectedEvents.map((event, index) => event && (
-                                     <div key={index} className="flex items-center gap-4 cursor-pointer" onClick={() => openDialogForModification(event, index)}>
-                                        <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                                            {index + 1}
-                                        </div>
-                                        <div className="relative w-28 h-auto aspect-video rounded-md overflow-hidden">
-                                             <Image
-                                                src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
-                                                alt={event.title}
-                                                width={160}
-                                                height={90}
-                                                className="object-cover"
-                                                onError={(e) => {
-                                                  const target = e.target as HTMLImageElement;
-                                                  target.onerror = null; 
-                                                  target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-                                                }}
-                                            />
-                                        </div>
-                                        <p className="text-sm font-semibold flex-grow truncate">{event.title}</p>
-                                    </div>
-                                ))}
-                                {selectedEventsCount === 0 && (
-                                    <p className="text-muted-foreground text-center pt-8">No has seleccionado ningún evento.</p>
-                                )}
-                            </div>
-                        </ScrollArea>
-                    </SheetContent>
-                </Sheet>
 
                 <Button
                     size="icon"
@@ -742,5 +734,3 @@ export default function HomePage() {
         )}
     </div>
   );
-
-    
