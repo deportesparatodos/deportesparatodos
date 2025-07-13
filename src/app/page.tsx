@@ -125,22 +125,30 @@ export default function HomePage() {
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-    
+  }, [selectedEvents]); 
+  
+  useEffect(() => {
     const activeEventIndexes = selectedEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
     const currentOrderActive = viewOrder.filter(i => activeEventIndexes.includes(i));
-    const newOrder = [...currentOrderActive];
-    for (let i = 0; i < 9; i++) {
-        if(!newOrder.includes(i)) {
-            newOrder.push(i);
+    
+    // Only update if the active part of the order has changed.
+    const activeOrderChanged = JSON.stringify(currentOrderActive) !== JSON.stringify(viewOrder.filter(i => selectedEvents[i] !== null));
+
+    if (activeOrderChanged) {
+        const newOrder = [...currentOrderActive];
+        for (let i = 0; i < 9; i++) {
+            if(!newOrder.includes(i)) {
+                newOrder.push(i);
+            }
+        }
+        
+        const stringifiedNewOrder = JSON.stringify(newOrder);
+        if (stringifiedNewOrder !== localStorage.getItem('viewOrder')) {
+            setViewOrder(newOrder);
+            localStorage.setItem('viewOrder', stringifiedNewOrder);
         }
     }
-    
-    const stringifiedNewOrder = JSON.stringify(newOrder);
-    if (stringifiedNewOrder !== localStorage.getItem('viewOrder')) {
-        setViewOrder(newOrder);
-        localStorage.setItem('viewOrder', stringifiedNewOrder);
-    }
-  }, [selectedEvents, viewOrder]); 
+  }, [selectedEvents, viewOrder]);
 
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
@@ -748,6 +756,4 @@ export default function HomePage() {
   );
   
 }
-    
-
     

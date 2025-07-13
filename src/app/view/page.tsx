@@ -26,6 +26,7 @@ function ViewPageContent() {
   const [progress, setProgress] = useState(100);
 
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
+  const [orderedEventData, setOrderedEventData] = useState<(Event | null)[]>([]);
 
   const handleReloadCamera = (index: number) => {
     setReloadCounters(prevCounters => {
@@ -38,13 +39,10 @@ function ViewPageContent() {
   const handleRemoveCamera = (indexToRemove: number) => {
     const newEvents = [...selectedEvents];
     newEvents[indexToRemove] = null;
-    
+
     const newOrder = viewOrder.filter(i => newEvents[i] !== null);
-    for (let i = 0; i < 9; i++) {
-        if (!newOrder.includes(i) && newEvents[i] === null) {
-            newOrder.push(i);
-        }
-    }
+    const availableSlots = Array.from({length: 9}, (_,i) => i).filter(i => !newOrder.includes(i));
+    newOrder.push(...availableSlots);
     
     setSelectedEvents(newEvents);
     setViewOrder(newOrder);
@@ -52,7 +50,21 @@ function ViewPageContent() {
     localStorage.setItem('selectedEvents', JSON.stringify(newEvents));
     localStorage.setItem('viewOrder', JSON.stringify(newOrder));
   };
-
+  
+  const handleOrderChange = (newOrder: number[]) => {
+    const fullNewOrder = [...newOrder];
+    const presentIndexes = new Set(newOrder);
+    for(let i=0; i<9; i++) {
+        if(!presentIndexes.has(i)) {
+            fullNewOrder.push(i);
+        }
+    }
+    setViewOrder(fullNewOrder);
+    localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
+  };
+  
+  const numCameras = useMemo(() => selectedEvents.filter(Boolean).length, [selectedEvents]);
+  
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (welcomePopupOpen) {
@@ -116,24 +128,10 @@ function ViewPageContent() {
     }
   }, []);
 
-  const handleOrderChange = (newOrder: number[]) => {
-    const fullNewOrder = [...newOrder];
-    const presentIndexes = new Set(newOrder);
-    for(let i=0; i<9; i++) {
-        if(!presentIndexes.has(i)) {
-            fullNewOrder.push(i);
-        }
-    }
-    setViewOrder(fullNewOrder);
-    localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
-  };
-
-  const activeEvents = useMemo(() => {
-      return selectedEvents.map((event, index) => event ? { ...event, originalIndex: index } : null)
-                   .filter(Boolean) as (Event & { originalIndex: number })[];
-  }, [selectedEvents]);
-
-  const numCameras = activeEvents.length;
+  useEffect(() => {
+      const newOrderedEventData = viewOrder.map(index => selectedEvents[index] || null);
+      setOrderedEventData(newOrderedEventData);
+  }, [selectedEvents, viewOrder]);
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -142,11 +140,11 @@ function ViewPageContent() {
     switch (count) {
         case 1: return 'grid-cols-1 grid-rows-1';
         case 2: return 'grid-cols-2 grid-rows-1';
-        case 3: return 'grid-cols-2 grid-rows-2'; // Will be handled by item spans
+        case 3: return 'grid-cols-2 grid-rows-2';
         case 4: return 'grid-cols-2 grid-rows-2';
-        case 5: return 'grid-cols-3 grid-rows-2'; // Will be handled by item spans
+        case 5: return 'grid-cols-3 grid-rows-2';
         case 6: return 'grid-cols-3 grid-rows-2';
-        case 7: return 'grid-cols-3 grid-rows-3'; // etc
+        case 7: return 'grid-cols-3 grid-rows-3';
         case 8: return 'grid-cols-3 grid-rows-3';
         case 9: return 'grid-cols-3 grid-rows-3';
         default: return 'grid-cols-1 grid-rows-1';
@@ -156,25 +154,10 @@ function ViewPageContent() {
   const getItemClasses = useCallback((index: number, count: number) => {
       if (isMobile) return '';
       if (count === 3 && index === 0) return 'col-span-2';
-      if (count === 5) {
-          if (index < 3) return 'row-start-1';
-          if (index >= 3) return 'row-start-2';
-      }
-      if (count === 7 && index < 3) return 'row-start-1';
-      if (count === 8) {
-          if(index < 3) return 'row-start-1';
-          if(index >=3 && index < 6) return 'row-start-2';
-          if(index >=6) return 'row-start-3';
-      }
+      if (count === 5 && index < 2) return 'col-span-1';
+      if (count === 5 && index >= 2) return 'col-span-1';
       return '';
   }, [isMobile]);
-
-  const orderedActiveEvents = useMemo(() => {
-      const eventMap = new Map(activeEvents.map(e => [e.originalIndex, e]));
-      return viewOrder
-          .map(originalIndex => eventMap.get(originalIndex))
-          .filter(Boolean) as (Event & { originalIndex: number })[];
-  }, [activeEvents, viewOrder]);
 
 
   if (!isMounted) {
@@ -195,7 +178,7 @@ function ViewPageContent() {
   }
   
   const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
-
+  const orderedIndexes = viewOrder.filter(i => selectedEvents[i] !== null);
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
@@ -230,7 +213,7 @@ function ViewPageContent() {
         >
           
           <CameraConfigurationComponent
-             order={viewOrder.filter(i => selectedEvents[i] !== null)}
+             order={orderedIndexes}
              onOrderChange={handleOrderChange}
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
@@ -283,40 +266,37 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {activeEvents.map((event, index) => {
-            const visualIndex = orderedActiveEvents.findIndex(e => e.originalIndex === event.originalIndex);
-            if (!event || !event.selectedOption) return null;
+          {Array.from({ length: 9 }).map((_, windowIndex) => {
+              const event = orderedEventData[windowIndex];
+              if (!event || !event.selectedOption) {
+                  return <div key={`empty-${windowIndex}`} className="hidden" />;
+              }
+              const windowClasses = cn(
+                  "overflow-hidden",
+                  "relative",
+                  "bg-black",
+                  getItemClasses(windowIndex, numCameras)
+              );
 
-            const windowClasses = cn(
-                "overflow-hidden", 
-                "relative", 
-                "bg-black",
-                getItemClasses(visualIndex, numCameras)
-            );
-            
-            let iframeSrc = event.selectedOption 
-              ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[event.originalIndex] || 0}`
-              : '';
-
-            if (iframeSrc.includes("youtube-nocookie.com")) {
-                iframeSrc += `&autoplay=1`;
-            }
-
-            return (
-              <div
-                key={event.originalIndex}
-                className={windowClasses}
-                style={{ order: visualIndex }}
-              >
-                <iframe
-                  src={iframeSrc}
-                  title={`Stream ${event.originalIndex + 1}`}
-                  className="w-full h-full border-0"
-                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              </div>
-            );
+              let iframeSrc = event.selectedOption
+                  ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[viewOrder[windowIndex]] || 0}`
+                  : '';
+              
+              if (iframeSrc.includes("youtube-nocookie.com")) {
+                  iframeSrc += `&autoplay=1`;
+              }
+              
+              return (
+                  <div key={`window-${viewOrder[windowIndex]}`} className={windowClasses}>
+                      <iframe
+                          src={iframeSrc}
+                          title={`Stream ${viewOrder[windowIndex] + 1}`}
+                          className="w-full h-full border-0"
+                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                          allowFullScreen
+                      />
+                  </div>
+              );
           })}
         </main>
       </div>
