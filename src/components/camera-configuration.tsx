@@ -2,11 +2,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings, ArrowUp, ArrowDown, RotateCw, Trash2 } from 'lucide-react';
+import { Settings, ArrowUp, ArrowDown, RotateCw, Trash2, SlidersHorizontal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Event } from '@/components/event-carousel';
+import { Separator } from './ui/separator';
+import { LayoutConfigurator } from './layout-configurator';
 
 interface CameraConfigurationProps {
   order: number[];
@@ -14,9 +16,27 @@ interface CameraConfigurationProps {
   eventDetails: (Event | null)[];
   onReload: (index: number) => void;
   onRemove: (index: number) => void;
+  gridGap: number;
+  onGridGapChange: (value: number) => void;
+  borderColor: string;
+  onBorderColorChange: (value: string) => void;
+  isChatEnabled: boolean;
+  onIsChatEnabledChange: (value: boolean) => void;
 }
 
-export function CameraConfigurationComponent({ order, onOrderChange, eventDetails, onReload, onRemove }: CameraConfigurationProps) {
+export function CameraConfigurationComponent({ 
+  order, 
+  onOrderChange, 
+  eventDetails, 
+  onReload, 
+  onRemove,
+  gridGap,
+  onGridGapChange,
+  borderColor,
+  onBorderColorChange,
+  isChatEnabled,
+  onIsChatEnabledChange,
+}: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
@@ -39,11 +59,25 @@ export function CameraConfigurationComponent({ order, onOrderChange, eventDetail
           <Settings className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent side="left">
         <SheetHeader>
           <SheetTitle>Configurar Vista</SheetTitle>
+          <SheetDescription>
+            Arrastra y suelta eventos para reordenarlos o usa los controles.
+          </SheetDescription>
         </SheetHeader>
-        <ScrollArea className="h-[calc(100%-4rem)] mt-4">
+        <Separator className="my-4" />
+        <LayoutConfigurator
+            gridGap={gridGap}
+            onGridGapChange={onGridGapChange}
+            borderColor={borderColor}
+            onBorderColorChange={onBorderColorChange}
+            isChatEnabled={isChatEnabled}
+            onIsChatEnabledChange={onIsChatEnabledChange}
+        />
+        <Separator className="my-4" />
+
+        <ScrollArea className="h-[calc(100%-18rem)]">
           <div className="space-y-4 pr-4">
             {order.map((originalIndex, currentIndex) => {
               const event = eventDetails[originalIndex];

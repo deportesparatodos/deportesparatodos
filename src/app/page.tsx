@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play } from 'lucide-react';
+import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -43,6 +43,7 @@ import { Input } from '@/components/ui/input';
 import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
+import { LayoutConfigurator } from '@/components/layout-configurator';
 
 
 export default function HomePage() {
@@ -61,6 +62,10 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const isMobile = useIsMobile(650);
+  
+  const [gridGap, setGridGap] = useState<number>(2);
+  const [borderColor, setBorderColor] = useState<string>('#000000');
+  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
@@ -92,6 +97,15 @@ export default function HomePage() {
       if (storedSelectedEvents) {
         setSelectedEvents(JSON.parse(storedSelectedEvents));
       }
+      const storedGap = localStorage.getItem('gridGap');
+      if (storedGap) setGridGap(parseInt(storedGap, 10));
+
+      const storedBorderColor = localStorage.getItem('borderColor');
+      if (storedBorderColor) setBorderColor(storedBorderColor);
+
+      const storedChatEnabled = localStorage.getItem('isChatEnabled');
+      if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
+
   }, [fetchEvents]);
 
   useEffect(() => {
@@ -437,6 +451,39 @@ export default function HomePage() {
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
+                                        <Settings />
+                                        Configuración
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                    <DialogTitle>Configuración de Vista</DialogTitle>
+                                    <DialogDescription>
+                                        Personaliza la apariencia de la cuadrícula de visualización. Los cambios se guardarán automáticamente.
+                                    </DialogDescription>
+                                    </DialogHeader>
+                                    <LayoutConfigurator
+                                        gridGap={gridGap}
+                                        onGridGapChange={(value) => {
+                                            setGridGap(value);
+                                            localStorage.setItem('gridGap', value.toString());
+                                        }}
+                                        borderColor={borderColor}
+                                        onBorderColorChange={(value) => {
+                                            setBorderColor(value);
+                                            localStorage.setItem('borderColor', value);
+                                        }}
+                                        isChatEnabled={isChatEnabled}
+                                        onIsChatEnabledChange={(value) => {
+                                            setIsChatEnabled(value);
+                                            localStorage.setItem('isChatEnabled', JSON.stringify(value));
+                                        }}
+                                    />
+                                </DialogContent>
+                            </Dialog>
                              <Dialog>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" className="w-full justify-start gap-2">
@@ -694,3 +741,4 @@ export default function HomePage() {
     </div>
   );
 }
+

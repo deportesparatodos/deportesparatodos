@@ -213,6 +213,21 @@ function ViewPageContent() {
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}
+             gridGap={gridGap}
+             onGridGapChange={(value) => {
+                 setGridGap(value);
+                 localStorage.setItem('gridGap', value.toString());
+             }}
+             borderColor={borderColor}
+             onBorderColorChange={(value) => {
+                 setBorderColor(value);
+                 localStorage.setItem('borderColor', value);
+             }}
+             isChatEnabled={isChatEnabled}
+             onIsChatEnabledChange={(value) => {
+                 setIsChatEnabled(value);
+                 localStorage.setItem('isChatEnabled', JSON.stringify(value));
+             }}
           />
 
           {isChatEnabled && (
