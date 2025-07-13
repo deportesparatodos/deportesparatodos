@@ -25,6 +25,9 @@ interface EventSelectionDialogProps {
   windowNumber: number;
 }
 
+const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
+
+
 export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   isOpen,
   onOpenChange,
@@ -36,10 +39,8 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
 }) => {
   if (!event) return null;
 
-  const timeDisplay = 
-    event.status.toLowerCase() === 'en vivo' ? 'AHORA' : 
-    (event.status.toLowerCase() === 'desconocido' || event.status.toLowerCase() === 'finalizado') ? '--:--' : 
-    event.time;
+  const timeDisplay = isValidTimeFormat(event.time) ? event.time : '';
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -60,11 +61,12 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
           </div>
           <DialogTitle className="text-center text-lg font-bold">{event.title}</DialogTitle>
            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1">
-                <p className="font-semibold">{timeDisplay}</p>
-                {event.status && event.status.toLowerCase() !== 'próximo' && (
+                {timeDisplay && <p className="font-semibold">{timeDisplay}</p>}
+                {event.status && (
                     <Badge className={cn(
                         "text-xs font-bold border-0 h-5",
                         event.status.toLowerCase() === 'en vivo' && 'bg-red-600 text-white',
+                        event.status.toLowerCase() === 'próximo' && 'bg-blue-600 text-white',
                         event.status.toLowerCase() === 'finalizado' && 'bg-black text-white',
                         event.status.toLowerCase() === 'desconocido' && 'bg-yellow-500 text-black'
                     )}>{event.status}</Badge>
@@ -79,7 +81,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
               className="w-full bg-background hover:bg-primary hover:text-primary-foreground text-white"
               onClick={() => onSelect(event, option)}
             >
-              {`Ventana ${windowNumber}: ${event.buttons[index] || `Opción ${index + 1}`}`}
+              {event.buttons[index] || `Opción ${index + 1}`}
             </Button>
           ))}
         </div>
@@ -99,5 +101,3 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     </Dialog>
   );
 };
-
-    
