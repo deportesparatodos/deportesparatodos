@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings, ArrowUp, ArrowDown, RotateCw, Trash2 } from 'lucide-react';
+import { Settings, ArrowUp, ArrowDown, RotateCw, Trash2, Replace } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Event } from '@/components/event-carousel';
 
@@ -58,28 +58,10 @@ export function CameraConfigurationComponent({ order, onOrderChange, eventDetail
                    >
                         {currentIndex + 1}
                     </div>
-                    <div 
-                      className="relative w-24 h-auto aspect-video rounded-md overflow-hidden flex-shrink-0 cursor-pointer"
-                      onClick={() => onReplace(originalIndex)}
-                    >
-                        <Image
-                          src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
-                          alt={event.title}
-                          width={160}
-                          height={90}
-                          className="object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-                          }}
-                        />
-                    </div>
-
+                    
                     <div className="flex-grow flex flex-col gap-2">
                         <p 
-                          className="text-sm font-semibold break-words cursor-pointer"
-                          onClick={() => onReplace(originalIndex)}
+                          className="text-sm font-semibold break-words"
                         >
                           {event.title}
                         </p>
@@ -101,6 +83,14 @@ export function CameraConfigurationComponent({ order, onOrderChange, eventDetail
                               disabled={currentIndex === activeEventsCount - 1}
                             >
                               <ArrowDown className="h-4 w-4" />
+                            </Button>
+                             <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7"
+                              onClick={() => onReplace(originalIndex)}
+                            >
+                                <Replace className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="ghost" 
