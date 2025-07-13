@@ -19,6 +19,7 @@ interface EventSelectionDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   event: Event;
+  selectedEvents: (Event | null)[];
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
   onRemove: () => void;
@@ -32,6 +33,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   isOpen,
   onOpenChange,
   event,
+  selectedEvents,
   onSelect,
   isModification,
   onRemove,
@@ -40,6 +42,11 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   if (!event) return null;
 
   const timeDisplay = isValidTimeFormat(event.time) ? event.time : '';
+  
+  const currentlySelectedEvent = selectedEvents.find(
+    (se) => se?.title === event.title
+  );
+  const selectedOptionUrl = currentlySelectedEvent?.selectedOption;
 
 
   return (
@@ -78,7 +85,8 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
           {event.options.map((option, index) => (
             <Button
               key={index}
-              className="w-full bg-background hover:bg-primary hover:text-primary-foreground text-white"
+              variant={selectedOptionUrl === option ? 'default' : 'secondary'}
+              className="w-full"
               onClick={() => onSelect(event, option)}
             >
               {event.buttons[index] || `Opción ${index + 1}`}

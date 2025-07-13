@@ -659,7 +659,7 @@ export default function HomePage() {
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <h2 className="text-2xl font-bold">Categorías</h2>
-                                    <div className="flex items-center gap-2 mt-[10px]">
+                                    <div className="flex items-center gap-2">
                                         <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0" />
                                         <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0" />
                                     </div>
@@ -732,6 +732,7 @@ export default function HomePage() {
                 isOpen={dialogOpen}
                 onOpenChange={setDialogOpen}
                 event={dialogEvent}
+                selectedEvents={selectedEvents}
                 onSelect={handleEventSelect}
                 isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
@@ -741,4 +742,3 @@ export default function HomePage() {
     </div>
   );
 }
-
