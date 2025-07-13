@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { X, Loader2, MessageSquare } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import type { Event } from '@/components/event-carousel';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
@@ -259,9 +259,10 @@ function ViewPageContent() {
 
       <Dialog open={isReplaceDialogOpen} onOpenChange={setReplaceDialogOpen}>
         <DialogContent className="p-0 border-0 w-[95vw] h-[90vh] max-w-[95vw] flex flex-col">
-            <DialogHeader className="p-2 border-b">
-                <DialogTitle>Selecciona un nuevo evento para la ventana {replaceIndex !== null ? replaceIndex + 1 : ''}</DialogTitle>
-            </DialogHeader>
+            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+            </DialogClose>
             <iframe src="/?replace=true" className="w-full h-full border-0" title="Reemplazar evento" />
         </DialogContent>
       </Dialog>

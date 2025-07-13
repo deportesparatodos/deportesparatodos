@@ -572,10 +572,10 @@ export default function HomePage() {
         </header>
         )}
 
-        <main className={cn("flex-grow overflow-y-auto p-4 md:p-8", isReplaceMode && "pt-0")}>
+        <main className={cn("flex-grow overflow-y-auto", isReplaceMode ? "p-4 md:p-5 pt-0" : "p-4 md:p-8")}>
             <div className="space-y-2">
                  {isReplaceMode && (
-                    <div className="relative mb-4">
+                    <div className="relative mb-4 mt-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input
                             type="text"
