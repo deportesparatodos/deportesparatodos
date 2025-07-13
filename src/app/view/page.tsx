@@ -293,18 +293,6 @@ function ViewPageContent() {
               </div>
             );
           })}
-           {/* Render empty slots */}
-          {Array.from({ length: 9 - urlsToDisplay.length }).map((_, i) => (
-             <div
-                key={`empty-${i}`}
-                className={cn(
-                    "overflow-hidden", "relative", "bg-black", "flex items-center justify-center w-full h-full text-white font-bold text-xl bg-muted/20",
-                    getOrderClass(urlsToDisplay.length + i + 1)
-                )}
-              >
-                VENTANA VACÍA
-            </div>
-          ))}
         </main>
       </div>
       
