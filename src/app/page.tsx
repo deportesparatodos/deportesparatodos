@@ -31,7 +31,6 @@ import {
     DialogDescription,
     DialogFooter,
     DialogClose,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
@@ -214,7 +213,7 @@ export default function HomePage() {
       const categorySet = new Set<string>();
       events.forEach((event) => {
         if (event.category) {
-            const category = event.category.toLowerCase() === 'other' ? 'Otros' : e.category;
+            const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
             categorySet.add(category);
         }
       });
