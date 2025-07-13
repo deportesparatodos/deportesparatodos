@@ -2,10 +2,9 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings, ArrowUp, ArrowDown, RotateCw, Trash2, Replace } from 'lucide-react';
+import { Settings, ArrowUp, ArrowDown, RotateCw, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Event } from '@/components/event-carousel';
 
@@ -15,10 +14,9 @@ interface CameraConfigurationProps {
   eventDetails: (Event | null)[];
   onReload: (index: number) => void;
   onRemove: (index: number) => void;
-  onReplace: (index: number) => void;
 }
 
-export function CameraConfigurationComponent({ order, onOrderChange, eventDetails, onReload, onRemove, onReplace }: CameraConfigurationProps) {
+export function CameraConfigurationComponent({ order, onOrderChange, eventDetails, onReload, onRemove }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
@@ -52,7 +50,7 @@ export function CameraConfigurationComponent({ order, onOrderChange, eventDetail
               if (!event) return null;
 
               return (
-                <div key={originalIndex} className="flex items-start gap-3 p-2 rounded-md bg-secondary/50">
+                <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
                    <div 
                       className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
                    >
@@ -83,14 +81,6 @@ export function CameraConfigurationComponent({ order, onOrderChange, eventDetail
                               disabled={currentIndex === activeEventsCount - 1}
                             >
                               <ArrowDown className="h-4 w-4" />
-                            </Button>
-                             <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-7 w-7"
-                              onClick={() => onReplace(originalIndex)}
-                            >
-                                <Replace className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="ghost" 

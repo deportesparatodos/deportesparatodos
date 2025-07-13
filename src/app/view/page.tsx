@@ -12,21 +12,6 @@ import { CameraConfigurationComponent } from '@/components/camera-configuration'
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Progress } from '@/components/ui/progress';
 
-const getOrderClass = (order: number) => {
-    switch (order) {
-        case 1: return "order-1";
-        case 2: return "order-2";
-        case 3: return "order-3";
-        case 4: return "order-4";
-        case 5: return "order-5";
-        case 6: return "order-6";
-        case 7: return "order-7";
-        case 8: return "order-8";
-        case 9: return "order-9";
-        default: return "order-none";
-    }
-};
-
 function ViewPageContent() {
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [isMounted, setIsMounted] = useState(false);
@@ -42,9 +27,6 @@ function ViewPageContent() {
   const [isSubDialogOpen, setIsSubDialogOpen] = useState(false);
 
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
-
-  const [isReplaceDialogOpen, setReplaceDialogOpen] = useState(false);
-  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
 
   const handleReloadCamera = (index: number) => {
     setReloadCounters(prevCounters => {
@@ -73,11 +55,6 @@ function ViewPageContent() {
 
         return newEvents;
     });
-  };
-
-  const handleOpenReplaceDialog = (index: number) => {
-    setReplaceIndex(index);
-    setReplaceDialogOpen(true);
   };
 
   useEffect(() => {
@@ -135,32 +112,7 @@ function ViewPageContent() {
             console.error("Failed to parse viewOrder from localStorage", e);
         }
     }
-
-    const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) {
-            return;
-        }
-
-        if (event.data.type === 'REPLACE_EVENT' && replaceIndex !== null) {
-            const { newEvent } = event.data;
-            
-            setSelectedEvents(prevEvents => {
-                const newEvents = [...prevEvents];
-                newEvents[replaceIndex] = newEvent;
-                localStorage.setItem('selectedEvents', JSON.stringify(newEvents));
-                return newEvents;
-            });
-            
-            setReplaceDialogOpen(false);
-            setReplaceIndex(null);
-        }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => {
-        window.removeEventListener('message', handleMessage);
-    };
-
-  }, [replaceIndex]);
+  }, []);
 
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
@@ -257,17 +209,6 @@ function ViewPageContent() {
           </DialogContent>
       </Dialog>
 
-      <Dialog open={isReplaceDialogOpen} onOpenChange={setReplaceDialogOpen}>
-        <DialogContent className="p-0 border-0 w-[95vw] h-[90vh] max-w-[95vw] flex flex-col">
-            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-            </DialogClose>
-            <iframe src="/?replace=true" className="w-full h-full border-0" title="Reemplazar evento" />
-        </DialogContent>
-      </Dialog>
-
-
       <div className="relative flex flex-col h-screen flex-grow">
         <div
           className={cn(
@@ -287,7 +228,6 @@ function ViewPageContent() {
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}
-             onReplace={handleOpenReplaceDialog}
           />
 
           {isChatEnabled && (

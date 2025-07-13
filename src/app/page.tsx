@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -47,8 +47,6 @@ import { Badge } from '@/components/ui/badge';
 
 export default function HomePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const isReplaceMode = searchParams.get('replace') === 'true';
 
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,16 +89,14 @@ export default function HomePage() {
     fetchEvents();
 
       const storedSelectedEvents = localStorage.getItem('selectedEvents');
-      if (storedSelectedEvents && !isReplaceMode) {
+      if (storedSelectedEvents) {
         setSelectedEvents(JSON.parse(storedSelectedEvents));
       }
-  }, [fetchEvents, isReplaceMode]);
+  }, [fetchEvents]);
 
   useEffect(() => {
-    if (!isReplaceMode) {
-        localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-    }
-  }, [selectedEvents, isReplaceMode]);
+    localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
+  }, [selectedEvents]);
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
@@ -173,11 +169,6 @@ export default function HomePage() {
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
 
-    if (isReplaceMode) {
-        window.parent.postMessage({ type: 'REPLACE_EVENT', newEvent: eventWithSelection }, '*');
-        return;
-    }
-
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
     if (isModification && modificationIndex !== null) {
@@ -208,7 +199,6 @@ export default function HomePage() {
   };
   
   const getEventSelection = (event: Event) => {
-    if (isReplaceMode) return { isSelected: false, window: null };
     const selection = selectedEvents.map((se, i) => se && se.title === event.title ? i : null).filter(i => i !== null);
     if (selection.length > 0) {
       return { isSelected: true, window: selection[0]! + 1 };
@@ -225,15 +215,13 @@ export default function HomePage() {
   
   const openDialogForEvent = (event: Event) => {
     setDialogEvent(event);
-    if (!isReplaceMode) {
-        const selection = getEventSelection(event);
-        if(selection.isSelected) {
-          setIsModification(true);
-          setModificationIndex(selection.window! - 1);
-        } else {
-          setIsModification(false);
-          setModificationIndex(selectedEvents.findIndex(e => e === null)); // Target first empty slot
-        }
+    const selection = getEventSelection(event);
+    if(selection.isSelected) {
+      setIsModification(true);
+      setModificationIndex(selection.window! - 1);
+    } else {
+      setIsModification(false);
+      setModificationIndex(selectedEvents.findIndex(e => e === null)); // Target first empty slot
     }
     setDialogOpen(true);
   };
@@ -255,7 +243,6 @@ export default function HomePage() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
-    if (isReplaceMode) return;
     setSheetOpen(false); // Close sheet before opening dialog
     setDialogEvent(event);
     setIsModification(true);
@@ -275,7 +262,6 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-        {!isReplaceMode && (
          <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-2 md:px-8 backdrop-blur-sm">
             <div className="flex items-center gap-2">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
@@ -570,25 +556,9 @@ export default function HomePage() {
                 </Button>
             </div>
         </header>
-        )}
 
-        <main className={cn("flex-grow overflow-y-auto", isReplaceMode ? "p-4 md:p-5 pt-0" : "p-4 md:p-8")}>
+        <main className="flex-grow overflow-y-auto p-4 md:p-8">
             <div className="space-y-2">
-                 {isReplaceMode && (
-                    <div className="relative mb-4 mt-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder="Buscar evento o canal para reemplazar..."
-                            className="w-full pl-10 pr-10"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={fetchEvents}>
-                            <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                        </Button>
-                    </div>
-                )}
                 {searchTerm ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
                         {searchResults.map((item, index) => {
@@ -632,7 +602,6 @@ export default function HomePage() {
                     </div>
                 ) : (
                     <>
-                        {!isReplaceMode && (
                         <div className="w-full space-y-4 pt-1 pb-1">
                              <Carousel
                                 opts={{
@@ -675,7 +644,6 @@ export default function HomePage() {
                                 </CarouselContent>
                             </Carousel>
                         </div>
-                        )}
                         
                         {isMobile ? (
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 pt-4">
@@ -718,7 +686,7 @@ export default function HomePage() {
                 onOpenChange={setDialogOpen}
                 event={dialogEvent}
                 onSelect={handleEventSelect}
-                isModification={isModification && !isReplaceMode}
+                isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
                 windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
             />
