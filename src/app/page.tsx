@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle } from 'lucide-react';
+import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle, Mail } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -377,6 +377,27 @@ export default function HomePage() {
                                         <DialogClose asChild>
                                             <Button>Cerrar</Button>
                                         </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                             <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
+                                        <Mail />
+                                        Contacto
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-md">
+                                    <DialogHeader>
+                                        <DialogTitle>Contacto</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="text-sm text-muted-foreground py-4">
+                                        <p>¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales.</p>
+                                    </div>
+                                    <DialogFooter>
+                                         <a href="mailto:deportesparatodosvercel@gmail.com" className={cn(buttonVariants({ variant: 'default' }), 'w-full')}>
+                                            Contactar
+                                        </a>
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
