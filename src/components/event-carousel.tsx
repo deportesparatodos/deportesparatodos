@@ -40,31 +40,6 @@ interface EventCarouselProps {
 }
 
 export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection }) => {
-  const [api, setApi] = useState<CarouselApi>()
-  const [canScrollPrev, setCanScrollPrev] = useState(false)
-  const [canScrollNext, setCanScrollNext] = useState(false)
-
-  useEffect(() => {
-    if (!api) {
-      return
-    }
-
-    const onSelect = (api: CarouselApi) => {
-        setCanScrollPrev(api.canScrollPrev())
-        setCanScrollNext(api.canScrollNext())
-    }
-
-    onSelect(api)
-    api.on("select", onSelect)
-    api.on("reInit", onSelect)
-
-    return () => {
-      api.off("select", onSelect)
-      api.off("reInit", onSelect)
-    }
-  }, [api])
-
-
   const hasContent = (events && events.length > 0) || (channels && channels.length > 0);
 
   if (!hasContent) {
@@ -73,72 +48,72 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
 
   return (
     <div className="w-full space-y-2">
-        <div className="flex items-center justify-between">
-             <h2 className="text-2xl font-bold">{title}</h2>
-             <div className="flex items-center gap-2">
-                <CarouselPrevious 
-                    variant="outline"
-                    className="static -translate-x-0 -translate-y-0"
-                    onClick={() => api?.scrollPrev()}
-                    disabled={!canScrollPrev}
-                />
-                <CarouselNext
-                    variant="outline"
-                    className="static -translate-x-0 -translate-y-0"
-                    onClick={() => api?.scrollNext()}
-                    disabled={!canScrollNext}
-                />
-             </div>
+      <Carousel
+        opts={{
+          align: 'start',
+          dragFree: true,
+          slidesToScroll: 'auto',
+        }}
+        className="w-full"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-2xl font-bold">{title}</h2>
+          <div className="flex items-center gap-2">
+            <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0" />
+            <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0" />
+          </div>
         </div>
-        <Carousel
-            setApi={setApi}
-            opts={{
-            align: "start",
-            dragFree: true,
-            slidesToScroll: 'auto',
-            }}
-            className="w-full"
-        >
-            <CarouselContent className="-ml-4">
-            {events && onCardClick && getEventSelection && events.map((event, index) => (
-                <CarouselItem key={`event-${event.title}-${index}`} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
-                <EventCard 
-                    event={event} 
-                    selection={getEventSelection(event)}
-                    onClick={() => onCardClick(event)}
+        <CarouselContent className="-ml-4">
+          {events &&
+            onCardClick &&
+            getEventSelection &&
+            events.map((event, index) => (
+              <CarouselItem
+                key={`event-${event.title}-${index}`}
+                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
+              >
+                <EventCard
+                  event={event}
+                  selection={getEventSelection(event)}
+                  onClick={() => onCardClick(event)}
                 />
-                </CarouselItem>
+              </CarouselItem>
             ))}
-             {channels && onChannelClick && channels.map((channel, index) => (
-                <CarouselItem key={`channel-${index}`} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4">
-                    <Card 
-                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
-                        onClick={() => onChannelClick(channel)}
-                    >
-                        <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
-                            <Image
-                                src={channel.logo}
-                                alt={`${channel.name} logo`}
-                                width={120}
-                                height={67.5}
-                                className="object-contain max-h-full max-w-full"
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.onerror = null; 
-                                    target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-                                }}
-                            />
-                        </div>
-                        <div className="p-3 bg-card">
-                            <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
-                        </div>
-                    </Card>
-                </CarouselItem>
+          {channels &&
+            onChannelClick &&
+            channels.map((channel, index) => (
+              <CarouselItem
+                key={`channel-${index}`}
+                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
+              >
+                <Card
+                  className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
+                  onClick={() => onChannelClick(channel)}
+                >
+                  <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
+                    <Image
+                      src={channel.logo}
+                      alt={`${channel.name} logo`}
+                      width={120}
+                      height={67.5}
+                      className="object-contain max-h-full max-w-full"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                      }}
+                    />
+                  </div>
+                  <div className="p-3 bg-card">
+                    <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
+                  </div>
+                </Card>
+              </CarouselItem>
             ))}
-            </CarouselContent>
-        </Carousel>
+        </CarouselContent>
+      </Carousel>
     </div>
   );
 };
-
     
+

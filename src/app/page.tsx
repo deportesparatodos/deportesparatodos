@@ -59,7 +59,6 @@ export default function HomePage() {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const isMobile = useIsMobile(650);
-  const [categoriesApi, setCategoriesApi] = useState<CarouselApi>()
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
@@ -263,7 +262,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-none">
+                        <Button variant="ghost" size="icon" className="ml-[-8px] rounded-none">
                             <Menu />
                         </Button>
                     </SheetTrigger>
@@ -596,32 +595,21 @@ export default function HomePage() {
                     </div>
                 ) : (
                     <>
-                        <div className="w-full space-y-2 pt-1 pb-1">
-                             <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-bold">Categorías</h2>
-                                <div className="flex items-center gap-2">
-                                    <CarouselPrevious
-                                        variant="outline"
-                                        className="static -translate-x-0 -translate-y-0"
-                                        onClick={() => categoriesApi?.scrollPrev()}
-                                        disabled={!categoriesApi?.canScrollPrev()}
-                                    />
-                                    <CarouselNext
-                                        variant="outline"
-                                        className="static -translate-x-0 -translate-y-0"
-                                        onClick={() => categoriesApi?.scrollNext()}
-                                        disabled={!categoriesApi?.canScrollNext()}
-                                    />
-                                </div>
-                             </div>
+                        <div className="w-full space-y-4 pt-1 pb-1">
                              <Carousel
-                                setApi={setCategoriesApi}
                                 opts={{
-                                align: "start",
-                                dragFree: true,
+                                    align: "start",
+                                    dragFree: true,
                                 }}
                                 className="w-full"
                             >
+                                <div className="flex items-center justify-between mb-2">
+                                    <h2 className="text-2xl font-bold">Categorías</h2>
+                                    <div className="flex items-center gap-2">
+                                        <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0" />
+                                        <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0" />
+                                    </div>
+                                </div>
                                 <CarouselContent className="-ml-4">
                                     <CarouselItem className="basis-auto pl-4">
                                         <Link href={`/events/live`}>
