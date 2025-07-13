@@ -23,6 +23,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { 
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
@@ -45,6 +55,7 @@ export default function HomePage() {
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const isMobile = useIsMobile(650);
 
@@ -247,8 +258,83 @@ export default function HomePage() {
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:px-8">
-            <div className="flex items-center gap-6">
-                <Link href="/" className="shrink-0 py-2 my-[10px]">
+            <div className="flex items-center gap-2">
+                <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Menu />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left">
+                        <SheetHeader>
+                            <SheetTitle>Menú</SheetTitle>
+                        </SheetHeader>
+                        <div className="py-4">
+                             <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start">Aviso Legal</Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle>Descargo de Responsabilidad – Derechos de Autor</DialogTitle>
+                                    </DialogHeader>
+                                    <ScrollArea className="h-96 pr-6">
+                                        <div className="text-sm text-muted-foreground space-y-4">
+                                            <p>Deportes para Todos es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.</p>
+                                            <p>No participamos en la creación, alteración ni distribución de dichas señales, y no somos responsables de la legalidad de los contenidos a los que se accede a través de estos terceros. Cualquier infracción potencial corresponde a dichos proveedores externos.</p>
+                                            <h3 className="font-bold text-foreground">Sobre la legalidad y responsabilidad de terceros:</h3>
+                                            <p>Existen antecedentes de sitios sancionados por alojar y retransmitir directamente contenido con derechos de autor. En contraste, Deportes para Todos no aloja señales ni transmite contenido, y se limita exclusivamente a insertar enlaces públicos de terceros mediante código iframe. No participamos en la obtención ni distribución del contenido audiovisual y no tenemos control sobre su disponibilidad o legalidad.</p>
+                                            <h3 className="font-bold text-foreground">Uso de marcas y logos:</h3>
+                                            <p>Todas las marcas, nombres comerciales, logotipos o imágenes presentes en el sitio son propiedad de sus respectivos dueños. En Deportes para Todos se utilizan exclusivamente con fines informativos o ilustrativos, respetando el derecho de cita previsto por el Artículo 32 de la Ley 11.723 de Propiedad Intelectual de Argentina.</p>
+                                            <h3 className="font-bold text-foreground">Legislación aplicable:</h3>
+                                            <p>Este sitio opera bajo las leyes de la República Argentina. El mero hecho de insertar un iframe público no configura, por sí solo, un delito conforme al derecho argentino, siempre que no se participe en la obtención o manipulación del contenido protegido.</p>
+                                            <h3 className="font-bold text-foreground">Uso personal y responsabilidad del usuario:</h3>
+                                            <p>El acceso a esta página se realiza bajo responsabilidad del usuario. Si en tu país este tipo de contenido se encuentra restringido, es tu obligación cumplir con las leyes locales. No nos responsabilizamos por el uso indebido o ilegal de los enlaces por parte de los visitantes.</p>
+                                            <h3 className="font-bold text-foreground">Sobre el uso de subdominios:</h3>
+                                            <p>Deportes para Todos utiliza subdominios como https://www.google.com/search?q=gh.deportesparatodos.com con fines exclusivamente organizativos y técnicos, para centralizar y facilitar el acceso a iframes de terceros. Estos subdominios no almacenan, manipulan ni retransmiten contenido audiovisual, sino que actúan como una ventana hacia los streams originales disponibles públicamente en sitios como streamtp3.com, la12hd.com y otros. En ningún caso se modifica la fuente original ni se interviene en el contenido emitido por dichos terceros.</p>
+                                            <h3 className="font-bold text-foreground">Sobre la experiencia del usuario:</h3>
+                                            <p>Deportes para Todos puede aplicar medidas para mejorar la experiencia de navegación, como la reducción de anuncios emergentes o contenido intrusivo de terceros. Estas medidas no interfieren con el contenido audiovisual transmitido dentro de los reproductores embebidos, ni modifican las señales originales. Cualquier bloqueo se limita a elementos externos ajenos a la emisión en sí.</p>
+                                            <h3 className="font-bold text-foreground">Monetización, publicidad y patrocinadores</h3>
+                                            <p>Deportes para Todos puede exhibir anuncios publicitarios proporcionados por plataformas de monetización de terceros (como Monetag) y/o incluir contenido patrocinado de empresas vinculadas al sector iGaming (casas de apuestas, juegos online y plataformas similares).</p>
+                                            <p>Estos ingresos publicitarios permiten el mantenimiento del sitio, pero no están directamente vinculados al contenido embebido ni implican relación comercial con las plataformas desde las cuales se obtiene dicho contenido.</p>
+                                            <p>Deportes para Todos no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.</p>
+                                            <p>Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.</p>
+                                            <p>Nos reservamos el derecho de incluir o remover campañas publicitarias en cualquier momento, y recomendamos a los usuarios consultar la política de privacidad de cada plataforma externa a la que accedan desde este sitio.</p>
+                                            <h3 className="font-bold text-foreground">Relación con los dueños del contenido:</h3>
+                                            <p>Deportes para Todos no tiene relación alguna con los titulares de los derechos de las transmisiones embebidas, ni con las plataformas que los alojan. Todo el contenido audiovisual visualizado mediante iframes es responsabilidad exclusiva del sitio externo que lo provee.</p>
+                                            <h3 className="font-bold text-foreground">Mecanismos de seguridad:</h3>
+                                            <p>No se utilizan mecanismos técnicos para eludir bloqueos, restricciones regionales (geobloqueos) ni sistemas de autenticación de las plataformas externas.</p>
+                                            <h3 className="font-bold text-foreground">Cookies y datos del usuario:</h3>
+                                            <p>Este sitio puede utilizar cookies de terceros para ofrecer una mejor experiencia de usuario, realizar estadísticas anónimas de uso o mostrar anuncios relevantes. Al navegar por Deportes para Todos usted acepta este uso de cookies. Recomendamos consultar las políticas de privacidad de los servicios externos vinculados a este sitio.</p>
+                                            <p>El contenido patrocinado relacionado con plataformas de iGaming está destinado únicamente a usuarios mayores de 18 años. Deportes para Todos no se responsabiliza por el acceso a dichas plataformas por parte de menores de edad.</p>
+                                            <p>This Site is affiliated with Monumetric (dba for The Blogger Network, LLC) for the purposes of placing advertising on the Site, and Monumetric will collect and use certain data for advertising purposes. To learn more about Monumetric’s data usage, click here: <a href="https://www.monumetric.com/publisher-advertising-privacy-policy/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Publisher Advertising Privacy</a></p>
+                                            <h3 className="font-bold text-foreground">Notificaciones de derechos de autor:</h3>
+                                            <p>Si usted es titular de derechos o su representante y considera que un contenido embebido desde una fuente externa infringe sus derechos, puede enviarnos una notificación formal mandando un mail a deportesparatodosvercel@gmail.com. Aunque no estamos sujetos a la legislación DMCA de EE.UU., colaboramos voluntariamente con cualquier requerimiento legítimo bajo dicho marco.</p>
+                                            <p>Por favor incluya en su notificación:</p>
+                                            <ul className="list-disc pl-6 space-y-1">
+                                                <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
+                                                <li>(b) Identificación clara del contenido presuntamente infringido.</li>
+                                                <li>(c) Enlace directo al contenido incrustado en Deportes para Todos.</li>
+                                                <li>(d) Datos de contacto válidos (correo electrónico).</li>
+                                                <li>(e) Una declaración de buena fe indicando que el uso no está autorizado por usted, su agente o la ley.</li>
+                                                <li>(f) Una declaración de veracidad de la información, bajo pena de perjurio.</li>
+                                            </ul>
+                                            <p>Una vez recibida y analizada la notificación, procederemos a desactivar el enlace correspondiente si así corresponde. También podremos notificar al proveedor del iframe, si fuera posible.</p>
+                                            <p className="font-bold">Al utilizar este sitio web, usted declara haber leído, comprendido y aceptado este descargo de responsabilidad en su totalidad.</p>
+                                        </div>
+                                    </ScrollArea>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button>Cerrar</Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </SheetContent>
+                </Sheet>
+
+                <Link href="/" className="shrink-0">
                     <Image
                         src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
@@ -256,6 +342,7 @@ export default function HomePage() {
                         height={37.5}
                         priority
                         data-ai-hint="logo"
+                        className="my-[18.75px]"
                     />
                 </Link>
             </div>
