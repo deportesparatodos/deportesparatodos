@@ -47,7 +47,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
   }
 
   return (
-    <div className="w-full space-y-2 mb-[25px]">
+    <div className="w-full space-y-2">
       <Carousel
         opts={{
           align: 'start',
@@ -116,6 +116,3 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
   );
 };
     
-
-
-

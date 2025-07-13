@@ -651,11 +651,21 @@ export default function HomePage() {
                             </div>
                         ) : (
                             <>
-                                <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                                <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
-                                <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                                <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                                <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                <div className="mb-8">
+                                    <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                </div>
+                                <div className="mb-8">
+                                    <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
+                                </div>
+                                <div className="mb-8">
+                                    <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                </div>
+                                <div className="mb-8">
+                                    <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                </div>
+                                <div className="mb-8">
+                                    <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                </div>
                             </>
                         )}
                     </>
