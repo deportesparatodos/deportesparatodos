@@ -47,7 +47,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
   }
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-2 mb-[15px]">
       <Carousel
         opts={{
           align: 'start',
@@ -59,8 +59,8 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold">{title}</h2>
           <div className="flex items-center gap-2">
-            <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0" />
-            <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0" />
+            <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
+            <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
           </div>
         </div>
         <CarouselContent className="-ml-4">
@@ -116,4 +116,5 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
   );
 };
     
+
 
