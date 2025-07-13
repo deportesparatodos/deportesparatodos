@@ -24,7 +24,6 @@ function ViewPageContent() {
   
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
   const [progress, setProgress] = useState(100);
-  const [isSubDialogOpen, setIsSubDialogOpen] = useState(false);
 
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
@@ -61,7 +60,7 @@ function ViewPageContent() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (welcomePopupOpen && !isSubDialogOpen) {
+    if (welcomePopupOpen) {
       interval = setInterval(() => {
         setProgress((prev) => {
           if (prev <= 0) {
@@ -74,7 +73,7 @@ function ViewPageContent() {
       }, 100); 
     }
     return () => clearInterval(interval);
-  }, [welcomePopupOpen, isSubDialogOpen]);
+  }, [welcomePopupOpen]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -182,12 +181,15 @@ function ViewPageContent() {
     <div className="flex h-screen w-screen bg-background text-foreground">
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
           <DialogContent className="sm:max-w-md p-0" hideClose>
+              <DialogHeader className="sr-only">
+                  <DialogTitle>Bienvenida</DialogTitle>
+              </DialogHeader>
               <div className="relative">
                   <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
               </div>
-              <DialogHeader className="px-6 pt-8 pb-2 text-center">
-                  <DialogTitle>¡Bienvenido a Deportes para Todos!</DialogTitle>
-              </DialogHeader>
+              <div className="px-6 pt-8 pb-2 text-center">
+                  <h2 className="text-lg font-bold">¡Bienvenido a Deportes para Todos!</h2>
+              </div>
               <div className="px-6 pb-6 pt-0 text-sm text-muted-foreground text-left">
                   <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
               </div>
@@ -213,6 +215,7 @@ function ViewPageContent() {
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}
+             onModify={() => {}} // No-op, functionality removed
              gridGap={gridGap}
              onGridGapChange={(value) => {
                  setGridGap(value);

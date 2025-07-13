@@ -125,6 +125,9 @@ export default function HomePage() {
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
+  }, [selectedEvents]);
+  
+  useEffect(() => {
     const activeEventIndexes = selectedEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
     const currentOrderActive = viewOrder.filter(i => activeEventIndexes.includes(i));
     const newOrder = [...currentOrderActive];
@@ -133,10 +136,14 @@ export default function HomePage() {
             newOrder.push(i);
         }
     }
-    setViewOrder(newOrder);
-    localStorage.setItem('viewOrder', JSON.stringify(newOrder));
-  }, [selectedEvents]);
-  
+    
+    // Only update and save if the order has actually changed
+    if (JSON.stringify(newOrder) !== JSON.stringify(viewOrder)) {
+        setViewOrder(newOrder);
+        localStorage.setItem('viewOrder', JSON.stringify(newOrder));
+    }
+  }, [selectedEvents]); // Removed viewOrder from dependencies to fix infinite loop
+
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
     const presentIndexes = new Set(newOrder);
@@ -321,6 +328,7 @@ export default function HomePage() {
                     </SheetTrigger>
                     <SheetContent side="left" className="p-0">
                         <SheetHeader className="items-center border-b border-border p-4">
+                           <DialogTitle className="sr-only">Menú Principal</DialogTitle>
                             <Image
                                 src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                                 alt="Deportes Para Todos Logo"
