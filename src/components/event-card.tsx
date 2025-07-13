@@ -13,11 +13,15 @@ interface EventCardProps {
   onClick: () => void;
 }
 
+const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
+
 export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => {
-  const timeDisplay = 
-    event.status.toLowerCase() === 'en vivo' ? 'AHORA' : 
-    (event.status.toLowerCase() === 'desconocido' || event.status.toLowerCase() === 'finalizado') ? '--:--' : 
-    event.time;
+  const timeDisplay = (() => {
+    const status = event.status.toLowerCase();
+    if (status === 'en vivo') return 'AHORA';
+    if (status === 'próximo' && isValidTimeFormat(event.time)) return event.time;
+    return '--:--';
+  })();
 
   return (
     <div 
