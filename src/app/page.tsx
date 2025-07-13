@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle, Mail } from 'lucide-react';
+import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -265,8 +265,8 @@ export default function HomePage() {
                             <Menu />
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="left">
-                        <SheetHeader className="items-center border-b border-border pb-4">
+                    <SheetContent side="left" className="p-0">
+                        <SheetHeader className="items-center border-b border-border p-4">
                             <Image
                                 src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                                 alt="Deportes Para Todos Logo"
@@ -275,7 +275,65 @@ export default function HomePage() {
                                 priority
                             />
                         </SheetHeader>
-                        <div className="py-4 space-y-2">
+                        <div className="p-4 space-y-2">
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
+                                        <BookOpen />
+                                        Tutorial
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle>Tutorial de Uso</DialogTitle>
+                                    </DialogHeader>
+                                    <ScrollArea className="h-96 pr-6">
+                                        <div className="text-sm text-muted-foreground space-y-4">
+                                            <p>¡Bienvenido a Deportes para Todos! Esta guía te ayudará a sacar el máximo provecho de la plataforma.</p>
+                                            
+                                            <h3 className="font-bold text-foreground">1. Navegación Principal</h3>
+                                            <ul className="list-disc pl-5 space-y-1">
+                                                <li><span className="font-semibold">Barra de Búsqueda:</span> Ubicada en la parte superior, te permite buscar eventos o canales por nombre. Los resultados aparecerán al instante.</li>
+                                                <li><span className="font-semibold">Carrusel de Categorías:</span> Desplázate horizontalmente para ver todas las categorías disponibles como "En Vivo", "Fútbol", "Canales", etc. Haz clic en una para ver todos sus eventos.</li>
+                                                <li><span className="font-semibold">Carruseles de Eventos:</span> En la vista de escritorio, los eventos están organizados por estado ("En Vivo", "Próximos", etc.) en carruseles que puedes deslizar.</li>
+                                            </ul>
+
+                                            <h3 className="font-bold text-foreground">2. Seleccionar Eventos para Ver</h3>
+                                            <ul className="list-disc pl-5 space-y-1">
+                                                <li><span className="font-semibold">Haz clic en una Tarjeta:</span> Cuando encuentres un evento o canal que te interese, haz clic en su tarjeta.</li>
+                                                <li><span className="font-semibold">Elige una Opción:</span> Se abrirá un diálogo con uno o más botones. Cada botón representa una fuente de transmisión diferente. Elige la que prefieras.</li>
+                                                <li><span className="font-semibold">Asignación a Ventana:</span> Al seleccionar una opción, el evento se asigna automáticamente a la primera "ventana" de visualización disponible (tienes hasta 9).</li>
+                                            </ul>
+
+                                            <h3 className="font-bold text-foreground">3. Gestionar tus Eventos Seleccionados</h3>
+                                            <ul className="list-disc pl-5 space-y-1">
+                                                <li><span className="font-semibold">Botón "Eventos Seleccionados":</span> En la esquina superior derecha, este botón te muestra cuántos eventos has elegido. Haz clic para abrir un panel y ver tu lista.</li>
+                                                <li><span className="font-semibold">Modificar o Eliminar:</span> Desde el panel de seleccionados, puedes hacer clic en un evento para cambiar la fuente de transmisión o para eliminarlo de tu selección.</li>
+                                            </ul>
+
+                                            <h3 className="font-bold text-foreground">4. Iniciar la Vista Múltiple</h3>
+                                            <ul className="list-disc pl-5 space-y-1">
+                                                <li><span className="font-semibold">Botón "Iniciar Vista":</span> Una vez que hayas seleccionado al menos un evento, este botón (de color verde) se activará. Haz clic en él para ir a la pantalla de visualización.</li>
+                                                <li><span className="font-semibold">Cuadrícula Dinámica:</span> La pantalla se dividirá automáticamente para mostrar todos los eventos que seleccionaste. La cuadrícula se adapta de 1 a 9 ventanas.</li>
+                                            </ul>
+
+                                            <h3 className="font-bold text-foreground">5. Menú Lateral de Ayuda</h3>
+                                            <p>El icono de menú en la esquina superior izquierda abre un panel con información útil:</p>
+                                            <ul className="list-disc pl-5 space-y-1">
+                                                <li><span className="font-semibold">Aviso Legal:</span> Términos y condiciones del servicio.</li>
+                                                <li><span className="font-semibold">Errores y Soluciones:</span> Guía para resolver problemas comunes de reproducción. ¡Muy recomendado si un video no carga!</li>
+                                                <li><span className="font-semibold">Contacto:</span> Para enviarnos sugerencias o reportar errores.</li>
+                                            </ul>
+                                            <p className="font-bold mt-2">¡Explora, combina y disfruta de todos tus deportes favoritos en un solo lugar!</p>
+                                        </div>
+                                    </ScrollArea>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button>Entendido</Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                              <Dialog>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" className="w-full justify-start gap-2">
