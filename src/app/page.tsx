@@ -451,39 +451,7 @@ export default function HomePage() {
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start gap-2">
-                                        <Settings />
-                                        Configuración
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                    <DialogTitle>Configuración de Vista</DialogTitle>
-                                    <DialogDescription>
-                                        Personaliza la apariencia de la cuadrícula de visualización. Los cambios se guardarán automáticamente.
-                                    </DialogDescription>
-                                    </DialogHeader>
-                                    <LayoutConfigurator
-                                        gridGap={gridGap}
-                                        onGridGapChange={(value) => {
-                                            setGridGap(value);
-                                            localStorage.setItem('gridGap', value.toString());
-                                        }}
-                                        borderColor={borderColor}
-                                        onBorderColorChange={(value) => {
-                                            setBorderColor(value);
-                                            localStorage.setItem('borderColor', value);
-                                        }}
-                                        isChatEnabled={isChatEnabled}
-                                        onIsChatEnabledChange={(value) => {
-                                            setIsChatEnabled(value);
-                                            localStorage.setItem('isChatEnabled', JSON.stringify(value));
-                                        }}
-                                    />
-                                </DialogContent>
-                            </Dialog>
+                            
                              <Dialog>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" className="w-full justify-start gap-2">
@@ -541,6 +509,39 @@ export default function HomePage() {
                 <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(!isSearchOpen)}>
                     {isSearchOpen ? <X /> : <Search />}
                 </Button>
+
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Settings />
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                        <DialogTitle>Configuración de Vista</DialogTitle>
+                        <DialogDescription>
+                            Personaliza la apariencia de la cuadrícula de visualización. Los cambios se guardarán automáticamente.
+                        </DialogDescription>
+                        </DialogHeader>
+                        <LayoutConfigurator
+                            gridGap={gridGap}
+                            onGridGapChange={(value) => {
+                                setGridGap(value);
+                                localStorage.setItem('gridGap', value.toString());
+                            }}
+                            borderColor={borderColor}
+                            onBorderColorChange={(value) => {
+                                setBorderColor(value);
+                                localStorage.setItem('borderColor', value);
+                            }}
+                            isChatEnabled={isChatEnabled}
+                            onIsChatEnabledChange={(value) => {
+                                setIsChatEnabled(value);
+                                localStorage.setItem('isChatEnabled', JSON.stringify(value));
+                            }}
+                        />
+                    </DialogContent>
+                </Dialog>
 
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                     <SheetTrigger asChild>

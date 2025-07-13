@@ -2,9 +2,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings, ArrowUp, ArrowDown, RotateCw, Trash2, SlidersHorizontal } from 'lucide-react';
+import { Settings, ArrowUp, ArrowDown, RotateCw, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Event } from '@/components/event-carousel';
 import { Separator } from './ui/separator';
@@ -63,7 +63,7 @@ export function CameraConfigurationComponent({
         <SheetHeader>
           <SheetTitle>Configurar Vista</SheetTitle>
           <SheetDescription>
-            Arrastra y suelta eventos para reordenarlos o usa los controles.
+            Ajusta el diseño y reordena los eventos.
           </SheetDescription>
         </SheetHeader>
         <Separator className="my-4" />
@@ -76,8 +76,10 @@ export function CameraConfigurationComponent({
             onIsChatEnabledChange={onIsChatEnabledChange}
         />
         <Separator className="my-4" />
-
-        <ScrollArea className="h-[calc(100%-18rem)]">
+        <SheetDescription>
+            Reordena, recarga o elimina ventanas.
+        </SheetDescription>
+        <ScrollArea className="h-[calc(100%-20rem)] mt-4">
           <div className="space-y-4 pr-4">
             {order.map((originalIndex, currentIndex) => {
               const event = eventDetails[originalIndex];
