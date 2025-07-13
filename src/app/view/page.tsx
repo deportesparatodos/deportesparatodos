@@ -2,22 +2,15 @@
 "use client";
 
 import Link from 'next/link';
-import { X, Loader2, Menu, MessageSquare, HelpCircle, AlertCircle, FileText, Mail, Settings } from "lucide-react";
+import { X, Loader2, Menu, MessageSquare, Settings } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
-import { channels as allChannels } from '@/components/channel-list';
 import type { Event } from '@/components/event-carousel';
-import { addHours, isAfter, parseISO, isValid } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { useIsMobile } from '@/hooks/use-is-mobile';
-import type { ScheduledLayoutChange } from '@/components/schedule-manager';
-import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-
 
 const getOrderClass = (order: number) => {
     switch (order) {
@@ -35,8 +28,7 @@ const getOrderClass = (order: number) => {
 };
 
 function ViewPageContent() {
-  const [urls, setUrls] = useState<string[]>(Array(9).fill(''));
-  const [numCameras, setNumCameras] = useState<number>(1);
+  const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [isMounted, setIsMounted] = useState(false);
   const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#000000');
@@ -49,7 +41,6 @@ function ViewPageContent() {
   const [progress, setProgress] = useState(100);
   const [isSubDialogOpen, setIsSubDialogOpen] = useState(false);
 
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
   const handleReloadCamera = (index: number) => {
@@ -82,19 +73,16 @@ function ViewPageContent() {
     setWelcomePopupOpen(true);
     setProgress(100);
 
-    const storedUrls = localStorage.getItem('cameraUrls');
-    if (storedUrls) {
-      const parsedUrls = JSON.parse(storedUrls);
-      const newUrls = Array(9).fill('');
-      parsedUrls.slice(0, 9).forEach((url: string, i: number) => {
-        newUrls[i] = url;
+    const storedEvents = localStorage.getItem('selectedEvents');
+    if (storedEvents) {
+      const parsedEvents: (Event | null)[] = JSON.parse(storedEvents);
+      const newSelectedEvents = Array(9).fill(null);
+      parsedEvents.slice(0, 9).forEach((event, i) => {
+        newSelectedEvents[i] = event;
       });
-      setUrls(newUrls);
+      setSelectedEvents(newSelectedEvents);
     }
-    const storedNumCameras = localStorage.getItem('numCameras');
-    if (storedNumCameras) {
-      setNumCameras(parseInt(storedNumCameras, 10));
-    }
+
     const storedGap = localStorage.getItem('gridGap');
     if (storedGap) {
       setGridGap(parseInt(storedGap, 10));
@@ -120,21 +108,24 @@ function ViewPageContent() {
     }
   }, []);
 
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('viewOrder', JSON.stringify(viewOrder));
-    }
-  }, [viewOrder, isMounted]);
+  const handleOrderChange = (newOrder: number[]) => {
+    setViewOrder(newOrder);
+    localStorage.setItem('viewOrder', JSON.stringify(newOrder));
+  };
 
+  const activeEvents = useMemo(() => {
+    return selectedEvents.filter(event => event !== null) as Event[];
+  }, [selectedEvents]);
+
+  const numCameras = activeEvents.length;
 
   const urlsToDisplay = useMemo(() => {
-      const activeUrls = urls.slice(0, numCameras);
-      return activeUrls.map((url, index) => ({
-          url,
-          originalIndex: index,
+      return activeEvents.map((event, index) => ({
+          url: (event as any).selectedOption,
+          originalIndex: selectedEvents.findIndex(e => e?.title === event.title && (e as any).selectedOption === (event as any).selectedOption),
           reloadKey: reloadCounters[index] || 0,
       }));
-  }, [urls, numCameras, reloadCounters]);
+  }, [activeEvents, selectedEvents, reloadCounters]);
 
 
   if (!isMounted) {
@@ -170,9 +161,12 @@ function ViewPageContent() {
     case 4:
       gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-4 md:grid-rows-2";
       break;
+    case 5:
     case 6:
       gridContainerClasses += " grid-cols-1 md:grid-cols-3 grid-rows-6 md:grid-rows-2";
       break;
+    case 7:
+    case 8:
     case 9:
       gridContainerClasses += " grid-cols-1 md:grid-cols-3 grid-rows-9 md:grid-rows-3";
       break;
@@ -184,7 +178,7 @@ function ViewPageContent() {
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
-          <DialogContent className="sm:max-w-md p-0">
+          <DialogContent className="sm:max-w-md p-0" hideClose>
               <div className="relative">
                   <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
               </div>
@@ -208,6 +202,14 @@ function ViewPageContent() {
               : { top: `${gridGap}px`, right: `${gridGap}px` }
           }
         >
+          
+          <CameraConfigurationComponent
+             events={activeEvents}
+             order={viewOrder.filter(i => selectedEvents[i] !== null)}
+             onOrderChange={handleOrderChange}
+             eventDetails={selectedEvents}
+          />
+
           {isChatEnabled && (
             <Button 
               size="icon" 
@@ -238,19 +240,36 @@ function ViewPageContent() {
           }}
         >
           {urlsToDisplay.map((item) => {
-            const visualOrder = viewOrder.indexOf(item.originalIndex);
-            
+            if (!item.url) return null;
+
+            const logicalIndex = item.originalIndex;
+            const eventData = selectedEvents[logicalIndex];
+
+            // Find the current visual position of this item
+            const visualOrder = viewOrder.indexOf(logicalIndex);
+
             const windowClasses: string[] = ["overflow-hidden", "relative", "bg-black"];
-            if (!item.url) {
-                windowClasses.push("bg-red-500", "flex", "items-center", "justify-center", "text-destructive-foreground", "font-bold");
-            }
              if (numIframes === 3) {
-              windowClasses.push(
-                'md:col-span-1 md:row-span-1',
-                visualOrder === 0 ? 'md:col-span-2' : ''
-              );
+                if (isMobile) {
+                    windowClasses.push('col-span-1', 'row-span-1');
+                } else {
+                    windowClasses.push(
+                        'md:col-span-1 md:row-span-1',
+                        visualOrder === 0 ? 'md:col-span-2' : ''
+                    );
+                }
             }
-            
+             if (numIframes >= 5 && numIframes <=6) {
+                if(isMobile) {
+                    windowClasses.push('col-span-1', 'row-span-1');
+                } else {
+                     windowClasses.push(
+                        'md:col-span-1 md:row-span-1',
+                        visualOrder === 0 || visualOrder === 1 ? 'md:col-span-3 md:row-span-1' : 'md:col-span-2 md:row-span-1'
+                    );
+                }
+            }
+
             let iframeSrc = item.url 
               ? `${item.url}${item.url.includes('?') ? '&' : '?'}reload=${item.reloadKey}`
               : '';
@@ -264,22 +283,28 @@ function ViewPageContent() {
                 key={`${item.originalIndex}-${item.reloadKey}`}
                 className={cn(windowClasses, getOrderClass(visualOrder + 1))}
               >
-                {item.url ? (
-                  <iframe
-                    src={iframeSrc}
-                    title={`Stream ${item.originalIndex + 1}`}
-                    className="w-full h-full border-0"
-                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full text-white font-bold text-xl bg-muted/20">
-                    VENTANA VACÍA
-                  </div>
-                )}
+                <iframe
+                  src={iframeSrc}
+                  title={`Stream ${item.originalIndex + 1}`}
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                  allowFullScreen
+                />
               </div>
             );
           })}
+           {/* Render empty slots */}
+          {Array.from({ length: 9 - urlsToDisplay.length }).map((_, i) => (
+             <div
+                key={`empty-${i}`}
+                className={cn(
+                    "overflow-hidden", "relative", "bg-black", "flex items-center justify-center w-full h-full text-white font-bold text-xl bg-muted/20",
+                    getOrderClass(urlsToDisplay.length + i + 1)
+                )}
+              >
+                VENTANA VACÍA
+            </div>
+          ))}
         </main>
       </div>
       
