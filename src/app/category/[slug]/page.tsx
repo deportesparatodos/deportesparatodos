@@ -5,7 +5,7 @@ import type { Event } from '@/components/event-carousel';
 // This function runs at build time to fetch all possible categories
 export async function generateStaticParams() {
   try {
-    const response = await fetch('https://cors-anywhere.herokuapp.com/https://agenda-dpt.vercel.app/api/events');
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`);
     if (!response.ok) {
         console.error('Failed to fetch events for static params');
         return [];
@@ -28,7 +28,7 @@ export async function generateStaticParams() {
 // This function runs on the server for each category page
 async function getCategoryEvents(categoryName: string): Promise<Event[]> {
     try {
-        const response = await fetch('https://cors-anywhere.herokuapp.com/https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, { cache: 'no-store' });
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }

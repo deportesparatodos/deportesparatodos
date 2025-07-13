@@ -49,7 +49,7 @@ export default function HomePage() {
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://cors-anywhere.herokuapp.com/https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
+      const response = await fetch('/api/events', { cache: 'no-store' });
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
@@ -243,7 +243,7 @@ export default function HomePage() {
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm md:px-8">
             <div className="flex items-center gap-6">
-                <Link href="/" className="shrink-0 py-2">
+                <Link href="/" className="shrink-0 py-2 my-[10px]">
                     <Image
                         src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
@@ -337,10 +337,10 @@ export default function HomePage() {
                                 return (
                                     <Card 
                                         key={`search-channel-${index}`}
-                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
+                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-[150px] flex flex-col"
                                         onClick={() => handleChannelClick(item)}
                                     >
-                                        <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
+                                        <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10">
                                             <Image
                                                 src={item.logo}
                                                 alt={`${item.name} logo`}
@@ -381,7 +381,7 @@ export default function HomePage() {
                                 }}
                                 className="w-full relative px-12"
                             >
-                                <CarouselContent className="-ml-4">
+                                <CarouselContent className="-ml-4 my-[5px]">
                                     <CarouselItem className="basis-auto pl-4">
                                         <Link href={`/events/live`}>
                                             <Button variant="secondary" className="h-12 px-6 text-lg">

@@ -2,7 +2,7 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'export', // Enable static exports
+  // output: 'export', // Cannot be used with API routes
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || '', // For GitHub Pages
   images: {
     unoptimized: true, // Required for static export, or configure remotePatterns
