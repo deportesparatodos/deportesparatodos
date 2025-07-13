@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { EventCard } from '@/components/event-card';
 import type { Event } from '@/components/event-carousel'; 
 import { Loader2, ArrowLeft, Tv, Menu, Search, RotateCw } from 'lucide-react';
-import { EventSelectionDialog } from './event-selection-dialog';
+import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import {
   Sheet,
   SheetContent,
@@ -37,7 +37,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
   const fetchCategoryEvents = useCallback(async () => {
     setIsLoading(true);
     try {
-        const response = await fetch('https://agenda-dpt.vercel.app/api/events', { cache: 'no-store' });
+        const response = await fetch('/api/events', { cache: 'no-store' });
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
@@ -53,13 +53,13 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
           (event) => event.category.toLowerCase() === categoryName.toLowerCase()
         );
 
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
+        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
         filtered.sort((a, b) => {
             if (a.status !== b.status) {
                 return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
             }
-            // Custom sort for "En Vivo"
-            if (a.status === 'En Vivo' && b.status === 'En Vivo') {
+             // Custom sort for "En Vivo" and "Desconocido"
+            if (a.status === 'En Vivo' || a.status === 'Desconocido') {
                 const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
                 const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
 
@@ -219,7 +219,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
             <Button
                 onClick={handleStartView}
                 disabled={selectedEvents.filter(Boolean).length === 0}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white my-[10px]"
             >
                 <Tv className="mr-2 h-4 w-4" />
                 Iniciar Vista ({selectedEvents.filter(Boolean).length})

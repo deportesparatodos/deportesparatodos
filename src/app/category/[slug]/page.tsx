@@ -1,5 +1,5 @@
 
-import { CategoryClientPage } from '@/components/category-client-page';
+import { CategoryClientPage } from '@/app/category-client-page';
 import type { Event } from '@/components/event-carousel';
 
 // This function runs at build time to fetch all possible categories
@@ -44,14 +44,14 @@ async function getCategoryEvents(categoryName: string): Promise<Event[]> {
           (event) => event.category.toLowerCase() === categoryName.toLowerCase()
         );
 
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
+        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
         
         filtered.sort((a, b) => {
             if (a.status !== b.status) {
                 return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
             }
-             // Custom sort for "En Vivo"
-            if (a.status === 'En Vivo' && b.status === 'En Vivo') {
+             // Custom sort for "En Vivo" and "Desconocido"
+            if (a.status === 'En Vivo' || a.status === 'Desconocido') {
                 const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
                 const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
 
