@@ -58,7 +58,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
       >
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold">{title}</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-[10px]">
             <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
             <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
           </div>

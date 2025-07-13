@@ -65,7 +65,7 @@ export function CameraConfigurationComponent({ events, order, onOrderChange, eve
                       }}
                     />
                   </div>
-                  <p className="text-sm font-semibold flex-grow">{event.title}</p>
+                  <p className="text-sm font-semibold flex-grow break-words">{event.title}</p>
                   <div className="flex flex-col gap-1 flex-shrink-0">
                     <Button 
                       variant="ghost" 
