@@ -43,11 +43,13 @@ function ViewPageContent() {
         localStorage.setItem('selectedEvents', JSON.stringify(newEvents));
         
         setViewOrder(prevOrder => {
-            const newOrder = prevOrder.filter(i => i !== indexToRemove);
-            while(newOrder.length < 9) {
-                const missingIndex = Array.from({length: 9}, (_, i) => i).find(i => !newOrder.includes(i));
-                if(missingIndex !== undefined) newOrder.push(missingIndex);
-                else break;
+            const currentActiveOrder = prevOrder.filter(i => newEvents[i] !== null);
+            const newOrder = [...currentActiveOrder];
+             // Add back the non-active indices to preserve the full order array length
+            for (let i = 0; i < 9; i++) {
+                if (!newOrder.includes(i) && newEvents[i] === null) {
+                    newOrder.push(i);
+                }
             }
             localStorage.setItem('viewOrder', JSON.stringify(newOrder));
             return newOrder;
@@ -164,33 +166,16 @@ function ViewPageContent() {
     );
   }
 
-  let gridContainerClasses = "grid flex-grow w-full h-full";
-
-  switch (numCameras) {
-    case 1:
-      gridContainerClasses += " grid-cols-1 grid-rows-1";
-      break;
-    case 2:
-      gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
-      break;
-    case 3:
-      gridContainerClasses += " grid-cols-1 md:grid-cols-2 md:grid-rows-2";
-      break;
-    case 4:
-      gridContainerClasses += " grid-cols-1 md:grid-cols-2 grid-rows-4 md:grid-rows-2";
-      break;
-    case 5:
-    case 6:
-      gridContainerClasses += " grid-cols-1 md:grid-cols-3 grid-rows-6 md:grid-rows-2";
-      break;
-    case 7:
-    case 8:
-    case 9:
-      gridContainerClasses += " grid-cols-1 md:grid-cols-3 grid-rows-9 md:grid-rows-3";
-      break;
-    default:
-      gridContainerClasses += " grid-cols-1 grid-rows-1";
-  }
+  const getGridClasses = (count: number) => {
+    if (count <= 1) return 'grid-cols-1 grid-rows-1';
+    if (count === 2) return 'grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1';
+    if (count <= 4) return 'grid-cols-1 md:grid-cols-2 grid-rows-4 md:grid-rows-2';
+    if (count <= 6) return 'grid-cols-1 md:grid-cols-3 grid-rows-6 md:grid-rows-2';
+    if (count <= 9) return 'grid-cols-1 md:grid-cols-3 grid-rows-9 md:grid-rows-3';
+    return 'grid-cols-1 grid-rows-1';
+  };
+  
+  const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
 
 
   return (
@@ -263,27 +248,7 @@ function ViewPageContent() {
             if (!item || !item.url) return null;
             
             const windowClasses: string[] = ["overflow-hidden", "relative", "bg-black"];
-             if (numCameras === 3) {
-                if (isMobile) {
-                    windowClasses.push('col-span-1', 'row-span-1');
-                } else {
-                    windowClasses.push(
-                        'md:col-span-1 md:row-span-1',
-                        visualIndex === 0 ? 'md:col-span-2' : ''
-                    );
-                }
-            }
-             if (numCameras >= 5 && numCameras <=6) {
-                if(isMobile) {
-                    windowClasses.push('col-span-1', 'row-span-1');
-                } else {
-                     windowClasses.push(
-                        'md:col-span-1 md:row-span-1',
-                        visualIndex === 0 || visualIndex === 1 ? 'md:col-span-3 md:row-span-1' : 'md:col-span-2 md:row-span-1'
-                    );
-                }
-            }
-
+            
             let iframeSrc = item.url 
               ? `${item.url}${item.url.includes('?') ? '&' : '?'}reload=${item.reloadKey}`
               : '';
