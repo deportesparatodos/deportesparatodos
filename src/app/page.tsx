@@ -605,7 +605,7 @@ export default function HomePage() {
             </div>
         </header>
 
-        <main className="flex-grow overflow-y-auto p-4 md:p-8">
+        <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8">
             <div className="space-y-2">
                 {searchTerm ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
@@ -650,7 +650,7 @@ export default function HomePage() {
                     </div>
                 ) : (
                     <>
-                        <div className="w-full space-y-4 pt-1 pb-1">
+                        <div className="w-full space-y-4 pt-4 pb-1">
                              <Carousel
                                 opts={{
                                     align: "start",
@@ -742,4 +742,5 @@ export default function HomePage() {
         )}
     </div>
   );
-}
+
+    
