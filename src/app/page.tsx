@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen } from 'lucide-react';
+import { Loader2, Tv, X, Menu, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -15,7 +15,6 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-  type CarouselApi,
 } from "@/components/ui/carousel";
 import {
   Sheet,
@@ -43,6 +42,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function HomePage() {
@@ -58,6 +58,7 @@ export default function HomePage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const isMobile = useIsMobile(650);
 
   const fetchEvents = useCallback(async () => {
@@ -256,9 +257,11 @@ export default function HomePage() {
     );
   }
 
+  const selectedEventsCount = selectedEvents.filter(Boolean).length;
+
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-        <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm md:px-8">
+        <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-2 md:px-8 backdrop-blur-sm">
             <div className="flex items-center gap-2">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
@@ -477,15 +480,34 @@ export default function HomePage() {
                 </Link>
             </div>
 
-            <div className="flex items-center gap-2 mr-2">
+            <div className="flex flex-1 items-center justify-end gap-2">
+                <div className={cn("flex-1 justify-end", isSearchOpen ? 'flex' : 'hidden')}>
+                    <div className="relative w-full max-w-sm">
+                        <Input
+                            type="text"
+                            placeholder="Buscar evento o canal..."
+                            className="w-full pr-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                         <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={fetchEvents}>
+                            <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
+                </div>
+
+                <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+                    {isSearchOpen ? <X /> : <Search />}
+                </Button>
+
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                     <SheetTrigger asChild>
                          <Button
                             variant="outline"
-                            disabled={selectedEvents.filter(Boolean).length === 0}
+                            disabled={selectedEventsCount === 0}
                         >
                             <Menu className="mr-2 h-4 w-4" />
-                            Eventos Seleccionados
+                            <span className="hidden md:inline">Seleccionados</span>
                         </Button>
                     </SheetTrigger>
                     <SheetContent>
@@ -516,42 +538,32 @@ export default function HomePage() {
                                         <p className="text-sm font-semibold flex-grow truncate">{event.title}</p>
                                     </div>
                                 ))}
-                                {selectedEvents.filter(Boolean).length === 0 && (
+                                {selectedEventsCount === 0 && (
                                     <p className="text-muted-foreground text-center pt-8">No has seleccionado ningún evento.</p>
                                 )}
                             </div>
                         </ScrollArea>
                     </SheetContent>
                 </Sheet>
-                 <Button
+
+                <Button
+                    size="icon"
                     onClick={handleStartView}
-                    disabled={selectedEvents.filter(Boolean).length === 0}
-                    className="bg-green-600 hover:bg-green-700 text-white my-[10px]"
+                    disabled={selectedEventsCount === 0}
+                    className="bg-green-600 hover:bg-green-700 text-white relative"
                 >
-                    <Tv className="mr-2 h-4 w-4" />
-                    Iniciar Vista ({selectedEvents.filter(Boolean).length})
+                    <Play />
+                     {selectedEventsCount > 0 && (
+                        <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
+                            {selectedEventsCount}
+                        </Badge>
+                    )}
                 </Button>
             </div>
         </header>
 
         <main className="flex-grow overflow-y-auto p-4 md:p-8">
             <div className="space-y-2">
-                <div className="w-full">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input 
-                            type="text"
-                            placeholder="Buscar evento o canal..."
-                            className="w-full pl-10 pr-10"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={fetchEvents}>
-                             <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                        </Button>
-                    </div>
-                </div>
-
                 {searchTerm ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
                         {searchResults.map((item, index) => {
