@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Label } from '@/components/ui/label';
@@ -29,11 +28,11 @@ interface LayoutConfiguratorProps {
   order: number[];
   onOrderChange: (newOrder: number[]) => void;
   eventDetails: (Event | null)[];
-  onReload: (index: number) => void;
+  onReload?: (index: number) => void;
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
   isViewPage: boolean;
-  onAddEvent: () => void;
+  onAddEvent?: () => void;
 }
 
 export function LayoutConfigurator({
@@ -185,26 +184,27 @@ export function LayoutConfigurator({
                                     >
                                       <ArrowDown className="h-4 w-4" />
                                     </Button>
-                                    {isViewPage && (
-                                      <>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-7 w-7"
-                                          onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
-                                        >
-                                          <RotateCw className="h-4 w-4" />
-                                        </Button>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-7 w-7"
-                                          onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                      </>
+                                    
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-7 w-7"
+                                      onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+
+                                    {isViewPage && onReload && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7"
+                                        onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
+                                      >
+                                        <RotateCw className="h-4 w-4" />
+                                      </Button>
                                     )}
+
                                     <Button 
                                       variant="ghost" 
                                       size="icon" 
@@ -221,7 +221,7 @@ export function LayoutConfigurator({
                       {activeEventsCount === 0 && (
                         <p className="text-muted-foreground text-center pt-8">No hay eventos seleccionados.</p>
                     )}
-                     {isViewPage && (
+                     {isViewPage && onAddEvent && (
                         <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={onAddEvent}>
                             <Plus className="mr-2 h-4 w-4" />
                             Añadir Evento/Canal
