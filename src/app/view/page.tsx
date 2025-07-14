@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText } from "lucide-react";
+import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -19,34 +19,12 @@ import { EventCard } from '@/components/event-card';
 import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
-import { Search } from 'lucide-react';
+import { EventCarousel } from '@/components/event-carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { toZonedTime, format } from 'date-fns-tz';
 
-function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
+function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, ppvEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], ppvEvents: Event[] }) {
     const [searchTerm, setSearchTerm] = useState('');
-
-    const { searchResults } = useMemo(() => {
-        let results: (Event | Channel)[] = [];
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
-
-        if (searchTerm) {
-            const lowercasedFilter = searchTerm.toLowerCase();
-            const filteredEvents = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
-            const filteredChannels = allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
-            results = [...filteredEvents, ...filteredChannels];
-        } else {
-            results = [...allEvents, ...allChannels];
-        }
-        
-        results.sort((a, b) => {
-            const statusA = 'status' in a ? (a as Event).status : 'Channel';
-            const statusB = 'status' in b ? (b as Event).status : 'Channel';
-            const orderA = statusA === 'Channel' ? 0.5 : (statusOrder[statusA] ?? 6);
-            const orderB = statusB === 'Channel' ? 0.5 : (statusOrder[statusB] ?? 6);
-            return orderA - orderB;
-        });
-
-        return { searchResults: results };
-    }, [searchTerm, allEvents, allChannels]);
 
     const getEventSelection = (eventTitle: string) => {
         const selection = selectedEvents.map((se, i) => se && se.title === eventTitle ? i : null).filter(i => i !== null);
@@ -78,6 +56,54 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
         setDialogOpen(false);
     };
 
+    const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, filteredChannels, searchResults } = useMemo(() => {
+        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
+        const combinedEvents = [...allEvents, ...ppvEvents];
+        const channels247 = combinedEvents.filter(e => e.title.includes('24/7'));
+        const otherEvents = combinedEvents.filter(e => !e.title.includes('24/7'));
+        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+        const live = otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
+        live.sort((a,b) => {
+            const aHasImage = a.image !== placeholderImage;
+            const bHasImage = b.image !== placeholderImage;
+            if (aHasImage && !bHasImage) return -1;
+            if (!aHasImage && bHasImage) return 1;
+            const aIsFromPPV = a.source === 'ppvs.su';
+            const bIsFromPPV = b.source === 'ppvs.su';
+            if (aIsFromPPV && !bIsFromPPV) return 1;
+            if (!aIsFromPPV && bIsFromPPV) return -1;
+            return a.time.localeCompare(b.time);
+        });
+        const upcoming = otherEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
+        const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido');
+        unknown.sort((a, b) => {
+            const aHasImage = a.image !== placeholderImage;
+            const bHasImage = b.image !== placeholderImage;
+            if (aHasImage && !bHasImage) return -1;
+            if (!aHasImage && bHasImage) return 1;
+            return a.time.localeCompare(b.time);
+        });
+        const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+        
+        let searchRes: (Event | Channel)[] = [];
+        if (searchTerm) {
+            const lowercasedFilter = searchTerm.toLowerCase();
+            const filteredEv = combinedEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
+            const sChannels = allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
+            const combinedResults = [...filteredEv, ...sChannels];
+            combinedResults.sort((a, b) => {
+                const statusA = 'status' in a ? (a as Event).status : 'Channel';
+                const statusB = 'status' in b ? (b as Event).status : 'Channel';
+                const orderA = statusA === 'Channel' ? 5 : (statusOrder[statusA] ?? 6);
+                const orderB = statusB === 'Channel' ? 5 : (statusOrder[statusB] ?? 6);
+                return orderA - orderB;
+            });
+            searchRes = combinedResults;
+        }
+
+        return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents: finished, channels247, filteredChannels: allChannels, searchResults: searchRes };
+    }, [searchTerm, allEvents, ppvEvents, allChannels]);
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4">
@@ -95,35 +121,24 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <ScrollArea className="flex-grow">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pr-4">
-                        {searchResults.map((item, index) => {
-                             if ('url' in item) { // Channel
-                                return (
-                                     <Card 
-                                        key={`search-channel-${index}`}
-                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-[150px] flex flex-col"
-                                        onClick={() => openSubDialog(item)}
-                                    >
-                                        <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10">
-                                            <Image
-                                                src={item.logo}
-                                                alt={`${item.name} logo`}
-                                                width={120}
-                                                height={67.5}
-                                                className="object-contain max-h-full max-w-full"
-                                            />
-                                        </div>
-                                        <div className="p-3 bg-card">
-                                            <h3 className="font-bold text-sm text-center">{item.name}</h3>
-                                        </div>
-                                    </Card>
-                                )
-                            } else { // Event
-                                return <EventCard key={`search-event-${index}`} event={item as Event} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
-                            }
-                        })}
-                    </div>
+                <ScrollArea className="flex-grow pr-4 -mr-4">
+                    {searchTerm ? (
+                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
+                            {searchResults.map((item, index) => 'url' in item 
+                                ? <Card key={`search-channel-${index}`} className="group cursor-pointer" onClick={() => openSubDialog(item)}><div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]"><Image src={(item as Channel).logo} alt={`${(item as Channel).name} logo`} width={120} height={67.5} className="object-contain max-h-full max-w-full" /></div><div className="p-3"><h3 className="font-bold truncate text-sm text-center">{item.name}</h3></div></Card> 
+                                : <EventCard key={`search-event-${index}`} event={item as Event} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
+                            )}
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={openSubDialog} />
+                            <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
+                             <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
+                        </div>
+                    )}
                 </ScrollArea>
             </DialogContent>
             {dialogEvent && (
@@ -162,6 +177,7 @@ function ViewPageContent() {
   
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [ppvEvents, setPpvEvents] = useState<Event[]>([]);
 
 
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
@@ -237,10 +253,46 @@ function ViewPageContent() {
     }
   }, []);
 
+  const fetchPpvEvents = useCallback(async () => {
+    try {
+      const response = await fetch('/api/ppv', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Failed to fetch PPV events');
+      const data = await response.json();
+      const transformedEvents: Event[] = [];
+      if (data.success && data.streams) {
+        data.streams.forEach((category: any) => {
+          if (category.streams) {
+            category.streams.forEach((stream: any) => {
+              const startTime = new Date(stream.starts_at * 1000);
+              let status: Event['status'] = stream.always_live === 1 ? 'En Vivo' : (stream.starts_at > 0 ? 'Próximo' : 'Desconocido');
+              if (status === 'Próximo') status = 'Desconocido';
+              transformedEvents.push({
+                title: stream.name,
+                time: stream.starts_at > 0 ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '24/7',
+                options: [stream.iframe],
+                buttons: [stream.tag || 'Ver Stream'],
+                category: stream.category_name,
+                language: '', 
+                date: stream.starts_at > 0 ? startTime.toLocaleDateString() : '',
+                source: 'ppvs.su',
+                image: stream.poster,
+                status: status,
+              });
+            });
+          }
+        });
+      }
+      setPpvEvents(transformedEvents);
+    } catch (error) {
+      console.error('Error fetching PPV events:', error);
+    }
+  }, []);
+
   
   useEffect(() => {
     setIsMounted(true);
     fetchAllEvents();
+    fetchPpvEvents();
     
     const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
     if (!hasVisited) {
@@ -251,12 +303,14 @@ function ViewPageContent() {
 
     const storedEvents = localStorage.getItem('selectedEvents');
     if (storedEvents) {
-      const parsedEvents: (Event | null)[] = JSON.parse(storedEvents);
-      const newSelectedEvents = Array(9).fill(null);
-      parsedEvents.slice(0, 9).forEach((event, i) => {
-        newSelectedEvents[i] = event;
-      });
-      setSelectedEvents(newSelectedEvents);
+      try {
+        const parsedEvents: (Event | null)[] = JSON.parse(storedEvents);
+        const newSelectedEvents = Array(9).fill(null);
+        parsedEvents.slice(0, 9).forEach((event, i) => {
+          newSelectedEvents[i] = event;
+        });
+        setSelectedEvents(newSelectedEvents);
+      } catch (e) { console.error("Could not parse selected events from local storage", e)}
     }
 
     const storedGap = localStorage.getItem('gridGap');
@@ -279,7 +333,7 @@ function ViewPageContent() {
             console.error("Failed to parse viewOrder from localStorage", e);
         }
     }
-  }, [fetchAllEvents]);
+  }, [fetchAllEvents, fetchPpvEvents]);
 
     const handleAddEventSelect = (event: Event, option: string) => {
         const newSelectedEvents = [...selectedEvents];
@@ -385,6 +439,7 @@ function ViewPageContent() {
             selectedEvents={selectedEvents}
             allEvents={allEvents}
             allChannels={channels}
+            ppvEvents={ppvEvents}
         />
 
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
@@ -475,25 +530,25 @@ function ViewPageContent() {
                           </DialogHeader>
                           <ScrollArea className="h-96 pr-6">
                               <div className="text-sm text-muted-foreground space-y-4">
-                                  <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
-                                  <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
-                                  <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
-                                  <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (1.1.1.1) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
-                                  <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
-                                  <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
-                                  <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "Reproductor MPD/M3U8/M3U/EPG" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.</p>
-                                  <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
-                                  <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
-                                  <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge, ya que suelen tener la mejor compatibilidad con tecnologías de video web.</p>
-                                  <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
-                                  <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
-                                  <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. La mayoría de estas extensiones te permiten añadir sitios a una "lista blanca" para que no actúen sobre ellos. Recarga la página después de desactivarlo.</p>
-                                  <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
-                                  <p><span className="font-semibold text-foreground">El Problema:</span> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
-                                  <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora. Esto asegura que haya suficientes recursos para manejar múltiples transmisiones de video simultáneamente.</p>
-                                  <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
-                                  <p><span className="font-semibold text-foreground">El Problema:</span> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
-                                  <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender". Un reinicio rápido de tu computadora y de tu router puede solucionar problemas transitorios de red, memoria o software que podrían estar afectando la reproducción de video.</p>
+                                    <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
+                                    <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
+                                    <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.</p>
+                                    <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge, ya que suelen tener la mejor compatibilidad con tecnologías de video web.</p>
+                                    <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. La mayoría de estas extensiones te permiten añadir sitios a una "lista blanca" para que no actúen sobre ellos. Recarga la página después de desactivarlo.</p>
+                                    <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora. Esto asegura que haya suficientes recursos para manejar múltiples transmisiones de video simultáneamente.</p>
+                                    <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender". Un reinicio rápido de tu computadora y de tu router puede solucionar problemas transitorios de red, memoria o software que podrían estar afectando la reproducción de video.</p>
                               </div>
                           </ScrollArea>
                           <DialogFooter>
@@ -666,3 +721,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    

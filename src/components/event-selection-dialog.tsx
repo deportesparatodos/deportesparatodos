@@ -53,7 +53,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-secondary border-border text-foreground" hideClose={true}>
+      <DialogContent className="sm:max-w-md bg-secondary border-border text-foreground p-0">
         <DialogHeader>
           <div className="relative w-full aspect-video rounded-t-lg overflow-hidden mb-4">
             <Image
@@ -67,19 +67,19 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
               }}
             />
-             <DialogClose className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+             <DialogClose className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10">
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
             </DialogClose>
           </div>
-          <DialogTitle className="text-center text-lg font-bold">{event.title}</DialogTitle>
-           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1">
+          <DialogTitle className="text-center text-lg font-bold px-6">{event.title}</DialogTitle>
+           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1 px-6">
                 {timeDisplay && <p className="font-semibold">{timeDisplay}</p>}
                 {event.status && (
                     <Badge className={cn(
                         "text-xs font-bold border-0 h-5",
                         event.status.toLowerCase() === 'en vivo' && 'bg-red-600 text-white',
-                        event.status.toLowerCase() === 'próximo' && 'bg-blue-600 text-white',
+                        event.status.toLowerCase() === 'próximo' && 'bg-gray-600 text-white',
                         event.status.toLowerCase() === 'finalizado' && 'bg-black text-white',
                         event.status.toLowerCase() === 'desconocido' && 'bg-yellow-500 text-black'
                     )}>{event.status}</Badge>
@@ -87,13 +87,16 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="flex justify-center py-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 justify-items-center">
+        <div className="py-4 px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {event.options.map((option, index) => (
                 <Button
                 key={index}
                 variant={selectedOptionUrl === option ? 'default' : 'secondary'}
-                className={cn("w-full border border-border hover:scale-105 transition-transform duration-200", event.options.length % 2 !== 0 && index === event.options.length - 1 && "sm:col-span-2")}
+                className={cn(
+                  "w-full border border-border hover:scale-105 transition-transform duration-200", 
+                  event.options.length === 1 && "sm:col-span-2"
+                )}
                 onClick={() => onSelect(event, option)}
                 >
                 {event.buttons[index] || `Opción ${index + 1}`}
@@ -103,7 +106,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         </div>
 
         {isModification && (
-          <DialogFooter>
+          <DialogFooter className="p-6 pt-0">
             <Button
               variant="destructive"
               className="w-full"
@@ -117,3 +120,5 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     </Dialog>
   );
 };
+
+    
