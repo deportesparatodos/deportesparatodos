@@ -200,7 +200,12 @@ const CarouselPrevious = React.forwardRef<
   
   React.useEffect(() => {
     if (api) {
-        api.on('reInit', () => setReInit(prev => prev + 1));
+        const reInitCallback = () => setReInit(prev => prev + 1);
+        api.on('reInit', reInitCallback);
+        
+        return () => {
+          api.off('reInit', reInitCallback);
+        }
     }
   }, [api]);
 
@@ -236,7 +241,12 @@ const CarouselNext = React.forwardRef<
   
   React.useEffect(() => {
     if (api) {
-        api.on('reInit', () => setReInit(prev => prev + 1));
+        const reInitCallback = () => setReInit(prev => prev + 1);
+        api.on('reInit', reInitCallback);
+
+        return () => {
+          api.off('reInit', reInitCallback);
+        }
     }
   }, [api]);
 

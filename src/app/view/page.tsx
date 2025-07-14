@@ -147,17 +147,44 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                 <ScrollArea className="flex-grow pr-4 -mr-4">
                     {searchTerm ? (
                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-                            {searchResults.map((item, index) => 'url' in item 
-                                ? <Card key={`search-channel-${index}`} className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col" onClick={() => openSubDialog(item)}>
-                                    <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0"><Image src={(item as Channel).logo} alt={`${(item as Channel).name} logo`} width={120} height={67.5} className="object-contain max-h-full max-w-full" onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }} /></div>
-                                    <div className="p-3 bg-card flex-grow flex flex-col justify-center"><h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3></div>
-                                  </Card> 
-                                : <EventCard key={`search-event-${index}`} event={item as Event} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
-                            )}
+                            {searchResults.map((item, index) => {
+                                if ('url' in item) { // It's a Channel
+                                    return (
+                                        <Card 
+                                            key={`search-channel-${index}`}
+                                            className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
+                                            onClick={() => openSubDialog(item as Channel)}
+                                        >
+                                            <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
+                                                <Image
+                                                    src={(item as Channel).logo}
+                                                    alt={`${(item as Channel).name} logo`}
+                                                    width={120}
+                                                    height={67.5}
+                                                    className="object-contain max-h-full max-w-full"
+                                                    onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
+                                                />
+                                            </div>
+                                            <div className="p-3 bg-card flex-grow flex flex-col justify-center">
+                                                <h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3>
+                                            </div>
+                                        </Card>
+                                    );
+                                } else { // It's an Event
+                                    return (
+                                        <EventCard
+                                          key={`search-event-${index}`}
+                                          event={item as Event}
+                                          selection={getEventSelection(item.title)}
+                                          onClick={() => openSubDialog(item as Event)}
+                                        />
+                                    );
+                                }
+                            })}
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            <Carousel
+                           <Carousel
                                 opts={{ align: "start", dragFree: true }}
                                 className="w-full"
                             >
@@ -199,7 +226,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                             <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
                             <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
                             <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
-                             <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
                         </div>
                     )}
                 </ScrollArea>
@@ -661,7 +688,7 @@ function ViewPageContent() {
           
           <CameraConfigurationComponent
              order={viewOrder.filter(i => selectedEvents[i] !== null)}
-             onOrderChange={setViewOrder}
+             onOrderChange={handleOrderChange}
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}
