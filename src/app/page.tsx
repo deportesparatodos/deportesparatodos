@@ -286,10 +286,10 @@ export default function HomePage() {
     
     const combinedEvents = [...events, ...ppvEvents];
     
-    const isKoreanCentralTv = (e: Event) => e.title.toLowerCase().includes('korean central television');
+    const isChannel247 = (e: Event) => e.time === '--:--' || e.title.toLowerCase().includes('korean central television');
     
-    const channels247 = combinedEvents.filter(e => e.time === '--:--' || isKoreanCentralTv(e));
-    const otherEvents = combinedEvents.filter(e => e.time !== '--:--' && !isKoreanCentralTv(e));
+    const channels247 = combinedEvents.filter(isChannel247);
+    const otherEvents = combinedEvents.filter(e => !isChannel247(e));
 
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
     
@@ -305,19 +305,24 @@ export default function HomePage() {
     const liveSortLogic = (a: Event, b: Event) => {
       const aHasImage = a.image && a.image !== placeholderImage;
       const bHasImage = b.image && b.image !== placeholderImage;
-
+      const aIs247 = isChannel247(a);
+      const bIs247 = isChannel247(b);
+  
       if (aHasImage && !bHasImage) return -1;
       if (!aHasImage && bHasImage) return 1;
+      
+      if (!aIs247 && bIs247) return -1;
+      if (aIs247 && !bIs247) return 1;
       
       return a.time.localeCompare(b.time);
     };
 
-    const live = otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo').sort(liveSortLogic);
+    const live = [...otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo'), ...channels247].sort(liveSortLogic);
     const upcoming = otherEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort(sortLogic);
     const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido').sort(sortLogic);
     const finishedEvents = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...upcoming, ...channels247, ...unknown, ...finishedEvents];
+    const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -361,7 +366,7 @@ export default function HomePage() {
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
         finishedEvents,
-        channels247,
+        channels247: channels247.sort(sortLogic),
         allChannels: channels,
         searchResults,
         allSortedEvents: allSorted,
