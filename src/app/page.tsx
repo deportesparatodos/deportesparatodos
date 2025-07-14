@@ -331,9 +331,15 @@ export default function HomePage() {
 
     let categoryFilteredEvents: Event[] = [];
     if (currentView !== 'home' && currentView !== 'channels' && currentView !== 'live') {
-        categoryFilteredEvents = combinedEvents
-            .filter(event => event.category.toLowerCase() === currentView.toLowerCase())
-            .sort(sortLogic);
+        const categoryEvents = combinedEvents
+            .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
+        
+        const live = categoryEvents.filter(e => e.status === 'En Vivo').sort(sortLogic);
+        const upcoming = categoryEvents.filter(e => e.status === 'Próximo').sort(sortLogic);
+        const unknown = categoryEvents.filter(e => e.status === 'Desconocido').sort(sortLogic);
+        const finished = categoryEvents.filter(e => e.status === 'Finalizado').sort(sortLogic);
+
+        categoryFilteredEvents = [...live, ...upcoming, ...unknown, ...finished];
     }
 
     return { 
@@ -943,5 +949,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
