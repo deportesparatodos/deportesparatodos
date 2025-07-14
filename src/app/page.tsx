@@ -287,7 +287,7 @@ export default function HomePage() {
     
     const combinedEvents = [...events, ...ppvEvents];
     
-    const isChannel247 = (e: Event) => e.time === '--:--' || e.title.toLowerCase().includes('korean central television');
+    const isChannel247 = (e: Event) => e.time === '--:--' || e.title.toLowerCase().includes('korean central television') || e.title.toLowerCase().includes('24/7');
     
     const channels247 = combinedEvents.filter(isChannel247);
     const otherEvents = combinedEvents.filter(e => !isChannel247(e));
@@ -313,12 +313,14 @@ export default function HomePage() {
         return a.time.localeCompare(b.time);
     };
 
-    const live = [...otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo'), ...channels247].sort(liveSortLogic);
-    const upcoming = otherEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort(sortLogic);
-    const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido').sort(sortLogic);
-    const finishedEvents = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    const live = otherEvents.filter((e) => e.status === 'En Vivo').sort(liveSortLogic);
+    const liveWith247Last = [...live, ...channels247.filter(e => e.status === 'En Vivo')];
+
+    const upcoming = otherEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
+    const unknown = otherEvents.filter((e) => e.status === 'Desconocido').sort(sortLogic);
+    const finishedEvents = otherEvents.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents];
+    const allSorted = [...liveWith247Last, ...upcoming, ...unknown, ...finishedEvents];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -358,7 +360,7 @@ export default function HomePage() {
     }
 
     return { 
-        liveEvents: live, 
+        liveEvents: liveWith247Last, 
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
         finishedEvents,
@@ -452,7 +454,7 @@ export default function HomePage() {
       title: channel.name,
       options: [channel.url],
       buttons: ['Ver canal'],
-      time: channel.name.includes('24/7') ? '24/7' : '',
+      time: channel.name.toLowerCase().includes('24/7') ? '24/7' : '',
       category: 'Canal',
       language: '',
       date: '',
@@ -465,7 +467,7 @@ export default function HomePage() {
   
   const openDialogForModification = (event: Event, index: number) => {
     setConfigDialogOpen(false);
-    setDialogEvent(event);
+    setDialogEvent({...event, source: 'view-page'});
     setIsModification(true);
     setModificationIndex(index);
     setDialogOpen(true);

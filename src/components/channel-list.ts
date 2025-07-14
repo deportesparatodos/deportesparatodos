@@ -272,5 +272,8 @@ export const channels: Channel[] = [
     { name: 'Nat Geo', url: 'https://embed.ksdjugfsddeports.fun/embed/natgeo.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Nat_Geo_HD.png' },
     { name: 'Animal Planet', url: 'https://embed.ksdjugfsddeports.fun/embed/animalplanet.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg' },
     { name: 'TV Pública', url: 'https://embed.ksdjugfsddeports.fun/embed/tvpublica.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg/1200px-TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg.png' },
-    { name: '(North) Korean Central Television 24/7', url: 'https://www.youtube.com/embed/juLIy_mH4wI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Kctv_logo.svg/1200px-Kctv_logo.svg.png'}
+    { name: '(North) Korean Central Television 24/7', url: 'https://www.youtube.com/embed/juLIy_mH4wI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Kctv_logo.svg/1200px-Kctv_logo.svg.png'},
+    { name: 'Los Simpsons 24/7', url: 'https://tvlibreonline.org/html/fl/?get=TG9zX1NpbXBzb24=', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/The_Simpsons_logo.svg/330px-The_Simpsons_logo.svg.png'},
+    { name: 'Padre de Familia 24/7', url: 'https://tvlibreonline.org/html/fl/?get=UGFkcmVfZGVfRmFtaWxpYQ', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Family_Guy_Logo.svg/1200px-Family_Guy_Logo.svg.png'},
+    { name: 'South Park 24/7', url: 'https://tvlibreonline.org/html/fl/?get=U291dGhQYXJr', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/South_Park_logo.svg/1200px-South_Park_logo.svg.png'}
 ];
