@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -272,8 +271,8 @@ export default function HomePage() {
     const combinedEvents = [...events, ...ppvEvents];
     
     // Separate 24/7 channels first
-    const channels247 = combinedEvents.filter(e => e.time === '24/7');
-    const otherEvents = combinedEvents.filter(e => e.time !== '24/7');
+    const channels247 = combinedEvents.filter(e => e.title.toLowerCase().includes('24/7'));
+    const otherEvents = combinedEvents.filter(e => !e.title.toLowerCase().includes('24/7'));
 
 
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
@@ -864,10 +863,10 @@ export default function HomePage() {
                         ) : (
                             <>
                                 <div className="mb-8">
-                                    <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                    <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
                                 </div>
                                 <div className="mb-8">
-                                    <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
+                                    <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                                 </div>
                                 <div className="mb-8">
                                     <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
@@ -904,6 +903,8 @@ export default function HomePage() {
   );
   
 }
+    
+
     
 
     
