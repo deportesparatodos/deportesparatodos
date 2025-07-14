@@ -224,7 +224,7 @@ export function LayoutConfigurator({
                      {isViewPage && (
                         <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={onAddEvent}>
                             <Plus className="mr-2 h-4 w-4" />
-                            Añadir Evento
+                            Añadir Evento/Canal
                         </Button>
                     )}
                   </div>

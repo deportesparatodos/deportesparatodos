@@ -4,8 +4,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil } from "lucide-react";
+import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil, Menu, RotateCw } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
@@ -17,7 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { EventCard } from '@/components/event-card';
-import { channels } from '@/components/channel-list';
+import { channels as allChannels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { EventCarousel } from '@/components/event-carousel';
@@ -25,8 +26,11 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { toZonedTime, format } from 'date-fns-tz';
 
 function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, ppvEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], ppvEvents: Event[] }) {
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
-
+    const [isLoading, setIsLoading] = useState(false); // To mimic home page logic
+    const isMobile = useIsMobile();
+    
     const getEventSelection = (eventTitle: string) => {
         const selection = selectedEvents.map((se, i) => se && se.title === eventTitle ? i : null).filter(i => i !== null);
         if (selection.length > 0) {
@@ -39,7 +43,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
     const [dialogOpen, setDialogOpen] = useState(false);
     const [isModification, setIsModification] = useState(false);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-    
+
     const openSubDialog = (item: Event | Channel) => {
         const event: Event = 'url' in item
             ? { title: item.name, options: [item.url], buttons: ['Ver canal'], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: item.logo }
@@ -54,28 +58,36 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
 
     const handleSelect = (event: Event, option: string) => {
         onSelect(event, option);
-        setDialogOpen(false);
+        setDialogOpen(false); // Close sub-dialog
+    };
+    
+    const handleChannelClick = (channel: Channel) => {
+        openSubDialog(channel);
+    };
+    
+    const openDialogForEvent = (event: Event) => {
+        openSubDialog(event);
     };
 
     const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
         const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
         const combinedEvents = [...allEvents, ...ppvEvents];
+        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+        
         const channels247 = combinedEvents.filter(e => e.title.includes('24/7'));
         const otherEvents = combinedEvents.filter(e => !e.title.includes('24/7'));
-        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+
         const live = otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
         live.sort((a,b) => {
             const aHasImage = a.image !== placeholderImage;
             const bHasImage = b.image !== placeholderImage;
             if (aHasImage && !bHasImage) return -1;
             if (!aHasImage && bHasImage) return 1;
-            const aIsFromPPV = a.source === 'ppvs.su';
-            const bIsFromPPV = b.source === 'ppvs.su';
-            if (aIsFromPPV && !bIsFromPPV) return 1;
-            if (!aIsFromPPV && bIsFromPPV) return -1;
             return a.time.localeCompare(b.time);
         });
+
         const upcoming = otherEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
+        
         const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido');
         unknown.sort((a, b) => {
             const aHasImage = a.image !== placeholderImage;
@@ -84,7 +96,9 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             if (!aHasImage && bHasImage) return 1;
             return a.time.localeCompare(b.time);
         });
+
         const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+        
         const allSorted = [...live, ...upcoming, ...unknown, ...finished, ...channels247];
 
         let searchRes: (Event | Channel)[] = [];
@@ -103,7 +117,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             searchRes = combinedResults;
         }
 
-        return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents: finished, channels247, filteredChannels: allChannels, searchResults: searchRes, allSortedEvents: allSorted };
+        return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents, channels247, filteredChannels: allChannels, searchResults: searchRes, allSortedEvents: allSorted };
     }, [searchTerm, allEvents, ppvEvents, allChannels]);
 
     const categories = useMemo(() => {
@@ -131,10 +145,9 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4">
                 <DialogHeader>
-                    <DialogTitle>Añadir Evento a la Vista</DialogTitle>
-                    <DialogDescription>Selecciona un evento o canal para añadir a una ventana vacía.</DialogDescription>
+                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
                 </DialogHeader>
-                <div className="relative mt-[5px]">
+                <div className="relative mt-1.5">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                         type="text"
@@ -144,8 +157,8 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <ScrollArea className="flex-grow pr-4 -mr-4">
-                    {searchTerm ? (
+                <ScrollArea className="flex-grow pr-4 -mr-4 mt-2">
+                     {searchTerm ? (
                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
                             {searchResults.map((item, index) => {
                                 if ('url' in item) { // It's a Channel
@@ -153,7 +166,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                                         <Card 
                                             key={`search-channel-${index}`}
                                             className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
-                                            onClick={() => openSubDialog(item as Channel)}
+                                            onClick={() => handleChannelClick(item as Channel)}
                                         >
                                             <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
                                                 <Image
@@ -176,7 +189,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                                           key={`search-event-${index}`}
                                           event={item as Event}
                                           selection={getEventSelection(item.title)}
-                                          onClick={() => openSubDialog(item as Event)}
+                                          onClick={() => openDialogForEvent(item as Event)}
                                         />
                                     );
                                 }
@@ -184,7 +197,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                         </div>
                     ) : (
                         <div className="space-y-6">
-                           <Carousel
+                            <Carousel
                                 opts={{ align: "start", dragFree: true }}
                                 className="w-full"
                             >
@@ -196,37 +209,35 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                                     </div>
                                 </div>
                                 <CarouselContent className="-ml-4">
-                                    <CarouselItem className="basis-auto pl-4">
-                                        <Link href={`/events/live`}>
-                                            <Button variant="secondary" className="h-12 px-6 text-lg">
-                                                En Vivo
-                                            </Button>
-                                        </Link>
+                                     <CarouselItem className="basis-auto pl-4">
+                                        <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => router.push('/events/live')}>
+                                            En Vivo
+                                        </Button>
                                     </CarouselItem>
                                      <CarouselItem className="basis-auto pl-4">
-                                        <Link href={`/events/channels`}>
-                                            <Button variant="secondary" className="h-12 px-6 text-lg">
-                                                Canales
-                                            </Button>
-                                        </Link>
+                                        <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => router.push('/events/channels')}>
+                                            Canales
+                                        </Button>
                                     </CarouselItem>
                                 {categories.map((category) => (
                                     <CarouselItem key={category} className="basis-auto pl-4">
-                                        <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
-                                            <Button variant="secondary" className="h-12 px-6 text-lg">
-                                                {category}
-                                            </Button>
-                                        </Link>
+                                        <Button 
+                                            variant="secondary" 
+                                            className="h-12 px-6 text-lg" 
+                                            onClick={() => router.push(`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`)}
+                                        >
+                                            {category}
+                                        </Button>
                                     </CarouselItem>
                                 ))}
                                 </CarouselContent>
                             </Carousel>
-                            <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={openSubDialog} />
-                            <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
+                            <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
                         </div>
                     )}
                 </ScrollArea>
@@ -549,7 +560,7 @@ function ViewPageContent() {
             onSelect={handleAddEventSelect}
             selectedEvents={selectedEvents}
             allEvents={allEvents}
-            allChannels={channels}
+            allChannels={allChannels}
             ppvEvents={ppvEvents}
         />
 
