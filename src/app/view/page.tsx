@@ -27,7 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 
 
-function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
+export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -746,6 +746,8 @@ function ViewPageContent() {
                  setSchedules(newSchedules);
                  localStorage.setItem('schedules', JSON.stringify(newSchedules));
              }}
+             allEvents={processedEventsData}
+             allChannels={allChannelsList}
           />
 
           {isChatEnabled && (
@@ -777,8 +779,7 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {viewOrder.map((originalIndex) => {
-              const event = selectedEvents[originalIndex];
+          {selectedEvents.map((event, originalIndex) => {
               if (!event) return null;
               
               const windowClasses = cn(
@@ -798,7 +799,7 @@ function ViewPageContent() {
               }
 
               return (
-                  <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.filter(i => selectedEvents[i] !== null).indexOf(originalIndex)} as React.CSSProperties}>
+                  <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
                       <iframe
                           src={iframeSrc}
                           title={`Stream ${originalIndex + 1}`}

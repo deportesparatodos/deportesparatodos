@@ -12,6 +12,7 @@ import { Dialog, DialogClose, DialogContent, DialogFooter as DialogModalFooter, 
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { ScheduleManager, type Schedule } from './schedule-manager';
+import type { Channel } from './channel-list';
 
 
 interface CameraConfigurationProps {
@@ -31,6 +32,8 @@ interface CameraConfigurationProps {
   onAddEvent: () => void;
   schedules: Schedule[];
   onSchedulesChange: (schedules: Schedule[]) => void;
+  allEvents: Event[];
+  allChannels: Channel[];
 }
 
 export function CameraConfigurationComponent({ 
@@ -49,7 +52,9 @@ export function CameraConfigurationComponent({
   isViewPage,
   onAddEvent,
   schedules,
-  onSchedulesChange
+  onSchedulesChange,
+  allEvents,
+  allChannels,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
@@ -231,6 +236,8 @@ export function CameraConfigurationComponent({
           schedules={schedules}
           onSchedulesChange={onSchedulesChange}
           onModifyEventInView={onModify}
+          allEvents={allEvents}
+          allChannels={allChannels}
         />
       )}
     </>
