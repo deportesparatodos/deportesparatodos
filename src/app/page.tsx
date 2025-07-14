@@ -466,17 +466,17 @@ export default function HomePage() {
   };
   
   const getEventSelection = (event: Event) => {
-    const eventIndex = selectedEvents.findIndex(se => se?.title === event.title);
-
-    if (eventIndex !== -1) {
+    const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title);
+    
+    if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
       const activeEventIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
       const orderedActiveIndexes = viewOrder.filter(i => activeEventIndexes.includes(i));
-      const displayPosition = orderedActiveIndexes.indexOf(eventIndex) + 1;
+      const displayPosition = orderedActiveIndexes.indexOf(selectionIndex) + 1;
       
-      return { isSelected: true, window: displayPosition > 0 ? displayPosition : null };
+      return { isSelected: true, window: displayPosition > 0 ? displayPosition : null, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
     }
 
-    return { isSelected: false, window: null };
+    return { isSelected: false, window: null, selectedOption: null };
   };
 
   const handleStartView = () => {
@@ -484,18 +484,19 @@ export default function HomePage() {
   };
   
   const openDialogForEvent = (event: Event) => {
-    const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title);
+    const selection = getEventSelection(event);
     
     let eventForDialog = {...event};
-    if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
-        eventForDialog.selectedOption = selectedEvents[selectionIndex]!.selectedOption;
+    if (selection.isSelected && selection.selectedOption) {
+        eventForDialog.selectedOption = selection.selectedOption;
     }
 
     setDialogEvent(eventForDialog);
 
-    if (selectionIndex !== -1) {
+    if (selection.isSelected) {
       setIsModification(true);
-      setModificationIndex(selectionIndex);
+      const originalIndex = selectedEvents.findIndex(se => se?.title === event.title);
+      setModificationIndex(originalIndex);
     } else {
       setIsModification(false);
       setModificationIndex(selectedEvents.findIndex(e => e === null));
@@ -521,7 +522,8 @@ export default function HomePage() {
   
   const openDialogForModification = (event: Event, index: number) => {
     setConfigDialogOpen(false);
-    setDialogEvent({...event, source: 'view-page'});
+    const selection = getEventSelection(event);
+    setDialogEvent({...event, selectedOption: selection.selectedOption});
     setIsModification(true);
     setModificationIndex(index);
     setDialogOpen(true);
@@ -582,42 +584,53 @@ export default function HomePage() {
                                     </DialogHeader>
                                     <ScrollArea className="h-96 pr-6">
                                         <div className="text-sm text-muted-foreground space-y-4">
-                                            <p>¡Bienvenido a Deportes para Todos! Esta guía te ayudará a sacar el máximo provecho de la plataforma.</p>
+                                            <p>¡Bienvenido a <strong>Deportes para Todos</strong>! Esta guía detallada te enseñará a usar la plataforma como un experto para que no te pierdas ni un segundo de tus eventos deportivos favoritos.</p>
                                             
-                                            <h3 className="font-bold text-foreground">1. Navegación Principal</h3>
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li><span className="font-semibold">Barra de Búsqueda:</span> Ubicada en la parte superior, te permite buscar eventos o canales por nombre. Los resultados aparecerán al instante.</li>
-                                                <li><span className="font-semibold">Carrusel de Categorías:</span> Desplázate horizontalmente para ver todas las categorías disponibles como "En Vivo", "Fútbol", "Canales", etc. Haz clic en una para ver todos sus eventos.</li>
-                                                <li><span className="font-semibold">Carruseles de Eventos:</span> En la vista de escritorio, los eventos están organizados por estado ("En Vivo", "Próximos", etc.) en carruseles que puedes deslizar.</li>
+                                            <h3 className="font-bold text-foreground mt-6">1. Entendiendo la Pantalla Principal</h3>
+                                            <p>La página de inicio es tu centro de comando. Aquí encontrarás todo el contenido organizado para un acceso rápido y sencillo.</p>
+                                            <ul className="list-disc pl-5 space-y-2">
+                                                <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
+                                                <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
+                                                <li><strong>Carruseles de Eventos:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
+                                                <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris).</li>
                                             </ul>
 
-                                            <h3 className="font-bold text-foreground">2. Seleccionar Eventos para Ver</h3>
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li><span className="font-semibold">Haz clic en una Tarjeta:</span> Cuando encuentres un evento o canal que te interese, haz clic en su tarjeta.</li>
-                                                <li><span className="font-semibold">Elige una Opción:</span> Se abrirá un diálogo con uno o más botones. Cada botón representa una fuente de transmisión diferente. Elige la que prefieras.</li>
-                                                <li><span className="font-semibold">Asignación a Ventana:</span> Al seleccionar una opción, el evento se asigna automáticamente a la primera "ventana" de visualización disponible (tienes hasta 9).</li>
+                                            <h3 className="font-bold text-foreground mt-6">2. Cómo Seleccionar un Evento para Ver</h3>
+                                            <p>Este es el paso fundamental para construir tu vista múltiple.</p>
+                                            <ul className="list-disc pl-5 space-y-2">
+                                                <li><strong>Haz clic en una Tarjeta:</strong> Cuando encuentres un evento o canal que te interese, simplemente haz clic en su tarjeta.</li>
+                                                <li><strong>Elige una Opción de Transmisión:</strong> Se abrirá una ventana emergente (diálogo) con uno o más botones. Cada botón representa una fuente o calidad de transmisión diferente (ej: "Opción 1", "Opción 2"). <br/>
+                                                <span className="text-xs italic"><strong>Consejo:</strong> Si una opción no funciona, puedes volver a esta ventana y probar otra.</span></li>
+                                                <li><strong>Asignación Automática a Ventana:</strong> Al seleccionar una opción, el evento se asigna automáticamente a la primera "ventana" de visualización disponible (tienes hasta 9). Verás que la tarjeta del evento en la página principal ahora muestra un número, indicando en qué ventana se verá.</li>
                                             </ul>
 
-                                            <h3 className="font-bold text-foreground">3. Gestionar tus Eventos Seleccionados</h3>
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li><span className="font-semibold">Botón "Configuración" (rueda dentada):</span> En la esquina superior derecha, este botón abre un panel donde puedes ver y gestionar tus eventos elegidos.</li>
-                                                <li><span className="font-semibold">Modificar o Eliminar:</span> Desde este panel, puedes hacer clic en un evento para cambiar la fuente de transmisión o para eliminarlo de tu selección. También puedes reordenar los eventos.</li>
+                                            <h3 className="font-bold text-foreground mt-6">3. Gestiona tu Selección Personalizada</h3>
+                                            <p>Una vez que has elegido uno o más eventos, puedes gestionarlos desde el panel de configuración.</p>
+                                            <ul className="list-disc pl-5 space-y-2">
+                                                <li><strong>Botón de Configuración (icono de engranaje <Settings className="inline-block h-4 w-4" />):</strong> Ubicado en la esquina superior derecha, este botón abre un panel donde puedes ver y administrar todos los eventos que has seleccionado.</li>
+                                                <li><strong>Dentro del Panel:</strong> Cada evento seleccionado aparece en una lista. Aquí puedes:
+                                                    <ul className="list-disc pl-6 mt-1">
+                                                        <li><strong>Reordenar:</strong> Usa las flechas hacia arriba y abajo para cambiar la posición de los eventos en la cuadrícula de visualización.</li>
+                                                        <li><strong>Modificar:</strong> Haz clic en el icono del lápiz (<Pencil className="inline-block h-4 w-4" />) para volver a abrir el diálogo de opciones y cambiar la fuente de transmisión sin tener que eliminar el evento.</li>
+                                                        <li><strong>Eliminar:</strong> Haz clic en el icono de la papelera (<Trash2 className="inline-block h-4 w-4" />) para quitar un evento de tu selección y liberar esa ventana.</li>
+                                                    </ul>
+                                                </li>
                                             </ul>
 
-                                            <h3 className="font-bold text-foreground">4. Iniciar la Vista Múltiple</h3>
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li><span className="font-semibold">Botón "Play":</span> Una vez que hayas seleccionado al menos un evento, este botón se activará. Haz clic en él para ir a la pantalla de visualización.</li>
-                                                <li><span className="font-semibold">Cuadrícula Dinámica:</span> La pantalla se dividirá automáticamente para mostrar todos los eventos que seleccionaste. La cuadrícula se adapta de 1 a 9 ventanas.</li>
+                                            <h3 className="font-bold text-foreground mt-6">4. ¡A Disfrutar! Iniciar la Vista Múltiple</h3>
+                                            <ul className="list-disc pl-5 space-y-2">
+                                                <li><strong>Botón de "Play" (<Play className="inline-block h-4 w-4" />):</strong> Este es el botón más importante. Una vez que hayas seleccionado al menos un evento, este botón (ubicado en la esquina superior derecha) se activará. Haz clic en él para ir a la pantalla de visualización.</li>
+                                                <li><strong>La Magia de la Cuadrícula Dinámica:</strong> La pantalla de visualización se dividirá automáticamente para mostrar todos los eventos que seleccionaste. La cuadrícula se adapta de forma inteligente: si eliges 2 eventos, verás 2 ventanas; si eliges 4, verás una cuadrícula de 2x2, y así hasta 9.</li>
+                                            </ul>
+                                             <h3 className="font-bold text-foreground mt-6">5. Menú de Ayuda y Contacto</h3>
+                                            <p>En la esquina superior izquierda, el icono de menú (<Menu className="inline-block h-4 w-4" />) abre un panel con recursos importantes:</p>
+                                            <ul className="list-disc pl-5 space-y-2">
+                                                <li><strong>Aviso Legal:</strong> Información sobre los términos de uso del servicio.</li>
+                                                <li><strong>Errores y Soluciones:</strong> ¡Muy recomendado! Una guía detallada para resolver problemas comunes de reproducción, como pantallas negras o errores de carga.</li>
+                                                <li><strong>Contacto:</strong> Un enlace para enviarnos un correo con sugerencias, reportes de errores o enlaces caídos.</li>
                                             </ul>
 
-                                            <h3 className="font-bold text-foreground">5. Menú Lateral de Ayuda</h3>
-                                            <p>El icono de menú en la esquina superior izquierda abre un panel con información útil:</p>
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li><span className="font-semibold">Aviso Legal:</span> Términos y condiciones del servicio.</li>
-                                                <li><span className="font-semibold">Errores y Soluciones:</span> Guía para resolver problemas comunes de reproducción. ¡Muy recomendado si un video no carga!</li>
-                                                <li><span className="font-semibold">Contacto:</span> Para enviarnos sugerencias o reportar errores.</li>
-                                            </ul>
-                                            <p className="font-bold mt-2">¡Explora, combina y disfruta de todos tus deportes favoritos en un solo lugar!</p>
+                                            <p className="font-bold text-foreground mt-6">¡Explora, combina y disfruta de todos tus deportes favoritos en un solo lugar y al mismo tiempo!</p>
                                         </div>
                                     </ScrollArea>
                                     <DialogFooter>
