@@ -110,6 +110,8 @@ export default function HomePage() {
                
                if (stream.always_live === 1) {
                    status = 'En Vivo';
+               } else if (!startTime) {
+                    status = 'Desconocido'
                }
 
               transformedEvents.push({
@@ -154,12 +156,13 @@ export default function HomePage() {
         // New logic to determine status if a valid time is present
         if (/^\d{2}:\d{2}$/.test(e.time)) {
              try {
-                const eventTimeToday = parse(e.time, 'HH:mm', nowInBA);
-                const eventEndTime = addHours(eventTimeToday, 3);
+                const eventTimeToday = parse(e.time, 'HH:mm', new Date());
+                const zonedEventTime = toZonedTime(eventTimeToday, timeZone);
+                const eventEndTime = addHours(zonedEventTime, 3);
                 
-                if (isBefore(nowInBA, eventTimeToday)) {
+                if (isBefore(nowInBA, zonedEventTime)) {
                     currentStatus = 'Próximo';
-                } else if (isAfter(nowInBA, eventTimeToday) && isBefore(nowInBA, eventEndTime)) {
+                } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
                     currentStatus = 'En Vivo';
                 } else if (isAfter(nowInBA, eventEndTime)) {
                     currentStatus = 'Finalizado';
@@ -287,7 +290,7 @@ export default function HomePage() {
     
     const combinedEvents = [...events, ...ppvEvents];
     
-    const isChannel247 = (e: Event) => e.time === '--:--' || e.title.toLowerCase().includes('korean central television') || e.title.toLowerCase().includes('24/7');
+    const isChannel247 = (e: Event) => e.title.toLowerCase().includes('24/7');
     
     const channels247 = combinedEvents.filter(isChannel247);
     const otherEvents = combinedEvents.filter(e => !isChannel247(e));
@@ -316,7 +319,7 @@ export default function HomePage() {
     const live = otherEvents.filter((e) => e.status === 'En Vivo').sort(liveSortLogic);
     
     const upcoming = otherEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
-    const unknown = otherEvents.filter((e) => e.status === 'Desconocido').sort(sortLogic);
+    const unknown = otherEvents.filter((e) => e.status === 'Desconocido' && !isChannel247(e)).sort(sortLogic);
     const finishedEvents = otherEvents.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
     const allSorted = [...live, ...upcoming, ...channels247, ...unknown, ...finishedEvents];
@@ -350,12 +353,13 @@ export default function HomePage() {
         const categoryEvents = combinedEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
-        const live = categoryEvents.filter(e => e.status === 'En Vivo').sort(sortLogic);
+        const live = categoryEvents.filter(e => e.status === 'En Vivo').sort(liveSortLogic);
         const upcoming = categoryEvents.filter(e => e.status === 'Próximo').sort(sortLogic);
-        const unknown = categoryEvents.filter(e => e.status === 'Desconocido').sort(sortLogic);
+        const unknown = categoryEvents.filter(e => e.status === 'Desconocido' && !isChannel247(e)).sort(sortLogic);
+        const channels247Cat = categoryEvents.filter(isChannel247).sort(sortLogic);
         const finished = categoryEvents.filter(e => e.status === 'Finalizado').sort(sortLogic);
 
-        categoryFilteredEvents = [...live, ...upcoming, ...unknown, ...finished];
+        categoryFilteredEvents = [...live, ...upcoming, ...channels247Cat, ...unknown, ...finished];
     }
 
     return { 
@@ -876,10 +880,11 @@ export default function HomePage() {
                 </div>
 
                 <Button variant="ghost" size="icon" onClick={() => {
-                    if (isSearchOpen && searchTerm) {
+                    if (isSearchOpen) {
                         setSearchTerm('');
+                        setIsSearchOpen(false);
                     } else {
-                       setIsSearchOpen(!isSearchOpen);
+                       setIsSearchOpen(true);
                     }
                 }}>
                     {isSearchOpen ? <X /> : <Search />}
