@@ -57,8 +57,8 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
         setDialogOpen(false);
     };
 
-    const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, filteredChannels, searchResults } = useMemo(() => {
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
+    const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
+        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
         const combinedEvents = [...allEvents, ...ppvEvents];
         const channels247 = combinedEvents.filter(e => e.title.includes('24/7'));
         const otherEvents = combinedEvents.filter(e => !e.title.includes('24/7'));
@@ -85,7 +85,8 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             return a.time.localeCompare(b.time);
         });
         const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
-        
+        const allSorted = [...live, ...upcoming, ...unknown, ...finished, ...channels247];
+
         let searchRes: (Event | Channel)[] = [];
         if (searchTerm) {
             const lowercasedFilter = searchTerm.toLowerCase();
@@ -102,8 +103,29 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             searchRes = combinedResults;
         }
 
-        return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents: finished, channels247, filteredChannels: allChannels, searchResults: searchRes };
+        return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents: finished, channels247, filteredChannels: allChannels, searchResults: searchRes, allSortedEvents: allSorted };
     }, [searchTerm, allEvents, ppvEvents, allChannels]);
+
+    const categories = useMemo(() => {
+        const categorySet = new Set<string>();
+        allEvents.forEach((event) => {
+            if (event.category) {
+                const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
+                categorySet.add(category);
+            }
+        });
+
+        const allCategories = Array.from(categorySet);
+        const otrosCategory = allCategories.find(c => c.toLowerCase() === 'otros');
+        const otherCategories = allCategories.filter(c => c.toLowerCase() !== 'otros').sort((a, b) => a.localeCompare(b));
+
+        const sortedCategories = [...otherCategories];
+        if (otrosCategory) {
+            sortedCategories.push(otrosCategory);
+        }
+
+        return sortedCategories;
+    }, [allEvents]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -127,14 +149,51 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
                             {searchResults.map((item, index) => 'url' in item 
                                 ? <Card key={`search-channel-${index}`} className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col" onClick={() => openSubDialog(item)}>
-                                    <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0"><Image src={(item as Channel).logo} alt={`${(item as Channel).name} logo`} width={120} height={67.5} className="object-contain max-h-full max-w-full" /></div>
-                                    <div className="p-3 bg-card flex-grow flex flex-col justify-center"><h3 className="font-bold text-sm text-center">{item.name}</h3></div>
+                                    <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0"><Image src={(item as Channel).logo} alt={`${(item as Channel).name} logo`} width={120} height={67.5} className="object-contain max-h-full max-w-full" onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }} /></div>
+                                    <div className="p-3 bg-card flex-grow flex flex-col justify-center"><h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3></div>
                                   </Card> 
                                 : <EventCard key={`search-event-${index}`} event={item as Event} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
                             )}
                         </div>
                     ) : (
                         <div className="space-y-6">
+                            <Carousel
+                                opts={{ align: "start", dragFree: true }}
+                                className="w-full"
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <h2 className="text-2xl font-bold">Categorías</h2>
+                                    <div className="flex items-center gap-2">
+                                        <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
+                                        <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
+                                    </div>
+                                </div>
+                                <CarouselContent className="-ml-4">
+                                    <CarouselItem className="basis-auto pl-4">
+                                        <Link href={`/events/live`}>
+                                            <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                En Vivo
+                                            </Button>
+                                        </Link>
+                                    </CarouselItem>
+                                     <CarouselItem className="basis-auto pl-4">
+                                        <Link href={`/events/channels`}>
+                                            <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                Canales
+                                            </Button>
+                                        </Link>
+                                    </CarouselItem>
+                                {categories.map((category) => (
+                                    <CarouselItem key={category} className="basis-auto pl-4">
+                                        <Link href={`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`}>
+                                            <Button variant="secondary" className="h-12 px-6 text-lg">
+                                                {category}
+                                            </Button>
+                                        </Link>
+                                    </CarouselItem>
+                                ))}
+                                </CarouselContent>
+                            </Carousel>
                             <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
                             <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={openSubDialog} />
                             <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openSubDialog} getEventSelection={(e) => getEventSelection(e.title)} />
@@ -449,7 +508,7 @@ function ViewPageContent() {
             <EventSelectionDialog
                 isOpen={!!modifyEvent}
                 onOpenChange={(open) => !open && setModifyEvent(null)}
-                event={modifyEvent.event}
+                event={{...modifyEvent.event, source: 'view-page'}}
                 selectedEvents={selectedEvents}
                 onSelect={handleModifyEventSelect}
                 isModification={true}
@@ -602,7 +661,7 @@ function ViewPageContent() {
           
           <CameraConfigurationComponent
              order={viewOrder.filter(i => selectedEvents[i] !== null)}
-             onOrderChange={handleOrderChange}
+             onOrderChange={setViewOrder}
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}

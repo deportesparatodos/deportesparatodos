@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Settings, FileText, AlertCircle, Mail, BookOpen } from 'lucide-react';
 import { Separator } from './ui/separator';
@@ -56,10 +56,7 @@ export function CameraConfigurationComponent({
       </SheetTrigger>
       <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
         <SheetHeader className="p-6 pb-0 text-center">
-          <SheetTitle>Configurar Vista</SheetTitle>
-          <SheetDescription>
-            Ajusta el diseño y gestiona los eventos activos.
-          </SheetDescription>
+          <SheetTitle>CONFIGURACION</SheetTitle>
         </SheetHeader>
         <Separator className="my-4" />
         <ScrollArea className="flex-grow px-6">
@@ -215,5 +212,3 @@ export function CameraConfigurationComponent({
     </Sheet>
   );
 }
-
-    

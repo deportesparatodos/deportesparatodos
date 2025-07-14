@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Event } from './event-carousel';
@@ -54,7 +53,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-secondary border-border text-foreground p-0">
-        <DialogHeader>
+         <DialogHeader>
           <div className="relative w-full aspect-video rounded-t-lg overflow-hidden mb-4">
             <Image
               src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
@@ -67,10 +66,10 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
               }}
             />
-             <DialogClose className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10">
+             <button onClick={() => onOpenChange(false)} className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10">
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
-            </DialogClose>
+            </button>
           </div>
           <DialogTitle className="text-center text-lg font-bold px-6">{event.title}</DialogTitle>
            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1 px-6">
@@ -105,7 +104,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </div>
 
-        {isModification && (
+        {isModification && event.source !== 'view-page' && (
           <DialogFooter className="p-6 pt-0">
             <Button
               variant="destructive"
@@ -120,5 +119,3 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     </Dialog>
   );
 };
-
-    
