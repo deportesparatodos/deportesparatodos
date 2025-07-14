@@ -22,8 +22,9 @@ import type { Channel } from '@/components/channel-list';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse } from 'date-fns';
+import { addHours, isBefore, isAfter, parse, isPast } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 
 
 function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
@@ -209,6 +210,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
 
 function ViewPageContent() {
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#000000');
@@ -377,6 +379,31 @@ function ViewPageContent() {
       });
   }, [allEventsData]);
 
+  // Handle schedules
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      let changed = false;
+      const activeSchedules = schedules.filter(s => {
+        const scheduleTime = new Date(s.dateTime);
+        if (now >= scheduleTime) {
+          setSelectedEvents(s.events);
+          localStorage.setItem('selectedEvents', JSON.stringify(s.events));
+          changed = true;
+          return false; // Remove from list
+        }
+        return true;
+      });
+
+      if (changed) {
+        setSchedules(activeSchedules);
+        localStorage.setItem('schedules', JSON.stringify(activeSchedules));
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [schedules]);
+
   
   useEffect(() => {
     setIsMounted(true);
@@ -401,6 +428,18 @@ function ViewPageContent() {
         setSelectedEvents(newSelectedEvents);
       } catch (e) { console.error("Could not parse selected events from local storage", e)}
     }
+    
+    const storedSchedules = localStorage.getItem('schedules');
+    if (storedSchedules) {
+      try {
+        const parsedSchedules: Schedule[] = JSON.parse(storedSchedules).map((s: Schedule) => ({
+          ...s,
+          dateTime: new Date(s.dateTime),
+        })).filter((s: Schedule) => !isPast(s.dateTime));
+        setSchedules(parsedSchedules);
+      } catch (e) { console.error("Could not parse schedules from local storage", e); }
+    }
+
 
     const storedGap = localStorage.getItem('gridGap');
     if (storedGap) setGridGap(parseInt(storedGap, 10));
@@ -702,6 +741,11 @@ function ViewPageContent() {
                  localStorage.setItem('isChatEnabled', JSON.stringify(value));
              }}
              onAddEvent={() => setAddEventsDialogOpen(true)}
+             schedules={schedules}
+             onSchedulesChange={(newSchedules) => {
+                 setSchedules(newSchedules);
+                 localStorage.setItem('schedules', JSON.stringify(newSchedules));
+             }}
           />
 
           {isChatEnabled && (

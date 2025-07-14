@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -33,6 +33,7 @@ interface LayoutConfiguratorProps {
   onModify: (event: Event, index: number) => void;
   isViewPage: boolean;
   onAddEvent?: () => void;
+  onSchedule?: () => void;
 }
 
 export function LayoutConfigurator({
@@ -50,6 +51,7 @@ export function LayoutConfigurator({
   onModify,
   isViewPage,
   onAddEvent,
+  onSchedule,
 }: LayoutConfiguratorProps) {
   
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
@@ -225,6 +227,12 @@ export function LayoutConfigurator({
                         <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={onAddEvent}>
                             <Plus className="mr-2 h-4 w-4" />
                             Añadir Evento/Canal
+                        </Button>
+                    )}
+                    {isViewPage && onSchedule && (
+                        <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onSchedule}>
+                            <CalendarClock className="mr-2 h-4 w-4" />
+                            Programar Selección
                         </Button>
                     )}
                   </div>
