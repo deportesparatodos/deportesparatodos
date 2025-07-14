@@ -13,8 +13,13 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Event } from './event-carousel';
 import { Badge } from './ui/badge';
-import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
+import { cn, getDomainFromUrl } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface EventSelectionDialogProps {
   isOpen: boolean;
@@ -83,21 +88,34 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         </DialogHeader>
 
         <div className="py-4 px-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {event.options.map((option, index) => (
-                <Button
-                key={index}
-                variant={selectedOptionUrl === option ? 'default' : 'secondary'}
-                className={cn(
-                  "w-full border border-border hover:scale-105 transition-transform duration-200", 
-                  event.options.length === 1 && "sm:col-span-2"
-                )}
-                onClick={() => onSelect(event, option)}
-                >
-                {event.buttons[index] || `Opción ${index + 1}`}
-                </Button>
-            ))}
-            </div>
+            <TooltipProvider>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {event.options.map((option, index) => {
+                    const domain = getDomainFromUrl(option);
+                    return (
+                        <Tooltip key={index} delayDuration={300}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                variant={selectedOptionUrl === option ? 'default' : 'secondary'}
+                                className={cn(
+                                "w-full border border-border hover:scale-105 transition-transform duration-200", 
+                                event.options.length === 1 && "sm:col-span-2"
+                                )}
+                                onClick={() => onSelect(event, option)}
+                                >
+                                {event.buttons[index] || `Opción ${index + 1}`}
+                                </Button>
+                            </TooltipTrigger>
+                            {domain && (
+                                <TooltipContent>
+                                    <p>{domain}</p>
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    );
+                })}
+                </div>
+            </TooltipProvider>
         </div>
 
         {isModification && event.source !== 'view-page' && (
