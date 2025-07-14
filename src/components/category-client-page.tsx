@@ -91,7 +91,6 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
   }, [categoryName]);
 
   useEffect(() => {
-    // This effect runs once on mount to initialize state from localStorage
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
     if (storedSelectedEvents) {
       try {
@@ -132,7 +131,6 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
   }, []);
 
   useEffect(() => {
-    // This effect syncs state changes TO localStorage
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
   }, [selectedEvents]);
 
@@ -266,7 +264,12 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
                 </div>
             </div>
 
-            <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+            <Button variant="ghost" size="icon" onClick={() => {
+                if (isSearchOpen) {
+                    setSearchTerm('');
+                }
+                setIsSearchOpen(!isSearchOpen);
+            }}>
                 {isSearchOpen ? <X /> : <Search />}
             </Button>
 

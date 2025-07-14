@@ -207,7 +207,12 @@ export default function ChannelsPage() {
                 </div>
             </div>
 
-            <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+            <Button variant="ghost" size="icon" onClick={() => {
+                if (isSearchOpen) {
+                    setSearchTerm('');
+                }
+                setIsSearchOpen(!isSearchOpen);
+            }}>
                 {isSearchOpen ? <X /> : <Search />}
             </Button>
 
