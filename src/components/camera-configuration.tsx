@@ -84,12 +84,12 @@ export function CameraConfigurationComponent({
           <SheetFooter className="p-4 border-t border-border mt-auto">
             <div className="space-y-2 w-full">
               <Dialog>
-                  <DialogTrigger asChild>
+                  <DialogModalTrigger asChild>
                       <Button variant="outline" className="w-full justify-start gap-2">
                           <BookOpen />
                           Tutorial
                       </Button>
-                  </DialogTrigger>
+                  </DialogModalTrigger>
                   <DialogContent className="max-w-2xl">
                       <DialogModalHeader>
                           <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
@@ -127,12 +127,12 @@ export function CameraConfigurationComponent({
                   </DialogContent>
               </Dialog>
               <Dialog>
-                  <DialogTrigger asChild>
+                  <DialogModalTrigger asChild>
                       <Button variant="outline" className="w-full justify-start gap-2">
                           <AlertCircle />
                           Errores y Soluciones
                       </Button>
-                  </DialogTrigger>
+                  </DialogModalTrigger>
                   <DialogContent className="max-w-2xl">
                       <DialogModalHeader>
                           <DialogModalTitle>Solución de Errores Comunes</DialogModalTitle>
@@ -154,12 +154,12 @@ export function CameraConfigurationComponent({
                   </DialogContent>
               </Dialog>
               <Dialog>
-                <DialogTrigger asChild>
+                <DialogModalTrigger asChild>
                     <Button variant="outline" className="w-full justify-start gap-2">
                         <FileText />
                         Aviso Legal
                     </Button>
-                </DialogTrigger>
+                </DialogModalTrigger>
                 <DialogContent className="max-w-2xl">
                     <DialogModalHeader>
                         <DialogModalTitle>Descargo de Responsabilidad</DialogModalTitle>
@@ -176,12 +176,12 @@ export function CameraConfigurationComponent({
                 </DialogContent>
             </Dialog>
               <Dialog>
-                <DialogTrigger asChild>
+                <DialogModalTrigger asChild>
                     <Button variant="outline" className="w-full justify-start gap-2">
                         <Mail />
                         Contacto
                     </Button>
-                </DialogTrigger>
+                </DialogModalTrigger>
                 <DialogContent className="max-w-md">
                     <DialogModalHeader>
                         <DialogModalTitle>Contacto</DialogModalTitle>
