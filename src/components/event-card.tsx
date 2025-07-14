@@ -54,7 +54,7 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
             <Badge className={cn(
                 "text-xs font-bold border-0 h-5",
                 event.status.toLowerCase() === 'en vivo' && 'bg-red-600 text-white',
-                event.status.toLowerCase() === 'próximo' && 'bg-blue-600 text-white',
+                event.status.toLowerCase() === 'próximo' && 'bg-gray-600 text-white',
                 event.status.toLowerCase() === 'finalizado' && 'bg-black text-white',
                 event.status.toLowerCase() === 'desconocido' && 'bg-yellow-500 text-black'
             )}>{event.status}</Badge>

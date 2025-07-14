@@ -349,18 +349,26 @@ export default function HomePage() {
 
 
   const categories = useMemo(() => {
-      const categorySet = new Set<string>();
-      events.forEach((event) => {
+    const categorySet = new Set<string>();
+    events.forEach((event) => {
         if (event.category) {
             const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
             categorySet.add(category);
         }
-      });
-      const filteredCategories = Array.from(categorySet).filter(category => 
-        events.some(event => (event.category.toLowerCase() === 'other' ? 'Otros' : event.category) === category)
-      );
-      return filteredCategories;
-  }, [events]);
+    });
+
+    const allCategories = Array.from(categorySet);
+    const otrosCategory = allCategories.find(c => c.toLowerCase() === 'otros');
+    const otherCategories = allCategories.filter(c => c.toLowerCase() !== 'otros').sort((a, b) => a.localeCompare(b));
+
+    const sortedCategories = [...otherCategories];
+    if (otrosCategory) {
+        sortedCategories.push(otrosCategory);
+    }
+
+    return sortedCategories;
+}, [events]);
+
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
@@ -455,7 +463,7 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-2 md:px-8 backdrop-blur-sm">
+         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-2 md:px-0 backdrop-blur-sm">
             <div className="flex items-center gap-0">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
@@ -669,7 +677,7 @@ export default function HomePage() {
                 </Link>
             </div>
 
-            <div className="flex flex-1 items-center justify-end gap-2">
+            <div className="flex flex-1 items-center justify-end gap-2 px-2 md:px-8">
                 <div className={cn("flex-1 justify-end", isSearchOpen ? 'flex' : 'hidden')}>
                     <div className="relative w-full max-w-sm">
                         <Input
@@ -780,8 +788,8 @@ export default function HomePage() {
                                                 }}
                                             />
                                         </div>
-                                        <div className="p-3 bg-card">
-                                            <h3 className="font-bold text-sm text-center flex items-center justify-center min-h-[40px]">{item.name}</h3>
+                                        <div className="p-3 bg-card min-h-[52px] flex items-center justify-center">
+                                            <h3 className="font-bold text-sm text-center">{item.name}</h3>
                                         </div>
                                     </Card>
                                 );
