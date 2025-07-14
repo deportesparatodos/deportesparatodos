@@ -265,19 +265,19 @@ export default function HomePage() {
   };
 
 
-  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
+  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
     
-    const combinedEvents = [...events];
+    const combinedEvents = [...events, ...ppvEvents];
     
-    const ppvLiveEvents = ppvEvents.filter(e => e.status === 'En Vivo');
-    const ppvOtherEvents = ppvEvents.filter(e => e.status !== 'En Vivo').map(e => ({...e, status: 'Desconocido' as const}));
+    // Separate 24/7 channels first
+    const channels247 = combinedEvents.filter(e => e.title.includes('24/7'));
+    const otherEvents = combinedEvents.filter(e => !e.title.includes('24/7'));
 
-    const allAvailableEvents = [...combinedEvents, ...ppvLiveEvents, ...ppvOtherEvents];
 
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
 
-    const live = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
+    const live = otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
     live.sort((a,b) => {
         const aHasImage = a.image !== placeholderImage;
         const bHasImage = b.image !== placeholderImage;
@@ -299,9 +299,9 @@ export default function HomePage() {
         return a.time.localeCompare(b.time);
     });
 
-    const upcoming = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
+    const upcoming = otherEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
     
-    const unknown = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'desconocido');
+    const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido');
     unknown.sort((a, b) => {
         const aHasImage = a.image !== placeholderImage;
         const bHasImage = b.image !== placeholderImage;
@@ -310,15 +310,15 @@ export default function HomePage() {
         return a.time.localeCompare(b.time);
     });
 
-    const finished = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...unknown, ...upcoming, ...finished];
+    const allSorted = [...live, ...unknown, ...upcoming, ...finished, ...channels247];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
         const lowercasedFilter = searchTerm.toLowerCase();
         
-        const filteredEvents = allAvailableEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
+        const filteredEvents = combinedEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
         
         const combinedResults = [...filteredEvents, ...sChannels];
@@ -340,7 +340,8 @@ export default function HomePage() {
         liveEvents: live, 
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
-        finishedEvents: finished, 
+        finishedEvents: finished,
+        channels247,
         filteredChannels: channels,
         searchResults,
         allSortedEvents: allSorted
@@ -467,7 +468,7 @@ export default function HomePage() {
             <div className="flex items-center gap-0">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-none">
+                        <Button variant="ghost" size="icon" className="ml-0 rounded-none">
                             <Menu className="h-6 w-6" />
                         </Button>
                     </SheetTrigger>
@@ -789,7 +790,7 @@ export default function HomePage() {
                                             />
                                         </div>
                                         <div className="p-3 bg-card min-h-[52px] flex items-center justify-center">
-                                            <h3 className="font-bold text-sm text-center">{item.name}</h3>
+                                            <h3 className="font-bold text-sm text-center min-h-[40px]">{item.name}</h3>
                                         </div>
                                     </Card>
                                 );
@@ -878,6 +879,9 @@ export default function HomePage() {
                                 <div className="mb-8">
                                     <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                                 </div>
+                                <div className="mb-8">
+                                    <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                </div>
                             </>
                         )}
                     </>
@@ -901,6 +905,8 @@ export default function HomePage() {
   );
   
 }
+    
+
     
 
     
