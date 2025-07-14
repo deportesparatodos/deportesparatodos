@@ -44,6 +44,8 @@ import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
+import { utcToZonedTime, format } from 'date-fns-tz';
+import { parse, addHours, isBefore, isAfter } from 'date-fns';
 
 
 export default function HomePage() {
@@ -106,7 +108,7 @@ export default function HomePage() {
 
               transformedEvents.push({
                 title: stream.name,
-                time: stream.starts_at > 0 ? startTime.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }) : '24/7',
+                time: stream.starts_at > 0 ? format(utcToZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '24/7',
                 options: [stream.iframe],
                 buttons: [stream.tag || 'Ver Stream'],
                 category: stream.category_name,
@@ -135,11 +137,44 @@ export default function HomePage() {
       }
       const data: Event[] = await response.json();
       
-      const processedEvents = data.map(e => ({
-        ...e,
-        category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
-        status: e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido',
-      }));
+      const timeZone = 'America/Argentina/Buenos_Aires';
+      const nowInBA = utcToZonedTime(new Date(), timeZone);
+      const currentHour = nowInBA.getHours();
+
+      // Logic is active between 6 AM and 8 PM (20:00)
+      const isLogicActive = currentHour >= 6 && currentHour < 20;
+
+      const processedEvents = data.map(e => {
+        let currentStatus: Event['status'] = e.status 
+            ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status']
+            : 'Desconocido';
+        
+        // Apply new logic only if logic is active and status is not already 'En Vivo' from API
+        if (isLogicActive && e.status.toLowerCase() !== 'en vivo' && /^\d{2}:\d{2}$/.test(e.time)) {
+             try {
+                const eventTimeToday = parse(e.time, 'HH:mm', nowInBA);
+                const eventEndTime = addHours(eventTimeToday, 3);
+                
+                if (isBefore(nowInBA, eventTimeToday)) {
+                    currentStatus = 'Próximo';
+                } else if (isAfter(nowInBA, eventTimeToday) && isBefore(nowInBA, eventEndTime)) {
+                    currentStatus = 'En Vivo';
+                } else if (isAfter(nowInBA, eventEndTime)) {
+                    currentStatus = 'Finalizado';
+                }
+             } catch (error) {
+                console.error("Error parsing date for event:", e.title, error);
+                // Keep original status if parsing fails
+             }
+        }
+
+
+        return {
+          ...e,
+          category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
+          status: currentStatus
+        };
+      });
 
       setEvents(processedEvents);
     } catch (error) {
@@ -148,6 +183,7 @@ export default function HomePage() {
       setIsLoading(false);
     }
   }, []);
+
 
   useEffect(() => {
     fetchEvents();
@@ -231,7 +267,14 @@ export default function HomePage() {
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
-    const allAvailableEvents = [...events, ...ppvEvents];
+    
+    const combinedEvents = [...events];
+    
+    const ppvLiveEvents = ppvEvents.filter(e => e.status === 'En Vivo');
+    const ppvOtherEvents = ppvEvents.filter(e => e.status !== 'En Vivo').map(e => ({...e, status: 'Desconocido' as const}));
+
+    const allAvailableEvents = [...combinedEvents, ...ppvLiveEvents, ...ppvOtherEvents];
+
 
     const live = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
     live.sort((a,b) => {
@@ -835,4 +878,6 @@ export default function HomePage() {
   );
   
 }
+    
+
     
