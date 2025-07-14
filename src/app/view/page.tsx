@@ -21,6 +21,7 @@ import { channels as allChannels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toZonedTime, format } from 'date-fns-tz';
 
 
 function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, ppvEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], ppvEvents: Event[] }) {
@@ -94,12 +95,13 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent 
+                hideClose={true}
                 className={cn(
                     "max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4 transition-all duration-300",
                     isFullScreen && "w-screen h-screen max-w-none rounded-none"
                 )}
             >
-                <DialogHeader className='flex-row items-center justify-between'>
+                <DialogHeader className='flex-row items-center justify-between pb-0'>
                     <DialogTitle>Añadir Evento/Canal</DialogTitle>
                      <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
@@ -112,8 +114,8 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                         </DialogClose>
                     </div>
                 </DialogHeader>
-                <Tabs defaultValue="eventos" className="flex-grow flex flex-col mt-2">
-                    <div className="flex-shrink-0 flex flex-col sm:flex-row gap-4">
+                <Tabs defaultValue="eventos" className="flex-grow flex flex-col">
+                    <div className="flex flex-col gap-2 mt-[5px]">
                         <div className="relative flex-grow">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                             <Input
@@ -124,7 +126,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+                        <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="eventos">Eventos</TabsTrigger>
                             <TabsTrigger value="canales">Canales</TabsTrigger>
                         </TabsList>
