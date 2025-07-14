@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -64,6 +64,11 @@ export function LayoutConfigurator({
   };
   
   const activeEventsCount = order.length;
+  
+  const handleRestoreDefaults = () => {
+    onGridGapChange(0);
+    onBorderColorChange('#000000');
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -114,6 +119,10 @@ export function LayoutConfigurator({
                     </div>
                   </div>
                 </div>
+                <Button variant="outline" size="sm" onClick={handleRestoreDefaults} className="w-full gap-2">
+                    <RefreshCcw />
+                    Restaurar
+                </Button>
               </div>
             </AccordionContent>
           </AccordionItem>

@@ -125,7 +125,10 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                     {searchTerm ? (
                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
                             {searchResults.map((item, index) => 'url' in item 
-                                ? <Card key={`search-channel-${index}`} className="group cursor-pointer" onClick={() => openSubDialog(item)}><div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]"><Image src={(item as Channel).logo} alt={`${(item as Channel).name} logo`} width={120} height={67.5} className="object-contain max-h-full max-w-full" /></div><div className="p-3"><h3 className="font-bold truncate text-sm text-center">{item.name}</h3></div></Card> 
+                                ? <Card key={`search-channel-${index}`} className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col" onClick={() => openSubDialog(item)}>
+                                    <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0"><Image src={(item as Channel).logo} alt={`${(item as Channel).name} logo`} width={120} height={67.5} className="object-contain max-h-full max-w-full" /></div>
+                                    <div className="p-3 bg-card flex-grow flex flex-col justify-center"><h3 className="font-bold truncate text-sm text-center">{item.name}</h3></div>
+                                  </Card> 
                                 : <EventCard key={`search-event-${index}`} event={item as Event} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
                             )}
                         </div>
@@ -379,19 +382,19 @@ function ViewPageContent() {
     }
   }, [isMobile]);
   
- const getItemClasses = (index: number, count: number) => {
+ const getItemClasses = (orderedIndex: number, count: number) => {
     if (isMobile) return '';
     if (count === 3) {
-      return index === 0 ? 'col-span-2' : 'col-span-1';
+      return orderedIndex === 0 ? 'col-span-2' : 'col-span-1';
     }
     if (count === 5) {
-      return index < 2 ? 'col-span-1' : 'col-span-1';
+      return orderedIndex < 2 ? 'col-span-1' : 'col-span-1';
     }
     if (count === 7) {
-       return index === 6 ? 'col-start-2' : '';
+       return orderedIndex === 6 ? 'col-start-2' : '';
     }
     if (count === 8) {
-       return index === 6 ? 'col-start-1' : index === 7 ? 'col-start-2' : '';
+       return orderedIndex === 6 ? 'col-start-1' : orderedIndex === 7 ? 'col-start-2' : '';
     }
     return '';
  };
@@ -415,19 +418,15 @@ function ViewPageContent() {
   
   const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
   
-  const windowData = Array.from({ length: 9 }).map((_, i) => {
-    const event = selectedEvents[i];
-    if (!event) return null;
-    const order = viewOrder.indexOf(i);
-    return {
-        event,
-        reload: reloadCounters[i],
-        order: order !== -1 ? order : 99, // Place unordered items at the end
-        originalIndex: i,
-    };
-  }).filter(Boolean) as { event: Event; reload: number; order: number; originalIndex: number }[];
-
-  windowData.sort((a,b) => a.order - b.order);
+  const activeWindows = viewOrder.map(originalIndex => {
+      const event = selectedEvents[originalIndex];
+      if (!event) return null;
+      return {
+          event,
+          reload: reloadCounters[originalIndex],
+          originalIndex,
+      };
+  }).filter(Boolean) as { event: Event; reload: number; originalIndex: number }[];
 
 
   return (
@@ -630,16 +629,12 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {windowData.map(({ event, reload, order, originalIndex }) => {
-            const itemStyle = {
-                order: order,
-            };
-
+          {activeWindows.map(({ event, reload, originalIndex }, orderedIndex) => {
             const windowClasses = cn(
               "overflow-hidden",
               "relative",
               "bg-black",
-              getItemClasses(order, numCameras)
+              getItemClasses(orderedIndex, numCameras)
             );
 
             let iframeSrc = event.selectedOption
@@ -651,7 +646,7 @@ function ViewPageContent() {
             }
             
             return (
-                <div key={`window-${originalIndex}`} className={windowClasses} style={itemStyle}>
+                <div key={`window-${originalIndex}`} className={windowClasses}>
                     <iframe
                         src={iframeSrc}
                         title={`Stream ${originalIndex + 1}`}
@@ -721,5 +716,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    
