@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Trash2, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2, Plus, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -60,42 +60,74 @@ export function ScheduleManager({
   allEvents,
   allChannels
 }: ScheduleManagerProps) {
+  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
-
+  
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
 
+  const resetToCurrentSelection = () => {
+    setFutureSelection([...currentSelection]);
+    const activeCurrentOrder = currentOrder.filter(i => currentSelection[i] !== null);
+    const fullOrder = Array.from({ length: 9 }, (_, i) => i);
+    const finalOrder = [...activeCurrentOrder, ...fullOrder.filter(i => !activeCurrentOrder.includes(i))];
+    setFutureOrder(finalOrder);
+    setDate(new Date());
+    setTime(format(new Date(), 'HH:mm'));
+    setEditingScheduleId(null);
+  };
+  
   useEffect(() => {
     if (open) {
-      setFutureSelection([...currentSelection]);
-      setFutureOrder([...currentOrder]);
-      setDate(new Date());
-      setTime('12:00');
+      resetToCurrentSelection();
     }
-  }, [open, currentSelection, currentOrder]);
+  }, [open]);
 
-  const handleAddSchedule = () => {
+  const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
 
     const [hours, minutes] = time.split(':').map(Number);
     const combinedDateTime = new Date(date);
     combinedDateTime.setHours(hours, minutes, 0, 0);
 
-    const newSchedule: Schedule = {
-      id: new Date().toISOString(),
-      dateTime: combinedDateTime,
-      events: futureSelection,
-      order: futureOrder,
-    };
-
-    onSchedulesChange([...schedules, newSchedule]);
-    onOpenChange(false);
+    if (editingScheduleId) {
+      // Update existing schedule
+      const updatedSchedules = schedules.map(s => 
+        s.id === editingScheduleId 
+          ? { ...s, dateTime: combinedDateTime, events: futureSelection, order: futureOrder }
+          : s
+      );
+      onSchedulesChange(updatedSchedules);
+    } else {
+      // Add new schedule
+      const newSchedule: Schedule = {
+        id: new Date().toISOString(),
+        dateTime: combinedDateTime,
+        events: futureSelection,
+        order: futureOrder,
+      };
+      onSchedulesChange([...schedules, newSchedule]);
+    }
+    
+    // Reset editing form to current selection for a new schedule creation
+    resetToCurrentSelection();
   };
   
+  const handleEditSchedule = (schedule: Schedule) => {
+    setEditingScheduleId(schedule.id);
+    setDate(new Date(schedule.dateTime));
+    setTime(format(new Date(schedule.dateTime), 'HH:mm'));
+    setFutureSelection([...schedule.events]);
+    setFutureOrder([...schedule.order]);
+  };
+
   const handleRemoveSchedule = (id: string) => {
     onSchedulesChange(schedules.filter(s => s.id !== id));
+    if (editingScheduleId === id) {
+       resetToCurrentSelection();
+    }
   };
   
   const handleRemoveEventFromFuture = (indexToRemove: number) => {
@@ -106,7 +138,14 @@ export function ScheduleManager({
   
   const handleOrderChange = (newOrder: number[]) => {
     if(newOrder) {
-      setFutureOrder(newOrder);
+      const fullNewOrder = [...newOrder];
+      const presentIndexes = new Set(newOrder);
+      for(let i=0; i<9; i++) {
+        if(!presentIndexes.has(i)) {
+          fullNewOrder.push(i);
+        }
+      }
+      setFutureOrder(fullNewOrder);
     }
   }
   
@@ -151,10 +190,10 @@ export function ScheduleManager({
       />
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-4xl w-full h-[90vh] flex flex-col p-0">
-          <DialogHeader className="p-4 border-b">
+          <DialogHeader className="p-4 border-b flex-shrink-0">
             <DialogTitle>Programar Selección</DialogTitle>
             <DialogDescription>
-              Configura una selección de eventos y canales para que se activen en un momento específico.
+              Configura o modifica una selección de eventos para que se activen en un momento específico.
             </DialogDescription>
           </DialogHeader>
 
@@ -177,9 +216,14 @@ export function ScheduleManager({
                                           Cantidad de Eventos/Canales: {schedule.events.filter(Boolean).length}
                                       </p>
                                   </div>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleRemoveSchedule(schedule.id)}>
-                                      <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  <div className="flex items-center">
+                                      <Button variant="ghost" size="icon" onClick={() => handleEditSchedule(schedule)}>
+                                          <Pencil className="h-4 w-4" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleRemoveSchedule(schedule.id)}>
+                                          <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                  </div>
                                   </div>
                               ))
                       )}
@@ -188,7 +232,14 @@ export function ScheduleManager({
               </div>
               
               <div className="flex flex-col">
-                   <h3 className="px-4 py-2 text-lg font-semibold flex-shrink-0">Configuración de la Programación</h3>
+                   <div className='flex justify-between items-center px-4 py-2 flex-shrink-0'>
+                     <h3 className="text-lg font-semibold">
+                       {editingScheduleId ? 'Editando Programación' : 'Nueva Programación'}
+                     </h3>
+                     {editingScheduleId && (
+                        <Button variant="outline" size="sm" onClick={resetToCurrentSelection}>Crear Nueva</Button>
+                     )}
+                   </div>
                    <Separator className="w-full flex-shrink-0" />
                    <div className="p-4 border-b border-border space-y-2 flex-shrink-0">
                       <div className="grid grid-cols-2 gap-4">
@@ -228,15 +279,18 @@ export function ScheduleManager({
                               onOrderChange={handleOrderChange}
                               eventDetails={futureSelection}
                               onRemove={handleRemoveEventFromFuture}
-                              onModify={onModifyEventInView}
+                              onModify={(event, index) => {
+                                  // This needs to open the dialog without closing the schedule manager
+                                  onModifyEventInView(event, index);
+                              }}
                               isViewPage={true}
                               onAddEvent={() => setAddEventsDialogOpen(true)}
                           />
                       </div>
                   </ScrollArea>
                    <div className="p-4 border-t border-border mt-auto flex-shrink-0">
-                      <Button className="w-full" onClick={handleAddSchedule} disabled={activeFutureEventsCount === 0}>
-                          Guardar Programación
+                      <Button className="w-full" onClick={handleSaveOrUpdateSchedule} disabled={activeFutureEventsCount === 0}>
+                          {editingScheduleId ? 'Actualizar Programación' : 'Guardar Programación'}
                       </Button>
                    </div>
               </div>
