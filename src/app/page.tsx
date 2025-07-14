@@ -98,6 +98,12 @@ export default function HomePage() {
                } else {
                    status = 'Desconocido';
                }
+               
+               // User request: "todo lo de ppv QUE TENGA EL INDICADOR DE PROXIMO, quiero que este en el carrusel de estado desconocido"
+               if (status === 'Próximo') {
+                  status = 'Desconocido';
+               }
+
 
               transformedEvents.push({
                 title: stream.name,
@@ -787,9 +793,6 @@ export default function HomePage() {
                         ) : (
                             <>
                                 <div className="mb-8">
-                                    <EventCarousel title="PPV" events={ppvEvents.filter(e => e.status === 'En Vivo' || e.status === 'Próximo')} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                                </div>
-                                <div className="mb-8">
                                     <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                                 </div>
                                 <div className="mb-8">
@@ -828,3 +831,4 @@ export default function HomePage() {
   
 }
     
+
