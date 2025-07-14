@@ -83,41 +83,43 @@ export default function HomePage() {
       }
       const data = await response.json();
       
+      const timeZone = 'America/Argentina/Buenos_Aires';
+      const nowInBA = toZonedTime(new Date(), timeZone);
+      
       const transformedEvents: Event[] = [];
       if (data.success && data.streams) {
         data.streams.forEach((category: any) => {
           if (category.streams) {
             category.streams.forEach((stream: any) => {
-               const startTime = new Date(stream.starts_at * 1000);
-               const now = new Date();
+               let status: Event['status'] = 'Desconocido';
+               let startTime: Date | null = null;
                
-               let status: Event['status'] = 'Próximo';
+               if (stream.starts_at > 0) {
+                 startTime = new Date(stream.starts_at * 1000);
+                 const eventTime = toZonedTime(startTime, timeZone);
+                 const eventEndTime = addHours(eventTime, 3);
+                 
+                 if (isBefore(nowInBA, eventTime)) {
+                     status = 'Próximo';
+                 } else if (isAfter(nowInBA, eventTime) && isBefore(nowInBA, eventEndTime)) {
+                     status = 'En Vivo';
+                 } else if (isAfter(nowInBA, eventEndTime)) {
+                     status = 'Finalizado';
+                 }
+               }
+               
                if (stream.always_live === 1) {
                    status = 'En Vivo';
-               } else if (stream.starts_at > 0) {
-                   const endTime = new Date(stream.ends_at * 1000);
-                   if (now >= startTime && now <= endTime) {
-                       status = 'En Vivo';
-                   } else if (now > endTime) {
-                       status = 'Finalizado';
-                   }
-               } else {
-                   status = 'Desconocido';
                }
-               
-               if (status === 'Próximo') {
-                  status = 'Desconocido';
-               }
-
 
               transformedEvents.push({
                 title: stream.name,
-                time: stream.starts_at > 0 ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '24/7',
+                time: startTime ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '--:--',
                 options: [stream.iframe],
                 buttons: [stream.tag || 'Ver Stream'],
                 category: stream.category_name,
                 language: '', 
-                date: stream.starts_at > 0 ? startTime.toLocaleDateString() : '',
+                date: startTime ? startTime.toLocaleDateString() : '',
                 source: 'ppvs.su',
                 image: stream.poster,
                 status: status,
@@ -169,7 +171,7 @@ export default function HomePage() {
              }
         } else {
             // If no valid time, status from API is used, or defaults to Desconocido
-            if (!['en vivo', 'próximo', 'finalizado'].includes(e.status.toLowerCase())) {
+            if (!['En Vivo', 'Próximo', 'Finalizado'].includes(currentStatus)) {
               currentStatus = 'Desconocido';
             }
         }
@@ -286,8 +288,8 @@ export default function HomePage() {
     
     const isKoreanCentralTv = (e: Event) => e.title.toLowerCase().includes('korean central television');
     
-    const channels247 = combinedEvents.filter(e => e.title.toLowerCase().includes('24/7') || isKoreanCentralTv(e));
-    const otherEvents = combinedEvents.filter(e => !e.title.toLowerCase().includes('24/7') && !isKoreanCentralTv(e));
+    const channels247 = combinedEvents.filter(e => e.time === '--:--' || isKoreanCentralTv(e));
+    const otherEvents = combinedEvents.filter(e => e.time !== '--:--' && !isKoreanCentralTv(e));
 
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
     
@@ -961,3 +963,4 @@ export default function HomePage() {
     </div>
   );
 }
+
