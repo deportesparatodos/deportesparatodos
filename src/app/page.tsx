@@ -185,43 +185,45 @@ export default function HomePage() {
     }
   }, []);
 
+  // Load state from localStorage once on initial mount
+  useEffect(() => {
+    const storedSelectedEvents = localStorage.getItem('selectedEvents');
+    if (storedSelectedEvents) {
+      try {
+          const parsedEvents = JSON.parse(storedSelectedEvents);
+          if(Array.isArray(parsedEvents)) {
+              const validEvents = parsedEvents.filter(Boolean);
+              const newSelectedEvents = Array(9).fill(null);
+              validEvents.slice(0, 9).forEach((event, i) => {
+                  newSelectedEvents[i] = event;
+              });
+              setSelectedEvents(newSelectedEvents);
+          }
+      } catch (e) { console.error("Failed to parse selectedEvents from localStorage", e); }
+    }
+     const storedViewOrder = localStorage.getItem('viewOrder');
+    if (storedViewOrder) {
+      try {
+          const parsedOrder = JSON.parse(storedViewOrder);
+          if(Array.isArray(parsedOrder) && parsedOrder.length === 9) {
+              setViewOrder(parsedOrder);
+          }
+      } catch(e) { console.error("Failed to parse viewOrder from localStorage", e); }
+    }
+    const storedGap = localStorage.getItem('gridGap');
+    if (storedGap) setGridGap(parseInt(storedGap, 10));
 
+    const storedBorderColor = localStorage.getItem('borderColor');
+    if (storedBorderColor) setBorderColor(storedBorderColor);
+
+    const storedChatEnabled = localStorage.getItem('isChatEnabled');
+    if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
+  }, []);
+
+  // Fetch event data
   useEffect(() => {
     fetchEvents();
     fetchPpvEvents();
-
-      const storedSelectedEvents = localStorage.getItem('selectedEvents');
-      if (storedSelectedEvents) {
-        try {
-            const parsedEvents = JSON.parse(storedSelectedEvents);
-            if(Array.isArray(parsedEvents)) {
-                const validEvents = parsedEvents.filter(Boolean);
-                const newSelectedEvents = Array(9).fill(null);
-                validEvents.slice(0, 9).forEach((event, i) => {
-                    newSelectedEvents[i] = event;
-                });
-                setSelectedEvents(newSelectedEvents);
-            }
-        } catch (e) { console.error("Failed to parse selectedEvents from localStorage", e); }
-      }
-       const storedViewOrder = localStorage.getItem('viewOrder');
-      if (storedViewOrder) {
-        try {
-            const parsedOrder = JSON.parse(storedViewOrder);
-            if(Array.isArray(parsedOrder) && parsedOrder.length === 9) {
-                setViewOrder(parsedOrder);
-            }
-        } catch(e) { console.error("Failed to parse viewOrder from localStorage", e); }
-      }
-      const storedGap = localStorage.getItem('gridGap');
-      if (storedGap) setGridGap(parseInt(storedGap, 10));
-
-      const storedBorderColor = localStorage.getItem('borderColor');
-      if (storedBorderColor) setBorderColor(storedBorderColor);
-
-      const storedChatEnabled = localStorage.getItem('isChatEnabled');
-      if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
-
   }, [fetchEvents, fetchPpvEvents]);
 
   useEffect(() => {
@@ -289,7 +291,7 @@ export default function HomePage() {
     const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido').sort(sortLogic);
     const finishedEvents = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...upcoming, ...unknown, ...channels247, ...finishedEvents];
+    const allSorted = [...live, ...upcoming, ...channels247, ...unknown, ...finishedEvents];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -747,10 +749,10 @@ export default function HomePage() {
                         <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
