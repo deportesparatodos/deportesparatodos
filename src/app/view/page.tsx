@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil, Menu, RotateCw, Maximize, Minimize } from "lucide-react";
+import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil, Menu, RotateCw, Maximize, Minimize, AlertTriangle } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toZonedTime, format } from 'date-fns-tz';
 import { addHours, isBefore, isAfter, parse } from 'date-fns';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
@@ -552,8 +553,15 @@ function ViewPageContent() {
               <div className="px-6 pt-8 pb-2 text-center">
                   <h2 className="text-lg font-bold">¡Bienvenido a Deportes para Todos!</h2>
               </div>
-              <div className="px-6 pb-6 pt-0 text-sm text-muted-foreground text-left">
+              <div className="px-6 pb-6 pt-0 text-sm text-muted-foreground text-left space-y-4">
                   <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
+                  <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500'>
+                      <AlertTriangle className="h-4 w-4 !text-yellow-500" />
+                      <AlertTitle className="font-bold">¡Atención!</AlertTitle>
+                      <AlertDescription className="text-yellow-500/80">
+                         Algunos canales pueden tardar mas en cargar que otros, hasta no ver un mensaje de error, NO CAMBIAR DE CANAL.
+                      </AlertDescription>
+                  </Alert>
               </div>
                <DialogFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
                   <Dialog open={tutorialDialogOpen} onOpenChange={setTutorialDialogOpen}>
