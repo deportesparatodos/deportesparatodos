@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Label } from '@/components/ui/label';
@@ -6,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -162,11 +163,7 @@ export function LayoutConfigurator({
                             </div>
                             
                             <div className="flex-grow flex flex-col gap-2 text-center">
-                                <p className={cn(
-                                  "text-sm font-semibold break-words",
-                                  !isViewPage && "cursor-pointer"
-                                  )} 
-                                  onClick={() => !isViewPage && onModify(event, originalIndex)}>
+                                <p className="text-sm font-semibold break-words">
                                   {event.title}
                                 </p>
                                 <div className="flex items-center justify-center gap-1">
@@ -189,14 +186,24 @@ export function LayoutConfigurator({
                                       <ArrowDown className="h-4 w-4" />
                                     </Button>
                                     {isViewPage && (
+                                      <>
                                         <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-7 w-7"
-                                        onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
-                                      >
-                                          <RotateCw className="h-4 w-4" />
-                                      </Button>
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="h-7 w-7"
+                                          onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
+                                        >
+                                            <RotateCw className="h-4 w-4" />
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="h-7 w-7"
+                                          onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                      </>
                                     )}
                                     <Button 
                                       variant="ghost" 

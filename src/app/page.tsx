@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -6,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, Pencil } from 'lucide-react';
 import type { Event } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -266,7 +267,7 @@ export default function HomePage() {
 
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
-    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
+    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     
     const combinedEvents = [...events, ...ppvEvents];
     
@@ -312,7 +313,7 @@ export default function HomePage() {
 
     const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...unknown, ...upcoming, ...finished, ...channels247];
+    const allSorted = [...live, ...upcoming, ...unknown, ...finished, ...channels247];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -445,7 +446,7 @@ export default function HomePage() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
-    setConfigDialogOpen(false); // Close sheet before opening dialog
+    setConfigDialogOpen(false);
     setDialogEvent(event);
     setIsModification(true);
     setModificationIndex(index);
@@ -468,7 +469,7 @@ export default function HomePage() {
             <div className="flex items-center gap-0">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="ml-0 rounded-none">
+                        <Button variant="ghost" size="icon" className="ml-[10px] rounded-none">
                             <Menu className="h-6 w-6" />
                         </Button>
                     </SheetTrigger>
@@ -903,8 +904,6 @@ export default function HomePage() {
   );
   
 }
-    
-
     
 
     

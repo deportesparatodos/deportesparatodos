@@ -1,9 +1,10 @@
 
+
 "use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv } from "lucide-react";
+import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -127,7 +128,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                             {searchResults.map((item, index) => 'url' in item 
                                 ? <Card key={`search-channel-${index}`} className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col" onClick={() => openSubDialog(item)}>
                                     <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0"><Image src={(item as Channel).logo} alt={`${(item as Channel).name} logo`} width={120} height={67.5} className="object-contain max-h-full max-w-full" /></div>
-                                    <div className="p-3 bg-card flex-grow flex flex-col justify-center"><h3 className="font-bold truncate text-sm text-center">{item.name}</h3></div>
+                                    <div className="p-3 bg-card flex-grow flex flex-col justify-center"><h3 className="font-bold text-sm text-center">{item.name}</h3></div>
                                   </Card> 
                                 : <EventCard key={`search-event-${index}`} event={item as Event} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
                             )}
@@ -181,6 +182,8 @@ function ViewPageContent() {
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [ppvEvents, setPpvEvents] = useState<Event[]>([]);
+
+  const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
 
 
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
@@ -363,6 +366,17 @@ function ViewPageContent() {
         setAddEventsDialogOpen(false); // Close the add dialog
     };
 
+    const handleModifyEventSelect = (event: Event, option: string) => {
+      if (modifyEvent) {
+          const newSelectedEvents = [...selectedEvents];
+          const eventWithSelection = { ...event, selectedOption: option };
+          newSelectedEvents[modifyEvent.index] = eventWithSelection;
+          setSelectedEvents(newSelectedEvents);
+          localStorage.setItem('selectedEvents', JSON.stringify(newSelectedEvents));
+          setModifyEvent(null);
+      }
+    };
+
 
  const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -431,6 +445,18 @@ function ViewPageContent() {
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
+        {modifyEvent && (
+            <EventSelectionDialog
+                isOpen={!!modifyEvent}
+                onOpenChange={(open) => !open && setModifyEvent(null)}
+                event={modifyEvent.event}
+                selectedEvents={selectedEvents}
+                onSelect={handleModifyEventSelect}
+                isModification={true}
+                onRemove={() => {}}
+                windowNumber={modifyEvent.index + 1}
+            />
+        )}
         <AddEventsDialog 
             open={addEventsDialogOpen}
             onOpenChange={setAddEventsDialogOpen}
@@ -580,7 +606,7 @@ function ViewPageContent() {
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}
-             onModify={(event, index) => {}}
+             onModify={(event, index) => setModifyEvent({ event, index })}
              isViewPage={true}
              gridGap={gridGap}
              onGridGapChange={(value) => {
