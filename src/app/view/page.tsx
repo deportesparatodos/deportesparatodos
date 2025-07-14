@@ -134,7 +134,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                     <DialogTitle>Añadir Evento a la Vista</DialogTitle>
                     <DialogDescription>Selecciona un evento o canal para añadir a una ventana vacía.</DialogDescription>
                 </DialogHeader>
-                <div className="relative my-4">
+                <div className="relative mt-[5px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                         type="text"
