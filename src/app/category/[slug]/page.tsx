@@ -44,19 +44,11 @@ async function getCategoryEvents(categoryName: string): Promise<Event[]> {
           (event) => event.category.toLowerCase() === categoryName.toLowerCase()
         );
 
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
+        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
         
         filtered.sort((a, b) => {
             if (a.status !== b.status) {
                 return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
-            }
-             // Custom sort for "En Vivo" and "Desconocido"
-            if (a.status === 'En Vivo' || a.status === 'Desconocido') {
-                const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
-                const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
-
-                if (aIsEmbedStream && !bIsEmbedStream) return 1;
-                if (!aIsEmbedStream && bIsEmbedStream) return -1;
             }
             return a.time.localeCompare(b.time);
         });

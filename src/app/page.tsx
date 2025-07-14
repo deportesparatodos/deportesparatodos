@@ -99,7 +99,6 @@ export default function HomePage() {
                    status = 'Desconocido';
                }
                
-               // User request: "todo lo de ppv QUE TENGA EL INDICADOR DE PROXIMO, quiero que este en el carrusel de estado desconocido"
                if (status === 'Próximo') {
                   status = 'Desconocido';
                }
@@ -236,6 +235,12 @@ export default function HomePage() {
 
     const live = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
     live.sort((a,b) => {
+        const aIsFromPPV = a.source === 'ppvs.su';
+        const bIsFromPPV = b.source === 'ppvs.su';
+        
+        if (aIsFromPPV && !bIsFromPPV) return 1;
+        if (!aIsFromPPV && bIsFromPPV) return -1;
+        
         const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
         const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
 
@@ -831,4 +836,3 @@ export default function HomePage() {
   
 }
     
-
