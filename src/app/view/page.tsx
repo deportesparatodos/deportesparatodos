@@ -90,7 +90,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
     const filteredChannels = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
         return allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
-    }, [searchTerm]);
+    }, [searchTerm, allChannels]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -114,7 +114,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                         </DialogClose>
                     </div>
                 </DialogHeader>
-                <Tabs defaultValue="eventos" className="flex-grow flex flex-col">
+                <Tabs defaultValue="eventos" className="flex-grow flex flex-col mt-2">
                     <div className="flex flex-col gap-2 mt-[5px]">
                         <div className="relative flex-grow">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -132,7 +132,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                         </TabsList>
                     </div>
 
-                    <TabsContent value="eventos" className="flex-grow mt-4 overflow-hidden">
+                    <TabsContent value="eventos" className="flex-grow mt-4 h-0">
                         <ScrollArea className="h-full pr-4 -mr-4">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                 {sortedAndFilteredEvents.map((event, index) => (
@@ -147,7 +147,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                         </ScrollArea>
                     </TabsContent>
 
-                    <TabsContent value="canales" className="flex-grow mt-4 overflow-hidden">
+                    <TabsContent value="canales" className="flex-grow mt-4 h-0">
                          <ScrollArea className="h-full pr-4 -mr-4">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                 {filteredChannels.map((channel, index) => (
@@ -773,3 +773,4 @@ export default function Page() {
     </Suspense>
   );
 }
+
