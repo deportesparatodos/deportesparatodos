@@ -50,6 +50,7 @@ export default function HomePage() {
   const router = useRouter();
 
   const [events, setEvents] = useState<Event[]>([]);
+  const [ppvEvents, setPpvEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
@@ -67,6 +68,58 @@ export default function HomePage() {
   const [borderColor, setBorderColor] = useState<string>('#000000');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+
+  const fetchPpvEvents = useCallback(async () => {
+    try {
+      const response = await fetch('/api/ppv', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('Failed to fetch PPV events');
+      }
+      const data = await response.json();
+      
+      const transformedEvents: Event[] = [];
+      if (data.success && data.streams) {
+        data.streams.forEach((category: any) => {
+          if (category.streams) {
+            category.streams.forEach((stream: any) => {
+               const startTime = new Date(stream.starts_at * 1000);
+               const now = new Date();
+               
+               let status: Event['status'] = 'Próximo';
+               if (stream.always_live === 1) {
+                   status = 'En Vivo';
+               } else if (stream.starts_at > 0) {
+                   const endTime = new Date(stream.ends_at * 1000);
+                   if (now >= startTime && now <= endTime) {
+                       status = 'En Vivo';
+                   } else if (now > endTime) {
+                       status = 'Finalizado';
+                   }
+               } else {
+                   status = 'Desconocido';
+               }
+
+              transformedEvents.push({
+                title: stream.name,
+                time: stream.starts_at > 0 ? startTime.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }) : '24/7',
+                options: [stream.iframe],
+                buttons: [stream.tag || 'Ver Stream'],
+                category: stream.category_name,
+                language: '', 
+                date: stream.starts_at > 0 ? startTime.toLocaleDateString() : '',
+                source: 'ppvs.su',
+                image: stream.poster,
+                status: status,
+              });
+            });
+          }
+        });
+      }
+      setPpvEvents(transformedEvents);
+    } catch (error) {
+      console.error('Error fetching PPV events:', error);
+    }
+  }, []);
 
   const fetchEvents = useCallback(async () => {
     setIsLoading(true);
@@ -93,13 +146,19 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchEvents();
+    fetchPpvEvents();
 
       const storedSelectedEvents = localStorage.getItem('selectedEvents');
       if (storedSelectedEvents) {
         try {
             const parsedEvents = JSON.parse(storedSelectedEvents);
             if(Array.isArray(parsedEvents)) {
-                setSelectedEvents(parsedEvents);
+                const validEvents = parsedEvents.filter(Boolean); // Filter out nulls
+                const newSelectedEvents = Array(9).fill(null);
+                validEvents.slice(0, 9).forEach((event, i) => {
+                    newSelectedEvents[i] = event;
+                });
+                setSelectedEvents(newSelectedEvents);
             }
         } catch (e) { console.error("Failed to parse selectedEvents from localStorage", e); }
       }
@@ -121,7 +180,7 @@ export default function HomePage() {
       const storedChatEnabled = localStorage.getItem('isChatEnabled');
       if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
 
-  }, [fetchEvents]);
+  }, [fetchEvents, fetchPpvEvents]);
 
   useEffect(() => {
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
@@ -167,8 +226,9 @@ export default function HomePage() {
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
+    const allAvailableEvents = [...events, ...ppvEvents];
 
-    const live = events.filter((e) => e.status.toLowerCase() === 'en vivo');
+    const live = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
     live.sort((a,b) => {
         const aIsEmbedStream = a.options.some(opt => opt.startsWith('https://embedstreams.top'));
         const bIsEmbedStream = b.options.some(opt => opt.startsWith('https://embedstreams.top'));
@@ -179,9 +239,9 @@ export default function HomePage() {
         return a.time.localeCompare(b.time);
     });
 
-    const upcoming = events.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
-    const unknown = events.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time));
-    const finished = events.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    const upcoming = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
+    const unknown = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time));
+    const finished = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
     const allSorted = [...live, ...unknown, ...upcoming, ...finished];
 
@@ -189,7 +249,7 @@ export default function HomePage() {
     if (searchTerm) {
         const lowercasedFilter = searchTerm.toLowerCase();
         
-        const filteredEvents = events.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
+        const filteredEvents = allAvailableEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
         
         const combinedResults = [...filteredEvents, ...sChannels];
@@ -216,7 +276,7 @@ export default function HomePage() {
         searchResults,
         allSortedEvents: allSorted
     };
-  }, [events, searchTerm]);
+  }, [events, ppvEvents, searchTerm]);
 
 
   const categories = useMemo(() => {
@@ -327,7 +387,7 @@ export default function HomePage() {
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
          <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 px-2 md:px-8 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="rounded-none">
@@ -335,7 +395,7 @@ export default function HomePage() {
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="p-0">
-                        <SheetHeader className="items-center border-b border-border p-4">
+                        <SheetHeader className="items-center border-b border-border p-4 text-center">
                            <DialogTitle className="sr-only">Menú Principal</DialogTitle>
                             <Image
                                 src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
@@ -572,7 +632,7 @@ export default function HomePage() {
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-h-[90vh] flex flex-col">
-                        <DialogHeader>
+                        <DialogHeader className="text-center">
                         <DialogTitle>Configuración y Eventos</DialogTitle>
                         <DialogDescription>
                             Personaliza la vista y gestiona tus eventos seleccionados.
@@ -652,7 +712,7 @@ export default function HomePage() {
                                             />
                                         </div>
                                         <div className="p-3 bg-card">
-                                            <h3 className="font-bold text-sm text-center min-h-[40px] flex items-center justify-center">{(item as Channel).name}</h3>
+                                            <h3 className="font-bold text-sm text-center flex items-center justify-center min-h-[40px]">{item.name}</h3>
                                         </div>
                                     </Card>
                                 );
@@ -726,6 +786,9 @@ export default function HomePage() {
                             </div>
                         ) : (
                             <>
+                                <div className="mb-8">
+                                    <EventCarousel title="PPV" events={ppvEvents.filter(e => e.status === 'En Vivo' || e.status === 'Próximo')} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                </div>
                                 <div className="mb-8">
                                     <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                                 </div>

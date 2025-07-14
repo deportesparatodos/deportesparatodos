@@ -278,6 +278,37 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // PPV API Image hosts
+      {
+        protocol: 'https',
+        hostname: 'mc-2mhdiicnc6.b-cdn.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'thumbs.poocloud.in',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'extension.usu.edu',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+        port: '',
+        pathname: '/**',
+      },
+       {
+        protocol: 'https',
+        hostname: 'cdn.nba.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   typescript: {
