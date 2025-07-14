@@ -603,6 +603,7 @@ export default function HomePage() {
                                 onReload={() => {}} 
                                 onModify={openDialogForModification}
                                 isViewPage={false}
+                                onAddEvent={() => {}}
                             />
                         </ScrollArea>
                     </DialogContent>
@@ -633,10 +634,10 @@ export default function HomePage() {
                                 return (
                                     <Card 
                                         key={`search-channel-${index}`}
-                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-[150px] flex flex-col"
+                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col"
                                         onClick={() => handleChannelClick(item as Channel)}
                                     >
-                                        <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10">
+                                        <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10 aspect-video">
                                             <Image
                                                 src={(item as Channel).logo}
                                                 alt={`${(item as Channel).name} logo`}
@@ -651,7 +652,7 @@ export default function HomePage() {
                                             />
                                         </div>
                                         <div className="p-3 bg-card">
-                                            <h3 className="font-bold text-sm text-center">{(item as Channel).name}</h3>
+                                            <h3 className="font-bold text-sm text-center min-h-[40px] flex items-center justify-center">{(item as Channel).name}</h3>
                                         </div>
                                     </Card>
                                 );

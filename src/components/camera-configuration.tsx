@@ -8,7 +8,7 @@ import { Settings, FileText, AlertCircle, Mail, BookOpen } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
-import { Dialog, DialogClose, DialogContent, DialogFooter as DialogModalFooter, DialogHeader as DialogModalHeader, DialogTitle as DialogModalTitle, DialogTrigger as DialogModalTrigger } from './ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter as DialogModalFooter, DialogHeader as DialogModalHeader, DialogTitle as DialogModalTitle, DialogTrigger } from './ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -84,12 +84,12 @@ export function CameraConfigurationComponent({
           <SheetFooter className="p-4 border-t border-border mt-auto">
             <div className="space-y-2 w-full">
               <Dialog>
-                  <DialogModalTrigger asChild>
+                  <DialogTrigger asChild>
                       <Button variant="outline" className="w-full justify-start gap-2">
                           <BookOpen />
                           Tutorial
                       </Button>
-                  </DialogModalTrigger>
+                  </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                       <DialogModalHeader>
                           <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
@@ -127,12 +127,12 @@ export function CameraConfigurationComponent({
                   </DialogContent>
               </Dialog>
               <Dialog>
-                  <DialogModalTrigger asChild>
+                  <DialogTrigger asChild>
                       <Button variant="outline" className="w-full justify-start gap-2">
                           <AlertCircle />
                           Errores y Soluciones
                       </Button>
-                  </DialogModalTrigger>
+                  </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                       <DialogModalHeader>
                           <DialogModalTitle>Solución de Errores Comunes</DialogModalTitle>
@@ -154,12 +154,12 @@ export function CameraConfigurationComponent({
                   </DialogContent>
               </Dialog>
               <Dialog>
-                <DialogModalTrigger asChild>
+                <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start gap-2">
                         <FileText />
                         Aviso Legal
                     </Button>
-                </DialogModalTrigger>
+                </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                     <DialogModalHeader>
                         <DialogModalTitle>Descargo de Responsabilidad</DialogModalTitle>
@@ -176,12 +176,12 @@ export function CameraConfigurationComponent({
                 </DialogContent>
             </Dialog>
               <Dialog>
-                <DialogModalTrigger asChild>
+                <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start gap-2">
                         <Mail />
                         Contacto
                     </Button>
-                </DialogModalTrigger>
+                </DialogTrigger>
                 <DialogContent className="max-w-md">
                     <DialogModalHeader>
                         <DialogModalTitle>Contacto</DialogModalTitle>
