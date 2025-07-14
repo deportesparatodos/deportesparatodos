@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -72,6 +72,8 @@ export default function HomePage() {
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   
   const [currentView, setCurrentView] = useState<string>('home'); // home, live, channels, or category name
+
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
   const fetchPpvEvents = useCallback(async () => {
     try {
@@ -220,6 +222,8 @@ export default function HomePage() {
 
     const storedChatEnabled = localStorage.getItem('isChatEnabled');
     if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
+    
+    setIsInitialLoadDone(true);
   }, []);
 
   // Fetch event data
@@ -228,31 +232,39 @@ export default function HomePage() {
     fetchPpvEvents();
   }, [fetchEvents, fetchPpvEvents]);
 
+  // Persist selectedEvents to localStorage
   useEffect(() => {
-    localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-  }, [selectedEvents]); 
-  
-  useEffect(() => {
-    const activeEventIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
-    const currentOrderActive = viewOrder.filter(i => activeEventIndexes.includes(i));
-    
-    const activeOrderChanged = JSON.stringify(currentOrderActive) !== JSON.stringify(viewOrder.filter(i => selectedEvents[i] !== null));
-
-    if (activeOrderChanged) {
-        const newOrder = [...currentOrderActive];
-        for (let i = 0; i < 9; i++) {
-            if (!newOrder.includes(i)) {
-                newOrder.push(i);
-            }
-        }
-        
-        const stringifiedNewOrder = JSON.stringify(newOrder);
-        if (stringifiedNewOrder !== localStorage.getItem('viewOrder')) {
-            setViewOrder(newOrder);
-            localStorage.setItem('viewOrder', stringifiedNewOrder);
-        }
+    if (isInitialLoadDone) {
+        localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
     }
-  }, [selectedEvents, viewOrder]);
+  }, [selectedEvents, isInitialLoadDone]); 
+  
+  // Persist viewOrder to localStorage
+  useEffect(() => {
+    if (isInitialLoadDone) {
+      const activeEventIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
+      const currentOrderActive = viewOrder.filter(i => activeEventIndexes.includes(i));
+      
+      const activeOrderChanged = JSON.stringify(currentOrderActive) !== JSON.stringify(viewOrder.filter(i => selectedEvents[i] !== null));
+
+      if (activeOrderChanged) {
+          const newOrder = [...currentOrderActive];
+          for (let i = 0; i < 9; i++) {
+              if (!newOrder.includes(i)) {
+                  newOrder.push(i);
+              }
+          }
+          
+          const stringifiedNewOrder = JSON.stringify(newOrder);
+          if (stringifiedNewOrder !== localStorage.getItem('viewOrder')) {
+              setViewOrder(newOrder);
+              localStorage.setItem('viewOrder', stringifiedNewOrder);
+          }
+      } else {
+        localStorage.setItem('viewOrder', JSON.stringify(viewOrder));
+      }
+    }
+  }, [selectedEvents, viewOrder, isInitialLoadDone]);
 
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
