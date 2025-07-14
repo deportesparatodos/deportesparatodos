@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Settings, FileText, AlertCircle, Mail, BookOpen } from 'lucide-react';
 import { Separator } from './ui/separator';
