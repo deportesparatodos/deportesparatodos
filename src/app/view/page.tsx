@@ -83,7 +83,11 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                 if (orderA !== orderB) {
                     return orderA - orderB;
                 }
-                return a.time.localeCompare(b.time);
+                // Secondary sort by time if statuses are the same
+                if (a.status === 'Próximo' || (a.status === 'Finalizado' && b.status === 'Finalizado')) {
+                    return a.time.localeCompare(b.time);
+                }
+                return 0; // Keep original order for other statuses if times are irrelevant
             });
     }, [searchTerm, allEvents, ppvEvents]);
 
