@@ -81,17 +81,19 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-2 py-4">
-          {event.options.map((option, index) => (
-            <Button
-              key={index}
-              variant={selectedOptionUrl === option ? 'default' : 'secondary'}
-              className="w-full border border-border hover:scale-105 transition-transform duration-200"
-              onClick={() => onSelect(event, option)}
-            >
-              {event.buttons[index] || `Opción ${index + 1}`}
-            </Button>
-          ))}
+        <div className="flex justify-center py-4">
+            <div className="grid grid-cols-2 gap-2">
+            {event.options.map((option, index) => (
+                <Button
+                key={index}
+                variant={selectedOptionUrl === option ? 'default' : 'secondary'}
+                className="w-full border border-border hover:scale-105 transition-transform duration-200"
+                onClick={() => onSelect(event, option)}
+                >
+                {event.buttons[index] || `Opción ${index + 1}`}
+                </Button>
+            ))}
+            </div>
         </div>
 
         {isModification && (

@@ -359,19 +359,20 @@ function ViewPageContent() {
   }
   
   const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
-  const orderedIndexes = viewOrder.filter(i => selectedEvents[i] !== null);
+  
+  const windowData = Array.from({ length: 9 }).map((_, i) => {
+    const event = selectedEvents[i];
+    if (!event) return null;
+    const order = viewOrder.indexOf(i);
+    return {
+        event,
+        reload: reloadCounters[i],
+        order: order !== -1 ? order : 99, // Place unordered items at the end
+        originalIndex: i,
+    };
+  }).filter(Boolean) as { event: Event; reload: number; order: number; originalIndex: number }[];
 
-  const windowData = Array.from({ length: 9 }, (_, i) => {
-      const orderedIndex = viewOrder.indexOf(i);
-      if (orderedIndex > -1 && selectedEvents[i]) {
-          return {
-              event: selectedEvents[i],
-              reload: reloadCounters[i],
-              order: orderedIndex
-          };
-      }
-      return null;
-  }).filter(Boolean) as { event: Event; reload: number; order: number }[];
+  windowData.sort((a,b) => a.order - b.order);
 
 
   return (
@@ -386,7 +387,7 @@ function ViewPageContent() {
         />
 
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
-           <DialogContent className="sm:max-w-md p-0" hideClose>
+           <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="sr-only">
                   <DialogTitle>Bienvenida</DialogTitle>
               </DialogHeader>
@@ -515,12 +516,12 @@ function ViewPageContent() {
         >
           
           <CameraConfigurationComponent
-             order={orderedIndexes}
+             order={viewOrder.filter(i => selectedEvents[i] !== null)}
              onOrderChange={handleOrderChange}
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}
-             onModify={() => {}} 
+             onModify={(event, index) => {}}
              isViewPage={true}
              gridGap={gridGap}
              onGridGapChange={(value) => {
@@ -569,27 +570,20 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {Array.from({ length: 9 }).map((_, windowIndex) => {
-            const orderedItemIndex = viewOrder.indexOf(windowIndex);
-            const eventData = orderedItemIndex !== -1 ? selectedEvents[windowIndex] : null;
-
-            if (!eventData || !eventData.selectedOption) {
-              return null;
-            }
-
+          {windowData.map(({ event, reload, order, originalIndex }) => {
             const itemStyle = {
-              order: orderedItemIndex,
+                order: order,
             };
 
             const windowClasses = cn(
               "overflow-hidden",
               "relative",
               "bg-black",
-              getItemClasses(orderedItemIndex, numCameras)
+              getItemClasses(order, numCameras)
             );
 
-            let iframeSrc = eventData.selectedOption
-                ? `${eventData.selectedOption}${eventData.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowIndex] || 0}`
+            let iframeSrc = event.selectedOption
+                ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reload || 0}`
                 : '';
             
             if (iframeSrc.includes("youtube-nocookie.com")) {
@@ -597,10 +591,10 @@ function ViewPageContent() {
             }
             
             return (
-                <div key={`window-${windowIndex}`} className={windowClasses} style={itemStyle}>
+                <div key={`window-${originalIndex}`} className={windowClasses} style={itemStyle}>
                     <iframe
                         src={iframeSrc}
-                        title={`Stream ${windowIndex + 1}`}
+                        title={`Stream ${originalIndex + 1}`}
                         className="w-full h-full border-0"
                         allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                         allowFullScreen
