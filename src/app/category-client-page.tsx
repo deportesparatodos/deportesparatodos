@@ -22,6 +22,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
+    DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from '@/components/ui/input';
