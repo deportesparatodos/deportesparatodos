@@ -16,6 +16,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
+import { ScrollArea } from './ui/scroll-area';
 
 interface LayoutConfiguratorProps {
   gridGap: number;
@@ -33,6 +34,7 @@ interface LayoutConfiguratorProps {
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
   isViewPage: boolean;
+  onAddEvent: () => void;
 }
 
 export function LayoutConfigurator({
@@ -49,6 +51,7 @@ export function LayoutConfigurator({
   onRemove,
   onModify,
   isViewPage,
+  onAddEvent,
 }: LayoutConfiguratorProps) {
   
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
@@ -66,156 +69,156 @@ export function LayoutConfigurator({
 
   return (
     <div className="flex flex-col h-full">
-      <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
-        <AccordionItem value="item-1" className="border rounded-lg px-4">
-          <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
-          <AccordionContent className="pt-2">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <Label htmlFor="grid-gap">Bordes ({gridGap}px)</Label>
-                <Slider
-                  id="grid-gap"
-                  min={0}
-                  max={20}
-                  step={1}
-                  value={[gridGap]}
-                  onValueChange={(value) => onGridGapChange(value[0])}
-                />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="border-color">Color de Borde</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="border-color"
-                    type="color"
-                    value={borderColor}
-                    onChange={(e) => onBorderColorChange(e.target.value)}
-                    className="w-14 h-10 p-1"
-                  />
-                  <Input
-                    type="text"
-                    value={borderColor}
-                    onChange={(e) => onBorderColorChange(e.target.value)}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Vista Previa</Label>
-                <div className="p-2 rounded-md aspect-video" style={{ backgroundColor: borderColor }}>
-                  <div className="grid grid-cols-3 h-full" style={{ gap: `${gridGap}px`}}>
-                    <div className="bg-card rounded-sm"></div>
-                    <div className="bg-card rounded-sm"></div>
-                    <div className="bg-card rounded-sm"></div>
-                    <div className="bg-card rounded-sm"></div>
-                    <div className="bg-card rounded-sm"></div>
-                    <div className="bg-card rounded-sm"></div>
+        <ScrollArea className="flex-grow pr-1">
+          <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
+            <AccordionItem value="item-1" className="border rounded-lg px-4">
+              <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="grid-gap">Bordes ({gridGap}px)</Label>
+                    <Slider
+                      id="grid-gap"
+                      min={0}
+                      max={20}
+                      step={1}
+                      value={[gridGap]}
+                      onValueChange={(value) => onGridGapChange(value[0])}
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label htmlFor="border-color">Color de Borde</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="border-color"
+                        type="color"
+                        value={borderColor}
+                        onChange={(e) => onBorderColorChange(e.target.value)}
+                        className="w-14 h-10 p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={borderColor}
+                        onChange={(e) => onBorderColorChange(e.target.value)}
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Vista Previa</Label>
+                    <div className="p-2 rounded-md aspect-video" style={{ backgroundColor: borderColor }}>
+                      <div className="grid grid-cols-3 h-full" style={{ gap: `${gridGap}px`}}>
+                        <div className="bg-card rounded-sm"></div>
+                        <div className="bg-card rounded-sm"></div>
+                        <div className="bg-card rounded-sm"></div>
+                        <div className="bg-card rounded-sm"></div>
+                        <div className="bg-card rounded-sm"></div>
+                        <div className="bg-card rounded-sm"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
+              </AccordionContent>
+            </AccordionItem>
 
-        <AccordionItem value="item-2" className="border rounded-lg px-4">
-          <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-          <AccordionContent className="pt-2">
-             <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-1.5 pr-4">
-                <Label>Activar Chat</Label>
-                 <p className="text-xs text-muted-foreground">
-                  Muestra u oculta el botón para abrir el chat en la vista de visualización.
-                </p>
-              </div>
-              <Switch
-                checked={isChatEnabled}
-                onCheckedChange={onIsChatEnabledChange}
-              />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="item-3" className="border rounded-lg px-4">
-          <AccordionTrigger>Eventos Seleccionados ({activeEventsCount})</AccordionTrigger>
-           <AccordionContent className="pt-2">
-             <div className="space-y-4 pr-1">
-                  {order.map((originalIndex, currentIndex) => {
-                    const event = eventDetails[originalIndex];
-                    if (!event) return null;
+            <AccordionItem value="item-2" className="border rounded-lg px-4">
+              <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
+              <AccordionContent className="pt-2">
+                 <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-1.5 pr-4">
+                    <Label>Activar Chat</Label>
+                     <p className="text-xs text-muted-foreground">
+                      Muestra u oculta el botón para abrir el chat en la vista de visualización.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isChatEnabled}
+                    onCheckedChange={onIsChatEnabledChange}
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="item-3" className="border rounded-lg px-4">
+              <AccordionTrigger>Eventos Seleccionados ({activeEventsCount})</AccordionTrigger>
+               <AccordionContent className="pt-2">
+                 <div className="space-y-4">
+                      {order.map((originalIndex, currentIndex) => {
+                        const event = eventDetails[originalIndex];
+                        if (!event) return null;
 
-                    return (
-                      <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                         <div 
-                            className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
-                         >
-                              {currentIndex + 1}
-                          </div>
-                          
-                          <div className="flex-grow flex flex-col gap-2">
-                              <p className={cn(
-                                "text-sm font-semibold break-words",
-                                !isViewPage && "cursor-pointer"
-                               )} 
-                                onClick={() => !isViewPage && onModify(event, originalIndex)}>
-                                {event.title}
-                              </p>
-                              <div className="flex items-center justify-center gap-1">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-7 w-7" 
-                                    onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'up'); }}
-                                    disabled={currentIndex === 0}
-                                  >
-                                    <ArrowUp className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-7 w-7" 
-                                    onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'down'); }}
-                                    disabled={currentIndex === activeEventsCount - 1}
-                                  >
-                                    <ArrowDown className="h-4 w-4" />
-                                  </Button>
-                                  {isViewPage && (
-                                     <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-7 w-7"
-                                      onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
-                                    >
-                                        <RotateCw className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-7 w-7 text-destructive hover:text-destructive"
-                                    onClick={(e) => { e.stopPropagation(); onRemove(originalIndex); }}
-                                  >
-                                      <Trash2 className="h-4 w-4" />
-                                  </Button>
+                        return (
+                          <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
+                             <div 
+                                className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
+                             >
+                                  {currentIndex + 1}
+                              </div>
+                              
+                              <div className="flex-grow flex flex-col gap-2 text-center">
+                                  <p className={cn(
+                                    "text-sm font-semibold break-words",
+                                    !isViewPage && "cursor-pointer"
+                                   )} 
+                                   onClick={() => !isViewPage && onModify(event, originalIndex)}>
+                                    {event.title}
+                                  </p>
+                                  <div className="flex items-center justify-center gap-1">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7" 
+                                        onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'up'); }}
+                                        disabled={currentIndex === 0}
+                                      >
+                                        <ArrowUp className="h-4 w-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7" 
+                                        onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'down'); }}
+                                        disabled={currentIndex === activeEventsCount - 1}
+                                      >
+                                        <ArrowDown className="h-4 w-4" />
+                                      </Button>
+                                      {isViewPage && (
+                                         <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="h-7 w-7"
+                                          onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
+                                        >
+                                            <RotateCw className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-7 w-7 text-destructive hover:text-destructive"
+                                        onClick={(e) => { e.stopPropagation(); onRemove(originalIndex); }}
+                                      >
+                                          <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                  </div>
                               </div>
                           </div>
-                      </div>
-                    )
-                  })}
-                   {activeEventsCount === 0 && (
-                      <p className="text-muted-foreground text-center pt-8">No hay eventos seleccionados.</p>
-                  )}
-                   {isViewPage && (
-                     <Button asChild variant="outline" className="w-full mt-4">
-                        <Link href="/">
-                          <Plus className="mr-2 h-4 w-4" />
-                          Añadir Evento
-                        </Link>
-                      </Button>
-                   )}
-                </div>
-           </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+                        )
+                      })}
+                       {activeEventsCount === 0 && (
+                          <p className="text-muted-foreground text-center pt-8">No hay eventos seleccionados.</p>
+                      )}
+                    </div>
+               </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </ScrollArea>
+        {isViewPage && (
+            <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={onAddEvent}>
+                <Plus className="mr-2 h-4 w-4" />
+                Añadir Evento
+            </Button>
+        )}
     </div>
   );
 }

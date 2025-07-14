@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { X, Loader2, MessageSquare, BookOpen, AlertCircle } from "lucide-react";
+import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Tv, Search, Mail, FileText, RotateCw, Menu, Settings, Play } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -12,6 +12,135 @@ import { CameraConfigurationComponent } from '@/components/camera-configuration'
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { EventCard } from '@/components/event-card';
+import { channels } from '@/components/channel-list';
+import type { Channel } from '@/components/channel-list';
+import { EventSelectionDialog } from '@/components/event-selection-dialog';
+import { Badge } from '@/components/ui/badge';
+
+function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const { searchResults } = useMemo(() => {
+        let results: (Event | Channel)[] = [];
+        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Desconocido': 2, 'Próximo': 3, 'Finalizado': 4 };
+
+        if (searchTerm) {
+            const lowercasedFilter = searchTerm.toLowerCase();
+            const filteredEvents = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
+            const filteredChannels = allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
+            results = [...filteredEvents, ...filteredChannels];
+        } else {
+            results = [...allEvents, ...allChannels];
+        }
+        
+        results.sort((a, b) => {
+            const statusA = 'status' in a ? (a as Event).status : 'Channel';
+            const statusB = 'status' in b ? (b as Event).status : 'Channel';
+            const orderA = statusA === 'Channel' ? 0.5 : (statusOrder[statusA] ?? 6);
+            const orderB = statusB === 'Channel' ? 0.5 : (statusOrder[statusB] ?? 6);
+            return orderA - orderB;
+        });
+
+        return { searchResults: results };
+    }, [searchTerm, allEvents, allChannels]);
+
+    const getEventSelection = (eventTitle: string) => {
+        const selection = selectedEvents.map((se, i) => se && se.title === eventTitle ? i : null).filter(i => i !== null);
+        if (selection.length > 0) {
+            return { isSelected: true, window: selection[0]! + 1 };
+        }
+        return { isSelected: false, window: null };
+    };
+
+    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [isModification, setIsModification] = useState(false);
+    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+    
+    const openSubDialog = (item: Event | Channel) => {
+        const event: Event = 'url' in item
+            ? { title: item.name, options: [item.url], buttons: ['Ver canal'], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: item.logo }
+            : item;
+
+        const selection = getEventSelection(event.title);
+        setDialogEvent(event);
+        setIsModification(selection.isSelected);
+        setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
+        setDialogOpen(true);
+    };
+
+    const handleSelect = (event: Event, option: string) => {
+        onSelect(event, option);
+        setDialogOpen(false);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4">
+                <DialogHeader>
+                    <DialogTitle>Añadir Evento a la Vista</DialogTitle>
+                    <DialogDescription>Selecciona un evento o canal para añadir a una ventana vacía.</DialogDescription>
+                </DialogHeader>
+                <div className="relative my-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                        type="text"
+                        placeholder="Buscar evento o canal..."
+                        className="w-full pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <ScrollArea className="flex-grow">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pr-4">
+                        {searchResults.map((item, index) => {
+                             if ('url' in item) { // Channel
+                                return (
+                                     <Card 
+                                        key={`search-channel-${index}`}
+                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-[150px] flex flex-col"
+                                        onClick={() => openSubDialog(item)}
+                                    >
+                                        <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10">
+                                            <Image
+                                                src={item.logo}
+                                                alt={`${item.name} logo`}
+                                                width={120}
+                                                height={67.5}
+                                                className="object-contain max-h-full max-w-full"
+                                            />
+                                        </div>
+                                        <div className="p-3 bg-card">
+                                            <h3 className="font-bold text-sm text-center">{item.name}</h3>
+                                        </div>
+                                    </Card>
+                                )
+                            } else { // Event
+                                return <EventCard key={`search-event-${index}`} event={item} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
+                            }
+                        })}
+                    </div>
+                </ScrollArea>
+            </DialogContent>
+            {dialogEvent && (
+                <EventSelectionDialog
+                    isOpen={dialogOpen}
+                    onOpenChange={setDialogOpen}
+                    event={dialogEvent}
+                    selectedEvents={selectedEvents}
+                    onSelect={handleSelect}
+                    isModification={isModification}
+                    onRemove={() => { /* Remove logic can be added here if needed */ setDialogOpen(false); }}
+                    windowNumber={(modificationIndex ?? 0) + 1}
+                />
+            )}
+        </Dialog>
+    );
+}
+
 
 function ViewPageContent() {
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
@@ -29,6 +158,9 @@ function ViewPageContent() {
 
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
   const [errorsDialogOpen, setErrorsDialogOpen] = useState(false);
+  
+  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
 
 
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
@@ -73,16 +205,9 @@ function ViewPageContent() {
   const handleRemoveCamera = (indexToRemove: number) => {
     const newEvents = [...selectedEvents];
     newEvents[indexToRemove] = null;
-
-    const newOrder = viewOrder.filter(i => newEvents[i] !== null);
-    const availableSlots = Array.from({length: 9}, (_,i) => i).filter(i => !newOrder.includes(i));
-    newOrder.push(...availableSlots);
     
     setSelectedEvents(newEvents);
-    setViewOrder(newOrder);
-
     localStorage.setItem('selectedEvents', JSON.stringify(newEvents));
-    localStorage.setItem('viewOrder', JSON.stringify(newOrder));
   };
   
   const handleOrderChange = (newOrder: number[]) => {
@@ -98,9 +223,22 @@ function ViewPageContent() {
   };
   
   const numCameras = useMemo(() => selectedEvents.filter(Boolean).length, [selectedEvents]);
+
+   const fetchAllEvents = useCallback(async () => {
+    try {
+      const response = await fetch('/api/events', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Failed to fetch events');
+      const data = await response.json();
+      setAllEvents(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
   
   useEffect(() => {
     setIsMounted(true);
+    fetchAllEvents();
     
     const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
     if (!hasVisited) {
@@ -108,7 +246,6 @@ function ViewPageContent() {
         sessionStorage.setItem('hasVisitedViewPage', 'true');
         setProgress(100);
     }
-
 
     const storedEvents = localStorage.getItem('selectedEvents');
     if (storedEvents) {
@@ -121,17 +258,14 @@ function ViewPageContent() {
     }
 
     const storedGap = localStorage.getItem('gridGap');
-    if (storedGap) {
-      setGridGap(parseInt(storedGap, 10));
-    }
+    if (storedGap) setGridGap(parseInt(storedGap, 10));
+    
     const storedBorderColor = localStorage.getItem('borderColor');
-    if (storedBorderColor) {
-      setBorderColor(storedBorderColor);
-    }
+    if (storedBorderColor) setBorderColor(storedBorderColor);
+    
     const storedChatEnabled = localStorage.getItem('isChatEnabled');
-    if (storedChatEnabled) {
-      setIsChatEnabled(JSON.parse(storedChatEnabled));
-    }
+    if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
+    
     const storedViewOrder = localStorage.getItem('viewOrder');
     if (storedViewOrder) {
         try {
@@ -143,16 +277,42 @@ function ViewPageContent() {
             console.error("Failed to parse viewOrder from localStorage", e);
         }
     }
-  }, []);
+  }, [fetchAllEvents]);
 
-  const getGridClasses = useCallback((count: number) => {
+    const handleAddEventSelect = (event: Event, option: string) => {
+        const newSelectedEvents = [...selectedEvents];
+        const eventWithSelection = { ...event, selectedOption: option };
+
+        const existingIndex = newSelectedEvents.findIndex(se => se?.title === event.title);
+
+        if (existingIndex !== -1) {
+            // Modify existing event
+            newSelectedEvents[existingIndex] = eventWithSelection;
+        } else {
+            // Add to first empty slot
+            const emptyIndex = newSelectedEvents.findIndex(e => e === null);
+            if (emptyIndex !== -1) {
+                newSelectedEvents[emptyIndex] = eventWithSelection;
+            } else {
+                alert("No empty slots available.");
+                return;
+            }
+        }
+        
+        setSelectedEvents(newSelectedEvents);
+        localStorage.setItem('selectedEvents', JSON.stringify(newSelectedEvents));
+        setAddEventsDialogOpen(false); // Close the add dialog
+    };
+
+
+ const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
-        return `grid-cols-1 grid-rows-${count}`;
+        return `grid-cols-1 grid-rows-${count > 0 ? count : 1}`;
     }
     switch (count) {
         case 1: return 'grid-cols-1 grid-rows-1';
         case 2: return 'grid-cols-2 grid-rows-1';
-        case 3: return 'grid-cols-2 grid-rows-2';
+        case 3: return 'grid-cols-2 grid-rows-2'; 
         case 4: return 'grid-cols-2 grid-rows-2';
         case 5: return 'grid-cols-3 grid-rows-2';
         case 6: return 'grid-cols-3 grid-rows-2';
@@ -165,10 +325,19 @@ function ViewPageContent() {
   
  const getItemClasses = (index: number, count: number) => {
     if (isMobile) return '';
-    if (count === 3 && index === 0) return 'col-span-2 row-span-1';
-    if (count === 5 && index < 2) return 'col-span-1 row-span-1';
-    if (count === 5 && index >= 2) return 'col-span-1 row-span-1';
-    return 'col-span-1 row-span-1';
+    if (count === 3) {
+      return index === 0 ? 'col-span-2' : 'col-span-1';
+    }
+    if (count === 5) {
+      return index < 2 ? 'col-span-1' : 'col-span-1';
+    }
+    if (count === 7) {
+       return index === 6 ? 'col-start-2' : '';
+    }
+    if (count === 8) {
+       return index === 6 ? 'col-start-1' : index === 7 ? 'col-start-2' : '';
+    }
+    return '';
  };
 
   if (!isMounted) {
@@ -191,10 +360,30 @@ function ViewPageContent() {
   const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
   const orderedIndexes = viewOrder.filter(i => selectedEvents[i] !== null);
 
-  const orderedEventData = viewOrder.map(index => selectedEvents[index] || null);
+  const windowData = Array.from({ length: 9 }, (_, i) => {
+      const orderedIndex = viewOrder.indexOf(i);
+      if (orderedIndex > -1 && selectedEvents[i]) {
+          return {
+              event: selectedEvents[i],
+              reload: reloadCounters[i],
+              order: orderedIndex
+          };
+      }
+      return null;
+  }).filter(Boolean) as { event: Event; reload: number; order: number }[];
+
 
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
+        <AddEventsDialog 
+            open={addEventsDialogOpen}
+            onOpenChange={setAddEventsDialogOpen}
+            onSelect={handleAddEventSelect}
+            selectedEvents={selectedEvents}
+            allEvents={allEvents}
+            allChannels={channels}
+        />
+
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
            <DialogContent className="sm:max-w-md p-0" hideClose>
               <DialogHeader className="sr-only">
@@ -347,6 +536,7 @@ function ViewPageContent() {
                  setIsChatEnabled(value);
                  localStorage.setItem('isChatEnabled', JSON.stringify(value));
              }}
+             onAddEvent={() => setAddEventsDialogOpen(true)}
           />
 
           {isChatEnabled && (
@@ -378,37 +568,44 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {orderedIndexes.map((originalIndex, layoutIndex) => {
-              const event = selectedEvents[originalIndex];
-              if (!event || !event.selectedOption) {
-                  return null; 
-              }
-              const windowClasses = cn(
-                  "overflow-hidden",
-                  "relative",
-                  "bg-black",
-                  getItemClasses(layoutIndex, numCameras)
-              );
+          {Array.from({ length: 9 }).map((_, windowIndex) => {
+            const orderedItemIndex = viewOrder.indexOf(windowIndex);
+            const eventData = orderedItemIndex !== -1 ? selectedEvents[windowIndex] : null;
 
-              let iframeSrc = event.selectedOption
-                  ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`
-                  : '';
-              
-              if (iframeSrc.includes("youtube-nocookie.com")) {
-                  iframeSrc += `&autoplay=1`;
-              }
-              
-              return (
-                  <div key={`window-${originalIndex}`} className={windowClasses}>
-                      <iframe
-                          src={iframeSrc}
-                          title={`Stream ${originalIndex + 1}`}
-                          className="w-full h-full border-0"
-                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                          allowFullScreen
-                      />
-                  </div>
-              );
+            if (!eventData || !eventData.selectedOption) {
+              return null;
+            }
+
+            const itemStyle = {
+              order: orderedItemIndex,
+            };
+
+            const windowClasses = cn(
+              "overflow-hidden",
+              "relative",
+              "bg-black",
+              getItemClasses(orderedItemIndex, numCameras)
+            );
+
+            let iframeSrc = eventData.selectedOption
+                ? `${eventData.selectedOption}${eventData.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowIndex] || 0}`
+                : '';
+            
+            if (iframeSrc.includes("youtube-nocookie.com")) {
+                iframeSrc += `&autoplay=1`;
+            }
+            
+            return (
+                <div key={`window-${windowIndex}`} className={windowClasses} style={itemStyle}>
+                    <iframe
+                        src={iframeSrc}
+                        title={`Stream ${windowIndex + 1}`}
+                        className="w-full h-full border-0"
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                        allowFullScreen
+                    />
+                </div>
+            );
           })}
         </main>
       </div>

@@ -128,21 +128,23 @@ export default function HomePage() {
   }, [selectedEvents]); 
   
   useEffect(() => {
-    const activeEventIndexes = selectedEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
+    const activeEventIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
     const currentOrderActive = viewOrder.filter(i => activeEventIndexes.includes(i));
     
-    // Only update if the active part of the order has changed.
+    // Check if the order of active items is different
     const activeOrderChanged = JSON.stringify(currentOrderActive) !== JSON.stringify(viewOrder.filter(i => selectedEvents[i] !== null));
 
     if (activeOrderChanged) {
         const newOrder = [...currentOrderActive];
+        // Add inactive items to the end
         for (let i = 0; i < 9; i++) {
-            if(!newOrder.includes(i)) {
+            if (!newOrder.includes(i)) {
                 newOrder.push(i);
             }
         }
         
         const stringifiedNewOrder = JSON.stringify(newOrder);
+        // Avoid writing to localStorage if it's the same
         if (stringifiedNewOrder !== localStorage.getItem('viewOrder')) {
             setViewOrder(newOrder);
             localStorage.setItem('viewOrder', stringifiedNewOrder);
@@ -554,7 +556,12 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+                <Button variant="ghost" size="icon" onClick={() => {
+                    if (isSearchOpen) {
+                        setSearchTerm('');
+                    }
+                    setIsSearchOpen(!isSearchOpen)
+                }}>
                     {isSearchOpen ? <X /> : <Search />}
                 </Button>
 
@@ -644,7 +651,7 @@ export default function HomePage() {
                                             />
                                         </div>
                                         <div className="p-3 bg-card">
-                                            <h3 className="font-bold truncate text-sm text-center">{(item as Channel).name}</h3>
+                                            <h3 className="font-bold text-sm text-center">{(item as Channel).name}</h3>
                                         </div>
                                     </Card>
                                 );

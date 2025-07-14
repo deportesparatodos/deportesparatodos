@@ -47,7 +47,7 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
         )}
       </div>
       <div className="p-3">
-        <h3 className="font-bold truncate text-sm">{event.title}</h3>
+        <h3 className="font-bold text-sm min-h-[40px]">{event.title}</h3>
         <div className="flex items-center justify-between text-xs mt-1">
           <p className="text-muted-foreground font-semibold">{timeDisplay}</p>
           {event.status && (
