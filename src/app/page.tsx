@@ -193,7 +193,7 @@ export default function HomePage() {
 
   // Load state from localStorage once on initial mount
   useEffect(() => {
-    if (isInitialLoadDone) return;
+    if (typeof window === 'undefined' || isInitialLoadDone) return;
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
     if (storedSelectedEvents) {
       try {
@@ -304,23 +304,22 @@ export default function HomePage() {
     };
 
     const liveSortLogic = (a: Event, b: Event) => {
-        const aIs247 = isChannel247(a);
-        const bIs247 = isChannel247(b);
+        const hasCustomImageA = a.image && a.image !== placeholderImage;
+        const hasCustomImageB = b.image && b.image !== placeholderImage;
 
-        if (aIs247 && !bIs247) return 1; // b (not 24/7) comes first
-        if (!aIs247 && bIs247) return -1; // a (not 24/7) comes first
-        
+        if (hasCustomImageA && !hasCustomImageB) return -1;
+        if (!hasCustomImageA && hasCustomImageB) return 1;
+
         return a.time.localeCompare(b.time);
     };
 
     const live = otherEvents.filter((e) => e.status === 'En Vivo').sort(liveSortLogic);
-    const liveWith247Last = [...live, ...channels247.filter(e => e.status === 'En Vivo')];
-
+    
     const upcoming = otherEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
     const unknown = otherEvents.filter((e) => e.status === 'Desconocido').sort(sortLogic);
     const finishedEvents = otherEvents.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...liveWith247Last, ...upcoming, ...unknown, ...finishedEvents];
+    const allSorted = [...live, ...upcoming, ...channels247, ...unknown, ...finishedEvents];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -360,7 +359,7 @@ export default function HomePage() {
     }
 
     return { 
-        liveEvents: liveWith247Last, 
+        liveEvents: live, 
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
         finishedEvents,
