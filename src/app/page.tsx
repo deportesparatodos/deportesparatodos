@@ -44,7 +44,7 @@ import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
-import { utcToZonedTime, format } from 'date-fns-tz';
+import { toZonedTime, format } from 'date-fns-tz';
 import { parse, addHours, isBefore, isAfter } from 'date-fns';
 
 
@@ -108,7 +108,7 @@ export default function HomePage() {
 
               transformedEvents.push({
                 title: stream.name,
-                time: stream.starts_at > 0 ? format(utcToZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '24/7',
+                time: stream.starts_at > 0 ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '24/7',
                 options: [stream.iframe],
                 buttons: [stream.tag || 'Ver Stream'],
                 category: stream.category_name,
@@ -138,7 +138,7 @@ export default function HomePage() {
       const data: Event[] = await response.json();
       
       const timeZone = 'America/Argentina/Buenos_Aires';
-      const nowInBA = utcToZonedTime(new Date(), timeZone);
+      const nowInBA = toZonedTime(new Date(), timeZone);
       const currentHour = nowInBA.getHours();
 
       // Logic is active between 6 AM and 8 PM (20:00)
@@ -878,6 +878,8 @@ export default function HomePage() {
   );
   
 }
+    
+
     
 
     
