@@ -284,18 +284,54 @@ export default function HomePage() {
     localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
   };
 
-
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, allChannels, searchResults, allSortedEvents, categoryFilteredEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
+    const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+
+    const normalizeTitle = (title: string): string => {
+        const prefixes = /^(f[oó]rmula 1:|liga profesional:|amistoso:|primera nacional:|copa libertadores:|copa sudamericana:|f[uú]tbol:|wwe:|ufc:)/i;
+        return title.replace(prefixes, '').trim().toLowerCase();
+    };
     
     const combinedEvents = [...events, ...ppvEvents];
     
+    const eventMap = new Map<string, Event>();
+
+    combinedEvents.forEach(event => {
+        const normalized = normalizeTitle(event.title);
+        const key = `${normalized}|${event.time}`;
+
+        if (eventMap.has(key)) {
+            const existingEvent = eventMap.get(key)!;
+            
+            // Merge logic
+            const newOptions = [...existingEvent.options, ...event.options];
+            const newButtons = [...existingEvent.buttons, ...event.buttons];
+            const newImage = (existingEvent.image !== placeholderImage && existingEvent.image) 
+                             ? existingEvent.image 
+                             : (event.image !== placeholderImage && event.image) 
+                               ? event.image 
+                               : placeholderImage;
+            const newTitle = event.title.length > existingEvent.title.length ? event.title : existingEvent.title;
+
+            eventMap.set(key, {
+                ...existingEvent,
+                title: newTitle,
+                image: newImage,
+                options: newOptions,
+                buttons: newButtons,
+            });
+        } else {
+            eventMap.set(key, event);
+        }
+    });
+
+    const mergedEvents = Array.from(eventMap.values());
+
     const isChannel247 = (e: Event) => e.title.toLowerCase().includes('24/7') || e.title.includes('(North) Korean Central Television');
     
-    const channels247 = combinedEvents.filter(isChannel247);
-    const otherEvents = combinedEvents.filter(e => !isChannel247(e));
-
-    const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+    const channels247 = mergedEvents.filter(isChannel247);
+    const otherEvents = mergedEvents.filter(e => !isChannel247(e));
     
     const sortLogic = (a: Event, b: Event) => {
       const orderA = statusOrder[a.status] ?? 99;
@@ -331,8 +367,8 @@ export default function HomePage() {
         const lowercasedFilter = searchTerm.toLowerCase();
         
         const eventsSource = currentView === 'home' || currentView === 'channels' || currentView === 'live'
-            ? combinedEvents
-            : combinedEvents.filter(e => e.category.toLowerCase() === currentView.toLowerCase());
+            ? mergedEvents
+            : mergedEvents.filter(e => e.category.toLowerCase() === currentView.toLowerCase());
             
         const filteredEvents = eventsSource.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = (currentView === 'home' || currentView === 'channels') ? channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter)) : [];
@@ -352,7 +388,7 @@ export default function HomePage() {
 
     let categoryFilteredEvents: Event[] = [];
     if (currentView !== 'home' && currentView !== 'channels' && currentView !== 'live') {
-        const categoryEvents = combinedEvents
+        const categoryEvents = mergedEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
         const liveCat = categoryEvents.filter(e => e.status === 'En Vivo' && !isChannel247(e)).sort(liveSortLogic);
@@ -495,7 +531,7 @@ export default function HomePage() {
     setCurrentView('home');
   };
 
-  if (isLoading && events.length === 0) {
+  if (isLoading && events.length === 0 && ppvEvents.length === 0) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -979,5 +1015,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
