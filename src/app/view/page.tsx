@@ -751,6 +751,7 @@ function ViewPageContent() {
                           src={iframeSrc}
                           title={`Stream ${index + 1}`}
                           className="w-full h-full border-0"
+                          loading="eager"
                           allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                           allowFullScreen
                       />

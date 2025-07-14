@@ -118,17 +118,6 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </TooltipProvider>
         </div>
 
-        {isModification && event.source !== 'view-page' && (
-          <DialogFooter className="p-6 pt-0">
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={onRemove}
-            >
-              Eliminar Selección
-            </Button>
-          </DialogFooter>
-        )}
       </DialogContent>
     </Dialog>
   );
