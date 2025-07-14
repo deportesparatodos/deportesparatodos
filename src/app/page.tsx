@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -6,7 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2 } from 'lucide-react';
-import type { Event } from '@/components/event-carousel'; 
+import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
   Carousel,
@@ -61,6 +62,7 @@ export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [ppvEvents, setPpvEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingStreams, setIsLoadingStreams] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
@@ -124,8 +126,9 @@ export default function HomePage() {
               transformedEvents.push({
                 title: stream.name,
                 time: startTime ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '--:--',
-                options: [stream.iframe],
-                buttons: [stream.tag || 'Ver Stream'],
+                options: [{ url: stream.iframe, label: 'Ver Stream', hd: false, language: '' }],
+                sources: [],
+                buttons: [],
                 category: stream.category_name,
                 language: '', 
                 date: startTime ? startTime.toLocaleDateString() : '',
@@ -160,9 +163,7 @@ export default function HomePage() {
       
       const allMatchesMap = new Map<string, StreamedMatch>();
       
-      // Add all today's matches to the map first
       todayData.forEach(match => allMatchesMap.set(match.id, match));
-      // Overwrite with live matches to ensure live status is captured if there's an overlap
       liveData.forEach(match => allMatchesMap.set(match.id, match));
 
       const combinedData = Array.from(allMatchesMap.values());
@@ -189,7 +190,7 @@ export default function HomePage() {
       const processedEvents: Event[] = combinedData.map((match: StreamedMatch) => {
         const eventDate = new Date(match.date);
         const zonedEventTime = toZonedTime(eventDate, timeZone);
-        const eventEndTime = addHours(zonedEventTime, 3); // Assuming 3 hours duration
+        const eventEndTime = addHours(zonedEventTime, 3);
         
         let status: Event['status'] = 'Desconocido';
         if (liveData.some(liveMatch => liveMatch.id === match.id)) {
@@ -197,19 +198,17 @@ export default function HomePage() {
         } else if (isBefore(nowInBA, zonedEventTime)) {
             status = 'Próximo';
         } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
-            status = 'En Vivo'; // Fallback for events that just started
+            status = 'En Vivo';
         } else if (isAfter(nowInBA, eventEndTime)) {
             status = 'Finalizado';
         }
 
-        const options = match.sources.map(source => `https://streamed.su/player/${source.source}?id=${source.id}`);
-        const buttons = match.sources.map(source => `${source.source.charAt(0).toUpperCase() + source.source.slice(1)}`);
-        
         return {
           title: match.title,
           time: format(zonedEventTime, 'HH:mm'),
-          options: options,
-          buttons: buttons,
+          options: [], // Will be fetched on demand
+          sources: match.sources, // Keep sources to fetch streams later
+          buttons: [],
           category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
           language: '',
           date: format(zonedEventTime, 'yyyy-MM-dd'),
@@ -338,8 +337,8 @@ export default function HomePage() {
             const existingEvent = eventMap.get(key)!;
             
             // Merge logic
-            const newOptions = [...new Set([...existingEvent.options, ...event.options])];
-            const newButtons = [...new Set([...existingEvent.buttons, ...event.buttons])];
+            const newOptions = [...existingEvent.options, ...event.options];
+            const newSources = [...existingEvent.sources, ...(event.sources || [])];
             const newImage = (existingEvent.image !== placeholderImage && existingEvent.image) 
                              ? existingEvent.image 
                              : (event.image !== placeholderImage && event.image) 
@@ -352,10 +351,11 @@ export default function HomePage() {
                 title: newTitle,
                 image: newImage,
                 options: newOptions,
-                buttons: newButtons,
+                sources: newSources,
+                buttons: [],
             });
         } else {
-            eventMap.set(key, { ...event, image: event.image || placeholderImage });
+            eventMap.set(key, { ...event, image: event.image || placeholderImage, buttons: [] });
         }
     });
 
@@ -516,32 +516,70 @@ export default function HomePage() {
     router.push('/view');
   };
   
-  const openDialogForEvent = (event: Event) => {
-    const selection = getEventSelection(event);
-    
-    let eventForDialog = {...event};
-    if (selection.isSelected && selection.selectedOption) {
-        eventForDialog.selectedOption = selection.selectedOption;
-    }
+    const fetchStreamOptions = async (event: Event): Promise<StreamOption[]> => {
+        if (!event.sources || event.sources.length === 0) {
+            // For PPV events that have options directly
+            return event.options;
+        }
 
-    setDialogEvent(eventForDialog);
+        setIsLoadingStreams(true);
+        try {
+            const allStreamOptions: StreamOption[] = [];
+            for (const source of event.sources) {
+                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
+                if (response.ok) {
+                    const streams: any[] = await response.json();
+                    streams.forEach(stream => {
+                        allStreamOptions.push({
+                            url: stream.embedUrl,
+                            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                            hd: stream.hd,
+                            language: stream.language,
+                        });
+                    });
+                }
+            }
+            return allStreamOptions;
+        } catch (error) {
+            console.error("Failed to fetch stream options:", error);
+            return []; // Return empty array on error
+        } finally {
+            setIsLoadingStreams(false);
+        }
+    };
 
-    if (selection.isSelected) {
-      setIsModification(true);
-      const originalIndex = selectedEvents.findIndex(se => se?.title === event.title);
-      setModificationIndex(originalIndex);
-    } else {
-      setIsModification(false);
-      setModificationIndex(selectedEvents.findIndex(e => e === null));
-    }
-    setDialogOpen(true);
-  };
+    const openDialogForEvent = async (event: Event) => {
+        const selection = getEventSelection(event);
+        let eventForDialog = { ...event };
+        
+        if (selection.isSelected && selection.selectedOption) {
+            eventForDialog.selectedOption = selection.selectedOption;
+        }
+
+        setDialogEvent(eventForDialog); // Set event immediately to show dialog with loader
+        setDialogOpen(true);
+
+        const streamOptions = await fetchStreamOptions(event);
+
+        setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: streamOptions } : null);
+        
+        if (selection.isSelected) {
+            setIsModification(true);
+            const originalIndex = selectedEvents.findIndex(se => se?.title === event.title);
+            setModificationIndex(originalIndex);
+        } else {
+            setIsModification(false);
+            setModificationIndex(selectedEvents.findIndex(e => e === null));
+        }
+    };
+
 
    const handleChannelClick = (channel: Channel) => {
     const channelAsEvent: Event = {
       title: channel.name,
-      options: [channel.url],
-      buttons: ['Ver canal'],
+      options: [{url: channel.url, label: 'Ver Canal', hd: false, language: ''}],
+      sources: [],
+      buttons: [],
       time: channel.name.toLowerCase().includes('24/7') ? '24/7' : '',
       category: 'Canal',
       language: '',
@@ -550,16 +588,15 @@ export default function HomePage() {
       status: 'En Vivo',
       image: channel.logo,
     };
-    openDialogForEvent(channelAsEvent);
+    setDialogEvent(channelAsEvent);
+    setIsModification(false);
+    setModificationIndex(selectedEvents.findIndex(e => e === null));
+    setDialogOpen(true);
   };
   
   const openDialogForModification = (event: Event, index: number) => {
     setConfigDialogOpen(false);
-    const selection = getEventSelection(event);
-    setDialogEvent({...event, selectedOption: selection.selectedOption});
-    setIsModification(true);
-    setModificationIndex(index);
-    setDialogOpen(true);
+    openDialogForEvent(event);
   }
 
   const handleViewChange = (view: string) => {
@@ -909,7 +946,7 @@ export default function HomePage() {
           {itemsToDisplay.map((item, index) => {
               if ('url' in item) { // It's a Channel
                   const channel = item as Channel;
-                  const channelAsEvent: Event = { title: channel.name, options: [channel.url], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                  const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                   const selection = getEventSelection(channelAsEvent);
                   return (
                       <Card 
@@ -1062,8 +1099,11 @@ export default function HomePage() {
                 isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
                 windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
+                isLoading={isLoadingStreams}
             />
         )}
     </div>
   );
 }
+
+    

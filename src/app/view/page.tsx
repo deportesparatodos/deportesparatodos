@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -8,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
-import type { Event } from '@/components/event-carousel';
+import type { Event, StreamOption } from '@/components/event-carousel';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Progress } from '@/components/ui/progress';
@@ -34,6 +35,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
     const [isModification, setIsModification] = useState(false);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+    const [isLoadingStreams, setIsLoadingStreams] = useState(false);
 
     const getEventSelection = useCallback((eventTitle: string) => {
         const selection = selectedEvents.map((se, i) => se && se.title === eventTitle ? i : null).filter(i => i !== null);
@@ -48,25 +50,60 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         setSubDialogOpen(false);
     };
     
-    const openSubDialogForEvent = (event: Event) => {
+    const fetchStreamOptions = async (event: Event): Promise<StreamOption[]> => {
+        if (!event.sources || event.sources.length === 0) {
+            return event.options;
+        }
+
+        setIsLoadingStreams(true);
+        try {
+            const allStreamOptions: StreamOption[] = [];
+            for (const source of event.sources) {
+                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
+                if (response.ok) {
+                    const streams: any[] = await response.json();
+                    streams.forEach(stream => {
+                        allStreamOptions.push({
+                            url: stream.embedUrl,
+                            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                            hd: stream.hd,
+                            language: stream.language,
+                        });
+                    });
+                }
+            }
+            return allStreamOptions;
+        } catch (error) {
+            console.error("Failed to fetch stream options:", error);
+            return [];
+        } finally {
+            setIsLoadingStreams(false);
+        }
+    };
+
+    const openSubDialogForEvent = async (event: Event) => {
         const selection = getEventSelection(event.title);
-        
         let eventForDialog = {...event};
         if(selection.isSelected && selection.selectedOption){
             eventForDialog.selectedOption = selection.selectedOption;
         }
 
         setDialogEvent(eventForDialog);
+        setSubDialogOpen(true);
+
+        const streamOptions = await fetchStreamOptions(event);
+        setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: streamOptions } : null);
+        
         setIsModification(selection.isSelected);
         setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
-        setSubDialogOpen(true);
     };
 
     const handleChannelClick = (channel: Channel) => {
         const event: Event = {
             title: channel.name,
-            options: [channel.url],
-            buttons: ['Ver canal'],
+            options: [{url: channel.url, label: 'Ver canal', hd: false, language: ''}],
+            sources: [],
+            buttons: [],
             time: channel.name.includes('24/7') ? '24/7' : '',
             category: 'Canal',
             language: '',
@@ -206,6 +243,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                     isModification={isModification}
                     onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
                     windowNumber={(modificationIndex ?? 0) + 1}
+                    isLoading={isLoadingStreams}
                 />
             )}
         </Dialog>
@@ -301,42 +339,53 @@ function ViewPageContent() {
 
    const fetchAllEvents = useCallback(async () => {
     try {
-        const [eventsResponse, ppvResponse] = await Promise.all([
-            fetch('/api/events', { cache: 'no-store' }),
-            fetch('/api/ppv', { cache: 'no-store' }),
-        ]);
+      const [liveResponse, todayResponse, ppvResponse] = await Promise.all([
+        fetch('https://streamed.su/api/matches/live', { cache: 'no-store' }),
+        fetch('https://streamed.su/api/matches/all-today', { cache: 'no-store' }),
+        fetch('/api/ppv', { cache: 'no-store' }),
+      ]);
 
-        if (!eventsResponse.ok || !ppvResponse.ok) {
-            throw new Error('Failed to fetch one or more event sources');
-        }
+      if (!liveResponse.ok || !todayResponse.ok || !ppvResponse.ok) {
+        throw new Error('Failed to fetch one or more event sources');
+      }
 
-        const eventsData: Event[] = await eventsResponse.json();
-        const ppvData = await ppvResponse.json();
+      const liveData: StreamedMatch[] = await liveResponse.json();
+      const todayData: StreamedMatch[] = await todayResponse.json();
+      const ppvData = await ppvResponse.json();
+      
+      const allMatchesMap = new Map<string, any>();
+      
+      todayData.forEach(match => allMatchesMap.set(match.id, match));
+      liveData.forEach(match => allMatchesMap.set(match.id, match));
 
-        // Process PPV events
-        const transformedPpvEvents: Event[] = [];
-        if (ppvData.success && ppvData.streams) {
-            ppvData.streams.forEach((category: any) => {
-                if (category.streams) {
-                    category.streams.forEach((stream: any) => {
-                        transformedPpvEvents.push({
-                            title: stream.name,
-                            time: stream.starts_at > 0 ? format(new Date(stream.starts_at * 1000), 'HH:mm') : '--:--',
-                            options: [stream.iframe],
-                            buttons: [stream.tag || 'Ver Stream'],
-                            category: stream.category_name,
-                            language: '', 
-                            date: stream.starts_at > 0 ? new Date(stream.starts_at * 1000).toLocaleDateString() : '',
-                            source: 'ppvs.su',
-                            image: stream.poster,
-                            status: stream.always_live === 1 ? 'En Vivo' : 'Desconocido', // Initial status
-                        });
-                    });
-                }
-            });
-        }
+      const combinedStreamedData = Array.from(allMatchesMap.values());
         
-        setAllEventsData([...eventsData, ...transformedPpvEvents]);
+        // Process PPV events
+      const transformedPpvEvents: Event[] = [];
+      if (ppvData.success && ppvData.streams) {
+          ppvData.streams.forEach((category: any) => {
+              if (category.streams) {
+                  category.streams.forEach((stream: any) => {
+                      transformedPpvEvents.push({
+                          title: stream.name,
+                          time: stream.starts_at > 0 ? format(new Date(stream.starts_at * 1000), 'HH:mm') : '--:--',
+                          options: [{ url: stream.iframe, label: 'Ver Stream', hd: false, language: '' }],
+                          sources: [],
+                          buttons: [],
+                          category: stream.category_name,
+                          language: '', 
+                          date: stream.starts_at > 0 ? new Date(stream.starts_at * 1000).toLocaleDateString() : '',
+                          source: 'ppvs.su',
+                          image: stream.poster,
+                          status: stream.always_live === 1 ? 'En Vivo' : 'Desconocido', // Initial status
+                      });
+                  });
+              }
+          });
+      }
+      
+      const allEvents = [...combinedStreamedData, ...transformedPpvEvents];
+      setAllEventsData(allEvents);
 
     } catch (error) {
       console.error(error);
@@ -347,39 +396,53 @@ function ViewPageContent() {
   const processedEventsData = useMemo(() => {
       const timeZone = 'America/Argentina/Buenos_Aires';
       const nowInBA = toZonedTime(new Date(), timeZone);
+      const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
       
-      return allEventsData.map(e => {
-        let currentStatus: Event['status'] = e.status 
-            ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status']
-            : 'Desconocido';
+      const categoryMap: { [key: string]: string } = {
+          football: "Fútbol",
+          basketball: "Baloncesto",
+          tennis: "Tenis",
+          hockey: "Hockey",
+          baseball: "Béisbol",
+          mma: "MMA",
+          boxing: "Boxeo",
+          motorsport: "Automovilismo",
+          handball: "Balonmano",
+          volleyball: "Voleibol",
+          cricket: "Críquet",
+          rugby: "Rugby",
+      };
+
+      return allEventsData.map((e: any) => {
+        if(e.source === 'ppvs.su') return e; // Already processed
+
+        const eventDate = new Date(e.date);
+        const zonedEventTime = toZonedTime(eventDate, timeZone);
+        const eventEndTime = addHours(zonedEventTime, 3);
         
-        if (/^\d{2}:\d{2}$/.test(e.time)) {
-             try {
-                const eventTimeToday = parse(e.time, 'HH:mm', new Date());
-                const zonedEventTime = toZonedTime(eventTimeToday, timeZone);
-                const eventEndTime = addHours(zonedEventTime, 3);
-                
-                if (isBefore(nowInBA, zonedEventTime)) {
-                    currentStatus = 'Próximo';
-                } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
-                    currentStatus = 'En Vivo';
-                } else if (isAfter(nowInBA, eventEndTime)) {
-                    currentStatus = 'Finalizado';
-                }
-             } catch (error) {
-                console.error("Error parsing date for event:", e.title, error);
-                currentStatus = 'Desconocido';
-             }
-        } else {
-            if (!['En Vivo', 'Próximo', 'Finalizado'].includes(currentStatus)) {
-              currentStatus = 'Desconocido';
-            }
+        let status: Event['status'] = 'Desconocido';
+        if (e.id.includes('live-')) { // A way to identify live events from the API structure if possible
+            status = 'En Vivo';
+        } else if (isBefore(nowInBA, zonedEventTime)) {
+            status = 'Próximo';
+        } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
+            status = 'En Vivo';
+        } else if (isAfter(nowInBA, eventEndTime)) {
+            status = 'Finalizado';
         }
 
         return {
-          ...e,
-          category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
-          status: currentStatus
+          title: e.title,
+          time: format(zonedEventTime, 'HH:mm'),
+          options: [],
+          sources: e.sources,
+          buttons: [],
+          category: categoryMap[e.category] || e.category.charAt(0).toUpperCase() + e.category.slice(1),
+          language: '',
+          date: format(zonedEventTime, 'yyyy-MM-dd'),
+          source: 'streamed.su',
+          image: e.poster ? `https://streamed.su${e.poster}` : placeholderImage,
+          status: status,
         };
       });
   }, [allEventsData]);
@@ -881,3 +944,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    

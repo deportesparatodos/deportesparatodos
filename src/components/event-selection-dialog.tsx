@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Loader2 } from 'lucide-react';
 
 interface EventSelectionDialogProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ interface EventSelectionDialogProps {
   isModification: boolean;
   onRemove: () => void;
   windowNumber: number;
+  isLoading?: boolean;
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
@@ -44,6 +46,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   isModification,
   onRemove,
   windowNumber,
+  isLoading = false,
 }) => {
   if (!event) return null;
 
@@ -93,37 +96,47 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         </DialogHeader>
 
         <div className="py-4 px-6">
-            <TooltipProvider>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {event.options.map((option, index) => {
-                    const domain = getDomainFromUrl(option);
-                    return (
-                        <Tooltip key={index} delayDuration={300}>
-                            <TooltipTrigger asChild>
-                                <Button
-                                variant={selectedOptionUrl === option ? 'default' : 'secondary'}
-                                className={cn(
-                                "w-full border border-border hover:scale-105 transition-transform duration-200", 
-                                event.options.length === 1 && "sm:col-span-2"
-                                )}
-                                onClick={() => onSelect(event, option)}
-                                >
-                                {event.buttons[index] || `Opción ${index + 1}`}
-                                </Button>
-                            </TooltipTrigger>
-                            {domain && (
-                                <TooltipContent>
-                                    <p>{domain}</p>
-                                </TooltipContent>
-                            )}
-                        </Tooltip>
-                    );
-                })}
+             {isLoading ? (
+                <div className="flex items-center justify-center h-24">
+                    <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
-            </TooltipProvider>
+            ) : event.options.length === 0 ? (
+                <p className="text-center text-muted-foreground">No hay transmisiones disponibles para este evento.</p>
+            ) : (
+                <TooltipProvider>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {event.options.map((option, index) => {
+                        const domain = getDomainFromUrl(option.url);
+                        return (
+                            <Tooltip key={index} delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                    variant={selectedOptionUrl === option.url ? 'default' : 'secondary'}
+                                    className={cn(
+                                    "w-full border border-border hover:scale-105 transition-transform duration-200", 
+                                    event.options.length === 1 && "sm:col-span-2"
+                                    )}
+                                    onClick={() => onSelect(event, option.url)}
+                                    >
+                                    {option.label}
+                                    </Button>
+                                </TooltipTrigger>
+                                {domain && (
+                                    <TooltipContent>
+                                        <p>{domain}</p>
+                                    </TooltipContent>
+                                )}
+                            </Tooltip>
+                        );
+                    })}
+                    </div>
+                </TooltipProvider>
+            )}
         </div>
 
       </DialogContent>
     </Dialog>
   );
 };
+
+    
