@@ -63,14 +63,14 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
           </div>
         </div>
-        <CarouselContent className="-ml-4 flex">
+        <CarouselContent className="-ml-4">
           {events &&
             onCardClick &&
             getEventSelection &&
             events.map((event, index) => (
               <CarouselItem
                 key={`event-${event.title}-${index}`}
-                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4 flex"
+                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
               >
                 <EventCard
                   event={event}
@@ -84,7 +84,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             channels.map((channel, index) => (
               <CarouselItem
                 key={`channel-${index}`}
-                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4 flex"
+                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
               >
                 <Card
                   className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
