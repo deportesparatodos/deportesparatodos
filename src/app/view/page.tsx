@@ -328,20 +328,19 @@ function ViewPageContent() {
             });
         }
         
-        return { events: eventsData, ppvs: transformedPpvEvents };
+        setAllEventsData([...eventsData, ...transformedPpvEvents]);
 
     } catch (error) {
       console.error(error);
-      return { events: [], ppvs: [] };
+      setAllEventsData([]);
     }
   }, []);
 
   const processedEventsData = useMemo(() => {
-      const allCombinedEvents = allEventsData;
       const timeZone = 'America/Argentina/Buenos_Aires';
       const nowInBA = toZonedTime(new Date(), timeZone);
       
-      return allCombinedEvents.map(e => {
+      return allEventsData.map(e => {
         let currentStatus: Event['status'] = e.status 
             ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status']
             : 'Desconocido';
@@ -381,11 +380,7 @@ function ViewPageContent() {
   useEffect(() => {
     setIsMounted(true);
     
-    const loadEvents = async () => {
-        const { events, ppvs } = await fetchAllEvents();
-        setAllEventsData([...events, ...ppvs]);
-    };
-    loadEvents();
+    fetchAllEvents();
     
     const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
     if (!hasVisited) {
