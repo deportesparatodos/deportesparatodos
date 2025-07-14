@@ -124,10 +124,20 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                             <Input
                                 type="text"
                                 placeholder="Buscar..."
-                                className="w-full pl-10"
+                                className="w-full pl-10 pr-10"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
+                             {searchTerm && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                                    onClick={() => setSearchTerm('')}
+                                >
+                                    <X className="h-5 w-5" />
+                                </Button>
+                            )}
                         </div>
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="eventos">Eventos</TabsTrigger>
@@ -295,72 +305,87 @@ function ViewPageContent() {
         const eventsData: Event[] = await eventsResponse.json();
         const ppvData = await ppvResponse.json();
 
-        const timeZone = 'America/Argentina/Buenos_Aires';
-        const nowInBA = toZonedTime(new Date(), timeZone);
-
-        // Process agenda events
-        const processedEvents = eventsData.map(e => {
-            let currentStatus: Event['status'] = e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido';
-            if (/^\d{2}:\d{2}$/.test(e.time)) {
-                try {
-                    const eventTimeToday = parse(e.time, 'HH:mm', nowInBA);
-                    const eventEndTime = addHours(eventTimeToday, 3);
-                    if (isBefore(nowInBA, eventTimeToday)) currentStatus = 'Próximo';
-                    else if (isAfter(nowInBA, eventTimeToday) && isBefore(nowInBA, eventEndTime)) currentStatus = 'En Vivo';
-                    else if (isAfter(nowInBA, eventEndTime)) currentStatus = 'Finalizado';
-                } catch { currentStatus = 'Desconocido'; }
-            } else if (!['En Vivo', 'Próximo', 'Finalizado'].includes(currentStatus)) {
-                currentStatus = 'Desconocido';
-            }
-            return { ...e, category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category, status: currentStatus };
-        });
-
         // Process PPV events
         const transformedPpvEvents: Event[] = [];
         if (ppvData.success && ppvData.streams) {
             ppvData.streams.forEach((category: any) => {
                 if (category.streams) {
                     category.streams.forEach((stream: any) => {
-                        let status: Event['status'] = 'Desconocido';
-                        let startTime: Date | null = null;
-                        if (stream.starts_at > 0) {
-                            startTime = new Date(stream.starts_at * 1000);
-                            const eventTime = toZonedTime(startTime, timeZone);
-                            const eventEndTime = addHours(eventTime, 3);
-                            if (isBefore(nowInBA, eventTime)) status = 'Próximo';
-                            else if (isAfter(nowInBA, eventTime) && isBefore(nowInBA, eventEndTime)) status = 'En Vivo';
-                            else if (isAfter(nowInBA, eventEndTime)) status = 'Finalizado';
-                        }
-                        if (stream.always_live === 1) status = 'En Vivo';
-                        
                         transformedPpvEvents.push({
                             title: stream.name,
-                            time: startTime ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '--:--',
+                            time: stream.starts_at > 0 ? format(new Date(stream.starts_at * 1000), 'HH:mm') : '--:--',
                             options: [stream.iframe],
                             buttons: [stream.tag || 'Ver Stream'],
                             category: stream.category_name,
                             language: '', 
-                            date: startTime ? startTime.toLocaleDateString() : '',
+                            date: stream.starts_at > 0 ? new Date(stream.starts_at * 1000).toLocaleDateString() : '',
                             source: 'ppvs.su',
                             image: stream.poster,
-                            status: status,
+                            status: stream.always_live === 1 ? 'En Vivo' : 'Desconocido', // Initial status
                         });
                     });
                 }
             });
         }
         
-        setAllEventsData([...processedEvents, ...transformedPpvEvents]);
+        return { events: eventsData, ppvs: transformedPpvEvents };
 
     } catch (error) {
       console.error(error);
+      return { events: [], ppvs: [] };
     }
   }, []);
+
+  const processedEventsData = useMemo(() => {
+      const allCombinedEvents = allEventsData;
+      const timeZone = 'America/Argentina/Buenos_Aires';
+      const nowInBA = toZonedTime(new Date(), timeZone);
+      
+      return allCombinedEvents.map(e => {
+        let currentStatus: Event['status'] = e.status 
+            ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status']
+            : 'Desconocido';
+        
+        if (/^\d{2}:\d{2}$/.test(e.time)) {
+             try {
+                const eventTimeToday = parse(e.time, 'HH:mm', new Date());
+                const zonedEventTime = toZonedTime(eventTimeToday, timeZone);
+                const eventEndTime = addHours(zonedEventTime, 3);
+                
+                if (isBefore(nowInBA, zonedEventTime)) {
+                    currentStatus = 'Próximo';
+                } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
+                    currentStatus = 'En Vivo';
+                } else if (isAfter(nowInBA, eventEndTime)) {
+                    currentStatus = 'Finalizado';
+                }
+             } catch (error) {
+                console.error("Error parsing date for event:", e.title, error);
+                currentStatus = 'Desconocido';
+             }
+        } else {
+            if (!['En Vivo', 'Próximo', 'Finalizado'].includes(currentStatus)) {
+              currentStatus = 'Desconocido';
+            }
+        }
+
+        return {
+          ...e,
+          category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
+          status: currentStatus
+        };
+      });
+  }, [allEventsData]);
 
   
   useEffect(() => {
     setIsMounted(true);
-    fetchAllEvents();
+    
+    const loadEvents = async () => {
+        const { events, ppvs } = await fetchAllEvents();
+        setAllEventsData([...events, ...ppvs]);
+    };
+    loadEvents();
     
     const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
     if (!hasVisited) {
@@ -513,7 +538,7 @@ function ViewPageContent() {
             onOpenChange={setAddEventsDialogOpen}
             onSelect={handleAddEventSelect}
             selectedEvents={selectedEvents}
-            allEvents={allEventsData}
+            allEvents={processedEventsData}
             allChannels={allChannelsList}
         />
 
