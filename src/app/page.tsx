@@ -270,9 +270,11 @@ export default function HomePage() {
     
     const combinedEvents = [...events, ...ppvEvents];
     
+    const isKoreanCentralTv = (e: Event) => e.title.toLowerCase().includes('korean central television');
+    
     // Separate 24/7 channels first
-    const channels247 = combinedEvents.filter(e => e.title.toLowerCase().includes('24/7'));
-    const otherEvents = combinedEvents.filter(e => !e.title.toLowerCase().includes('24/7'));
+    const channels247 = combinedEvents.filter(e => e.title.toLowerCase().includes('24/7') || isKoreanCentralTv(e));
+    const otherEvents = combinedEvents.filter(e => !e.title.toLowerCase().includes('24/7') && !isKoreanCentralTv(e));
 
 
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
