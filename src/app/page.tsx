@@ -275,9 +275,15 @@ export default function HomePage() {
 
     const allAvailableEvents = [...combinedEvents, ...ppvLiveEvents, ...ppvOtherEvents];
 
+    const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
 
     const live = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
     live.sort((a,b) => {
+        const aHasImage = a.image !== placeholderImage;
+        const bHasImage = b.image !== placeholderImage;
+        if (aHasImage && !bHasImage) return -1;
+        if (!aHasImage && bHasImage) return 1;
+
         const aIsFromPPV = a.source === 'ppvs.su';
         const bIsFromPPV = b.source === 'ppvs.su';
         
@@ -294,7 +300,16 @@ export default function HomePage() {
     });
 
     const upcoming = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
-    const unknown = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'desconocido').sort((a,b) => a.time.localeCompare(b.time));
+    
+    const unknown = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'desconocido');
+    unknown.sort((a, b) => {
+        const aHasImage = a.image !== placeholderImage;
+        const bHasImage = b.image !== placeholderImage;
+        if (aHasImage && !bHasImage) return -1;
+        if (!aHasImage && bHasImage) return 1;
+        return a.time.localeCompare(b.time);
+    });
+
     const finished = allAvailableEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
     const allSorted = [...live, ...unknown, ...upcoming, ...finished];
