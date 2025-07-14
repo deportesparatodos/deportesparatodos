@@ -560,7 +560,7 @@ function ViewPageContent() {
             <EventSelectionDialog
                 isOpen={!!modifyEvent}
                 onOpenChange={(open) => !open && setModifyEvent(null)}
-                event={{...modifyEvent.event, source: 'view-page'}}
+                event={{...modifyEvent.event, selectedOption: selectedEvents[modifyEvent.index]?.selectedOption, source: 'view-page'}}
                 selectedEvents={selectedEvents}
                 onSelect={handleModifyEventSelect}
                 isModification={true}

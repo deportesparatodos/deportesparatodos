@@ -91,8 +91,7 @@ export function ScheduleManager({
     };
 
     onSchedulesChange([...schedules, newSchedule]);
-    setDate(new Date());
-    setTime('12:00');
+    onOpenChange(false);
   };
   
   const handleRemoveSchedule = (id: string) => {
@@ -104,14 +103,11 @@ export function ScheduleManager({
     newSelection[indexToRemove] = null;
     setFutureSelection(newSelection);
   };
-
-  const handleModifyEventInView = (event: Event, index: number) => {
-    onOpenChange(false);
-    onModifyEventInView(event, index);
-  }
-
+  
   const handleOrderChange = (newOrder: number[]) => {
+    if(newOrder) {
       setFutureOrder(newOrder);
+    }
   }
   
   const handleAddEventToFuture = (event: Event, option: string) => {
@@ -123,17 +119,25 @@ export function ScheduleManager({
           newFutureSelection[emptyIndex] = eventWithSelection;
           setFutureSelection(newFutureSelection);
 
-          const newFutureOrder = [...futureOrder];
-          if (!newFutureOrder.includes(emptyIndex)) {
-              newFutureOrder.push(emptyIndex);
-              setFutureOrder(newFutureOrder);
-          }
+          // Update order if needed
+          const newFutureOrder = [...(futureOrder || [])];
+           const activeIndexes = newFutureSelection.map((e, i) => e ? i : -1).filter(i => i !== -1);
+           const currentOrderActive = newFutureOrder.filter(i => activeIndexes.includes(i));
+           const finalOrder = [...currentOrderActive];
+           for (let i = 0; i < 9; i++) {
+               if (!finalOrder.includes(i)) {
+                   finalOrder.push(i);
+               }
+           }
+           setFutureOrder(finalOrder);
+
       } else {
           alert("Todos los espacios están ocupados.");
       }
       setAddEventsDialogOpen(false);
   };
 
+  const activeFutureEventsCount = futureOrder?.filter(i => futureSelection[i] !== null).length ?? 0;
 
   return (
     <>
@@ -154,10 +158,10 @@ export function ScheduleManager({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid md:grid-cols-2 flex-grow h-0 overflow-y-hidden">
+          <div className="grid md:grid-cols-2 flex-grow h-0 overflow-hidden">
               <div className="flex flex-col border-r border-border">
                    <h3 className="px-4 py-2 text-lg font-semibold flex-shrink-0">Programaciones Activas</h3>
-                   <Separator className="w-full" />
+                   <Separator className="w-full flex-shrink-0" />
                    <ScrollArea className="flex-grow h-0">
                       <div className="p-4 space-y-3">
                       {schedules.length === 0 ? (
@@ -185,7 +189,7 @@ export function ScheduleManager({
               
               <div className="flex flex-col">
                    <h3 className="px-4 py-2 text-lg font-semibold flex-shrink-0">Configuración de la Programación</h3>
-                   <Separator className="w-full" />
+                   <Separator className="w-full flex-shrink-0" />
                    <div className="p-4 border-b border-border space-y-2 flex-shrink-0">
                       <div className="grid grid-cols-2 gap-4">
                         <Label htmlFor='date-picker'>Fecha</Label>
@@ -220,18 +224,18 @@ export function ScheduleManager({
                   <ScrollArea className="flex-grow h-0">
                       <div className="p-4">
                           <EventListManagement
-                              order={futureOrder.filter(i => futureSelection[i] !== null)}
+                              order={futureOrder ? futureOrder.filter(i => futureSelection[i] !== null) : []}
                               onOrderChange={handleOrderChange}
                               eventDetails={futureSelection}
                               onRemove={handleRemoveEventFromFuture}
-                              onModify={handleModifyEventInView}
+                              onModify={onModifyEventInView}
                               isViewPage={true}
                               onAddEvent={() => setAddEventsDialogOpen(true)}
                           />
                       </div>
                   </ScrollArea>
                    <div className="p-4 border-t border-border mt-auto flex-shrink-0">
-                      <Button className="w-full" onClick={handleAddSchedule} disabled={futureSelection.filter(Boolean).length === 0}>
+                      <Button className="w-full" onClick={handleAddSchedule} disabled={activeFutureEventsCount === 0}>
                           Guardar Programación
                       </Button>
                    </div>
