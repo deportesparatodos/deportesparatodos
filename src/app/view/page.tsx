@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil, Menu, RotateCw } from "lucide-react";
+import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil, Menu, RotateCw, Maximize, Minimize } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -14,20 +14,18 @@ import { CameraConfigurationComponent } from '@/components/camera-configuration'
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader as UiCardHeader, CardContent as UiCardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { EventCard } from '@/components/event-card';
 import { channels as allChannels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
-import { EventCarousel } from '@/components/event-carousel';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { toZonedTime, format } from 'date-fns-tz';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, ppvEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], ppvEvents: Event[] }) {
-    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
-    const isMobile = useIsMobile();
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     const [subDialogOpen, setSubDialogOpen] = useState(false);
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -44,7 +42,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
 
     const handleSubDialogSelect = (event: Event, option: string) => {
         onSelect(event, option);
-        setSubDialogOpen(false); // Close sub-dialog
+        setSubDialogOpen(false);
     };
     
     const openSubDialogForEvent = (event: Event) => {
@@ -71,177 +69,110 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
         openSubDialogForEvent(event);
     };
 
-    const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
+    const sortedAndFilteredEvents = useMemo(() => {
         const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
         const combinedEvents = [...allEvents, ...ppvEvents];
-        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-        
-        const channels247 = combinedEvents.filter(e => e.time === '24/7');
-        const otherEvents = combinedEvents.filter(e => e.time !== '24/7');
+        const lowercasedFilter = searchTerm.toLowerCase();
 
-        const live = otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
-        live.sort((a,b) => {
-            const aHasImage = a.image !== placeholderImage;
-            const bHasImage = b.image !== placeholderImage;
-            if (aHasImage && !bHasImage) return -1;
-            if (!aHasImage && bHasImage) return 1;
-            return a.time.localeCompare(b.time);
-        });
-
-        const upcoming = otherEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
-        const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido');
-        unknown.sort((a, b) => {
-            const aHasImage = a.image !== placeholderImage;
-            const bHasImage = b.image !== placeholderImage;
-            if (aHasImage && !bHasImage) return -1;
-            if (!aHasImage && bHasImage) return 1;
-            return a.time.localeCompare(b.time);
-        });
-
-        const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
-        
-        const allSorted = [...live, ...upcoming, ...unknown, ...finished, ...channels247];
-
-        let searchRes: (Event | Channel)[] = [];
-        if (searchTerm) {
-            const lowercasedFilter = searchTerm.toLowerCase();
-            const filteredEv = combinedEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
-            const sChannels = allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
-            const combinedResults = [...filteredEv, ...sChannels];
-            combinedResults.sort((a, b) => {
-                const statusA = 'status' in a ? (a as Event).status : 'Canal';
-                const statusB = 'status' in b ? (b as Event).status : 'Channel';
-                const orderA = statusA === 'Channel' ? 5 : (statusOrder[statusA] ?? 6);
-                const orderB = statusB === 'Channel' ? 5 : (statusOrder[statusB] ?? 6);
-                return orderA - orderB;
+        return combinedEvents
+            .filter(e => e.title.toLowerCase().includes(lowercasedFilter))
+            .sort((a, b) => {
+                const orderA = statusOrder[a.status] ?? 99;
+                const orderB = statusOrder[b.status] ?? 99;
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+                return a.time.localeCompare(b.time);
             });
-            searchRes = combinedResults;
-        }
+    }, [searchTerm, allEvents, ppvEvents]);
 
-        return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents: finished, channels247, filteredChannels: allChannels, searchResults: searchRes, allSortedEvents: allSorted };
-    }, [searchTerm, allEvents, ppvEvents, allChannels]);
-
-    const categories = useMemo(() => {
-        const categorySet = new Set<string>();
-        allEvents.forEach((event) => {
-            if (event.category) {
-                const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
-                categorySet.add(category);
-            }
-        });
-
-        const allCategories = Array.from(categorySet);
-        const otrosCategory = allCategories.find(c => c.toLowerCase() === 'otros');
-        const otherCategories = allCategories.filter(c => c.toLowerCase() !== 'otros').sort((a, b) => a.localeCompare(b));
-
-        const sortedCategories = [...otherCategories];
-        if (otrosCategory) {
-            sortedCategories.push(otrosCategory);
-        }
-
-        return sortedCategories;
-    }, [allEvents]);
+    const filteredChannels = useMemo(() => {
+        const lowercasedFilter = searchTerm.toLowerCase();
+        return allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
+    }, [searchTerm]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4">
-                <DialogHeader>
-                    <DialogTitle className='mb-0'>Añadir Evento/Canal</DialogTitle>
+            <DialogContent 
+                className={cn(
+                    "max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4 transition-all duration-300",
+                    isFullScreen && "w-screen h-screen max-w-none rounded-none"
+                )}
+            >
+                <DialogHeader className='flex-row items-center justify-between'>
+                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
+                     <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
+                            {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                        </Button>
+                        <DialogClose asChild>
+                           <Button variant="ghost" size="icon">
+                               <X className="h-5 w-5" />
+                           </Button>
+                        </DialogClose>
+                    </div>
                 </DialogHeader>
-                <div className="relative pt-[5px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                        type="text"
-                        placeholder="Buscar evento o canal..."
-                        className="w-full pl-10"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <ScrollArea className="flex-grow pr-4 -mr-4 mt-2">
-                     {searchTerm ? (
-                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-                            {searchResults.map((item, index) => {
-                                if ('url' in item) { // It's a Channel
-                                    return (
-                                        <Card 
-                                            key={`search-channel-${index}`}
-                                            className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
-                                            onClick={() => handleChannelClick(item as Channel)}
-                                        >
-                                            <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
-                                                <Image
-                                                    src={(item as Channel).logo}
-                                                    alt={`${(item as Channel).name} logo`}
-                                                    width={120}
-                                                    height={67.5}
-                                                    className="object-contain max-h-full max-w-full"
-                                                    onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
-                                                />
-                                            </div>
-                                            <div className="p-3 bg-card flex-grow flex flex-col justify-center">
-                                                <h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3>
-                                            </div>
-                                        </Card>
-                                    );
-                                } else { // It's an Event
-                                    return (
-                                        <EventCard
-                                          key={`search-event-${index}`}
-                                          event={item as Event}
-                                          selection={getEventSelection(item.title)}
-                                          onClick={() => openSubDialogForEvent(item as Event)}
-                                        />
-                                    );
-                                }
-                            })}
+                <Tabs defaultValue="eventos" className="flex-grow flex flex-col mt-2">
+                    <div className="flex-shrink-0 flex flex-col sm:flex-row gap-4">
+                        <div className="relative flex-grow">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Buscar..."
+                                className="w-full pl-10"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-                    ) : (
-                        <div className="space-y-6">
-                            <Carousel
-                                opts={{ align: "start", dragFree: true }}
-                                className="w-full"
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-2xl font-bold">Categorías</h2>
-                                    <div className="flex items-center gap-2">
-                                        <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
-                                        <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
-                                    </div>
-                                </div>
-                                <CarouselContent className="-ml-4">
-                                     <CarouselItem className="basis-auto pl-4">
-                                        <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => router.push('/events/live')}>
-                                            En Vivo
-                                        </Button>
-                                    </CarouselItem>
-                                     <CarouselItem className="basis-auto pl-4">
-                                        <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => router.push('/events/channels')}>
-                                            Canales
-                                        </Button>
-                                    </CarouselItem>
-                                {categories.map((category) => (
-                                    <CarouselItem key={category} className="basis-auto pl-4">
-                                        <Button 
-                                            variant="secondary" 
-                                            className="h-12 px-6 text-lg" 
-                                            onClick={() => router.push(`/category/${encodeURIComponent(category.toLowerCase().replace(/ /g, '-'))}`)}
-                                        >
-                                            {category}
-                                        </Button>
-                                    </CarouselItem>
+                        <TabsList className="grid w-full grid-cols-2 sm:w-auto">
+                            <TabsTrigger value="eventos">Eventos</TabsTrigger>
+                            <TabsTrigger value="canales">Canales</TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <TabsContent value="eventos" className="flex-grow mt-4 overflow-hidden">
+                        <ScrollArea className="h-full pr-4 -mr-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {sortedAndFilteredEvents.map((event, index) => (
+                                    <EventCard
+                                        key={`event-${index}`}
+                                        event={event}
+                                        selection={getEventSelection(event.title)}
+                                        onClick={() => openSubDialogForEvent(event)}
+                                    />
                                 ))}
-                                </CarouselContent>
-                            </Carousel>
-                            <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
-                            <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
-                        </div>
-                    )}
-                </ScrollArea>
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="canales" className="flex-grow mt-4 overflow-hidden">
+                         <ScrollArea className="h-full pr-4 -mr-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {filteredChannels.map((channel, index) => (
+                                     <Card 
+                                        key={`search-channel-${index}`}
+                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
+                                        onClick={() => handleChannelClick(channel)}
+                                    >
+                                        <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
+                                            <Image
+                                                src={channel.logo}
+                                                alt={`${channel.name} logo`}
+                                                width={120}
+                                                height={67.5}
+                                                className="object-contain max-h-full max-w-full"
+                                                onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
+                                            />
+                                        </div>
+                                        <div className="p-3 bg-card flex-grow flex flex-col justify-center">
+                                            <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+                </Tabs>
             </DialogContent>
             {dialogEvent && (
                 <EventSelectionDialog
