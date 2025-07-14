@@ -17,14 +17,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardHeader as UiCardHeader, CardContent as UiCardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { EventCard } from '@/components/event-card';
-import { channels as allChannels } from '@/components/channel-list';
+import { channels as allChannelsList } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toZonedTime, format } from 'date-fns-tz';
+import { addHours, isBefore, isAfter, parse } from 'date-fns';
 
 
-function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, ppvEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], ppvEvents: Event[] }) {
+function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -72,10 +73,9 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
 
     const sortedAndFilteredEvents = useMemo(() => {
         const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
-        const combinedEvents = [...allEvents, ...ppvEvents];
         const lowercasedFilter = searchTerm.toLowerCase();
 
-        return combinedEvents
+        return allEvents
             .filter(e => e.title.toLowerCase().includes(lowercasedFilter))
             .sort((a, b) => {
                 const orderA = statusOrder[a.status] ?? 99;
@@ -83,13 +83,12 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                 if (orderA !== orderB) {
                     return orderA - orderB;
                 }
-                // Secondary sort by time if statuses are the same
-                if (a.status === 'Próximo' || (a.status === 'Finalizado' && b.status === 'Finalizado')) {
+                if (a.time && b.time) {
                     return a.time.localeCompare(b.time);
                 }
-                return 0; // Keep original order for other statuses if times are irrelevant
+                return 0;
             });
-    }, [searchTerm, allEvents, ppvEvents]);
+    }, [searchTerm, allEvents]);
 
     const filteredChannels = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
@@ -215,8 +214,7 @@ function ViewPageContent() {
   const [errorsDialogOpen, setErrorsDialogOpen] = useState(false);
   
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
-  const [allEvents, setAllEvents] = useState<Event[]>([]);
-  const [ppvEvents, setPpvEvents] = useState<Event[]>([]);
+  const [allEventsData, setAllEventsData] = useState<Event[]>([]);
 
   const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
 
@@ -285,47 +283,77 @@ function ViewPageContent() {
 
    const fetchAllEvents = useCallback(async () => {
     try {
-      const response = await fetch('/api/events', { cache: 'no-store' });
-      if (!response.ok) throw new Error('Failed to fetch events');
-      const data = await response.json();
-      setAllEvents(data);
+        const [eventsResponse, ppvResponse] = await Promise.all([
+            fetch('/api/events', { cache: 'no-store' }),
+            fetch('/api/ppv', { cache: 'no-store' }),
+        ]);
+
+        if (!eventsResponse.ok || !ppvResponse.ok) {
+            throw new Error('Failed to fetch one or more event sources');
+        }
+
+        const eventsData: Event[] = await eventsResponse.json();
+        const ppvData = await ppvResponse.json();
+
+        const timeZone = 'America/Argentina/Buenos_Aires';
+        const nowInBA = toZonedTime(new Date(), timeZone);
+
+        // Process agenda events
+        const processedEvents = eventsData.map(e => {
+            let currentStatus: Event['status'] = e.status ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status'] : 'Desconocido';
+            if (/^\d{2}:\d{2}$/.test(e.time)) {
+                try {
+                    const eventTimeToday = parse(e.time, 'HH:mm', nowInBA);
+                    const eventEndTime = addHours(eventTimeToday, 3);
+                    if (isBefore(nowInBA, eventTimeToday)) currentStatus = 'Próximo';
+                    else if (isAfter(nowInBA, eventTimeToday) && isBefore(nowInBA, eventEndTime)) currentStatus = 'En Vivo';
+                    else if (isAfter(nowInBA, eventEndTime)) currentStatus = 'Finalizado';
+                } catch { currentStatus = 'Desconocido'; }
+            } else if (!['En Vivo', 'Próximo', 'Finalizado'].includes(currentStatus)) {
+                currentStatus = 'Desconocido';
+            }
+            return { ...e, category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category, status: currentStatus };
+        });
+
+        // Process PPV events
+        const transformedPpvEvents: Event[] = [];
+        if (ppvData.success && ppvData.streams) {
+            ppvData.streams.forEach((category: any) => {
+                if (category.streams) {
+                    category.streams.forEach((stream: any) => {
+                        let status: Event['status'] = 'Desconocido';
+                        let startTime: Date | null = null;
+                        if (stream.starts_at > 0) {
+                            startTime = new Date(stream.starts_at * 1000);
+                            const eventTime = toZonedTime(startTime, timeZone);
+                            const eventEndTime = addHours(eventTime, 3);
+                            if (isBefore(nowInBA, eventTime)) status = 'Próximo';
+                            else if (isAfter(nowInBA, eventTime) && isBefore(nowInBA, eventEndTime)) status = 'En Vivo';
+                            else if (isAfter(nowInBA, eventEndTime)) status = 'Finalizado';
+                        }
+                        if (stream.always_live === 1) status = 'En Vivo';
+                        
+                        transformedPpvEvents.push({
+                            title: stream.name,
+                            time: startTime ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '--:--',
+                            options: [stream.iframe],
+                            buttons: [stream.tag || 'Ver Stream'],
+                            category: stream.category_name,
+                            language: '', 
+                            date: startTime ? startTime.toLocaleDateString() : '',
+                            source: 'ppvs.su',
+                            image: stream.poster,
+                            status: status,
+                        });
+                    });
+                }
+            });
+        }
+        
+        setAllEventsData([...processedEvents, ...transformedPpvEvents]);
+
     } catch (error) {
       console.error(error);
-    }
-  }, []);
-
-  const fetchPpvEvents = useCallback(async () => {
-    try {
-      const response = await fetch('/api/ppv', { cache: 'no-store' });
-      if (!response.ok) throw new Error('Failed to fetch PPV events');
-      const data = await response.json();
-      const transformedEvents: Event[] = [];
-      if (data.success && data.streams) {
-        data.streams.forEach((category: any) => {
-          if (category.streams) {
-            category.streams.forEach((stream: any) => {
-              const startTime = new Date(stream.starts_at * 1000);
-              let status: Event['status'] = stream.always_live === 1 ? 'En Vivo' : (stream.starts_at > 0 ? 'Próximo' : 'Desconocido');
-              if (status === 'Próximo') status = 'Desconocido';
-              transformedEvents.push({
-                title: stream.name,
-                time: stream.starts_at > 0 ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '24/7',
-                options: [stream.iframe],
-                buttons: [stream.tag || 'Ver Stream'],
-                category: stream.category_name,
-                language: '', 
-                date: stream.starts_at > 0 ? startTime.toLocaleDateString() : '',
-                source: 'ppvs.su',
-                image: stream.poster,
-                status: status,
-              });
-            });
-          }
-        });
-      }
-      setPpvEvents(transformedEvents);
-    } catch (error) {
-      console.error('Error fetching PPV events:', error);
     }
   }, []);
 
@@ -333,7 +361,6 @@ function ViewPageContent() {
   useEffect(() => {
     setIsMounted(true);
     fetchAllEvents();
-    fetchPpvEvents();
     
     const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
     if (!hasVisited) {
@@ -374,7 +401,7 @@ function ViewPageContent() {
             console.error("Failed to parse viewOrder from localStorage", e);
         }
     }
-  }, [fetchAllEvents, fetchPpvEvents]);
+  }, [fetchAllEvents]);
 
     const handleAddEventSelect = (event: Event, option: string) => {
         const newSelectedEvents = [...selectedEvents];
@@ -497,9 +524,8 @@ function ViewPageContent() {
             onOpenChange={setAddEventsDialogOpen}
             onSelect={handleAddEventSelect}
             selectedEvents={selectedEvents}
-            allEvents={allEvents}
-            allChannels={allChannels}
-            ppvEvents={ppvEvents}
+            allEvents={allEventsData}
+            allChannels={allChannelsList}
         />
 
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
@@ -777,3 +803,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    
