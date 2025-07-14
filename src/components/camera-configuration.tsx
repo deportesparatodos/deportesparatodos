@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -60,7 +59,6 @@ export function CameraConfigurationComponent({
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
-  const [modifyFromSchedule, setModifyFromSchedule] = useState<{ event: Event, index: number } | null>(null);
 
   return (
     <>

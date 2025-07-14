@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -47,6 +46,14 @@ import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
 import { addHours, isBefore, isAfter, parse } from 'date-fns';
 
+interface StreamedMatch {
+  id: string;
+  title: string;
+  category: string;
+  date: number; // Timestamp in milliseconds
+  poster?: string;
+  sources: { source: string; id: string }[];
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -136,53 +143,79 @@ export default function HomePage() {
     }
   }, []);
 
-  const fetchEvents = useCallback(async () => {
+ const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/events', { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
+      const [liveResponse, todayResponse] = await Promise.all([
+        fetch('https://streamed.su/api/matches/live', { cache: 'no-store' }),
+        fetch('https://streamed.su/api/matches/all-today', { cache: 'no-store' })
+      ]);
+
+      if (!liveResponse.ok || !todayResponse.ok) {
+        throw new Error('Failed to fetch events from one or more sources');
       }
-      const data: Event[] = await response.json();
+
+      const liveData: StreamedMatch[] = await liveResponse.json();
+      const todayData: StreamedMatch[] = await todayResponse.json();
       
+      const allMatchesMap = new Map<string, StreamedMatch>();
+      
+      // Add all today's matches to the map first
+      todayData.forEach(match => allMatchesMap.set(match.id, match));
+      // Overwrite with live matches to ensure live status is captured if there's an overlap
+      liveData.forEach(match => allMatchesMap.set(match.id, match));
+
+      const combinedData = Array.from(allMatchesMap.values());
+
       const timeZone = 'America/Argentina/Buenos_Aires';
       const nowInBA = toZonedTime(new Date(), timeZone);
+      const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+      
+      const categoryMap: { [key: string]: string } = {
+          football: "Fútbol",
+          basketball: "Baloncesto",
+          tennis: "Tenis",
+          hockey: "Hockey",
+          baseball: "Béisbol",
+          mma: "MMA",
+          boxing: "Boxeo",
+          motorsport: "Automovilismo",
+          handball: "Balonmano",
+          volleyball: "Voleibol",
+          cricket: "Críquet",
+          rugby: "Rugby",
+      };
 
-      const processedEvents = data.map(e => {
-        let currentStatus: Event['status'] = e.status 
-            ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status']
-            : 'Desconocido';
+      const processedEvents: Event[] = combinedData.map((match: StreamedMatch) => {
+        const eventDate = new Date(match.date);
+        const zonedEventTime = toZonedTime(eventDate, timeZone);
+        const eventEndTime = addHours(zonedEventTime, 3); // Assuming 3 hours duration
         
-        // New logic to determine status if a valid time is present
-        if (/^\d{2}:\d{2}$/.test(e.time)) {
-             try {
-                const eventTimeToday = parse(e.time, 'HH:mm', new Date());
-                const zonedEventTime = toZonedTime(eventTimeToday, timeZone);
-                const eventEndTime = addHours(zonedEventTime, 3);
-                
-                if (isBefore(nowInBA, zonedEventTime)) {
-                    currentStatus = 'Próximo';
-                } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
-                    currentStatus = 'En Vivo';
-                } else if (isAfter(nowInBA, eventEndTime)) {
-                    currentStatus = 'Finalizado';
-                }
-             } catch (error) {
-                console.error("Error parsing date for event:", e.title, error);
-                // If parsing fails, leave status as is or default to Desconocido
-                currentStatus = 'Desconocido';
-             }
-        } else {
-            // If no valid time, status from API is used, or defaults to Desconocido
-            if (!['En Vivo', 'Próximo', 'Finalizado'].includes(currentStatus)) {
-              currentStatus = 'Desconocido';
-            }
+        let status: Event['status'] = 'Desconocido';
+        if (liveData.some(liveMatch => liveMatch.id === match.id)) {
+            status = 'En Vivo';
+        } else if (isBefore(nowInBA, zonedEventTime)) {
+            status = 'Próximo';
+        } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
+            status = 'En Vivo'; // Fallback for events that just started
+        } else if (isAfter(nowInBA, eventEndTime)) {
+            status = 'Finalizado';
         }
 
+        const options = match.sources.map(source => `https://streamed.su/player/${source.source}?id=${source.id}`);
+        const buttons = match.sources.map(source => `${source.source.charAt(0).toUpperCase() + source.source.slice(1)}`);
+        
         return {
-          ...e,
-          category: e.category.toLowerCase() === 'other' ? 'Otros' : e.category,
-          status: currentStatus
+          title: match.title,
+          time: format(zonedEventTime, 'HH:mm'),
+          options: options,
+          buttons: buttons,
+          category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
+          language: '',
+          date: format(zonedEventTime, 'yyyy-MM-dd'),
+          source: 'streamed.su',
+          image: match.poster ? `https://streamed.su${match.poster}` : placeholderImage,
+          status: status,
         };
       });
 
@@ -305,8 +338,8 @@ export default function HomePage() {
             const existingEvent = eventMap.get(key)!;
             
             // Merge logic
-            const newOptions = [...existingEvent.options, ...event.options];
-            const newButtons = [...existingEvent.buttons, ...event.buttons];
+            const newOptions = [...new Set([...existingEvent.options, ...event.options])];
+            const newButtons = [...new Set([...existingEvent.buttons, ...event.buttons])];
             const newImage = (existingEvent.image !== placeholderImage && existingEvent.image) 
                              ? existingEvent.image 
                              : (event.image !== placeholderImage && event.image) 
@@ -392,12 +425,12 @@ export default function HomePage() {
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
         const liveCat = categoryEvents.filter(e => e.status === 'En Vivo' && !isChannel247(e)).sort(liveSortLogic);
-        const upcoming = categoryEvents.filter(e => e.status === 'Próximo').sort(sortLogic);
-        const unknown = categoryEvents.filter(e => e.status === 'Desconocido' && !isChannel247(e)).sort(sortLogic);
+        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(sortLogic);
+        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido' && !isChannel247(e)).sort(sortLogic);
         const channels247Cat = categoryEvents.filter(isChannel247).sort(sortLogic);
-        const finished = categoryEvents.filter(e => e.status === 'Finalizado').sort(sortLogic);
+        const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort(sortLogic);
 
-        categoryFilteredEvents = [...liveCat, ...upcoming, ...channels247Cat, ...unknown, ...finished];
+        categoryFilteredEvents = [...liveCat, ...upcomingCat, ...channels247Cat, ...unknownCat, ...finishedCat];
     }
 
     return { 

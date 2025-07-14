@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil, Menu, RotateCw, Maximize, Minimize, AlertTriangle, Settings, Trash2 } from "lucide-react";
+import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText, Search, Tv, Pencil, Menu, RotateCw, Maximize, Minimize, AlertTriangle, Settings, Trash2, Play } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -395,6 +394,8 @@ function ViewPageContent() {
         if (now >= scheduleTime) {
           setSelectedEvents(s.events);
           localStorage.setItem('selectedEvents', JSON.stringify(s.events));
+          setViewOrder(s.order);
+          localStorage.setItem('viewOrder', JSON.stringify(s.order));
           changed = true;
           return false; // Remove from list
         }
@@ -659,21 +660,10 @@ function ViewPageContent() {
                                     <li><strong>Botón de "Play" (<Play className="inline-block h-4 w-4" />):</strong> Este es el botón más importante. Una vez que hayas seleccionado al menos un evento, este botón (ubicado en la esquina superior derecha) se activará. Haz clic en él para ir a la pantalla de visualización.</li>
                                     <li><strong>La Magia de la Cuadrícula Dinámica:</strong> La pantalla de visualización se dividirá automáticamente para mostrar todos los eventos que seleccionaste. La cuadrícula se adapta de forma inteligente: si eliges 2 eventos, verás 2 ventanas; si eliges 4, verás una cuadrícula de 2x2, y así hasta 9.</li>
                                 </ul>
-                                 <h3 className="font-bold text-foreground mt-6">5. Menú de Ayuda y Contacto</h3>
-                                <p>En la esquina superior izquierda, el icono de menú (<Menu className="inline-block h-4 w-4" />) abre un panel con recursos importantes:</p>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li><strong>Aviso Legal:</strong> Información sobre los términos de uso del servicio.</li>
-                                    <li><strong>Errores y Soluciones:</strong> ¡Muy recomendado! Una guía detallada para resolver problemas comunes de reproducción, como pantallas negras o errores de carga.</li>
-                                    <li><strong>Contacto:</strong> Un enlace para enviarnos un correo con sugerencias, reportes de errores o enlaces caídos.</li>
-                                </ul>
-
-                                <p className="font-bold text-foreground mt-6">¡Explora, combina y disfruta de todos tus deportes favoritos en un solo lugar y al mismo tiempo!</p>
                             </div>
                         </ScrollArea>
                         <DialogFooter>
-                            <DialogClose asChild>
-                                <Button>Entendido</Button>
-                            </DialogClose>
+                            <DialogClose asChild><Button>Entendido</Button></DialogClose>
                         </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -711,9 +701,7 @@ function ViewPageContent() {
                               </div>
                           </ScrollArea>
                           <DialogFooter>
-                              <DialogClose asChild>
-                                  <Button>Cerrar</Button>
-                              </DialogClose>
+                              <DialogClose asChild><Button>Cerrar</Button></DialogClose>
                           </DialogFooter>
                       </DialogContent>
                   </Dialog>
@@ -742,10 +730,8 @@ function ViewPageContent() {
              onRemove={handleRemoveCamera}
              onModify={(event, index) => {
                  const currentEventState = selectedEvents[index];
-                 const eventForModification = { ...event };
-                 if (currentEventState) {
-                     eventForModification.selectedOption = currentEventState.selectedOption;
-                 }
+                 if (!currentEventState) return;
+                 const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
                  setModifyEvent({ event: eventForModification, index });
              }}
              isViewPage={true}

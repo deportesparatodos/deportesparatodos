@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -85,7 +84,7 @@ export function ScheduleManager({
     if (open) {
       resetToCurrentSelection();
     }
-  }, [open, currentSelection, currentOrder]);
+  }, [open, JSON.stringify(currentSelection), JSON.stringify(currentOrder)]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -112,9 +111,6 @@ export function ScheduleManager({
       };
       onSchedulesChange([...schedules, newSchedule]);
     }
-    
-    // Do not reset the form, allow for multiple creations/edits
-    // resetToCurrentSelection();
   };
   
   const handleEditSchedule = (schedule: Schedule) => {
@@ -191,25 +187,29 @@ export function ScheduleManager({
 
   return (
     <>
-      <AddEventsDialog 
-        open={addEventsDialogOpen}
-        onOpenChange={setAddEventsDialogOpen}
-        onSelect={handleAddEventToFuture}
-        selectedEvents={futureSelection}
-        allEvents={allEvents}
-        allChannels={allChannels}
-      />
+      <Dialog open={addEventsDialogOpen} onOpenChange={setAddEventsDialogOpen}>
+          <AddEventsDialog 
+            open={addEventsDialogOpen}
+            onOpenChange={setAddEventsDialogOpen}
+            onSelect={handleAddEventToFuture}
+            selectedEvents={futureSelection}
+            allEvents={allEvents}
+            allChannels={allChannels}
+          />
+      </Dialog>
       {modifyEventForSchedule && (
-        <EventSelectionDialog
-          isOpen={!!modifyEventForSchedule}
-          onOpenChange={(open) => !open && setModifyEventForSchedule(null)}
-          event={modifyEventForSchedule.event}
-          selectedEvents={futureSelection}
-          onSelect={handleModifyEventForSchedule}
-          isModification={true}
-          onRemove={() => {}}
-          windowNumber={modifyEventForSchedule.index + 1}
-        />
+        <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => !open && setModifyEventForSchedule(null)}>
+          <EventSelectionDialog
+            isOpen={!!modifyEventForSchedule}
+            onOpenChange={(open) => !open && setModifyEventForSchedule(null)}
+            event={modifyEventForSchedule.event}
+            selectedEvents={futureSelection}
+            onSelect={handleModifyEventForSchedule}
+            isModification={true}
+            onRemove={() => {}}
+            windowNumber={modifyEventForSchedule.index + 1}
+          />
+        </Dialog>
       )}
 
       <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onOpenChange(false); }}>
@@ -305,10 +305,8 @@ export function ScheduleManager({
                               onRemove={handleRemoveEventFromFuture}
                               onModify={(event, index) => {
                                 const currentEventState = futureSelection[index];
-                                const eventForModification = { ...event };
-                                if (currentEventState) {
-                                  eventForModification.selectedOption = currentEventState.selectedOption;
-                                }
+                                if (!currentEventState) return;
+                                const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
                                 setModifyEventForSchedule({ event: eventForModification, index });
                               }}
                               isViewPage={true}
