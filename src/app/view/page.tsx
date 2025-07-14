@@ -2,6 +2,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Tv, Search, Mail, FileText, RotateCw, Menu, Settings, Play } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -119,7 +120,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                                     </Card>
                                 )
                             } else { // Event
-                                return <EventCard key={`search-event-${index}`} event={item} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
+                                return <EventCard key={`search-event-${index}`} event={item as Event} selection={getEventSelection(item.title)} onClick={() => openSubDialog(item)} />
                             }
                         })}
                     </div>
