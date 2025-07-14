@@ -49,15 +49,20 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
 
   const timeDisplay = isValidTimeFormat(event.time) ? event.time : '';
   
-  const currentlySelectedEvent = selectedEvents.find(
-    (se) => se?.title === event.title
-  );
-  const selectedOptionUrl = currentlySelectedEvent?.selectedOption;
+  const selectedOptionUrl = event.selectedOption;
 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-secondary border-border text-foreground p-0">
+      <DialogContent 
+        className="sm:max-w-md bg-secondary border-border text-foreground p-0"
+        onInteractOutside={(e) => {
+           // This allows tooltips to work inside the dialog without closing it.
+          if ((e.target as HTMLElement)?.closest('[data-radix-popper-content-wrapper]')) {
+            e.preventDefault();
+          }
+        }}
+        >
          <DialogHeader>
           <div className="relative w-full aspect-video rounded-t-lg overflow-hidden mb-4">
             <Image
