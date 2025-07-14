@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -305,8 +306,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
                             onRemove={handleEventRemove}
                             onModify={openDialogForModification}
                             isViewPage={false}
-                            onAddEvent={() => {}} 
-                            onReload={() => {}}
+                            onAddEvent={() => {}}
                         />
                     </ScrollArea>
                 </DialogContent>

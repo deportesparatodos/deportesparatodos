@@ -272,8 +272,8 @@ export default function HomePage() {
     const combinedEvents = [...events, ...ppvEvents];
     
     // Separate 24/7 channels first
-    const channels247 = combinedEvents.filter(e => e.title.includes('24/7'));
-    const otherEvents = combinedEvents.filter(e => !e.title.includes('24/7'));
+    const channels247 = combinedEvents.filter(e => e.time === '24/7');
+    const otherEvents = combinedEvents.filter(e => e.time !== '24/7');
 
 
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
@@ -434,7 +434,7 @@ export default function HomePage() {
       title: channel.name,
       options: [channel.url],
       buttons: ['Ver canal'],
-      time: '',
+      time: channel.name.includes('24/7') ? '24/7' : '',
       category: 'Canal',
       language: '',
       date: '',
@@ -737,7 +737,7 @@ export default function HomePage() {
                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                 onOrderChange={handleOrderChange}
                                 eventDetails={selectedEvents}
-                                onRemove={() => {}} 
+                                onRemove={handleEventRemove} 
                                 onModify={openDialogForModification}
                                 isViewPage={false}
                                 onAddEvent={() => {}}
@@ -876,10 +876,10 @@ export default function HomePage() {
                                     <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                                 </div>
                                 <div className="mb-8">
-                                    <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                    <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                                 </div>
                                 <div className="mb-8">
-                                    <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                                    <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                                 </div>
                             </>
                         )}

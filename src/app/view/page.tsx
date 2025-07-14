@@ -27,45 +27,48 @@ import { toZonedTime, format } from 'date-fns-tz';
 function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, ppvEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], ppvEvents: Event[] }) {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
-    const [isLoading, setIsLoading] = useState(false); // To mimic home page logic
     const isMobile = useIsMobile();
-    
-    const getEventSelection = (eventTitle: string) => {
+
+    const [subDialogOpen, setSubDialogOpen] = useState(false);
+    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+    const [isModification, setIsModification] = useState(false);
+    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+
+    const getEventSelection = useCallback((eventTitle: string) => {
         const selection = selectedEvents.map((se, i) => se && se.title === eventTitle ? i : null).filter(i => i !== null);
         if (selection.length > 0) {
             return { isSelected: true, window: selection[0]! + 1 };
         }
         return { isSelected: false, window: null };
+    }, [selectedEvents]);
+
+    const handleSubDialogSelect = (event: Event, option: string) => {
+        onSelect(event, option);
+        setSubDialogOpen(false); // Close sub-dialog
     };
-
-    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [isModification, setIsModification] = useState(false);
-    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-
-    const openSubDialog = (item: Event | Channel) => {
-        const event: Event = 'url' in item
-            ? { title: item.name, options: [item.url], buttons: ['Ver canal'], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: item.logo }
-            : item;
-
+    
+    const openSubDialogForEvent = (event: Event) => {
         const selection = getEventSelection(event.title);
         setDialogEvent(event);
         setIsModification(selection.isSelected);
         setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
-        setDialogOpen(true);
+        setSubDialogOpen(true);
     };
 
-    const handleSelect = (event: Event, option: string) => {
-        onSelect(event, option);
-        setDialogOpen(false); // Close sub-dialog
-    };
-    
     const handleChannelClick = (channel: Channel) => {
-        openSubDialog(channel);
-    };
-    
-    const openDialogForEvent = (event: Event) => {
-        openSubDialog(event);
+        const event: Event = {
+            title: channel.name,
+            options: [channel.url],
+            buttons: ['Ver canal'],
+            time: channel.name.includes('24/7') ? '24/7' : '',
+            category: 'Canal',
+            language: '',
+            date: '',
+            source: '',
+            status: 'En Vivo',
+            image: channel.logo,
+        };
+        openSubDialogForEvent(event);
     };
 
     const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, filteredChannels, searchResults, allSortedEvents } = useMemo(() => {
@@ -73,8 +76,8 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
         const combinedEvents = [...allEvents, ...ppvEvents];
         const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
         
-        const channels247 = combinedEvents.filter(e => e.title.includes('24/7'));
-        const otherEvents = combinedEvents.filter(e => !e.title.includes('24/7'));
+        const channels247 = combinedEvents.filter(e => e.time === '24/7');
+        const otherEvents = combinedEvents.filter(e => e.time !== '24/7');
 
         const live = otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo');
         live.sort((a,b) => {
@@ -86,7 +89,6 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
         });
 
         const upcoming = otherEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort((a,b) => a.time.localeCompare(b.time));
-        
         const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido');
         unknown.sort((a, b) => {
             const aHasImage = a.image !== placeholderImage;
@@ -96,9 +98,9 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             return a.time.localeCompare(b.time);
         });
 
-        const finishedEvents = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+        const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
         
-        const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents, ...channels247];
+        const allSorted = [...live, ...upcoming, ...unknown, ...finished, ...channels247];
 
         let searchRes: (Event | Channel)[] = [];
         if (searchTerm) {
@@ -107,7 +109,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             const sChannels = allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
             const combinedResults = [...filteredEv, ...sChannels];
             combinedResults.sort((a, b) => {
-                const statusA = 'status' in a ? (a as Event).status : 'Channel';
+                const statusA = 'status' in a ? (a as Event).status : 'Canal';
                 const statusB = 'status' in b ? (b as Event).status : 'Channel';
                 const orderA = statusA === 'Channel' ? 5 : (statusOrder[statusA] ?? 6);
                 const orderB = statusB === 'Channel' ? 5 : (statusOrder[statusB] ?? 6);
@@ -116,7 +118,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             searchRes = combinedResults;
         }
 
-        return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents, channels247, filteredChannels: allChannels, searchResults: searchRes, allSortedEvents: allSorted };
+        return { liveEvents: live, upcomingEvents: upcoming, unknownEvents: unknown, finishedEvents: finished, channels247, filteredChannels: allChannels, searchResults: searchRes, allSortedEvents: allSorted };
     }, [searchTerm, allEvents, ppvEvents, allChannels]);
 
     const categories = useMemo(() => {
@@ -144,13 +146,9 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4">
                 <DialogHeader>
-                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
-                     <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Close</span>
-                    </DialogClose>
+                    <DialogTitle className='mb-0'>Añadir Evento/Canal</DialogTitle>
                 </DialogHeader>
-                <div className="relative pt-1.5">
+                <div className="relative pt-[5px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                         type="text"
@@ -192,7 +190,7 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                                           key={`search-event-${index}`}
                                           event={item as Event}
                                           selection={getEventSelection(item.title)}
-                                          onClick={() => openDialogForEvent(item as Event)}
+                                          onClick={() => openSubDialogForEvent(item as Event)}
                                         />
                                     );
                                 }
@@ -235,25 +233,25 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                                 ))}
                                 </CarouselContent>
                             </Carousel>
-                            <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
                             <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
-                            <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
-                            <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
+                            <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openSubDialogForEvent} getEventSelection={(e) => getEventSelection(e.title)} />
                         </div>
                     )}
                 </ScrollArea>
             </DialogContent>
             {dialogEvent && (
                 <EventSelectionDialog
-                    isOpen={dialogOpen}
-                    onOpenChange={setDialogOpen}
+                    isOpen={subDialogOpen}
+                    onOpenChange={setSubDialogOpen}
                     event={dialogEvent}
                     selectedEvents={selectedEvents}
-                    onSelect={handleSelect}
+                    onSelect={handleSubDialogSelect}
                     isModification={isModification}
-                    onRemove={() => { /* Remove logic can be added here if needed */ setDialogOpen(false); }}
+                    onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
                     windowNumber={(modificationIndex ?? 0) + 1}
                 />
             )}
