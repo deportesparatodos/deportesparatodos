@@ -110,7 +110,7 @@ export default function HomePage() {
                
                if (stream.always_live === 1) {
                    status = 'En Vivo';
-               } else if (!startTime) {
+               } else if (!startTime || stream.time === '--:--') {
                     status = 'Desconocido'
                }
 
@@ -355,13 +355,13 @@ export default function HomePage() {
         const categoryEvents = combinedEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
-        const live = categoryEvents.filter(e => e.status === 'En Vivo').sort(liveSortLogic);
+        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo' && !isChannel247(e)).sort(liveSortLogic);
         const upcoming = categoryEvents.filter(e => e.status === 'Próximo').sort(sortLogic);
         const unknown = categoryEvents.filter(e => e.status === 'Desconocido' && !isChannel247(e)).sort(sortLogic);
         const channels247Cat = categoryEvents.filter(isChannel247).sort(sortLogic);
         const finished = categoryEvents.filter(e => e.status === 'Finalizado').sort(sortLogic);
 
-        categoryFilteredEvents = [...live, ...upcoming, ...channels247Cat, ...unknown, ...finished];
+        categoryFilteredEvents = [...liveCat, ...upcoming, ...channels247Cat, ...unknown, ...finished];
     }
 
     return { 
@@ -430,10 +430,16 @@ export default function HomePage() {
   };
   
   const getEventSelection = (event: Event) => {
-    const selection = selectedEvents.map((se, i) => se && se.title === event.title ? i : null).filter(i => i !== null);
-    if (selection.length > 0) {
-      return { isSelected: true, window: selection[0]! + 1 };
+    const eventIndex = selectedEvents.findIndex(se => se?.title === event.title);
+
+    if (eventIndex !== -1) {
+      const activeEventIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
+      const orderedActiveIndexes = viewOrder.filter(i => activeEventIndexes.includes(i));
+      const displayPosition = orderedActiveIndexes.indexOf(eventIndex) + 1;
+      
+      return { isSelected: true, window: displayPosition > 0 ? displayPosition : null };
     }
+
     return { isSelected: false, window: null };
   };
 
@@ -443,10 +449,11 @@ export default function HomePage() {
   
   const openDialogForEvent = (event: Event) => {
     setDialogEvent(event);
-    const selection = getEventSelection(event);
-    if(selection.isSelected) {
+    const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title);
+
+    if (selectionIndex !== -1) {
       setIsModification(true);
-      setModificationIndex(selection.window! - 1);
+      setModificationIndex(selectionIndex);
     } else {
       setIsModification(false);
       setModificationIndex(selectedEvents.findIndex(e => e === null));
@@ -835,7 +842,7 @@ export default function HomePage() {
                                       target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                                   }}
                               />
-                              {selection.isSelected && (
+                              {selection.isSelected && selection.window && (
                                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                                       <span className="text-5xl font-extrabold text-white drop-shadow-lg">{selection.window}</span>
                                   </div>
