@@ -733,20 +733,20 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {selectedEvents.map((event, index) => {
+          {viewOrder.map((originalIndex) => {
+              const event = selectedEvents[originalIndex];
               if (!event) return null;
               
-              const orderedIndex = viewOrder.indexOf(index);
               const windowClasses = cn(
                   "overflow-hidden",
                   "relative",
                   "bg-black",
                   "order-[var(--order)]",
-                  getItemClasses(orderedIndex, numCameras)
+                  getItemClasses(viewOrder.filter(i => selectedEvents[i] !== null).indexOf(originalIndex), numCameras)
               );
 
               let iframeSrc = event.selectedOption
-                  ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`
+                  ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`
                   : '';
               
               if (iframeSrc.includes("youtube-nocookie.com")) {
@@ -754,10 +754,10 @@ function ViewPageContent() {
               }
 
               return (
-                  <div key={`window-stable-${index}`} className={windowClasses} style={{'--order': orderedIndex} as React.CSSProperties}>
+                  <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.filter(i => selectedEvents[i] !== null).indexOf(originalIndex)} as React.CSSProperties}>
                       <iframe
                           src={iframeSrc}
-                          title={`Stream ${index + 1}`}
+                          title={`Stream ${originalIndex + 1}`}
                           className="w-full h-full border-0"
                           loading="eager"
                           allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
