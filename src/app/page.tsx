@@ -33,7 +33,7 @@ import {
     DialogClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { channels } from '@/components/channel-list';
@@ -545,6 +545,68 @@ export default function HomePage() {
                              <Dialog>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" className="w-full justify-start gap-2">
+                                        <AlertCircle />
+                                        Errores y Soluciones
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle>Solución de Errores Comunes</DialogTitle>
+                                    </DialogHeader>
+                                    <ScrollArea className="h-96 pr-6">
+                                        <div className="text-sm text-muted-foreground space-y-4">
+                                            <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
+                                            <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
+                                            <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
+                                            <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (1.1.1.1) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
+                                            <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
+                                            <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
+                                            <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "Reproductor MPD/M3U8/M3U/EPG" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.</p>
+                                            <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
+                                            <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
+                                            <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge, ya que suelen tener la mejor compatibilidad con tecnologías de video web.</p>
+                                            <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
+                                            <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
+                                            <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. La mayoría de estas extensiones te permiten añadir sitios a una "lista blanca" para que no actúen sobre ellos. Recarga la página después de desactivarlo.</p>
+                                            <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
+                                            <p><span className="font-semibold text-foreground">El Problema:</span> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
+                                            <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora. Esto asegura que haya suficientes recursos para manejar múltiples transmisiones de video simultáneamente.</p>
+                                            <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
+                                            <p><span className="font-semibold text-foreground">El Problema:</span> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
+                                            <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender". Un reinicio rápido de tu computadora y de tu router puede solucionar problemas transitorios de red, memoria o software que podrían estar afectando la reproducción de video.</p>
+                                        </div>
+                                    </ScrollArea>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button>Cerrar</Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                             <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
+                                        <Mail />
+                                        Contacto
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-md">
+                                    <DialogHeader>
+                                        <DialogTitle>Contacto</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="text-sm text-muted-foreground py-4">
+                                        <p>¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales.</p>
+                                    </div>
+                                    <DialogFooter>
+                                         <a href="mailto:deportesparatodosvercel@gmail.com" className={cn(buttonVariants({ variant: 'default' }), 'w-full')}>
+                                            Contactar
+                                        </a>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                             <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
                                         <FileText />
                                         Aviso Legal
                                     </Button>
@@ -596,69 +658,6 @@ export default function HomePage() {
                                         <DialogClose asChild>
                                             <Button>Cerrar</Button>
                                         </DialogClose>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                             <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start gap-2">
-                                        <AlertCircle />
-                                        Errores y Soluciones
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-2xl">
-                                    <DialogHeader>
-                                        <DialogTitle>Solución de Errores Comunes</DialogTitle>
-                                    </DialogHeader>
-                                    <ScrollArea className="h-96 pr-6">
-                                        <div className="text-sm text-muted-foreground space-y-4">
-                                            <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
-                                            <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
-                                            <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
-                                            <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (1.1.1.1) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
-                                            <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
-                                            <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
-                                            <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "Reproductor MPD/M3U8/M3U/EPG" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.</p>
-                                            <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
-                                            <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
-                                            <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge, ya que suelen tener la mejor compatibilidad con tecnologías de video web.</p>
-                                            <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
-                                            <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
-                                            <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. La mayoría de estas extensiones te permiten añadir sitios a una "lista blanca" para que no actúen sobre ellos. Recarga la página después de desactivarlo.</p>
-                                            <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
-                                            <p><span className="font-semibold text-foreground">El Problema:</span> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
-                                            <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora. Esto asegura que haya suficientes recursos para manejar múltiples transmisiones de video simultáneamente.</p>
-                                            <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
-                                            <p><span className="font-semibold text-foreground">El Problema:</span> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
-                                            <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender". Un reinicio rápido de tu computadora y de tu router puede solucionar problemas transitorios de red, memoria o software que podrían estar afectando la reproducción de video.</p>
-                                        </div>
-                                    </ScrollArea>
-                                    <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button>Cerrar</Button>
-                                        </DialogClose>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                            
-                             <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start gap-2">
-                                        <Mail />
-                                        Contacto
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-md">
-                                    <DialogHeader>
-                                        <DialogTitle>Contacto</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="text-sm text-muted-foreground py-4">
-                                        <p>¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales.</p>
-                                    </div>
-                                    <DialogFooter>
-                                         <a href="mailto:deportesparatodosvercel@gmail.com" className={cn(buttonVariants({ variant: 'default' }), 'w-full')}>
-                                            Contactar
-                                        </a>
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
