@@ -314,7 +314,7 @@ export default function HomePage() {
 
     const finishedEvents = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents, ...channels247];
+    const allSorted = [...live, ...upcoming, ...unknown, ...channels247, ...finishedEvents];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
