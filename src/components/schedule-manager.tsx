@@ -29,6 +29,7 @@ import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import type { Channel } from './channel-list';
 import { AddEventsDialog } from '@/app/view/page'; 
+import { EventSelectionDialog } from './event-selection-dialog';
 
 export interface Schedule {
   id: string;
@@ -67,6 +68,7 @@ export function ScheduleManager({
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
+  const [modifyEventForSchedule, setModifyEventForSchedule] = useState<{ event: Event, index: number } | null>(null);
 
   const resetToCurrentSelection = () => {
     setFutureSelection([...currentSelection]);
@@ -83,7 +85,7 @@ export function ScheduleManager({
     if (open) {
       resetToCurrentSelection();
     }
-  }, [open]);
+  }, [open, currentSelection, currentOrder]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -111,8 +113,8 @@ export function ScheduleManager({
       onSchedulesChange([...schedules, newSchedule]);
     }
     
-    // Reset editing form to current selection for a new schedule creation
-    resetToCurrentSelection();
+    // Do not reset the form, allow for multiple creations/edits
+    // resetToCurrentSelection();
   };
   
   const handleEditSchedule = (schedule: Schedule) => {
@@ -176,6 +178,15 @@ export function ScheduleManager({
       setAddEventsDialogOpen(false);
   };
 
+  const handleModifyEventForSchedule = (event: Event, option: string) => {
+    if (modifyEventForSchedule) {
+      const newFutureSelection = [...futureSelection];
+      newFutureSelection[modifyEventForSchedule.index] = { ...event, selectedOption: option };
+      setFutureSelection(newFutureSelection);
+      setModifyEventForSchedule(null);
+    }
+  };
+
   const activeFutureEventsCount = futureOrder?.filter(i => futureSelection[i] !== null).length ?? 0;
 
   return (
@@ -188,7 +199,20 @@ export function ScheduleManager({
         allEvents={allEvents}
         allChannels={allChannels}
       />
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      {modifyEventForSchedule && (
+        <EventSelectionDialog
+          isOpen={!!modifyEventForSchedule}
+          onOpenChange={(open) => !open && setModifyEventForSchedule(null)}
+          event={modifyEventForSchedule.event}
+          selectedEvents={futureSelection}
+          onSelect={handleModifyEventForSchedule}
+          isModification={true}
+          onRemove={() => {}}
+          windowNumber={modifyEventForSchedule.index + 1}
+        />
+      )}
+
+      <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onOpenChange(false); }}>
         <DialogContent className="max-w-4xl w-full h-[90vh] flex flex-col p-0">
           <DialogHeader className="p-4 border-b flex-shrink-0">
             <DialogTitle>Programar Selección</DialogTitle>
@@ -280,8 +304,12 @@ export function ScheduleManager({
                               eventDetails={futureSelection}
                               onRemove={handleRemoveEventFromFuture}
                               onModify={(event, index) => {
-                                  // This needs to open the dialog without closing the schedule manager
-                                  onModifyEventInView(event, index);
+                                const currentEventState = futureSelection[index];
+                                const eventForModification = { ...event };
+                                if (currentEventState) {
+                                  eventForModification.selectedOption = currentEventState.selectedOption;
+                                }
+                                setModifyEventForSchedule({ event: eventForModification, index });
                               }}
                               isViewPage={true}
                               onAddEvent={() => setAddEventsDialogOpen(true)}

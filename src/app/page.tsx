@@ -322,7 +322,7 @@ export default function HomePage() {
                 buttons: newButtons,
             });
         } else {
-            eventMap.set(key, event);
+            eventMap.set(key, { ...event, image: event.image || placeholderImage });
         }
     });
 
@@ -484,8 +484,14 @@ export default function HomePage() {
   };
   
   const openDialogForEvent = (event: Event) => {
-    setDialogEvent(event);
     const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title);
+    
+    let eventForDialog = {...event};
+    if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
+        eventForDialog.selectedOption = selectedEvents[selectionIndex]!.selectedOption;
+    }
+
+    setDialogEvent(eventForDialog);
 
     if (selectionIndex !== -1) {
       setIsModification(true);

@@ -34,6 +34,7 @@ interface CameraConfigurationProps {
   onSchedulesChange: (schedules: Schedule[]) => void;
   allEvents: Event[];
   allChannels: Channel[];
+  currentOrder: number[];
 }
 
 export function CameraConfigurationComponent({ 
@@ -55,10 +56,12 @@ export function CameraConfigurationComponent({
   onSchedulesChange,
   allEvents,
   allChannels,
+  currentOrder
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
-  
+  const [modifyFromSchedule, setModifyFromSchedule] = useState<{ event: Event, index: number } | null>(null);
+
   return (
     <>
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -232,7 +235,7 @@ export function CameraConfigurationComponent({
           open={scheduleManagerOpen}
           onOpenChange={setScheduleManagerOpen}
           currentSelection={eventDetails}
-          currentOrder={order}
+          currentOrder={currentOrder}
           schedules={schedules}
           onSchedulesChange={onSchedulesChange}
           onModifyEventInView={onModify}

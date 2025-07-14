@@ -38,10 +38,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 
     const getEventSelection = useCallback((eventTitle: string) => {
         const selection = selectedEvents.map((se, i) => se && se.title === eventTitle ? i : null).filter(i => i !== null);
-        if (selection.length > 0) {
-            return { isSelected: true, window: selection[0]! + 1 };
+        if (selection.length > 0 && selectedEvents[selection[0]!]) {
+            return { isSelected: true, window: selection[0]! + 1, selectedOption: selectedEvents[selection[0]!]!.selectedOption };
         }
-        return { isSelected: false, window: null };
+        return { isSelected: false, window: null, selectedOption: null };
     }, [selectedEvents]);
 
     const handleSubDialogSelect = (event: Event, option: string) => {
@@ -51,7 +51,13 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
     const openSubDialogForEvent = (event: Event) => {
         const selection = getEventSelection(event.title);
-        setDialogEvent(event);
+        
+        let eventForDialog = {...event};
+        if(selection.isSelected && selection.selectedOption){
+            eventForDialog.selectedOption = selection.selectedOption;
+        }
+
+        setDialogEvent(eventForDialog);
         setIsModification(selection.isSelected);
         setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
         setSubDialogOpen(true);
@@ -559,8 +565,8 @@ function ViewPageContent() {
         {modifyEvent && (
             <EventSelectionDialog
                 isOpen={!!modifyEvent}
-                onOpenChange={(open) => !open && setModifyEvent(null)}
-                event={{...modifyEvent.event, selectedOption: selectedEvents[modifyEvent.index]?.selectedOption, source: 'view-page'}}
+                onOpenChange={(open) => { if (!open) setModifyEvent(null); }}
+                event={modifyEvent.event}
                 selectedEvents={selectedEvents}
                 onSelect={handleModifyEventSelect}
                 isModification={true}
@@ -723,7 +729,14 @@ function ViewPageContent() {
              eventDetails={selectedEvents}
              onReload={handleReloadCamera}
              onRemove={handleRemoveCamera}
-             onModify={(event, index) => setModifyEvent({ event, index })}
+             onModify={(event, index) => {
+                 const currentEventState = selectedEvents[index];
+                 const eventForModification = { ...event };
+                 if (currentEventState) {
+                     eventForModification.selectedOption = currentEventState.selectedOption;
+                 }
+                 setModifyEvent({ event: eventForModification, index });
+             }}
              isViewPage={true}
              gridGap={gridGap}
              onGridGapChange={(value) => {
@@ -748,6 +761,7 @@ function ViewPageContent() {
              }}
              allEvents={processedEventsData}
              allChannels={allChannelsList}
+             currentOrder={viewOrder}
           />
 
           {isChatEnabled && (
