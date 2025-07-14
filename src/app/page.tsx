@@ -45,7 +45,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
-import { parse, addHours, isBefore, isAfter } from 'date-fns';
+import { addHours, isBefore, isAfter, parse } from 'date-fns';
 
 
 export default function HomePage() {
@@ -141,18 +141,14 @@ export default function HomePage() {
       
       const timeZone = 'America/Argentina/Buenos_Aires';
       const nowInBA = toZonedTime(new Date(), timeZone);
-      const currentHour = nowInBA.getHours();
-
-      // Logic is active between 6 AM and 8 PM (20:00)
-      const isLogicActive = currentHour >= 6 && currentHour < 20;
 
       const processedEvents = data.map(e => {
         let currentStatus: Event['status'] = e.status 
             ? (e.status.charAt(0).toUpperCase() + e.status.slice(1)) as Event['status']
             : 'Desconocido';
         
-        // Apply new logic only if logic is active and status is not already 'En Vivo' from API
-        if (isLogicActive && e.status.toLowerCase() !== 'en vivo' && /^\d{2}:\d{2}$/.test(e.time)) {
+        // New logic to determine status if a valid time is present
+        if (/^\d{2}:\d{2}$/.test(e.time)) {
              try {
                 const eventTimeToday = parse(e.time, 'HH:mm', nowInBA);
                 const eventEndTime = addHours(eventTimeToday, 3);
@@ -166,9 +162,15 @@ export default function HomePage() {
                 }
              } catch (error) {
                 console.error("Error parsing date for event:", e.title, error);
+                // If parsing fails, leave status as is or default to Desconocido
+                currentStatus = 'Desconocido';
              }
+        } else {
+            // If no valid time, status from API is used, or defaults to Desconocido
+            if (!['en vivo', 'próximo', 'finalizado'].includes(e.status.toLowerCase())) {
+              currentStatus = 'Desconocido';
+            }
         }
-
 
         return {
           ...e,
@@ -286,7 +288,17 @@ export default function HomePage() {
       return a.time.localeCompare(b.time);
     };
 
-    const live = otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo').sort(sortLogic);
+    const liveSortLogic = (a: Event, b: Event) => {
+      const aHasImage = a.image && a.image !== placeholderImage;
+      const bHasImage = b.image && b.image !== placeholderImage;
+
+      if (aHasImage && !bHasImage) return -1;
+      if (!aHasImage && bHasImage) return 1;
+      
+      return a.time.localeCompare(b.time);
+    };
+
+    const live = otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo').sort(liveSortLogic);
     const upcoming = otherEvents.filter((e) => e.status.toLowerCase() === 'próximo').sort(sortLogic);
     const unknown = otherEvents.filter((e) => e.status.toLowerCase() === 'desconocido').sort(sortLogic);
     const finishedEvents = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
@@ -931,3 +943,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
