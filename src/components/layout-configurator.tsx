@@ -147,7 +147,7 @@ export function LayoutConfigurator({
           </AccordionItem>
           
           <AccordionItem value="item-3" className="border rounded-lg px-4">
-            <AccordionTrigger>Eventos Seleccionados ({activeEventsCount})</AccordionTrigger>
+            <AccordionTrigger>Eventos/Canales Seleccionados ({activeEventsCount})</AccordionTrigger>
               <AccordionContent className="pt-2">
                 <div className="space-y-4">
                     {order.map((originalIndex, currentIndex) => {
@@ -186,14 +186,24 @@ export function LayoutConfigurator({
                                       <ArrowDown className="h-4 w-4" />
                                     </Button>
                                     {isViewPage && (
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-7 w-7"
-                                        onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
-                                      >
-                                          <Pencil className="h-4 w-4" />
-                                      </Button>
+                                      <>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="h-7 w-7"
+                                          onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
+                                        >
+                                          <RotateCw className="h-4 w-4" />
+                                        </Button>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="h-7 w-7"
+                                          onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                      </>
                                     )}
                                     <Button 
                                       variant="ghost" 
