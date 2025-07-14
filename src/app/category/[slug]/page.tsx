@@ -47,8 +47,10 @@ async function getCategoryEvents(categoryName: string): Promise<Event[]> {
         const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
         
         filtered.sort((a, b) => {
-            if (a.status !== b.status) {
-                return (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5);
+            const statusA = statusOrder[a.status] ?? 99;
+            const statusB = statusOrder[b.status] ?? 99;
+            if (statusA !== statusB) {
+                return statusA - statusB;
             }
             return a.time.localeCompare(b.time);
         });

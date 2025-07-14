@@ -63,14 +63,14 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
           </div>
         </div>
-        <CarouselContent className="-ml-4">
+        <CarouselContent className="-ml-4 flex">
           {events &&
             onCardClick &&
             getEventSelection &&
             events.map((event, index) => (
               <CarouselItem
                 key={`event-${event.title}-${index}`}
-                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
+                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4 flex"
               >
                 <EventCard
                   event={event}
@@ -84,13 +84,13 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             channels.map((channel, index) => (
               <CarouselItem
                 key={`channel-${index}`}
-                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
+                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4 flex"
               >
                 <Card
-                  className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
+                  className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
                   onClick={() => onChannelClick(channel)}
                 >
-                  <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
+                  <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
                     <Image
                       src={channel.logo}
                       alt={`${channel.name} logo`}
@@ -104,7 +104,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                       }}
                     />
                   </div>
-                  <div className="p-3 bg-card">
+                  <div className="p-3 bg-card flex-grow flex flex-col justify-center">
                     <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
                   </div>
                 </Card>
@@ -115,4 +115,3 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
-    

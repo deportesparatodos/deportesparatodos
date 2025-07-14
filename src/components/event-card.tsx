@@ -25,7 +25,7 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
 
   return (
     <div 
-      className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border"
+      className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border flex flex-col h-full"
       onClick={onClick}
     >
       <div className="relative w-full aspect-video">
@@ -46,8 +46,8 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => 
           </div>
         )}
       </div>
-      <div className="p-3">
-        <h3 className="font-bold text-sm min-h-[40px]">{event.title}</h3>
+      <div className="p-3 flex flex-col flex-grow">
+        <h3 className="font-bold text-sm flex-grow min-h-[40px]">{event.title}</h3>
         <div className="flex items-center justify-between text-xs mt-1">
           <p className="text-muted-foreground font-semibold">{timeDisplay}</p>
           {event.status && (

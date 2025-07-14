@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Tv, Search, Mail, FileText, RotateCw, Menu, Settings, Play } from "lucide-react";
+import { X, Loader2, MessageSquare, BookOpen, AlertCircle, Plus, Mail, FileText } from "lucide-react";
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -19,7 +19,7 @@ import { EventCard } from '@/components/event-card';
 import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
-import { Badge } from '@/components/ui/badge';
+import { Search } from 'lucide-react';
 
 function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -167,6 +167,7 @@ function ViewPageContent() {
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
   const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev <= 0) {
@@ -387,10 +388,14 @@ function ViewPageContent() {
         />
 
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
-           <DialogContent className="sm:max-w-md p-0">
+           <DialogContent className="sm:max-w-md p-0" hideClose={true}>
               <DialogHeader className="sr-only">
                   <DialogTitle>Bienvenida</DialogTitle>
               </DialogHeader>
+               <DialogClose className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
               <div className="relative">
                   <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
               </div>

@@ -53,7 +53,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-secondary border-border text-foreground">
+      <DialogContent className="sm:max-w-md bg-secondary border-border text-foreground" hideClose={true}>
         <DialogHeader>
           <div className="relative w-full aspect-video rounded-t-lg overflow-hidden mb-4">
             <Image
@@ -88,12 +88,12 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         </DialogHeader>
 
         <div className="flex justify-center py-4">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 justify-items-center">
             {event.options.map((option, index) => (
                 <Button
                 key={index}
                 variant={selectedOptionUrl === option ? 'default' : 'secondary'}
-                className="w-full border border-border hover:scale-105 transition-transform duration-200"
+                className={cn("w-full border border-border hover:scale-105 transition-transform duration-200", event.options.length % 2 !== 0 && index === event.options.length - 1 && "sm:col-span-2")}
                 onClick={() => onSelect(event, option)}
                 >
                 {event.buttons[index] || `Opción ${index + 1}`}
