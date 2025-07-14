@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Link from 'next/link';
@@ -97,9 +96,9 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             return a.time.localeCompare(b.time);
         });
 
-        const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+        const finishedEvents = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
         
-        const allSorted = [...live, ...upcoming, ...unknown, ...finished, ...channels247];
+        const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents, ...channels247];
 
         let searchRes: (Event | Channel)[] = [];
         if (searchTerm) {
@@ -146,8 +145,12 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
             <DialogContent className="max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4">
                 <DialogHeader>
                     <DialogTitle>Añadir Evento/Canal</DialogTitle>
+                     <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                    </DialogClose>
                 </DialogHeader>
-                <div className="relative mt-1.5">
+                <div className="relative pt-1.5">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                         type="text"
