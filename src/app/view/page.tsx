@@ -494,17 +494,6 @@ function ViewPageContent() {
   
   const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
   
-  const activeWindows = viewOrder.map(originalIndex => {
-      const event = selectedEvents[originalIndex];
-      if (!event) return null;
-      return {
-          event,
-          reload: reloadCounters[originalIndex],
-          originalIndex,
-      };
-  }).filter(Boolean) as { event: Event; reload: number; originalIndex: number }[];
-
-
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
         {modifyEvent && (
@@ -716,33 +705,37 @@ function ViewPageContent() {
             backgroundColor: borderColor
           }}
         >
-          {activeWindows.map(({ event, reload, originalIndex }, orderedIndex) => {
-            const windowClasses = cn(
-              "overflow-hidden",
-              "relative",
-              "bg-black",
-              getItemClasses(orderedIndex, numCameras)
-            );
+          {selectedEvents.map((event, index) => {
+              if (!event) return null;
+              
+              const orderedIndex = viewOrder.indexOf(index);
+              const windowClasses = cn(
+                  "overflow-hidden",
+                  "relative",
+                  "bg-black",
+                  "order-[var(--order)]",
+                  getItemClasses(orderedIndex, numCameras)
+              );
 
-            let iframeSrc = event.selectedOption
-                ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reload || 0}`
-                : '';
-            
-            if (iframeSrc.includes("youtube-nocookie.com")) {
-                iframeSrc += `&autoplay=1`;
-            }
-            
-            return (
-                <div key={`window-${originalIndex}`} className={windowClasses}>
-                    <iframe
-                        src={iframeSrc}
-                        title={`Stream ${originalIndex + 1}`}
-                        className="w-full h-full border-0"
-                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                        allowFullScreen
-                    />
-                </div>
-            );
+              let iframeSrc = event.selectedOption
+                  ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`
+                  : '';
+              
+              if (iframeSrc.includes("youtube-nocookie.com")) {
+                  iframeSrc += `&autoplay=1`;
+              }
+
+              return (
+                  <div key={`window-stable-${index}`} className={windowClasses} style={{'--order': orderedIndex} as React.CSSProperties}>
+                      <iframe
+                          src={iframeSrc}
+                          title={`Stream ${index + 1}`}
+                          className="w-full h-full border-0"
+                          allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                          allowFullScreen
+                      />
+                  </div>
+              );
           })}
         </main>
       </div>
@@ -803,5 +796,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    
