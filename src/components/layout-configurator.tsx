@@ -15,16 +15,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
+import { ScrollArea } from './ui/scroll-area';
 
-interface LayoutConfiguratorProps {
-  gridGap: number;
-  onGridGapChange: (value: number) => void;
-  borderColor: string;
-  onBorderColorChange: (value: string) => void;
-  isChatEnabled: boolean;
-  onIsChatEnabledChange: (value: boolean) => void;
-  
-  // Event management props
+interface EventListManagementProps {
   order: number[];
   onOrderChange: (newOrder: number[]) => void;
   eventDetails: (Event | null)[];
@@ -36,13 +29,7 @@ interface LayoutConfiguratorProps {
   onSchedule?: () => void;
 }
 
-export function LayoutConfigurator({
-  gridGap,
-  onGridGapChange,
-  borderColor,
-  onBorderColorChange,
-  isChatEnabled,
-  onIsChatEnabledChange,
+export function EventListManagement({
   order,
   onOrderChange,
   eventDetails,
@@ -52,8 +39,7 @@ export function LayoutConfigurator({
   isViewPage,
   onAddEvent,
   onSchedule,
-}: LayoutConfiguratorProps) {
-  
+}: EventListManagementProps) {
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
@@ -64,8 +50,118 @@ export function LayoutConfigurator({
       onOrderChange(newOrder);
     }
   };
-  
+
   const activeEventsCount = order.length;
+
+  return (
+    <div className="space-y-4">
+      {order.map((originalIndex, currentIndex) => {
+        const event = eventDetails[originalIndex];
+        if (!event) return null;
+
+        return (
+          <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
+              <div 
+                className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
+              >
+                  {currentIndex + 1}
+              </div>
+              
+              <div className="flex-grow flex flex-col gap-2 text-center">
+                  <p className="text-sm font-semibold break-words">
+                    {event.title}
+                  </p>
+                  <div className="flex items-center justify-center gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7" 
+                        onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'up'); }}
+                        disabled={currentIndex === 0}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7" 
+                        onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'down'); }}
+                        disabled={currentIndex === activeEventsCount - 1}
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7"
+                        onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
+                      >
+                          <Pencil className="h-4 w-4" />
+                      </Button>
+
+                      {isViewPage && onReload && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7"
+                          onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
+                        >
+                          <RotateCw className="h-4 w-4" />
+                        </Button>
+                      )}
+
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); onRemove(originalIndex); }}
+                      >
+                          <Trash2 className="h-4 w-4" />
+                      </Button>
+                  </div>
+              </div>
+          </div>
+        )
+      })}
+      {activeEventsCount === 0 && (
+          <p className="text-muted-foreground text-center pt-8">No hay eventos seleccionados.</p>
+      )}
+      {isViewPage && onAddEvent && (
+          <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={onAddEvent}>
+              <Plus className="mr-2 h-4 w-4" />
+              Añadir Evento/Canal
+          </Button>
+      )}
+      {isViewPage && onSchedule && (
+          <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onSchedule}>
+              <CalendarClock className="mr-2 h-4 w-4" />
+              Programar Selección
+          </Button>
+      )}
+    </div>
+  );
+}
+
+
+interface LayoutConfiguratorProps extends EventListManagementProps {
+  gridGap: number;
+  onGridGapChange: (value: number) => void;
+  borderColor: string;
+  onBorderColorChange: (value: string) => void;
+  isChatEnabled: boolean;
+  onIsChatEnabledChange: (value: boolean) => void;
+}
+
+export function LayoutConfigurator({
+  gridGap,
+  onGridGapChange,
+  borderColor,
+  onBorderColorChange,
+  isChatEnabled,
+  onIsChatEnabledChange,
+  ...eventProps
+}: LayoutConfiguratorProps) {
   
   const handleRestoreDefaults = () => {
     onGridGapChange(0);
@@ -148,94 +244,9 @@ export function LayoutConfigurator({
           </AccordionItem>
           
           <AccordionItem value="item-3" className="border rounded-lg px-4">
-            <AccordionTrigger>Eventos/Canales Seleccionados ({activeEventsCount})</AccordionTrigger>
+            <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
               <AccordionContent className="pt-2">
-                <div className="space-y-4">
-                    {order.map((originalIndex, currentIndex) => {
-                      const event = eventDetails[originalIndex];
-                      if (!event) return null;
-
-                      return (
-                        <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                            <div 
-                              className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
-                            >
-                                {currentIndex + 1}
-                            </div>
-                            
-                            <div className="flex-grow flex flex-col gap-2 text-center">
-                                <p className="text-sm font-semibold break-words">
-                                  {event.title}
-                                </p>
-                                <div className="flex items-center justify-center gap-1">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-7 w-7" 
-                                      onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'up'); }}
-                                      disabled={currentIndex === 0}
-                                    >
-                                      <ArrowUp className="h-4 w-4" />
-                                    </Button>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-7 w-7" 
-                                      onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'down'); }}
-                                      disabled={currentIndex === activeEventsCount - 1}
-                                    >
-                                      <ArrowDown className="h-4 w-4" />
-                                    </Button>
-                                    
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-7 w-7"
-                                      onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
-                                    >
-                                        <Pencil className="h-4 w-4" />
-                                    </Button>
-
-                                    {isViewPage && onReload && (
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-7 w-7"
-                                        onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
-                                      >
-                                        <RotateCw className="h-4 w-4" />
-                                      </Button>
-                                    )}
-
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-7 w-7 text-destructive hover:text-destructive"
-                                      onClick={(e) => { e.stopPropagation(); onRemove(originalIndex); }}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                      )
-                    })}
-                      {activeEventsCount === 0 && (
-                        <p className="text-muted-foreground text-center pt-8">No hay eventos seleccionados.</p>
-                    )}
-                     {isViewPage && onAddEvent && (
-                        <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={onAddEvent}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Añadir Evento/Canal
-                        </Button>
-                    )}
-                    {isViewPage && onSchedule && (
-                        <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onSchedule}>
-                            <CalendarClock className="mr-2 h-4 w-4" />
-                            Programar Selección
-                        </Button>
-                    )}
-                  </div>
+                 <EventListManagement {...eventProps} />
               </AccordionContent>
           </AccordionItem>
         </Accordion>

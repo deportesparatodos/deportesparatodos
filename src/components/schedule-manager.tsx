@@ -1,13 +1,12 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Check, ChevronsUpDown, Trash2, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +14,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
 import {
@@ -33,32 +31,49 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from './ui/label';
 import type { Event } from './event-carousel';
+import { EventListManagement } from './layout-configurator';
+import { Separator } from './ui/separator';
 
 export interface Schedule {
   id: string;
   dateTime: Date;
   events: (Event | null)[];
+  order: number[];
 }
 
 interface ScheduleManagerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentSelection: (Event | null)[];
+  currentOrder: number[];
   schedules: Schedule[];
   onSchedulesChange: (schedules: Schedule[]) => void;
+  onModifyEventInView: (event: Event, index: number) => void;
 }
 
 export function ScheduleManager({
   open,
   onOpenChange,
   currentSelection,
+  currentOrder,
   schedules,
   onSchedulesChange,
+  onModifyEventInView
 }: ScheduleManagerProps) {
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
-  const [selectedForSchedule, setSelectedForSchedule] = useState<boolean[]>(Array(9).fill(false));
+
+  // State for the events that will be in the new schedule
+  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(currentSelection);
+  const [futureOrder, setFutureOrder] = useState<number[]>(currentOrder);
+
+  // When current view selection changes, reset the schedule builder
+  useEffect(() => {
+    if (open) {
+        setFutureSelection(currentSelection);
+        setFutureOrder(currentOrder);
+    }
+  }, [open, currentSelection, currentOrder]);
 
   const timeOptions = useMemo(() => {
     const options = [];
@@ -79,140 +94,149 @@ export function ScheduleManager({
     const combinedDateTime = new Date(date);
     combinedDateTime.setHours(hours, minutes, 0, 0);
 
-    const newScheduledEvents = Array(9).fill(null);
-    selectedForSchedule.forEach((isSelected, index) => {
-      if (isSelected) {
-        newScheduledEvents[index] = currentSelection[index];
-      }
-    });
-
     const newSchedule: Schedule = {
       id: new Date().toISOString(),
       dateTime: combinedDateTime,
-      events: newScheduledEvents,
+      events: futureSelection,
+      order: futureOrder,
     };
 
     onSchedulesChange([...schedules, newSchedule]);
-    setAddDialogOpen(false);
     setDate(new Date());
     setTime('12:00');
-    setSelectedForSchedule(Array(9).fill(false));
   };
   
   const handleRemoveSchedule = (id: string) => {
     onSchedulesChange(schedules.filter(s => s.id !== id));
   };
+  
+  const handleRemoveEvent = (indexToRemove: number) => {
+    const newSelection = [...futureSelection];
+    newSelection[indexToRemove] = null;
+    setFutureSelection(newSelection);
+    
+    const newOrder = futureOrder.filter(i => i !== indexToRemove);
+    setFutureOrder(newOrder);
+  };
+
+  const handleModifyEvent = (event: Event, index: number) => {
+      onModifyEventInView(event, index);
+  }
+
+  const handleOrderChange = (newOrder: number[]) => {
+      const fullNewOrder = [...newOrder];
+      const presentIndexes = new Set(newOrder);
+      for(let i=0; i<9; i++) {
+          if(!presentIndexes.has(i) && futureSelection[i] !== null) {
+              if(!presentIndexes.has(i)) fullNewOrder.push(i);
+          }
+      }
+      setFutureOrder(fullNewOrder);
+  }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl w-full h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-4 border-b">
           <DialogTitle>Programar Selección</DialogTitle>
           <DialogDescription>
-            Configura qué ventanas se activarán en una fecha y hora específicas.
+            Configura una selección de eventos y canales para que se activen en un momento específico.
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="py-4">
-          <h3 className="mb-4 text-lg font-semibold">Programaciones Activas</h3>
-          <ScrollArea className="h-48 pr-4 border rounded-lg">
-            {schedules.length === 0 ? (
-                <p className="text-muted-foreground text-center p-4">No hay programaciones activas.</p>
-            ) : (
-                <div className="space-y-2 p-2">
-                    {schedules.map((schedule) => (
-                        <div key={schedule.id} className="flex items-center justify-between p-2 rounded-md bg-secondary">
-                           <div>
-                             <p className="font-medium">{format(schedule.dateTime, 'PPP p')}</p>
-                             <p className="text-sm text-muted-foreground">
-                                {schedule.events.filter(Boolean).length} ventanas activas
-                             </p>
-                           </div>
-                           <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleRemoveSchedule(schedule.id)}>
-                               <Trash2 className="h-4 w-4" />
-                           </Button>
-                        </div>
-                    ))}
-                </div>
-            )}
-          </ScrollArea>
-        </div>
 
-        <DialogFooter className="sm:justify-between flex-col-reverse sm:flex-row gap-2">
-            <DialogClose asChild>
-                <Button variant="outline">Cerrar</Button>
-            </DialogClose>
-            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button>Añadir Nueva Programación</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Crear Programación</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="flex gap-4">
-                        <div className="space-y-2">
-                            <Label>Fecha</Label>
-                            <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                variant={'outline'}
-                                className={cn('w-[200px] justify-start text-left font-normal', !date && 'text-muted-foreground')}
-                                >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, 'PPP') : <span>Elige una fecha</span>}
+        <div className="grid grid-cols-1 md:grid-cols-2 flex-grow h-0">
+            {/* Left Column */}
+            <div className="flex flex-col border-r">
+                 <h3 className="px-4 py-2 text-lg font-semibold">Programaciones Activas</h3>
+                 <Separator />
+                 <ScrollArea className="flex-grow h-0">
+                    <div className="p-4 space-y-3">
+                    {schedules.length === 0 ? (
+                        <p className="text-muted-foreground text-center p-4">No hay programaciones.</p>
+                    ) : (
+                        schedules
+                            .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
+                            .map((schedule) => (
+                                <div key={schedule.id} className="flex items-center justify-between p-3 rounded-md border bg-secondary">
+                                <div>
+                                    <p className="font-bold">{format(schedule.dateTime, 'EEE, d MMM, p')}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Cantidad de Eventos/Canales: {schedule.events.filter(Boolean).length}
+                                    </p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleRemoveSchedule(schedule.id)}>
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                            </PopoverContent>
-                            </Popover>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Hora</Label>
-                            <Select value={time} onValueChange={setTime}>
-                            <SelectTrigger className="w-[120px]">
-                                <SelectValue placeholder="Hora" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {timeOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                            </SelectContent>
-                            </Select>
-                        </div>
+                                </div>
+                            ))
+                    )}
                     </div>
-                    <div>
-                        <Label>Ventanas a activar</Label>
-                        <p className="text-sm text-muted-foreground">Selecciona los eventos que quieres que aparezcan a la hora programada.</p>
-                        <ScrollArea className="h-64 mt-2 p-2 border rounded-md">
-                           <div className="space-y-2">
-                             {currentSelection.map((event, index) =>
-                                event ? (
-                                  <div key={index} className="flex items-center space-x-2 p-2 rounded-md bg-secondary/50">
-                                    <Checkbox
-                                      id={`schedule-event-${index}`}
-                                      checked={selectedForSchedule[index]}
-                                      onCheckedChange={(checked) => {
-                                        const newSelected = [...selectedForSchedule];
-                                        newSelected[index] = !!checked;
-                                        setSelectedForSchedule(newSelected);
-                                      }}
-                                    />
-                                    <label htmlFor={`schedule-event-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                      {`Ventana ${index + 1}: ${event.title}`}
-                                    </label>
-                                  </div>
-                                ) : null
-                              )}
-                           </div>
-                        </ScrollArea>
+                 </ScrollArea>
+            </div>
+            
+            {/* Right Column */}
+            <div className="flex flex-col">
+                 <h3 className="px-4 py-2 text-lg font-semibold">Configuración de la Programación</h3>
+                 <Separator />
+                 <div className="flex flex-wrap items-center gap-4 p-4 border-b">
+                     <div className="space-y-1">
+                        <Label>Fecha</Label>
+                        <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={'outline'}
+                            className={cn('w-[200px] justify-start text-left font-normal', !date && 'text-muted-foreground')}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, 'PPP') : <span>Elige una fecha</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                        </PopoverContent>
+                        </Popover>
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Hora</Label>
+                        <Select value={time} onValueChange={setTime}>
+                        <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Hora" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {timeOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                        </SelectContent>
+                        </Select>
                     </div>
                 </div>
-                <DialogFooter>
-                    <Button onClick={handleAddSchedule}>Guardar Programación</Button>
-                </DialogFooter>
-                </DialogContent>
-            </Dialog>
+
+                <ScrollArea className="flex-grow h-0">
+                    <div className="p-4">
+                        <EventListManagement
+                            order={futureOrder.filter(i => futureSelection[i] !== null)}
+                            onOrderChange={handleOrderChange}
+                            eventDetails={futureSelection}
+                            onRemove={handleRemoveEvent}
+                            onModify={handleModifyEvent}
+                            isViewPage={true}
+                            onAddEvent={() => {
+                                onOpenChange(false); // Close schedule dialog
+                                // You might need a way to reopen it after adding an event
+                            }}
+                        />
+                    </div>
+                </ScrollArea>
+                 <div className="p-4 border-t mt-auto">
+                    <Button className="w-full" onClick={handleAddSchedule} disabled={futureSelection.filter(Boolean).length === 0}>
+                        Guardar Programación
+                    </Button>
+                 </div>
+            </div>
+        </div>
+        <DialogFooter className="p-4 border-t">
+          <DialogClose asChild>
+            <Button variant="outline">Cerrar</Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
