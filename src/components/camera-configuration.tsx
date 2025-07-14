@@ -227,8 +227,10 @@ export function CameraConfigurationComponent({
           open={scheduleManagerOpen}
           onOpenChange={setScheduleManagerOpen}
           currentSelection={eventDetails}
+          currentOrder={order}
           schedules={schedules}
           onSchedulesChange={onSchedulesChange}
+          onModifyEventInView={onModify}
         />
       )}
     </>

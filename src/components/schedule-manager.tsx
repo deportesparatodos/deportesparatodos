@@ -115,8 +115,10 @@ export function ScheduleManager({
     newSelection[indexToRemove] = null;
     setFutureSelection(newSelection);
     
-    const newOrder = futureOrder.filter(i => i !== indexToRemove);
-    setFutureOrder(newOrder);
+    if (futureOrder) {
+        const newOrder = futureOrder.filter(i => i !== indexToRemove);
+        setFutureOrder(newOrder);
+    }
   };
 
   const handleModifyEvent = (event: Event, index: number) => {
@@ -213,7 +215,7 @@ export function ScheduleManager({
                 <ScrollArea className="flex-grow h-0">
                     <div className="p-4">
                         <EventListManagement
-                            order={futureOrder.filter(i => futureSelection[i] !== null)}
+                            order={futureOrder ? futureOrder.filter(i => futureSelection[i] !== null) : []}
                             onOrderChange={handleOrderChange}
                             eventDetails={futureSelection}
                             onRemove={handleRemoveEvent}
