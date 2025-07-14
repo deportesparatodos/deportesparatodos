@@ -312,9 +312,9 @@ export default function HomePage() {
         return a.time.localeCompare(b.time);
     });
 
-    const finished = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    const finishedEvents = otherEvents.filter((e) => e.status.toLowerCase() === 'finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...upcoming, ...unknown, ...finished, ...channels247];
+    const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents, ...channels247];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -342,7 +342,7 @@ export default function HomePage() {
         liveEvents: live, 
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
-        finishedEvents: finished,
+        finishedEvents: finishedEvents,
         channels247,
         filteredChannels: channels,
         searchResults,
@@ -411,9 +411,6 @@ export default function HomePage() {
   };
 
   const handleStartView = () => {
-    const urls = selectedEvents.map(e => e ? (e as any).selectedOption : '');
-    localStorage.setItem('cameraUrls', JSON.stringify(urls));
-    localStorage.setItem('numCameras', selectedEvents.filter(Boolean).length.toString());
     router.push('/view');
   };
   
@@ -769,16 +766,19 @@ export default function HomePage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
                         {searchResults.map((item, index) => {
                             if ('url' in item) { // It's a Channel
+                                const channel = item as Channel;
+                                const channelAsEvent: Event = { title: channel.name, options: [channel.url], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                const selection = getEventSelection(channelAsEvent);
                                 return (
                                     <Card 
                                         key={`search-channel-${index}`}
                                         className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col"
-                                        onClick={() => handleChannelClick(item as Channel)}
+                                        onClick={() => handleChannelClick(channel)}
                                     >
                                         <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10 aspect-video">
                                             <Image
-                                                src={(item as Channel).logo}
-                                                alt={`${(item as Channel).name} logo`}
+                                                src={channel.logo}
+                                                alt={`${channel.name} logo`}
                                                 width={120}
                                                 height={67.5}
                                                 className="object-contain max-h-full max-w-full"
@@ -788,6 +788,11 @@ export default function HomePage() {
                                                     target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                                                 }}
                                             />
+                                            {selection.isSelected && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                                                    <span className="text-5xl font-extrabold text-white drop-shadow-lg">{selection.window}</span>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="p-3 bg-card min-h-[52px] flex items-center justify-center">
                                             <h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3>
@@ -865,7 +870,7 @@ export default function HomePage() {
                         ) : (
                             <>
                                 <div className="mb-8">
-                                    <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} />
+                                    <EventCarousel title="Canales" channels={filteredChannels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                                 </div>
                                 <div className="mb-8">
                                     <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
@@ -905,12 +910,3 @@ export default function HomePage() {
   );
   
 }
-    
-
-    
-
-    
-
-    
-
-    

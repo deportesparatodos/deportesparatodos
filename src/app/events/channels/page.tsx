@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Tv, Menu, Search, RotateCw } from 'lucide-react';
+import { Loader2, ArrowLeft, Tv, Menu, Search, RotateCw, Play, X, Settings } from 'lucide-react';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import {
   Sheet,
@@ -20,23 +20,67 @@ import { channels as allChannels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { LayoutConfigurator } from '@/components/layout-configurator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function ChannelsPage() {
   const router = useRouter();
   const [channels] = useState<Channel[]>(allChannels);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
+  const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
+  const [gridGap, setGridGap] = useState<number>(2);
+  const [borderColor, setBorderColor] = useState<string>('#000000');
+  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
     if (storedSelectedEvents) {
-      setSelectedEvents(JSON.parse(storedSelectedEvents));
+      try {
+        const parsedEvents = JSON.parse(storedSelectedEvents);
+        if (Array.isArray(parsedEvents)) {
+          const validEvents = parsedEvents.filter(Boolean);
+          const newSelectedEvents = Array(9).fill(null);
+          validEvents.slice(0, 9).forEach((event, i) => {
+            newSelectedEvents[i] = event;
+          });
+          setSelectedEvents(newSelectedEvents);
+        }
+      } catch (e) {
+        console.error("Failed to parse selectedEvents from localStorage", e);
+      }
     }
+    const storedViewOrder = localStorage.getItem('viewOrder');
+    if (storedViewOrder) {
+      try {
+        const parsedOrder = JSON.parse(storedViewOrder);
+        if (Array.isArray(parsedOrder) && parsedOrder.length === 9) {
+          setViewOrder(parsedOrder);
+        }
+      } catch (e) {
+        console.error("Failed to parse viewOrder from localStorage", e);
+      }
+    }
+    const storedGap = localStorage.getItem('gridGap');
+    if (storedGap) setGridGap(parseInt(storedGap, 10));
+
+    const storedBorderColor = localStorage.getItem('borderColor');
+    if (storedBorderColor) setBorderColor(storedBorderColor);
+
+    const storedChatEnabled = localStorage.getItem('isChatEnabled');
+    if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
   }, []);
 
   useEffect(() => {
@@ -67,27 +111,36 @@ export default function ChannelsPage() {
 
   const openDialogForEvent = (event: Event) => {
     setDialogEvent(event);
-    const targetIndex = selectedEvents.findIndex(e => e === null);
-    if (targetIndex !== -1) {
-      setIsModification(false);
-      setModificationIndex(targetIndex);
-    } else {
-      // If all are full, allow modifying the first one
+    const selection = getEventSelection(event);
+    if (selection.isSelected) {
       setIsModification(true);
-      setModificationIndex(0);
+      setModificationIndex(selection.window! - 1);
+    } else {
+      setIsModification(false);
+      setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     setDialogOpen(true);
+  };
+  
+  const getEventSelection = (event: Event) => {
+    const selection = selectedEvents.map((se, i) => se && se.title === event.title ? i : null).filter(i => i !== null);
+    if (selection.length > 0) {
+      return { isSelected: true, window: selection[0]! + 1 };
+    }
+    return { isSelected: false, window: null };
   };
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...selectedEvents];
     const eventWithSelection = { ...event, selectedOption: optionUrl };
 
-    let targetIndex = modificationIndex;
-    if (targetIndex === null) {
+    let targetIndex = -1;
+    if (isModification && modificationIndex !== null) {
+      targetIndex = modificationIndex;
+    } else {
       targetIndex = newSelectedEvents.findIndex(e => e === null);
     }
-
+    
     if (targetIndex !== -1) {
       newSelectedEvents[targetIndex] = eventWithSelection;
       setSelectedEvents(newSelectedEvents);
@@ -96,29 +149,41 @@ export default function ChannelsPage() {
     }
 
     setDialogOpen(false);
+    setIsModification(false);
+    setModificationIndex(null);
   };
   
   const handleEventRemove = (windowIndex: number) => {
     const newSelectedEvents = [...selectedEvents];
     newSelectedEvents[windowIndex] = null;
     setSelectedEvents(newSelectedEvents);
-    setDialogOpen(false);
+  };
+
+  const handleOrderChange = (newOrder: number[]) => {
+    const fullNewOrder = [...newOrder];
+    const presentIndexes = new Set(newOrder);
+    for (let i = 0; i < 9; i++) {
+      if (!presentIndexes.has(i)) {
+        fullNewOrder.push(i);
+      }
+    }
+    setViewOrder(fullNewOrder);
+    localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
   };
 
   const handleStartView = () => {
-    const urls = selectedEvents.map(e => e ? (e as any).selectedOption : '');
-    localStorage.setItem('cameraUrls', JSON.stringify(urls));
-    localStorage.setItem('numCameras', selectedEvents.filter(Boolean).length.toString());
     router.push('/view');
   };
 
   const openDialogForModification = (event: Event, index: number) => {
-    setSheetOpen(false);
+    setConfigDialogOpen(false); // Close config dialog before opening event dialog
     setDialogEvent(event);
     setIsModification(true);
     setModificationIndex(index);
     setDialogOpen(true);
   }
+
+  const selectedEventsCount = selectedEvents.filter(Boolean).length;
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
@@ -130,104 +195,117 @@ export default function ChannelsPage() {
           <h1 className="text-2xl font-bold capitalize">Canales</h1>
         </div>
         <div className="flex items-center gap-2">
-            <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetTrigger asChild>
-                    <Button
-                        variant="outline"
-                        disabled={selectedEvents.filter(Boolean).length === 0}
-                    >
-                        <Menu className="mr-2 h-4 w-4" />
-                        Eventos Seleccionados
+           <div className={cn("flex-1 justify-end", isSearchOpen ? 'flex' : 'hidden')}>
+                <div className="relative w-full max-w-sm">
+                    <Input
+                        type="text"
+                        placeholder="Buscar canal..."
+                        className="w-full pr-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </div>
+
+            <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(!isSearchOpen)}>
+                {isSearchOpen ? <X /> : <Search />}
+            </Button>
+
+            <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Settings />
                     </Button>
-                </SheetTrigger>
-                <SheetContent>
-                    <SheetHeader>
-                        <SheetTitle>Tus Eventos Seleccionados</SheetTitle>
-                    </SheetHeader>
-                    <ScrollArea className="h-[calc(100%-4rem)] mt-4">
-                        <div className="space-y-4 pr-4">
-                            {selectedEvents.map((event, index) => event && (
-                                <div key={index} className="flex items-center gap-4 cursor-pointer" onClick={() => openDialogForModification(event, index)}>
-                                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                                        {index + 1}
-                                    </div>
-                                    <div className="relative w-28 h-auto aspect-video rounded-md overflow-hidden">
-                                        <Image
-                                            src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
-                                            alt={event.title}
-                                            width={160}
-                                            height={90}
-                                            className="object-cover"
-                                            onError={(e) => {
-                                                const target = e.target as HTMLImageElement;
-                                                target.onerror = null; 
-                                                target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-                                            }}
-                                        />
-                                    </div>
-                                    <p className="text-sm font-semibold flex-grow truncate">{event.title}</p>
-                                </div>
-                            ))}
-                            {selectedEvents.filter(Boolean).length === 0 && (
-                                <p className="text-muted-foreground text-center pt-8">No has seleccionado ningún evento.</p>
-                            )}
-                        </div>
+                </DialogTrigger>
+                <DialogContent className="max-h-[90vh] flex flex-col">
+                    <DialogHeader className="text-center">
+                        <DialogTitle>Configuración y Eventos</DialogTitle>
+                        <DialogDescription>
+                            Personaliza la vista y gestiona tus eventos seleccionados.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <ScrollArea className="pr-4 -mr-4">
+                       <LayoutConfigurator
+                            gridGap={gridGap}
+                            onGridGapChange={(value) => {
+                                setGridGap(value);
+                                localStorage.setItem('gridGap', value.toString());
+                            }}
+                            borderColor={borderColor}
+                            onBorderColorChange={(value) => {
+                                setBorderColor(value);
+                                localStorage.setItem('borderColor', value);
+                            }}
+                            isChatEnabled={isChatEnabled}
+                            onIsChatEnabledChange={(value) => {
+                                setIsChatEnabled(value);
+                                localStorage.setItem('isChatEnabled', JSON.stringify(value));
+                            }}
+                            order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                            onOrderChange={handleOrderChange}
+                            eventDetails={selectedEvents}
+                            onRemove={handleEventRemove}
+                            onModify={openDialogForModification}
+                            isViewPage={false}
+                            onAddEvent={() => {}}
+                        />
                     </ScrollArea>
-                </SheetContent>
-            </Sheet>
+                </DialogContent>
+            </Dialog>
             <Button
+                size="icon"
                 onClick={handleStartView}
-                disabled={selectedEvents.filter(Boolean).length === 0}
-                className="bg-green-600 hover:bg-green-700 text-white my-[10px]"
+                disabled={selectedEventsCount === 0}
+                className="bg-green-600 hover:bg-green-700 text-white relative"
             >
-                <Tv className="mr-2 h-4 w-4" />
-                Iniciar Vista ({selectedEvents.filter(Boolean).length})
+                <Play />
+                 {selectedEventsCount > 0 && (
+                    <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
+                        {selectedEventsCount}
+                    </Badge>
+                )}
             </Button>
         </div>
       </header>
 
       <main className="flex-grow overflow-y-auto p-4 md:p-8">
-        <div className="mb-8 w-full">
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                    type="text"
-                    placeholder="Buscar canal..."
-                    className="w-full pl-10 pr-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { /* No-op, visual only */ }}>
-                    <RotateCw className="h-4 w-4" />
-                </Button>
-            </div>
-        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6">
-          {filteredChannels.map((channel, index) => (
-             <Card 
-                key={index}
-                className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
-                onClick={() => handleChannelClick(channel)}
-            >
-                <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
-                    <Image
-                        src={channel.logo}
-                        alt={`${channel.name} logo`}
-                        width={120}
-                        height={67.5}
-                        className="object-contain max-h-full max-w-full"
-                        onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null; 
-                            target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-                        }}
-                    />
-                </div>
-                <div className="p-3 bg-card">
-                    <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
-                </div>
-            </Card>
-          ))}
+          {filteredChannels.map((channel, index) => {
+              const channelAsEvent: Event = {
+                title: channel.name, options: [channel.url], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo,
+              };
+              const selection = getEventSelection(channelAsEvent);
+             return (
+              <Card 
+                  key={index}
+                  className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border"
+                  onClick={() => handleChannelClick(channel)}
+              >
+                  <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px]">
+                      <Image
+                          src={channel.logo}
+                          alt={`${channel.name} logo`}
+                          width={120}
+                          height={67.5}
+                          className="object-contain max-h-full max-w-full"
+                          onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null; 
+                              target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                          }}
+                      />
+                       {selection.isSelected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                          <span className="text-5xl font-extrabold text-white drop-shadow-lg">{selection.window}</span>
+                        </div>
+                      )}
+                  </div>
+                  <div className="p-3 bg-card">
+                      <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
+                  </div>
+              </Card>
+            )
+          })}
         </div>
       </main>
 
@@ -236,10 +314,11 @@ export default function ChannelsPage() {
           isOpen={dialogOpen}
           onOpenChange={setDialogOpen}
           event={dialogEvent}
+          selectedEvents={selectedEvents}
           onSelect={handleEventSelect}
           isModification={isModification}
           onRemove={() => handleEventRemove(modificationIndex!)}
-          windowNumber={(modificationIndex ?? 0) + 1}
+          windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
         />
       )}
     </div>

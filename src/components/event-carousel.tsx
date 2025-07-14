@@ -81,7 +81,11 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             ))}
           {channels &&
             onChannelClick &&
-            channels.map((channel, index) => (
+            getEventSelection &&
+            channels.map((channel, index) => {
+              const channelAsEvent: Event = { title: channel.name, options: [channel.url], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+              const selection = getEventSelection(channelAsEvent);
+              return (
               <CarouselItem
                 key={`channel-${channel.name}-${index}`}
                 className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
@@ -103,13 +107,18 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                         target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                       }}
                     />
+                    {selection.isSelected && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                        <span className="text-5xl font-extrabold text-white drop-shadow-lg">{selection.window}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-3 bg-card flex-grow flex flex-col justify-center">
                     <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
                   </div>
                 </Card>
               </CarouselItem>
-            ))}
+            )})}
         </CarouselContent>
       </Carousel>
     </div>

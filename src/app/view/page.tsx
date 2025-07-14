@@ -115,8 +115,8 @@ function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEven
                     </div>
                 </DialogHeader>
                 <Tabs defaultValue="eventos" className="flex-grow flex flex-col mt-2">
-                    <div className="flex flex-col gap-2 mt-[5px]">
-                        <div className="relative flex-grow">
+                    <div className="flex flex-col gap-2">
+                        <div className="relative flex-grow mt-[5px]">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                             <Input
                                 type="text"
@@ -773,4 +773,3 @@ export default function Page() {
     </Suspense>
   );
 }
-

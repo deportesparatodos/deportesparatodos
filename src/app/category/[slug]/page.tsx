@@ -1,5 +1,5 @@
 
-import { CategoryClientPage } from '@/app/category-client-page';
+import { CategoryClientPage } from '@/components/category-client-page';
 import type { Event } from '@/components/event-carousel';
 
 // This function runs at build time to fetch all possible categories

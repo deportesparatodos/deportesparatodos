@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -91,7 +90,8 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
     }
   }, [categoryName]);
 
- useEffect(() => {
+  useEffect(() => {
+    // This effect runs once on mount to initialize state from localStorage
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
     if (storedSelectedEvents) {
       try {
@@ -108,6 +108,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
         console.error("Failed to parse selectedEvents from localStorage", e);
       }
     }
+
     const storedViewOrder = localStorage.getItem('viewOrder');
     if (storedViewOrder) {
       try {
@@ -119,6 +120,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
         console.error("Failed to parse viewOrder from localStorage", e);
       }
     }
+
     const storedGap = localStorage.getItem('gridGap');
     if (storedGap) setGridGap(parseInt(storedGap, 10));
 
@@ -130,6 +132,7 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
   }, []);
 
   useEffect(() => {
+    // This effect syncs state changes TO localStorage
     localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
   }, [selectedEvents]);
 
@@ -212,9 +215,6 @@ export function CategoryClientPage({ initialEvents, categoryName }: { initialEve
   };
 
   const handleStartView = () => {
-    const urls = selectedEvents.map(e => e ? (e as any).selectedOption : '');
-    localStorage.setItem('cameraUrls', JSON.stringify(urls));
-    localStorage.setItem('numCameras', selectedEvents.filter(Boolean).length.toString());
     router.push('/view');
   };
 
