@@ -193,6 +193,7 @@ export default function HomePage() {
 
   // Load state from localStorage once on initial mount
   useEffect(() => {
+    if (isInitialLoadDone) return;
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
     if (storedSelectedEvents) {
       try {
@@ -226,7 +227,7 @@ export default function HomePage() {
     if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
     
     setIsInitialLoadDone(true);
-  }, []);
+  }, [isInitialLoadDone]);
 
   // Fetch event data
   useEffect(() => {
@@ -303,18 +304,13 @@ export default function HomePage() {
     };
 
     const liveSortLogic = (a: Event, b: Event) => {
-      const aHasImage = a.image && a.image !== placeholderImage;
-      const bHasImage = b.image && b.image !== placeholderImage;
-      const aIs247 = isChannel247(a);
-      const bIs247 = isChannel247(b);
-  
-      if (aHasImage && !bHasImage) return -1;
-      if (!aHasImage && bHasImage) return 1;
-      
-      if (!aIs247 && bIs247) return -1;
-      if (aIs247 && !bIs247) return 1;
-      
-      return a.time.localeCompare(b.time);
+        const aIs247 = isChannel247(a);
+        const bIs247 = isChannel247(b);
+
+        if (aIs247 && !bIs247) return 1; // b (not 24/7) comes first
+        if (!aIs247 && bIs247) return -1; // a (not 24/7) comes first
+        
+        return a.time.localeCompare(b.time);
     };
 
     const live = [...otherEvents.filter((e) => e.status.toLowerCase() === 'en vivo'), ...channels247].sort(liveSortLogic);
@@ -968,4 +964,3 @@ export default function HomePage() {
     </div>
   );
 }
-
