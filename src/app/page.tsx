@@ -290,7 +290,7 @@ export default function HomePage() {
     
     const combinedEvents = [...events, ...ppvEvents];
     
-    const isChannel247 = (e: Event) => e.title.toLowerCase().includes('24/7');
+    const isChannel247 = (e: Event) => e.title.toLowerCase().includes('24/7') || e.title.includes('(North) Korean Central Television');
     
     const channels247 = combinedEvents.filter(isChannel247);
     const otherEvents = combinedEvents.filter(e => !isChannel247(e));
@@ -313,10 +313,12 @@ export default function HomePage() {
         if (hasCustomImageA && !hasCustomImageB) return -1;
         if (!hasCustomImageA && hasCustomImageB) return 1;
 
-        return a.time.localeCompare(b.time);
+        return 0;
     };
 
-    const live = otherEvents.filter((e) => e.status === 'En Vivo').sort(liveSortLogic);
+    const live = otherEvents
+        .filter((e) => e.status === 'En Vivo' && !isChannel247(e))
+        .sort(liveSortLogic);
     
     const upcoming = otherEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
     const unknown = otherEvents.filter((e) => e.status === 'Desconocido' && !isChannel247(e)).sort(sortLogic);
@@ -970,3 +972,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
