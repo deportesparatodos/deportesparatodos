@@ -89,7 +89,7 @@ export default function HomePage() {
 
   const fetchPpvEvents = useCallback(async () => {
     try {
-      const response = await fetch('/api/ppv', { cache: 'no-store' });
+      const response = await fetch('/api/ppv');
       if (!response.ok) {
         throw new Error('Failed to fetch PPV events');
       }
@@ -867,9 +867,7 @@ export default function HomePage() {
                                         </div>
                                     </ScrollArea>
                                     <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button>Cerrar</Button>
-                                        </DialogClose>
+                                        <DialogClose asChild><Button>Cerrar</Button></DialogClose>
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
@@ -1147,5 +1145,6 @@ export default function HomePage() {
     </div>
   );
 }
+
 
 
