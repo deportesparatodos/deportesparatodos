@@ -53,6 +53,10 @@ interface StreamedMatch {
   category: string;
   date: number; // Timestamp in milliseconds
   poster?: string;
+  teams?: {
+      home: { name: string; badge: string };
+      away: { name: string; badge: string };
+  };
   sources: { source: string; id: string }[];
 }
 
@@ -170,7 +174,6 @@ export default function HomePage() {
       const combinedData = Array.from(allMatchesMap.values());
 
       const timeZone = 'America/Argentina/Buenos_Aires';
-      const nowInBA = toZonedTime(new Date(), timeZone);
       const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
       
       const categoryMap = sportsData.reduce((acc, sport) => {
@@ -194,6 +197,13 @@ export default function HomePage() {
             status = 'Finalizado';
         }
 
+        let imageUrl = placeholderImage;
+        if (match.teams?.home?.badge && match.teams?.away?.badge) {
+            imageUrl = `https://streamed.su/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`;
+        } else if (match.poster) {
+            imageUrl = `https://streamed.su${match.poster}`;
+        }
+
         return {
           title: match.title,
           time: format(zonedEventTime, 'HH:mm'),
@@ -204,7 +214,7 @@ export default function HomePage() {
           language: '',
           date: format(zonedEventTime, 'yyyy-MM-dd'),
           source: 'streamed.su',
-          image: match.poster ? `https://streamed.su${match.poster}` : placeholderImage,
+          image: imageUrl,
           status: status,
         };
       });

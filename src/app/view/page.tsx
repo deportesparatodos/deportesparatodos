@@ -340,7 +340,15 @@ function ViewPageContent() {
           return acc;
       }, {} as Record<string, string>);
 
-      const initialEvents: Event[] = combinedStreamedData.map((match: any) => ({
+      const initialEvents: Event[] = combinedStreamedData.map((match: any) => {
+        let imageUrl = placeholderImage;
+        if (match.teams?.home?.badge && match.teams?.away?.badge) {
+            imageUrl = `https://streamed.su/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`;
+        } else if (match.poster) {
+            imageUrl = `https://streamed.su${match.poster}`;
+        }
+        
+        return {
         title: match.title,
         time: format(toZonedTime(new Date(match.date), timeZone), 'HH:mm'),
         options: [], 
@@ -350,9 +358,9 @@ function ViewPageContent() {
         language: '',
         date: format(toZonedTime(new Date(match.date), timeZone), 'yyyy-MM-dd'),
         source: 'streamed.su',
-        image: match.poster ? `https://streamed.su${match.poster}` : placeholderImage,
+        image: imageUrl,
         status: 'Desconocido', // Will be updated later
-      }));
+      }});
 
       // Fetch all stream options concurrently
       const eventsWithStreams = await Promise.all(
@@ -947,4 +955,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
