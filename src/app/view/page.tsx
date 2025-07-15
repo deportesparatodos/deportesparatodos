@@ -320,7 +320,7 @@ function ViewPageContent() {
         fetch('/api/matches/live'),
         fetch('/api/matches/all-today'),
         fetch('/api/sports'),
-        fetch('/api/ppv'),
+        fetch('/api/streams?source=ppv'),
       ]);
 
       if (!liveResponse.ok || !todayResponse.ok || !ppvResponse.ok || !sportsResponse.ok) {

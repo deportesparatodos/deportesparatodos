@@ -89,7 +89,7 @@ export default function HomePage() {
 
   const fetchPpvEvents = useCallback(async () => {
     try {
-      const response = await fetch('/api/ppv');
+      const response = await fetch('/api/streams?source=ppv');
       if (!response.ok) {
         throw new Error('Failed to fetch PPV events');
       }
@@ -1145,6 +1145,7 @@ export default function HomePage() {
     </div>
   );
 }
+
 
 
 
