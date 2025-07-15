@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       console.log('Launching Puppeteer for PPV...');
       browser = await puppeteer.launch({
         args: chromium.args,
-        executablePath: await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'),
+        executablePath: await chromium.executablePath(),
         headless: chromium.headless,
       });
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
         await browser.close();
       }
       // Return an empty array or an error object to prevent the entire page from failing.
-      return NextResponse.json({ error: 'Failed to fetch PPV data with Puppeteer', data: [] }, { status: 200 });
+      return NextResponse.json({ success: false, streams: [] }, { status: 200 });
     }
   }
 
