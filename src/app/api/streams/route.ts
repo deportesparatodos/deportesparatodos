@@ -1,6 +1,7 @@
+
 // /src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
-import playwright from 'playwright-aws-lambda';
+const playwright = require('playwright-aws-lambda');
 
 export const dynamic = 'force-dynamic';
 
@@ -63,7 +64,9 @@ export async function GET(request: NextRequest) {
       await page.goto(API_ENDPOINTS.ppv, { waitUntil: 'networkidle' });
       
       const jsonText = await page.evaluate(() => {
-          return document.body.innerText;
+          // Access the pre element which contains the JSON
+          const preElement = document.querySelector('pre');
+          return preElement ? preElement.innerText : document.body.innerText;
       });
       
       const data = JSON.parse(jsonText);
