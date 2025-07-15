@@ -112,6 +112,9 @@ export function ScheduleManager({
       };
       onSchedulesChange([...schedules, newSchedule]);
     }
+    
+    // Reset form to allow creating a new schedule
+    resetToCurrentSelection();
   };
   
   const handleEditSchedule = (schedule: Schedule) => {
