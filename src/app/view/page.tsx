@@ -316,20 +316,18 @@ function ViewPageContent() {
 
    const fetchAllEvents = useCallback(async () => {
     try {
-      const [liveResponse, todayResponse, sportsResponse, ppvResponse] = await Promise.all([
+      const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
         fetch('/api/matches/live'),
         fetch('/api/matches/all-today'),
         fetch('/api/sports'),
-        fetch('/api/ppv'),
       ]);
 
-      if (!liveResponse.ok || !todayResponse.ok || !ppvResponse.ok || !sportsResponse.ok) {
+      if (!liveResponse.ok || !todayResponse.ok || !sportsResponse.ok) {
         throw new Error('Failed to fetch one or more event sources');
       }
 
       const liveData: any[] = await liveResponse.json();
       const todayData: any[] = await todayResponse.json();
-      const ppvData = await ppvResponse.json();
       const sportsData: {id: string; name: string}[] = await sportsResponse.json();
       
       const allMatchesMap = new Map<string, any>();
@@ -402,73 +400,27 @@ function ViewPageContent() {
       
       const finalStreamedEvents = eventsWithStreams.filter(e => e.options.length > 0);
 
-      // Process PPV events
-      const transformedPpvEvents: Event[] = [];
-      if (ppvData.success && ppvData.streams) {
-          ppvData.streams.forEach((category: any) => {
-              if (category.streams) {
-                  category.streams.forEach((stream: any) => {
-                      transformedPpvEvents.push({
-                          title: stream.name,
-                          time: stream.starts_at > 0 ? format(new Date(stream.starts_at * 1000), 'HH:mm') : '--:--',
-                          options: [{ url: stream.iframe, label: 'Ver Stream', hd: false, language: '' }],
-                          sources: [],
-                          buttons: [],
-                          category: stream.category_name,
-                          language: '', 
-                          date: stream.starts_at > 0 ? new Date(stream.starts_at * 1000).toLocaleDateString() : '',
-                          source: 'ppvs.su',
-                          image: stream.poster,
-                          status: stream.always_live === 1 ? 'En Vivo' : 'Desconocido', // Initial status
-                      });
-                  });
-              }
-          });
-      }
-      
-      const allEvents = [...finalStreamedEvents, ...transformedPpvEvents];
+      const allEvents = [...finalStreamedEvents];
       
       // Update statuses for all events
       const nowInBA = toZonedTime(new Date(), timeZone);
       const updatedEvents = allEvents.map(e => {
         let newEvent = {...e};
         
-        if (newEvent.source === 'ppvs.su') {
-            let status: Event['status'] = 'Desconocido';
-            let startTime: Date | null = null;
-            if (newEvent.date && newEvent.time !== '--:--') {
-              try {
-                startTime = toZonedTime(parse(`${newEvent.date} ${newEvent.time}`, 'M/d/yyyy HH:mm', new Date()), timeZone);
-              } catch (error) {
-                 startTime = toZonedTime(new Date(newEvent.date), timeZone);
-              }
-            } else if (newEvent.date) {
-               startTime = toZonedTime(new Date(newEvent.date), timeZone);
-            }
-             
-            if (startTime) {
-              const eventEndTime = addHours(startTime, 3);
-              if (isBefore(nowInBA, startTime)) status = 'Próximo';
-              else if (isAfter(nowInBA, startTime) && isBefore(nowInBA, eventEndTime)) status = 'En Vivo';
-              else if (isAfter(nowInBA, eventEndTime)) status = 'Finalizado';
-            }
-            if(newEvent.status === 'En Vivo') status = 'En Vivo'; // always_live override
-            newEvent.status = status;
-        } else {
-             const eventDate = new Date(e.date);
-             const zonedEventTime = toZonedTime(eventDate, timeZone);
-             const eventEndTime = addHours(zonedEventTime, 3);
+        const eventDate = new Date(e.date);
+        const zonedEventTime = toZonedTime(eventDate, timeZone);
+        const eventEndTime = addHours(zonedEventTime, 3);
 
-             if (liveData.some((liveMatch:any) => liveMatch.id === e.sources[0]?.id)) {
-                 newEvent.status = 'En Vivo';
-             } else if (isBefore(nowInBA, zonedEventTime)) {
-                 newEvent.status = 'Próximo';
-             } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
-                 newEvent.status = 'En Vivo';
-             } else if (isAfter(nowInBA, eventEndTime)) {
-                 newEvent.status = 'Finalizado';
-             }
+        if (liveData.some((liveMatch:any) => liveMatch.id === e.sources[0]?.id)) {
+            newEvent.status = 'En Vivo';
+        } else if (isBefore(nowInBA, zonedEventTime)) {
+            newEvent.status = 'Próximo';
+        } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
+            newEvent.status = 'En Vivo';
+        } else if (isAfter(nowInBA, eventEndTime)) {
+            newEvent.status = 'Finalizado';
         }
+        
         return newEvent;
       });
 
@@ -988,5 +940,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    

@@ -64,7 +64,6 @@ export default function HomePage() {
   const router = useRouter();
 
   const [events, setEvents] = useState<Event[]>([]);
-  const [ppvEvents, setPpvEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
@@ -87,68 +86,6 @@ export default function HomePage() {
 
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
-  const fetchPpvEvents = useCallback(async () => {
-    try {
-      const response = await fetch('/api/ppv', { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error('Failed to fetch PPV events');
-      }
-      const data = await response.json();
-      
-      const timeZone = 'America/Argentina/Buenos_Aires';
-      const nowInBA = toZonedTime(new Date(), timeZone);
-      
-      const transformedEvents: Event[] = [];
-      if (data.success && data.streams) {
-        data.streams.forEach((category: any) => {
-          if (category.streams) {
-            category.streams.forEach((stream: any) => {
-               let status: Event['status'] = 'Desconocido';
-               let startTime: Date | null = null;
-               
-               if (stream.starts_at > 0) {
-                 startTime = new Date(stream.starts_at * 1000);
-                 const eventTime = toZonedTime(startTime, timeZone);
-                 const eventEndTime = addHours(eventTime, 3);
-                 
-                 if (isBefore(nowInBA, eventTime)) {
-                     status = 'Próximo';
-                 } else if (isAfter(nowInBA, eventTime) && isBefore(nowInBA, eventEndTime)) {
-                     status = 'En Vivo';
-                 } else if (isAfter(nowInBA, eventEndTime)) {
-                     status = 'Finalizado';
-                 }
-               }
-               
-               if (stream.always_live === 1) {
-                   status = 'En Vivo';
-               } else if (!startTime || stream.time === '--:--') {
-                    status = 'Desconocido'
-               }
-
-              transformedEvents.push({
-                title: stream.name,
-                time: startTime ? format(toZonedTime(startTime, 'America/Argentina/Buenos_Aires'), 'HH:mm') : '--:--',
-                options: [{ url: stream.iframe, label: 'Ver Stream', hd: false, language: '' }],
-                sources: [],
-                buttons: [],
-                category: stream.category_name,
-                language: '', 
-                date: startTime ? startTime.toLocaleDateString() : '',
-                source: 'ppvs.su',
-                image: stream.poster,
-                status: status,
-              });
-            });
-          }
-        });
-      }
-      setPpvEvents(transformedEvents);
-    } catch (error) {
-      console.error('Error fetching PPV events:', error);
-      setPpvEvents([]); // Ensure it's an empty array on error
-    }
-  }, []);
 
  const fetchEvents = useCallback(async () => {
     try {
@@ -305,12 +242,12 @@ export default function HomePage() {
   useEffect(() => {
     const loadAllData = async () => {
       setIsLoading(true);
-      await Promise.all([fetchEvents(), fetchPpvEvents()]);
+      await fetchEvents();
       setIsLoading(false);
     };
 
     loadAllData();
-  }, [fetchEvents, fetchPpvEvents]);
+  }, [fetchEvents]);
 
   // Persist selectedEvents to localStorage
   useEffect(() => {
@@ -378,13 +315,24 @@ export default function HomePage() {
         return title.replace(prefixes, '').trim().toLowerCase();
     };
     
-    // Separate 24/7 channels from ppvEvents
-    const regularPpvEvents = ppvEvents.filter(event => !is247Channel(event.title));
-    const channels247FromPpv = ppvEvents
-        .filter(event => is247Channel(event.title))
-        .map(e => ({...e, status: 'En Vivo' as const, time: 'AHORA'}));
+    // Separate 24/7 channels
+    const channels247FromPpv = channels
+        .filter(event => is247Channel(event.name))
+        .map(e => ({
+            title: e.name,
+            time: 'AHORA',
+            options: [{ url: e.url, label: 'Ver Stream', hd: false, language: '' }],
+            sources: [],
+            buttons: [],
+            category: 'Canal',
+            language: '',
+            date: '',
+            source: 'channel',
+            image: e.logo,
+            status: 'En Vivo' as const
+        }));
     
-    const combinedEvents = [...events, ...regularPpvEvents];
+    const combinedEvents = [...events];
     
     const eventMap = new Map<string, Event>();
 
@@ -512,12 +460,12 @@ export default function HomePage() {
         categoryFilteredEvents,
         channels247Events: channels247FromPpv,
     };
-  }, [events, ppvEvents, searchTerm, currentView]);
+  }, [events, searchTerm, currentView]);
 
 
   const categories = useMemo(() => {
     const categorySet = new Set<string>();
-    [...events, ...ppvEvents].forEach((event) => {
+    [...events].forEach((event) => {
         if (event.category) {
             const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
             categorySet.add(category);
@@ -534,7 +482,7 @@ export default function HomePage() {
     }
 
     return sortedCategories;
-  }, [events, ppvEvents]);
+  }, [events]);
 
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
@@ -1051,7 +999,7 @@ export default function HomePage() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                         <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { fetchEvents(); fetchPpvEvents(); }}>
+                         <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { fetchEvents(); }}>
                             <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                         </Button>
                     </div>
@@ -1148,4 +1096,4 @@ export default function HomePage() {
   );
 }
 
-
+    
