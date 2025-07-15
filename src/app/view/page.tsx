@@ -315,7 +315,9 @@ function ViewPageContent() {
   const numCameras = useMemo(() => selectedEvents.filter(Boolean).length, [selectedEvents]);
 
    const fetchAllEvents = useCallback(async () => {
+    setIsAddEventsLoading(true);
     try {
+<<<<<<< HEAD
       const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
         fetch('/api/matches/live'),
         fetch('/api/matches/all-today'),
@@ -329,6 +331,19 @@ function ViewPageContent() {
       const liveData: any[] = await liveResponse.json();
       const todayData: any[] = await todayResponse.json();
       const sportsData: {id: string; name: string}[] = await sportsResponse.json();
+=======
+      const [liveResponse, todayResponse, sportsResponse, ppvResponse] = await Promise.all([
+        fetch('/api/streams?type=live'),
+        fetch('/api/streams?type=all-today'),
+        fetch('/api/streams?type=sports'),
+        fetch('/api/streams?type=ppv'),
+      ]);
+
+      const liveData: any[] = (await liveResponse.json()) || [];
+      const todayData: any[] = (await todayResponse.json()) || [];
+      const ppvData = (await ppvResponse.json()) || {};
+      const sportsData: {id: string; name: string}[] = (await sportsResponse.json()) || [];
+>>>>>>> e9a7a26e08c729025707f44e0ab11a3c3e207166
       
       const allMatchesMap = new Map<string, any>();
       
@@ -374,7 +389,7 @@ function ViewPageContent() {
             try {
               const streamOptions: StreamOption[] = [];
               const sourcePromises = event.sources.map(async (source) => {
-                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
+                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
                 if (response.ok) {
                   const streams: any[] = await response.json();
                   return streams.map(stream => ({
@@ -400,16 +415,73 @@ function ViewPageContent() {
       
       const finalStreamedEvents = eventsWithStreams.filter(e => e.options.length > 0);
 
+<<<<<<< HEAD
       const allEvents = [...finalStreamedEvents];
+=======
+      // Process PPV events
+      const transformedPpvEvents: Event[] = [];
+      if (ppvData.success && ppvData.streams) {
+          ppvData.streams.forEach((category: any) => {
+              if (category.streams) {
+                  category.streams.forEach((stream: any) => {
+                      transformedPpvEvents.push({
+                          title: stream.name,
+                          time: stream.starts_at > 0 ? format(new Date(stream.starts_at * 1000), 'HH:mm') : '--:--',
+                          options: [{ url: stream.iframe, label: 'Ver Stream', hd: false, language: '' }],
+                          sources: [],
+                          buttons: [],
+                          category: stream.category_name,
+                          language: '', 
+                          date: stream.starts_at > 0 ? new Date(stream.starts_at * 1000).toLocaleDateString('en-CA') : '',
+                          source: 'ppv.to',
+                          image: stream.poster,
+                          status: stream.always_live === 1 ? 'En Vivo' : 'Desconocido', // Initial status
+                      });
+                  });
+              }
+          });
+      }
+      
+      const allEvents = [...finalStreamedEvents, ...transformedPpvEvents];
+>>>>>>> e9a7a26e08c729025707f44e0ab11a3c3e207166
       
       // Update statuses for all events
       const nowInBA = toZonedTime(new Date(), timeZone);
       const updatedEvents = allEvents.map(e => {
         let newEvent = {...e};
         
+<<<<<<< HEAD
         const eventDate = new Date(e.date);
         const zonedEventTime = toZonedTime(eventDate, timeZone);
         const eventEndTime = addHours(zonedEventTime, 3);
+=======
+        if (newEvent.source === 'ppv.to') {
+            let status: Event['status'] = 'Desconocido';
+            let startTime: Date | null = null;
+            if (newEvent.date && newEvent.time !== '--:--') {
+              try {
+                 const parsedDate = new Date(newEvent.date + 'T' + newEvent.time + ':00');
+                 if(!isNaN(parsedDate.getTime())){
+                    startTime = toZonedTime(parsedDate, timeZone);
+                 }
+              } catch (error) {
+                 startTime = null;
+              }
+            }
+             
+            if (startTime) {
+              const eventEndTime = addHours(startTime, 3);
+              if (isBefore(nowInBA, startTime)) status = 'Próximo';
+              else if (isAfter(nowInBA, startTime) && isBefore(nowInBA, eventEndTime)) status = 'En Vivo';
+              else if (isAfter(nowInBA, eventEndTime)) status = 'Finalizado';
+            }
+            if(newEvent.status === 'En Vivo') status = 'En Vivo'; // always_live override
+            newEvent.status = status;
+        } else {
+             const eventDate = new Date(e.date);
+             const zonedEventTime = toZonedTime(eventDate, timeZone);
+             const eventEndTime = addHours(zonedEventTime, 3);
+>>>>>>> e9a7a26e08c729025707f44e0ab11a3c3e207166
 
         if (liveData.some((liveMatch:any) => liveMatch.id === e.sources[0]?.id)) {
             newEvent.status = 'En Vivo';
@@ -427,8 +499,10 @@ function ViewPageContent() {
       setAllEventsData(updatedEvents);
 
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch all events:", error);
       setAllEventsData([]);
+    } finally {
+        setIsAddEventsLoading(false);
     }
   }, []);
 
@@ -520,12 +594,14 @@ function ViewPageContent() {
 
     useEffect(() => {
         if (addEventsDialogOpen) {
-            setIsAddEventsLoading(true);
-            if (allEventsData.length > 0 && allChannelsList.length > 0) {
+            if (allEventsData.length === 0) {
+                setIsAddEventsLoading(true);
+                fetchAllEvents();
+            } else {
                 setIsAddEventsLoading(false);
             }
         }
-    }, [addEventsDialogOpen, allEventsData, allChannelsList]);
+    }, [addEventsDialogOpen, allEventsData, fetchAllEvents]);
 
     const handleAddEventSelect = (event: Event, option: string) => {
         const newSelectedEvents = [...selectedEvents];

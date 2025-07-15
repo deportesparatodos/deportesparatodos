@@ -144,7 +144,7 @@ export default function HomePage() {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const isMobile = useIsMobile(650);
+  const isMobile = useIsMobile();
   
   const [gridGap, setGridGap] = useState<number>(2);
   const [borderColor, setBorderColor] = useState<string>('#000000');
@@ -155,13 +155,12 @@ export default function HomePage() {
 
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
-
  const fetchEvents = useCallback(async () => {
     try {
       const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
-        fetch('/api/matches/live'),
-        fetch('/api/matches/all-today'),
-        fetch('/api/sports')
+        fetch('/api/streams?type=live'),
+        fetch('/api/streams?type=all-today'),
+        fetch('/api/streams?type=sports')
       ]);
 
       if (!liveResponse.ok || !todayResponse.ok || !sportsResponse.ok) {
@@ -232,7 +231,7 @@ export default function HomePage() {
             try {
               const streamOptions: StreamOption[] = [];
               const sourcePromises = event.sources.map(async (source) => {
-                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
+                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
                 if (response.ok) {
                   const streams: any[] = await response.json();
                   return streams.map(stream => ({
@@ -364,7 +363,7 @@ export default function HomePage() {
     localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
   };
 
-  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, allChannels, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events } = useMemo(() => {
+  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
     const excludedFromFinished = new Set([
@@ -460,6 +459,7 @@ export default function HomePage() {
     const channels247FromEvents = processedEvents.filter(e => e.category === '24/7' && e.status === 'En Vivo');
     
     const allSorted = [...live, ...upcoming, ...unknown, ...finished];
+    const mobileSorted = [...live, ...channels247FromEvents, ...upcoming, ...unknown, ...finished];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -507,6 +507,7 @@ export default function HomePage() {
         allChannels: channels,
         searchResults,
         allSortedEvents: allSorted,
+        mobileSortedEvents: mobileSorted,
         categoryFilteredEvents,
         channels247Events: channels247FromEvents,
     };
@@ -515,7 +516,7 @@ export default function HomePage() {
 
   const categories = useMemo(() => {
     const categorySet = new Set<string>();
-    [...events].forEach((event) => {
+    [...events, ...channels247].forEach((event) => {
         if (event.category) {
             const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
             categorySet.add(category);
@@ -668,7 +669,7 @@ export default function HomePage() {
             <div className="flex items-center gap-0">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-none">
+                        <Button variant="ghost" size="icon" className={cn("rounded-none", isSearchOpen && "hidden md:flex")}>
                             <Menu className="h-6 w-6" />
                         </Button>
                     </SheetTrigger>
@@ -865,16 +866,14 @@ export default function HomePage() {
                                         </div>
                                     </ScrollArea>
                                     <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button>Cerrar</Button>
-                                        </DialogClose>
+                                        <DialogClose asChild><Button>Cerrar</Button></DialogClose>
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
                         </div>
                     </SheetContent>
                 </Sheet>
-                <Link href="/" className="shrink-0 ml-2" onClick={handleBackToHome}>
+                <Link href="/" className={cn("shrink-0 ml-2", isSearchOpen && "hidden md:block")} onClick={handleBackToHome}>
                     <Image
                         src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
@@ -942,7 +941,7 @@ export default function HomePage() {
             
             {isMobile ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 pt-4">
-                    {allSortedEvents.map((event, index) => (
+                    {mobileSortedEvents.map((event, index) => (
                         <EventCard
                             key={`mobile-event-${index}`}
                             event={event}
@@ -954,7 +953,7 @@ export default function HomePage() {
             ) : (
                 <>
                     <div className="mb-8">
-                        <EventCarousel title="Canales" channels={allChannels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales" channels={channels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
@@ -978,7 +977,7 @@ export default function HomePage() {
     } else if (currentView === 'live') {
       itemsToDisplay = liveEvents;
     } else if (currentView === 'channels') {
-      itemsToDisplay = allChannels;
+      itemsToDisplay = channels;
     } else {
       itemsToDisplay = categoryFilteredEvents;
     }
@@ -1058,10 +1057,8 @@ export default function HomePage() {
                 <Button variant="ghost" size="icon" onClick={() => {
                     if (isSearchOpen) {
                         setSearchTerm('');
-                        setIsSearchOpen(false);
-                    } else {
-                       setIsSearchOpen(true);
                     }
+                    setIsSearchOpen(!isSearchOpen);
                 }}>
                     {isSearchOpen ? <X /> : <Search />}
                 </Button>
@@ -1146,4 +1143,3 @@ export default function HomePage() {
   );
 }
 
-    

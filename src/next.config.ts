@@ -309,30 +309,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'www.pdc.tv',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'gwaa.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'nbcsports.brightspotcdn.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'origin.go.foxsports.com.au',
-        port: '',
-        pathname: '/**',
-      },
     ],
   },
   typescript: {
@@ -344,5 +320,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-
