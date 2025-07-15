@@ -146,11 +146,11 @@ export default function HomePage() {
       setPpvEvents(transformedEvents);
     } catch (error) {
       console.error('Error fetching PPV events:', error);
+      setPpvEvents([]); // Ensure it's an empty array on error
     }
   }, []);
 
  const fetchEvents = useCallback(async () => {
-    setIsLoading(true);
     try {
       const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
         fetch('https://streamed.su/api/matches/live', { cache: 'no-store' }),
@@ -259,8 +259,7 @@ export default function HomePage() {
 
     } catch (error) {
       console.error('Error fetching events:', error);
-    } finally {
-      setIsLoading(false);
+      setEvents([]); // Ensure it's an empty array on error
     }
   }, []);
 
@@ -304,8 +303,13 @@ export default function HomePage() {
 
   // Fetch event data
   useEffect(() => {
-    fetchEvents();
-    fetchPpvEvents();
+    const loadAllData = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchEvents(), fetchPpvEvents()]);
+      setIsLoading(false);
+    };
+
+    loadAllData();
   }, [fetchEvents, fetchPpvEvents]);
 
   // Persist selectedEvents to localStorage
@@ -618,7 +622,7 @@ export default function HomePage() {
     setCurrentView('home');
   };
 
-  if (isLoading && events.length === 0 && ppvEvents.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -670,7 +674,7 @@ export default function HomePage() {
                                             <ul className="list-disc pl-5 space-y-2">
                                                 <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
                                                 <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
-                                                <li><strong>Carruseles de Eventos:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
+                                                <li><strong>Carruseles de Eventos:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
                                                 <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris).</li>
                                             </ul>
 
@@ -1109,4 +1113,3 @@ export default function HomePage() {
     </div>
   );
 }
-
