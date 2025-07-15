@@ -60,6 +60,75 @@ interface StreamedMatch {
   sources: { source: string; id: string }[];
 }
 
+const channels247: Event[] = [
+  {
+    title: "24/7 South Park",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/3b146825-9e54-4e17-b96e-c172ced342ad", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://thumbs.poocloud.in/southpark/preview.jpg",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  },
+  {
+    title: "24/7 COWS",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://extension.usu.edu/drought/images/drought-mitigation-cows-thumbnail.png",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  },
+  {
+    title: "24/7 Family Guy",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/d2b4b104-853f-4e4e-9edd-425a1275e90a", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://thumbs.poocloud.in/familyguy/preview.jpg",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  },
+  {
+    title: "24/7 The Simpsons",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/d2b4b104-853f-4e4e-9edd-425a1275e90a", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://thumbs.poocloud.in/thesimpsons/preview.jpg",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  },
+  {
+    title: "(North) Korean Central Television",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/4a68d34f-7052-4a60-ac79-728320fa0531", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://i.imgur.com/CnphStu.png",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  }
+];
+
+
 export default function HomePage() {
   const router = useRouter();
 
@@ -305,34 +374,13 @@ export default function HomePage() {
         "ESPN", "Sky Sports Golf", "PGA Tour 2025", "NBC Golf Channel", "Fox NRL TV", "Wimbledon Open"
     ]);
 
-    const is247Channel = (title: string): boolean => {
-      const lowerCaseTitle = title.toLowerCase();
-      return lowerCaseTitle.includes('24/7') || title === '(North) Korean Central Television';
-    }
-
     const normalizeTitle = (title: string): string => {
         const prefixes = /^(f[oó]rmula 1:|liga profesional:|amistoso:|primera nacional:|copa libertadores:|copa sudamericana:|f[uú]tbol:|wwe:|ufc:)/i;
         return title.replace(prefixes, '').trim().toLowerCase();
     };
     
-    // Separate 24/7 channels
-    const channels247FromPpv = channels
-        .filter(event => is247Channel(event.name))
-        .map(e => ({
-            title: e.name,
-            time: 'AHORA',
-            options: [{ url: e.url, label: 'Ver Stream', hd: false, language: '' }],
-            sources: [],
-            buttons: [],
-            category: 'Canal',
-            language: '',
-            date: '',
-            source: 'channel',
-            image: e.logo,
-            status: 'En Vivo' as const
-        }));
-    
-    const combinedEvents = [...events];
+    // Combine fetched events with static 24/7 channels
+    const combinedEvents = [...events, ...channels247];
     
     const eventMap = new Map<string, Event>();
 
@@ -400,7 +448,7 @@ export default function HomePage() {
     });
 
     const live = processedEvents
-        .filter((e) => e.status === 'En Vivo')
+        .filter((e) => e.status === 'En Vivo' && e.category !== '24/7')
         .sort(liveSortLogic);
     
     const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
@@ -409,6 +457,8 @@ export default function HomePage() {
         .filter((e) => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
         .sort((a,b) => b.time.localeCompare(a.time));
     
+    const channels247FromEvents = processedEvents.filter(e => e.category === '24/7' && e.status === 'En Vivo');
+    
     const allSorted = [...live, ...upcoming, ...unknown, ...finished];
 
     let searchResults: (Event | Channel)[] = [];
@@ -416,8 +466,8 @@ export default function HomePage() {
         const lowercasedFilter = searchTerm.toLowerCase();
         
         const eventsSource = currentView === 'home' || currentView === 'channels' || currentView === 'live'
-            ? [...processedEvents, ...channels247FromPpv]
-            : [...processedEvents, ...channels247FromPpv].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
+            ? [...processedEvents]
+            : [...processedEvents].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
             
         const filteredEvents = eventsSource.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = (currentView === 'home' || currentView === 'channels') ? channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter)) : [];
@@ -458,7 +508,7 @@ export default function HomePage() {
         searchResults,
         allSortedEvents: allSorted,
         categoryFilteredEvents,
-        channels247Events: channels247FromPpv,
+        channels247Events: channels247FromEvents,
     };
   }, [events, searchTerm, currentView]);
 
@@ -909,11 +959,11 @@ export default function HomePage() {
                     <div className="mb-8">
                         <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
-                    <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                    </div>
                      <div className="mb-8">
                         <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                    </div>
+                    <div className="mb-8">
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
