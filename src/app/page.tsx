@@ -361,6 +361,12 @@ export default function HomePage() {
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, allChannels, searchResults, allSortedEvents, categoryFilteredEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+    const excludedFromFinished = new Set([
+        "NBA TV", "MLB Network", "NHL Network", "Sky Sports News | SSN Breaking Sports News", 
+        "ESPN First Take", "Sky Sports F1 | Sky F1", "DAZN Formula 1 | DAZN F1", "WWE Network", 
+        "Tenis Channel", "Sky Sports Darts", "Darts TV: All Darts Championship", "NFL Network", 
+        "ESPN", "Sky Sports Golf", "PGA Tour 2025", "NBC Golf Channel", "Fox NRL TV", "Wimbledon Open"
+    ]);
 
     const normalizeTitle = (title: string): string => {
         const prefixes = /^(f[oó]rmula 1:|liga profesional:|amistoso:|primera nacional:|copa libertadores:|copa sudamericana:|f[uú]tbol:|wwe:|ufc:)/i;
@@ -428,9 +434,11 @@ export default function HomePage() {
     
     const upcoming = mergedEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
     const unknown = mergedEvents.filter((e) => e.status === 'Desconocido').sort(sortLogic);
-    const finishedEvents = mergedEvents.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    const finished = mergedEvents
+        .filter((e) => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
+        .sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents];
+    const allSorted = [...live, ...upcoming, ...unknown, ...finished];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -474,7 +482,7 @@ export default function HomePage() {
         liveEvents: live, 
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
-        finishedEvents,
+        finishedEvents: finished,
         allChannels: channels,
         searchResults,
         allSortedEvents: allSorted,
