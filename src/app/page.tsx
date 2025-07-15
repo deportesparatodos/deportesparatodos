@@ -368,13 +368,10 @@ export default function HomePage() {
         "ESPN", "Sky Sports Golf", "PGA Tour 2025", "NBC Golf Channel", "Fox NRL TV", "Wimbledon Open"
     ]);
 
-    const channels247Names = new Set([
-      '24/7 South Park',
-      '24/7 COWS',
-      '24/7 The Simpsons',
-      '24/7 Family Guy',
-      '(North) Korean Central Television'
-    ]);
+    const is247Channel = (title: string): boolean => {
+      const lowerCaseTitle = title.toLowerCase();
+      return lowerCaseTitle.includes('24/7') || title === '(North) Korean Central Television';
+    }
 
     const normalizeTitle = (title: string): string => {
         const prefixes = /^(f[oó]rmula 1:|liga profesional:|amistoso:|primera nacional:|copa libertadores:|copa sudamericana:|f[uú]tbol:|wwe:|ufc:)/i;
@@ -382,9 +379,9 @@ export default function HomePage() {
     };
     
     // Separate 24/7 channels from ppvEvents
-    const regularPpvEvents = ppvEvents.filter(event => !channels247Names.has(event.title));
+    const regularPpvEvents = ppvEvents.filter(event => !is247Channel(event.title));
     const channels247FromPpv = ppvEvents
-        .filter(event => channels247Names.has(event.title))
+        .filter(event => is247Channel(event.title))
         .map(e => ({...e, status: 'En Vivo' as const, time: 'AHORA'}));
     
     const combinedEvents = [...events, ...regularPpvEvents];
