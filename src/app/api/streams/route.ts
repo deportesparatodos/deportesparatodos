@@ -60,14 +60,17 @@ export async function GET(request: NextRequest) {
       console.log('Launching Puppeteer for PPV...');
       browser = await puppeteer.launch({
         args: chromium.args,
-        executablePath: await chromium.executablePath(),
+        executablePath: await chromium.executablePath(
+          process.env.NODE_ENV === 'production'
+            ? 'https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'
+            : undefined
+        ),
         headless: chromium.headless,
       });
 
       const page = await browser.newPage();
       await page.goto(API_ENDPOINTS.ppv, { waitUntil: 'networkidle2' });
       
-      const content = await page.content();
       // The content is often wrapped in a <pre> tag
       const jsonText = await page.evaluate(() => {
           return document.body.innerText;
