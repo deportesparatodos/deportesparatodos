@@ -1,4 +1,3 @@
-
 // /src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
 import chromium from '@sparticuz/chromium-min';
@@ -59,13 +58,14 @@ export async function GET(request: NextRequest) {
     try {
       console.log('Launching Puppeteer for PPV...');
       browser = await puppeteer.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(
-          process.env.NODE_ENV === 'production'
-            ? 'https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'
-            : undefined
-        ),
+        args: [
+            ...chromium.args,
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ],
+        executablePath: await chromium.executablePath(),
         headless: chromium.headless,
+        ignoreHTTPSErrors: true,
       });
 
       const page = await browser.newPage();
