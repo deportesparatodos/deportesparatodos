@@ -197,17 +197,19 @@ export function ScheduleManager({
         allChannels={allChannels}
       />
       
-      <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}>
-        <EventSelectionDialog
-          isOpen={!!modifyEventForSchedule}
-          onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
-          event={modifyEventForSchedule!.event}
-          onSelect={handleModifyEventForSchedule}
-          isModification={true}
-          onRemove={() => {}}
-          windowNumber={modifyEventForSchedule!.index + 1}
-        />
-      </Dialog>
+      {modifyEventForSchedule && (
+        <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}>
+          <EventSelectionDialog
+            isOpen={!!modifyEventForSchedule}
+            onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
+            event={modifyEventForSchedule.event}
+            onSelect={handleModifyEventForSchedule}
+            isModification={true}
+            onRemove={() => {}}
+            windowNumber={modifyEventForSchedule.index + 1}
+          />
+        </Dialog>
+      )}
 
 
       <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onOpenChange(false); }}>
