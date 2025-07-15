@@ -36,7 +36,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
-import { channels } from '@/components/channel-list';
+import { channels, channels247 as staticChannels247 } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -389,10 +389,26 @@ export default function HomePage() {
 
     const mergedEvents = Array.from(eventMap.values());
 
-    const isChannel247 = (e: Event) => e.title.toLowerCase().includes('24/7') || e.title.includes('(North) Korean Central Television');
+    const isApiChannel247 = (e: Event) => e.title.toLowerCase().includes('24/7') || e.title.includes('(North) Korean Central Television');
+
+    const static247Events: Event[] = staticChannels247.map(channel => ({
+      title: channel.name,
+      options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}],
+      sources: [],
+      buttons: [],
+      time: 'AHORA',
+      category: 'Canal 24/7',
+      language: '',
+      date: '',
+      source: '',
+      status: 'En Vivo',
+      image: channel.logo,
+    }));
     
-    const channels247 = mergedEvents.filter(isChannel247);
-    const otherEvents = mergedEvents.filter(e => !isChannel247(e));
+    const apiChannels247 = mergedEvents.filter(isApiChannel247);
+    const all247Channels = [...apiChannels247, ...static247Events];
+
+    const otherEvents = mergedEvents.filter(e => !isApiChannel247(e));
     
     const sortLogic = (a: Event, b: Event) => {
       const orderA = statusOrder[a.status] ?? 99;
@@ -414,22 +430,22 @@ export default function HomePage() {
     };
 
     const live = otherEvents
-        .filter((e) => e.status === 'En Vivo' && !isChannel247(e))
+        .filter((e) => e.status === 'En Vivo' && !isApiChannel247(e))
         .sort(liveSortLogic);
     
     const upcoming = otherEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
-    const unknown = otherEvents.filter((e) => e.status === 'Desconocido' && !isChannel247(e)).sort(sortLogic);
+    const unknown = otherEvents.filter((e) => e.status === 'Desconocido' && !isApiChannel247(e)).sort(sortLogic);
     const finishedEvents = otherEvents.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
-    const allSorted = [...live, ...upcoming, ...channels247, ...unknown, ...finishedEvents];
+    const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents];
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
         const lowercasedFilter = searchTerm.toLowerCase();
         
         const eventsSource = currentView === 'home' || currentView === 'channels' || currentView === 'live'
-            ? mergedEvents
-            : mergedEvents.filter(e => e.category.toLowerCase() === currentView.toLowerCase());
+            ? [...mergedEvents, ...static247Events]
+            : [...mergedEvents, ...static247Events].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
             
         const filteredEvents = eventsSource.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = (currentView === 'home' || currentView === 'channels') ? channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter)) : [];
@@ -449,13 +465,14 @@ export default function HomePage() {
 
     let categoryFilteredEvents: Event[] = [];
     if (currentView !== 'home' && currentView !== 'channels' && currentView !== 'live') {
-        const categoryEvents = mergedEvents
+        const allCategoryEvents = [...mergedEvents, ...static247Events];
+        const categoryEvents = allCategoryEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
-        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo' && !isChannel247(e)).sort(liveSortLogic);
+        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo' && !isApiChannel247(e)).sort(liveSortLogic);
         const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(sortLogic);
-        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido' && !isChannel247(e)).sort(sortLogic);
-        const channels247Cat = categoryEvents.filter(isChannel247).sort(sortLogic);
+        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido' && !isApiChannel247(e)).sort(sortLogic);
+        const channels247Cat = categoryEvents.filter(isApiChannel247).sort(sortLogic);
         const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort(sortLogic);
 
         categoryFilteredEvents = [...liveCat, ...upcomingCat, ...channels247Cat, ...unknownCat, ...finishedCat];
@@ -466,7 +483,7 @@ export default function HomePage() {
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
         finishedEvents,
-        channels247: channels247.sort(sortLogic),
+        channels247: all247Channels.sort(sortLogic),
         allChannels: channels,
         searchResults,
         allSortedEvents: allSorted,
