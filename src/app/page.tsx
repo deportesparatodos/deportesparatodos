@@ -36,7 +36,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
-import { channels } from '@/components/channel-list';
+import { channels, channels247 } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -933,10 +933,13 @@ export default function HomePage() {
             ) : (
                 <>
                     <div className="mb-8">
-                        <EventCarousel title="Canales" channels={allChannels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                    </div>
+                     <div className="mb-8">
+                        <EventCarousel title="Canales 24/7" channels={channels247} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales" channels={allChannels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />

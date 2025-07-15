@@ -5,6 +5,13 @@ export interface Channel {
   logo: string;
 }
 
+export const channels247: Channel[] = [
+    { name: 'South Park 24/7', url: 'https://tvlibreonline.org/html/fl/?get=U291dGhQYXJr', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/South_Park_logo.svg/1200px-South_Park_logo.svg.png'},
+    { name: 'Los Simpsons 24/7', url: 'https://tvlibreonline.org/html/fl/?get=TG9zX1NpbXBzb24=', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/The_Simpsons_logo.svg/330px-The_Simpsons_logo.svg.png'},
+    { name: 'Padre de Familia 24/7', url: 'https://tvlibreonline.org/html/fl/?get=UGFkcmVfZGVfRmFtaWxpYQ', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Family_Guy_Logo.svg/1200px-Family_Guy_Logo.svg.png'},
+    { name: '(North) Korean Central Television 24/7', url: 'https://www.youtube.com/embed/juLIy_mH4wI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Kctv_logo.svg/1200px-Kctv_logo.svg.png'},
+];
+
 export const channels: Channel[] = [
     { name: 'A24', url: 'https://www.youtube-nocookie.com/embed/QGpHLgRnrx4', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
     { name: 'A3SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/a3series.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnbtKSukxgLre37kBp2mHcm6FyWnotLCxKfA&s' },
@@ -272,10 +279,6 @@ export const channels: Channel[] = [
     { name: 'Nat Geo', url: 'https://embed.ksdjugfsddeports.fun/embed/natgeo.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Nat_Geo_HD.png' },
     { name: 'Animal Planet', url: 'https://embed.ksdjugfsddeports.fun/embed/animalplanet.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg' },
     { name: 'TV Pública', url: 'https://embed.ksdjugfsddeports.fun/embed/tvpublica.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg/1200px-TVP_-_Televisi%C3%B3n_P%C3%BAblica_%282021%29.svg.png' },
-    { name: '(North) Korean Central Television 24/7', url: 'https://www.youtube.com/embed/juLIy_mH4wI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Kctv_logo.svg/1200px-Kctv_logo.svg.png'},
-    { name: 'Los Simpsons 24/7', url: 'https://tvlibreonline.org/html/fl/?get=TG9zX1NpbXBzb24=', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/The_Simpsons_logo.svg/330px-The_Simpsons_logo.svg.png'},
-    { name: 'Padre de Familia 24/7', url: 'https://tvlibreonline.org/html/fl/?get=UGFkcmVfZGVfRmFtaWxpYQ', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Family_Guy_Logo.svg/1200px-Family_Guy_Logo.svg.png'},
-    { name: 'South Park 24/7', url: 'https://tvlibreonline.org/html/fl/?get=U291dGhQYXJr', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/South_Park_logo.svg/1200px-South_Park_logo.svg.png'},
     { name: 'NBA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/nba.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/NBA_TV.svg/1200px-NBA_TV.svg.png' },
     { name: 'MLB Network', url: 'https://embed.ksdjugfsddeports.fun/embed/mlbnetwork.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/ac/MLBNetworkLogo.svg/1200px-MLBNetworkLogo.svg.png' },
     { name: 'Sky Sports F1 | Sky F1', url: 'https://embed.ksdjugfsddeports.fun/embed/skysportsf1.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQg9vzqbU-z482DKPxItcBGSto52zbdHqP5Mg&s' },
@@ -293,4 +296,5 @@ export const channels: Channel[] = [
     { name: 'Fox NRL TV', url: 'https://streamtpglobal.com/global1.php?stream=eventos2', logo: 'https://i.imgur.com/39bAUn2.png' },
     { name: 'Wimbledon Open', url: 'https://streamtpglobal.com/global1.php?stream=eventos5', logo: 'https://i.imgur.com/eGjB6G1.png' },
 ];
+
 
