@@ -11,5 +11,8 @@
       "source": "/api/:path*",
       "destination": "/api/streams"
     }
-  ]
+  ],
+  "env": {
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+  }
 }

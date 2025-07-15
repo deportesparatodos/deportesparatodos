@@ -1,4 +1,3 @@
-
 // /src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
 const playwright = require('playwright-aws-lambda');
@@ -52,16 +51,38 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Handle PPV requests with Playwright
+  // Handle PPV requests with Playwright (CORREGIDO)
   if (type === 'ppv') {
     let browser = null;
     try {
       console.log('Launching Playwright for PPV...');
-      browser = await playwright.launchChromium({ headless: true });
+      
+      // Usar playwright-aws-lambda en lugar de playwright regular
+      browser = await playwright.launchChromium({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-extensions'
+        ]
+      });
 
-      const context = await browser.newContext();
+      const context = await browser.newContext({
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      });
+      
       const page = await context.newPage();
-      await page.goto(API_ENDPOINTS.ppv, { waitUntil: 'networkidle' });
+      
+      // Establecer un timeout más alto y manejar errores de navegación
+      await page.goto(API_ENDPOINTS.ppv, { 
+        waitUntil: 'networkidle',
+        timeout: 30000 // 30 segundos
+      });
       
       const jsonText = await page.evaluate(() => {
           // Access the pre element which contains the JSON
@@ -76,10 +97,18 @@ export async function GET(request: NextRequest) {
     } catch (error: any) {
       console.error(`Error during Playwright execution for PPV:`, error);
       // Return an empty array or an error object to prevent the entire page from failing.
-      return NextResponse.json({ success: false, streams: [] }, { status: 200 });
+      return NextResponse.json({ 
+        success: false, 
+        streams: [], 
+        error: process.env.NODE_ENV === 'development' ? error.message : 'PPV service temporarily unavailable'
+      }, { status: 200 });
     } finally {
         if (browser) {
-            await browser.close();
+            try {
+                await browser.close();
+            } catch (closeError) {
+                console.error('Error closing browser:', closeError);
+            }
         }
     }
   }
