@@ -504,7 +504,6 @@ export default function HomePage() {
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
         finishedEvents: finished,
-        allChannels: channels,
         searchResults,
         allSortedEvents: allSorted,
         mobileSortedEvents: mobileSorted,
@@ -669,7 +668,7 @@ export default function HomePage() {
             <div className="flex items-center gap-0">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className={cn("rounded-none", isSearchOpen && "hidden md:flex")}>
+                        <Button variant="ghost" size="icon" className={cn("rounded-none", isMobile && isSearchOpen && "hidden")}>
                             <Menu className="h-6 w-6" />
                         </Button>
                     </SheetTrigger>
@@ -873,7 +872,7 @@ export default function HomePage() {
                         </div>
                     </SheetContent>
                 </Sheet>
-                <Link href="/" className={cn("shrink-0 ml-2", isSearchOpen && "hidden md:block")} onClick={handleBackToHome}>
+                <Link href="/" className={cn("shrink-0 ml-2", isMobile && isSearchOpen && "hidden")} onClick={handleBackToHome}>
                     <Image
                         src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
@@ -1142,4 +1141,3 @@ export default function HomePage() {
     </div>
   );
 }
-
