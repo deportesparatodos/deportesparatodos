@@ -153,9 +153,9 @@ export default function HomePage() {
  const fetchEvents = useCallback(async () => {
     try {
       const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
-        fetch('https://streamed.su/api/matches/live', { cache: 'no-store' }),
-        fetch('https://streamed.su/api/matches/all-today', { cache: 'no-store' }),
-        fetch('https://streamed.su/api/sports', { cache: 'no-store' })
+        fetch('/api/matches/live'),
+        fetch('/api/matches/all-today'),
+        fetch('/api/sports')
       ]);
 
       if (!liveResponse.ok || !todayResponse.ok || !sportsResponse.ok) {
@@ -1147,4 +1147,5 @@ export default function HomePage() {
     </div>
   );
 }
+
 

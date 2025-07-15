@@ -317,10 +317,10 @@ function ViewPageContent() {
    const fetchAllEvents = useCallback(async () => {
     try {
       const [liveResponse, todayResponse, sportsResponse, ppvResponse] = await Promise.all([
-        fetch('https://streamed.su/api/matches/live', { cache: 'no-store' }),
-        fetch('https://streamed.su/api/matches/all-today', { cache: 'no-store' }),
-        fetch('https://streamed.su/api/sports', { cache: 'no-store' }),
-        fetch('/api/ppv', { cache: 'no-store' }),
+        fetch('/api/matches/live'),
+        fetch('/api/matches/all-today'),
+        fetch('/api/sports'),
+        fetch('/api/ppv'),
       ]);
 
       if (!liveResponse.ok || !todayResponse.ok || !ppvResponse.ok || !sportsResponse.ok) {
