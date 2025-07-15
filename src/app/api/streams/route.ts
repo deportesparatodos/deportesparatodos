@@ -1,5 +1,8 @@
+
 // /src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 
 const API_ENDPOINTS = {
   'live': 'https://streamed.su/api/matches/live',
