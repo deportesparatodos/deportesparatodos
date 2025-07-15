@@ -26,12 +26,10 @@ interface EventSelectionDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   event: Event;
-  selectedEvents: (Event | null)[];
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
   onRemove: () => void;
   windowNumber: number;
-  isLoading?: boolean;
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
@@ -41,12 +39,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   isOpen,
   onOpenChange,
   event,
-  selectedEvents,
   onSelect,
-  isModification,
-  onRemove,
-  windowNumber,
-  isLoading = false,
 }) => {
   if (!event) return null;
 
@@ -96,12 +89,10 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         </DialogHeader>
 
         <div className="py-4 px-6">
-             {isLoading ? (
+             {event.options.length === 0 ? (
                 <div className="flex items-center justify-center h-24">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
-            ) : event.options.length === 0 ? (
-                <p className="text-center text-muted-foreground">No hay transmisiones disponibles para este evento.</p>
             ) : (
                 <TooltipProvider>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -138,5 +129,3 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     </Dialog>
   );
 };
-
-    

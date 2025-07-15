@@ -141,10 +141,10 @@ export function ScheduleManager({
       const presentIndexes = new Set(newOrder);
       for(let i=0; i<9; i++) {
         if(!presentIndexes.has(i)) {
-          newFullOrder.push(i);
+          fullNewOrder.push(i);
         }
       }
-      setFutureOrder(newFullOrder);
+      setFutureOrder(fullNewOrder);
     }
   }
   
@@ -188,29 +188,26 @@ export function ScheduleManager({
 
   return (
     <>
-      <Dialog open={addEventsDialogOpen} onOpenChange={setAddEventsDialogOpen}>
-          <AddEventsDialog 
-            open={addEventsDialogOpen}
-            onOpenChange={setAddEventsDialogOpen}
-            onSelect={handleAddEventToFuture}
-            selectedEvents={futureSelection}
-            allEvents={allEvents}
-            allChannels={allChannels}
-          />
-      </Dialog>
+      <AddEventsDialog 
+        open={addEventsDialogOpen}
+        onOpenChange={setAddEventsDialogOpen}
+        onSelect={handleAddEventToFuture}
+        selectedEvents={futureSelection}
+        allEvents={allEvents}
+        allChannels={allChannels}
+      />
       
-      <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => !open && setModifyEventForSchedule(null)}>
-          <EventSelectionDialog
-            isOpen={!!modifyEventForSchedule}
-            onOpenChange={(open) => !open && setModifyEventForSchedule(null)}
-            event={modifyEventForSchedule!.event}
-            selectedEvents={futureSelection}
-            onSelect={handleModifyEventForSchedule}
-            isModification={true}
-            onRemove={() => {}}
-            windowNumber={modifyEventForSchedule!.index + 1}
-          />
-        </Dialog>
+      <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}>
+        <EventSelectionDialog
+          isOpen={!!modifyEventForSchedule}
+          onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
+          event={modifyEventForSchedule!.event}
+          onSelect={handleModifyEventForSchedule}
+          isModification={true}
+          onRemove={() => {}}
+          windowNumber={modifyEventForSchedule!.index + 1}
+        />
+      </Dialog>
 
 
       <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onOpenChange(false); }}>
@@ -238,7 +235,7 @@ export function ScheduleManager({
                                   <div>
                                       <p className="font-bold">{format(schedule.dateTime, 'EEE, d MMM, p')}</p>
                                       <p className="text-sm text-muted-foreground">
-                                          Cantidad de Eventos/Canales: {schedule.events.filter(Boolean).length}
+                                          Eventos: {schedule.events.filter(Boolean).length}
                                       </p>
                                   </div>
                                   <div className="flex items-center">
@@ -332,5 +329,3 @@ export function ScheduleManager({
     </>
   );
 }
-
-    

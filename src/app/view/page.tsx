@@ -35,7 +35,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
     const [isModification, setIsModification] = useState(false);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-    const [isLoadingStreams, setIsLoadingStreams] = useState(false);
 
     const getEventSelection = useCallback((eventTitle: string, eventTime: string) => {
         const selectionIndex = selectedEvents.findIndex(se => se?.title === eventTitle && se?.time === eventTime);
@@ -51,38 +50,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         setSubDialogOpen(false);
     };
     
-    const fetchStreamOptions = async (event: Event): Promise<StreamOption[]> => {
-        if (!event.sources || event.sources.length === 0) {
-            return event.options;
-        }
-
-        setIsLoadingStreams(true);
-        try {
-            const allStreamOptions: StreamOption[] = [];
-            for (const source of event.sources) {
-                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
-                if (response.ok) {
-                    const streams: any[] = await response.json();
-                    streams.forEach(stream => {
-                        allStreamOptions.push({
-                            url: stream.embedUrl,
-                            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                            hd: stream.hd,
-                            language: stream.language,
-                        });
-                    });
-                }
-            }
-            return allStreamOptions;
-        } catch (error) {
-            console.error("Failed to fetch stream options:", error);
-            return [];
-        } finally {
-            setIsLoadingStreams(false);
-        }
-    };
-
-    const openSubDialogForEvent = async (event: Event) => {
+    const openSubDialogForEvent = (event: Event) => {
         const selection = getEventSelection(event.title, event.time);
         let eventForDialog = {...event};
         if(selection.isSelected && selection.selectedOption){
@@ -92,9 +60,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         setDialogEvent(eventForDialog);
         setSubDialogOpen(true);
 
-        const streamOptions = await fetchStreamOptions(event);
-        setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: streamOptions } : null);
-        
         setIsModification(selection.isSelected);
         setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
     };
@@ -244,12 +209,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         isOpen={subDialogOpen}
                         onOpenChange={setSubDialogOpen}
                         event={dialogEvent}
-                        selectedEvents={selectedEvents}
                         onSelect={handleSubDialogSelect}
                         isModification={isModification}
                         onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
                         windowNumber={(modificationIndex ?? 0) + 1}
-                        isLoading={isLoadingStreams}
                     />
                 </Dialog>
             )}
@@ -346,19 +309,21 @@ function ViewPageContent() {
 
    const fetchAllEvents = useCallback(async () => {
     try {
-      const [liveResponse, todayResponse, ppvResponse] = await Promise.all([
+      const [liveResponse, todayResponse, sportsResponse, ppvResponse] = await Promise.all([
         fetch('https://streamed.su/api/matches/live', { cache: 'no-store' }),
         fetch('https://streamed.su/api/matches/all-today', { cache: 'no-store' }),
+        fetch('https://streamed.su/api/sports', { cache: 'no-store' }),
         fetch('/api/ppv', { cache: 'no-store' }),
       ]);
 
-      if (!liveResponse.ok || !todayResponse.ok || !ppvResponse.ok) {
+      if (!liveResponse.ok || !todayResponse.ok || !ppvResponse.ok || !sportsResponse.ok) {
         throw new Error('Failed to fetch one or more event sources');
       }
 
       const liveData = await liveResponse.json();
       const todayData = await todayResponse.json();
       const ppvData = await ppvResponse.json();
+      const sportsData = await sportsResponse.json();
       
       const allMatchesMap = new Map<string, any>();
       
@@ -367,7 +332,62 @@ function ViewPageContent() {
 
       const combinedStreamedData = Array.from(allMatchesMap.values());
         
-        // Process PPV events
+      const timeZone = 'America/Argentina/Buenos_Aires';
+      const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+      
+      const categoryMap = sportsData.reduce((acc: any, sport: any) => {
+          acc[sport.id] = sport.name;
+          return acc;
+      }, {} as Record<string, string>);
+
+      const initialEvents: Event[] = combinedStreamedData.map((match: any) => ({
+        title: match.title,
+        time: format(toZonedTime(new Date(match.date), timeZone), 'HH:mm'),
+        options: [], 
+        sources: match.sources,
+        buttons: [],
+        category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
+        language: '',
+        date: format(toZonedTime(new Date(match.date), timeZone), 'yyyy-MM-dd'),
+        source: 'streamed.su',
+        image: match.poster ? `https://streamed.su${match.poster}` : placeholderImage,
+        status: 'Desconocido', // Will be updated later
+      }));
+
+      // Fetch all stream options concurrently
+      const eventsWithStreams = await Promise.all(
+        initialEvents.map(async (event) => {
+          if (event.sources && event.sources.length > 0) {
+            try {
+              const streamOptions: StreamOption[] = [];
+              const sourcePromises = event.sources.map(async (source) => {
+                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
+                if (response.ok) {
+                  const streams: any[] = await response.json();
+                  return streams.map(stream => ({
+                    url: stream.embedUrl,
+                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                    hd: stream.hd,
+                    language: stream.language,
+                  }));
+                }
+                return [];
+              });
+              
+              const results = await Promise.all(sourcePromises);
+              results.forEach(options => streamOptions.push(...options));
+              return { ...event, options: streamOptions };
+            } catch (error) {
+              return { ...event, options: [] };
+            }
+          }
+          return event;
+        })
+      );
+      
+      const finalStreamedEvents = eventsWithStreams.filter(e => e.options.length > 0);
+
+      // Process PPV events
       const transformedPpvEvents: Event[] = [];
       if (ppvData.success && ppvData.streams) {
           ppvData.streams.forEach((category: any) => {
@@ -391,68 +411,43 @@ function ViewPageContent() {
           });
       }
       
-      const combinedFromApi = [...combinedStreamedData, ...transformedPpvEvents];
-      setAllEventsData(combinedFromApi);
+      const allEvents = [...finalStreamedEvents, ...transformedPpvEvents];
+      
+      // Update statuses for all events
+      const nowInBA = toZonedTime(new Date(), timeZone);
+      const updatedEvents = allEvents.map(e => {
+        if(e.source === 'ppvs.su') {
+            if (e.status !== 'En Vivo' && e.date) {
+                 const eventTime = toZonedTime(new Date(e.date), timeZone);
+                 const eventEndTime = addHours(eventTime, 3);
+                 if (isBefore(nowInBA, eventTime)) e.status = 'Próximo';
+                 else if (isAfter(nowInBA, eventTime) && isBefore(nowInBA, eventEndTime)) e.status = 'En Vivo';
+                 else if (isAfter(nowInBA, eventEndTime)) e.status = 'Finalizado';
+            }
+        } else {
+             const eventDate = new Date(e.date);
+             const zonedEventTime = toZonedTime(eventDate, timeZone);
+             const eventEndTime = addHours(zonedEventTime, 3);
+             if (liveData.some((liveMatch:any) => liveMatch.id.includes(e.title.substring(0,10)))) { // Heuristic
+                 e.status = 'En Vivo';
+             } else if (isBefore(nowInBA, zonedEventTime)) {
+                 e.status = 'Próximo';
+             } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
+                 e.status = 'En Vivo';
+             } else if (isAfter(nowInBA, eventEndTime)) {
+                 e.status = 'Finalizado';
+             }
+        }
+        return e;
+      });
+
+      setAllEventsData(updatedEvents);
 
     } catch (error) {
       console.error(error);
       setAllEventsData([]);
     }
   }, []);
-
-  const processedEventsData = useMemo(() => {
-      const timeZone = 'America/Argentina/Buenos_Aires';
-      const nowInBA = toZonedTime(new Date(), timeZone);
-      const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-      
-      const categoryMap: { [key: string]: string } = {
-          football: "Fútbol",
-          basketball: "Baloncesto",
-          tennis: "Tenis",
-          hockey: "Hockey",
-          baseball: "Béisbol",
-          mma: "MMA",
-          boxing: "Boxeo",
-          motorsport: "Automovilismo",
-          handball: "Balonmano",
-          volleyball: "Voleibol",
-          cricket: "Críquet",
-          rugby: "Rugby",
-      };
-
-      return allEventsData.map((e: any) => {
-        if(e.source === 'ppvs.su') return e; // Already processed
-
-        const eventDate = new Date(e.date);
-        const zonedEventTime = toZonedTime(eventDate, timeZone);
-        const eventEndTime = addHours(zonedEventTime, 3);
-        
-        let status: Event['status'] = 'Desconocido';
-        if (e.id.includes('live-')) { // A way to identify live events from the API structure if possible
-            status = 'En Vivo';
-        } else if (isBefore(nowInBA, zonedEventTime)) {
-            status = 'Próximo';
-        } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
-            status = 'En Vivo';
-        } else if (isAfter(nowInBA, eventEndTime)) {
-            status = 'Finalizado';
-        }
-
-        return {
-          title: e.title,
-          time: format(zonedEventTime, 'HH:mm'),
-          options: [],
-          sources: e.sources,
-          buttons: [],
-          category: categoryMap[e.category] || e.category.charAt(0).toUpperCase() + e.category.slice(1),
-          language: '',
-          date: format(zonedEventTime, 'yyyy-MM-dd'),
-          source: 'streamed.su',
-          image: e.poster ? `https://streamed.su${e.poster}` : placeholderImage,
-          status: status,
-        };
-      });
-  }, [allEventsData]);
 
   // Handle schedules
   useEffect(() => {
@@ -639,7 +634,6 @@ function ViewPageContent() {
                     isOpen={!!modifyEvent}
                     onOpenChange={(open) => { if (!open) setModifyEvent(null); }}
                     event={modifyEvent.event}
-                    selectedEvents={selectedEvents}
                     onSelect={handleModifyEventSelect}
                     isModification={true}
                     onRemove={() => {}}
@@ -652,7 +646,7 @@ function ViewPageContent() {
             onOpenChange={setAddEventsDialogOpen}
             onSelect={handleAddEventSelect}
             selectedEvents={selectedEvents}
-            allEvents={processedEventsData}
+            allEvents={allEventsData}
             allChannels={allChannelsList}
         />
 
@@ -828,7 +822,7 @@ function ViewPageContent() {
                  setSchedules(newSchedules);
                  localStorage.setItem('schedules', JSON.stringify(newSchedules));
              }}
-             allEvents={processedEventsData}
+             allEvents={allEventsData}
              allChannels={allChannelsList}
              currentOrder={viewOrder}
           />
@@ -954,4 +948,3 @@ export default function Page() {
   );
 }
 
-    

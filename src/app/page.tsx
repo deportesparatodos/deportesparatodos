@@ -62,7 +62,6 @@ export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [ppvEvents, setPpvEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingStreams, setIsLoadingStreams] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
@@ -179,7 +178,7 @@ export default function HomePage() {
           return acc;
       }, {} as Record<string, string>);
 
-      const processedEvents: Event[] = combinedData.map((match: StreamedMatch) => {
+      const initialEvents: Event[] = combinedData.map((match: StreamedMatch) => {
         const eventDate = new Date(match.date);
         const zonedEventTime = toZonedTime(eventDate, timeZone);
         const eventEndTime = addHours(zonedEventTime, 3);
@@ -198,8 +197,8 @@ export default function HomePage() {
         return {
           title: match.title,
           time: format(zonedEventTime, 'HH:mm'),
-          options: [], // Will be fetched on demand
-          sources: match.sources, // Keep sources to fetch streams later
+          options: [], // Will be fetched
+          sources: match.sources, 
           buttons: [],
           category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
           language: '',
@@ -210,7 +209,44 @@ export default function HomePage() {
         };
       });
 
-      setEvents(processedEvents);
+      // Fetch all stream options concurrently
+      const eventsWithStreams = await Promise.all(
+        initialEvents.map(async (event) => {
+          if (event.sources && event.sources.length > 0) {
+            try {
+              const streamOptions: StreamOption[] = [];
+              const sourcePromises = event.sources.map(async (source) => {
+                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
+                if (response.ok) {
+                  const streams: any[] = await response.json();
+                  return streams.map(stream => ({
+                    url: stream.embedUrl,
+                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                    hd: stream.hd,
+                    language: stream.language,
+                  }));
+                }
+                return [];
+              });
+              
+              const results = await Promise.all(sourcePromises);
+              results.forEach(options => streamOptions.push(...options));
+              
+              return { ...event, options: streamOptions };
+            } catch (error) {
+              console.error(`Failed to fetch streams for ${event.title}`, error);
+              return { ...event, options: [] }; // Keep event even if streams fail
+            }
+          }
+          return event;
+        })
+      );
+
+      // Filter out events that have no options
+      const finalEvents = eventsWithStreams.filter(event => event.options.length > 0);
+
+      setEvents(finalEvents);
+
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -508,39 +544,7 @@ export default function HomePage() {
     router.push('/view');
   };
   
-    const fetchStreamOptions = async (event: Event): Promise<StreamOption[]> => {
-        if (!event.sources || event.sources.length === 0) {
-            // For PPV events that have options directly
-            return event.options;
-        }
-
-        setIsLoadingStreams(true);
-        try {
-            const allStreamOptions: StreamOption[] = [];
-            for (const source of event.sources) {
-                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
-                if (response.ok) {
-                    const streams: any[] = await response.json();
-                    streams.forEach(stream => {
-                        allStreamOptions.push({
-                            url: stream.embedUrl,
-                            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                            hd: stream.hd,
-                            language: stream.language,
-                        });
-                    });
-                }
-            }
-            return allStreamOptions;
-        } catch (error) {
-            console.error("Failed to fetch stream options:", error);
-            return []; // Return empty array on error
-        } finally {
-            setIsLoadingStreams(false);
-        }
-    };
-
-    const openDialogForEvent = async (event: Event) => {
+    const openDialogForEvent = (event: Event) => {
         const selection = getEventSelection(event);
         let eventForDialog = { ...event };
         
@@ -548,13 +552,9 @@ export default function HomePage() {
             eventForDialog.selectedOption = selection.selectedOption;
         }
 
-        setDialogEvent(eventForDialog); // Set event immediately to show dialog with loader
+        setDialogEvent(eventForDialog);
         setDialogOpen(true);
 
-        const streamOptions = await fetchStreamOptions(event);
-
-        setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: streamOptions } : null);
-        
         if (selection.isSelected) {
             setIsModification(true);
             const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
@@ -1099,12 +1099,10 @@ export default function HomePage() {
                 isOpen={dialogOpen}
                 onOpenChange={setDialogOpen}
                 event={dialogEvent}
-                selectedEvents={selectedEvents}
                 onSelect={handleEventSelect}
                 isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
                 windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
-                isLoading={isLoadingStreams}
             />
         )}
     </div>
