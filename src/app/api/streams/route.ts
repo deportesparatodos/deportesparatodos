@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'Accept': 'application/json',
       },
-      cache: 'no-store', // Ensure fresh data for live streams
+      cache: 'no-store',
     });
 
     if (!response.ok) {
