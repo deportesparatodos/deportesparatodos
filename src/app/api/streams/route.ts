@@ -1,7 +1,6 @@
 // /src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
-import chromium from '@sparticuz/chromium-min';
-import puppeteer from 'puppeteer-core';
+import playwright from 'playwright-aws-lambda';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,43 +51,33 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Handle PPV requests with Puppeteer
+  // Handle PPV requests with Playwright
   if (type === 'ppv') {
-    let browser;
+    let browser = null;
     try {
-      console.log('Launching Puppeteer for PPV...');
-      browser = await puppeteer.launch({
-        args: [
-            ...chromium.args,
-            '--no-sandbox',
-            '--disable-setuid-sandbox'
-        ],
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-        ignoreHTTPSErrors: true,
-      });
+      console.log('Launching Playwright for PPV...');
+      browser = await playwright.launchChromium({ headless: true });
 
-      const page = await browser.newPage();
-      await page.goto(API_ENDPOINTS.ppv, { waitUntil: 'networkidle2' });
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      await page.goto(API_ENDPOINTS.ppv, { waitUntil: 'networkidle' });
       
-      // The content is often wrapped in a <pre> tag
       const jsonText = await page.evaluate(() => {
           return document.body.innerText;
       });
-
-      await browser.close();
-
+      
       const data = JSON.parse(jsonText);
-      console.log('Successfully fetched PPV data with Puppeteer.');
+      console.log('Successfully fetched PPV data with Playwright.');
       return NextResponse.json(data);
 
-    } catch (error) {
-      console.error(`Error during Puppeteer execution for PPV:`, error);
-      if (browser) {
-        await browser.close();
-      }
+    } catch (error: any) {
+      console.error(`Error during Playwright execution for PPV:`, error);
       // Return an empty array or an error object to prevent the entire page from failing.
       return NextResponse.json({ success: false, streams: [] }, { status: 200 });
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
     }
   }
 
