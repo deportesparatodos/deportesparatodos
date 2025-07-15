@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -323,14 +324,10 @@ function ViewPageContent() {
         fetch('/api/streams?type=ppv'),
       ]);
 
-      if (!liveResponse.ok || !todayResponse.ok || !ppvResponse.ok || !sportsResponse.ok) {
-        throw new Error('Failed to fetch one or more event sources');
-      }
-
-      const liveData: any[] = await liveResponse.json();
-      const todayData: any[] = await todayResponse.json();
-      const ppvData = await ppvResponse.json();
-      const sportsData: {id: string; name: string}[] = await sportsResponse.json();
+      const liveData: any[] = (await liveResponse.json()) || [];
+      const todayData: any[] = (await todayResponse.json()) || [];
+      const ppvData = (await ppvResponse.json()) || {};
+      const sportsData: {id: string; name: string}[] = (await sportsResponse.json()) || [];
       
       const allMatchesMap = new Map<string, any>();
       
@@ -416,8 +413,8 @@ function ViewPageContent() {
                           buttons: [],
                           category: stream.category_name,
                           language: '', 
-                          date: stream.starts_at > 0 ? new Date(stream.starts_at * 1000).toLocaleDateString() : '',
-                          source: 'ppvs.su',
+                          date: stream.starts_at > 0 ? new Date(stream.starts_at * 1000).toLocaleDateString('en-CA') : '',
+                          source: 'ppv.to',
                           image: stream.poster,
                           status: stream.always_live === 1 ? 'En Vivo' : 'Desconocido', // Initial status
                       });
@@ -433,17 +430,18 @@ function ViewPageContent() {
       const updatedEvents = allEvents.map(e => {
         let newEvent = {...e};
         
-        if (newEvent.source === 'ppvs.su') {
+        if (newEvent.source === 'ppv.to') {
             let status: Event['status'] = 'Desconocido';
             let startTime: Date | null = null;
             if (newEvent.date && newEvent.time !== '--:--') {
               try {
-                startTime = toZonedTime(parse(`${newEvent.date} ${newEvent.time}`, 'M/d/yyyy HH:mm', new Date()), timeZone);
+                 const parsedDate = new Date(newEvent.date + 'T' + newEvent.time + ':00');
+                 if(!isNaN(parsedDate.getTime())){
+                    startTime = toZonedTime(parsedDate, timeZone);
+                 }
               } catch (error) {
-                 startTime = toZonedTime(new Date(newEvent.date), timeZone);
+                 startTime = null;
               }
-            } else if (newEvent.date) {
-               startTime = toZonedTime(new Date(newEvent.date), timeZone);
             }
              
             if (startTime) {
@@ -475,7 +473,7 @@ function ViewPageContent() {
       setAllEventsData(updatedEvents);
 
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch all events:", error);
       setAllEventsData([]);
     } finally {
         setIsAddEventsLoading(false);

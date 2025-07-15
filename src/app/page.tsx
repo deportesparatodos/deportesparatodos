@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -121,7 +122,7 @@ export default function HomePage() {
                
                if (stream.always_live === 1) {
                    status = 'En Vivo';
-               } else if (!startTime || stream.time === '--:--') {
+               } else if (!startTime) {
                     status = 'Desconocido'
                }
 
@@ -133,8 +134,8 @@ export default function HomePage() {
                 buttons: [],
                 category: stream.category_name,
                 language: '', 
-                date: startTime ? startTime.toLocaleDateString() : '',
-                source: 'ppvs.su',
+                date: startTime ? startTime.toLocaleDateString('en-CA') : '', // YYYY-MM-DD
+                source: 'ppv.to',
                 image: stream.poster,
                 status: status,
               });
