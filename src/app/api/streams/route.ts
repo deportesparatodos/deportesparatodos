@@ -1,5 +1,7 @@
 // /src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
+import chromium from '@sparticuz/chromium-min';
+import puppeteer from 'puppeteer-core';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +10,7 @@ const API_ENDPOINTS = {
   'all-today': 'https://streamed.su/api/matches/all-today',
   'sports': 'https://streamed.su/api/sports',
   'ppv': 'https://ppv.to/api/streams',
-  'stream': 'https://streamed.su/api/stream', // Base URL for specific streams
+  'stream': 'https://streamed.su/api/stream',
 };
 
 export async function GET(request: NextRequest) {
@@ -50,7 +52,46 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Handle list-based requests (live, all-today, sports, ppv)
+  // Handle PPV requests with Puppeteer
+  if (type === 'ppv') {
+    let browser;
+    try {
+      console.log('Launching Puppeteer for PPV...');
+      browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(
+          `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
+        ),
+        headless: chromium.headless,
+      });
+
+      const page = await browser.newPage();
+      await page.goto(API_ENDPOINTS.ppv, { waitUntil: 'networkidle2' });
+      
+      const content = await page.content();
+      // The content is often wrapped in a <pre> tag
+      const jsonText = await page.evaluate(() => {
+          return document.body.innerText;
+      });
+
+      await browser.close();
+
+      const data = JSON.parse(jsonText);
+      console.log('Successfully fetched PPV data with Puppeteer.');
+      return NextResponse.json(data);
+
+    } catch (error) {
+      console.error(`Error during Puppeteer execution for PPV:`, error);
+      if (browser) {
+        await browser.close();
+      }
+      // Return an empty array or an error object to prevent the entire page from failing.
+      return NextResponse.json({ error: 'Failed to fetch PPV data with Puppeteer', data: [] }, { status: 200 });
+    }
+  }
+
+
+  // Handle other list-based requests (live, all-today, sports)
   const apiUrl = API_ENDPOINTS[type as keyof typeof API_ENDPOINTS];
 
   if (!apiUrl) {
@@ -59,22 +100,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const headers: HeadersInit = { 'Accept': 'application/json' };
-    if (type === 'ppv') {
-      // This User-Agent can help bypass simple bot checks, but won't defeat advanced systems like Cloudflare's.
-      headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0';
-    }
-
+    
     const response = await fetch(apiUrl, {
       headers,
       cache: 'no-store',
     });
 
     if (!response.ok) {
-      // Log the specific error from the external API for debugging in Vercel.
       const errorBody = await response.text();
       console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, errorBody);
-      // Instead of throwing, return an empty array or an error object specific to this type.
-      // This prevents the entire page from failing if one source is down.
       return NextResponse.json({ error: `Failed to fetch data for type '${type}': ${response.statusText}`, data: [] }, { status: 200 });
     }
     
@@ -83,7 +117,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
-    // Return a generic server error if the fetch itself fails.
     return NextResponse.json({ error: 'Internal Server Error while fetching ' + type, data: [] }, { status: 200 });
   }
 }
