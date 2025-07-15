@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       console.log('Launching Puppeteer for PPV...');
       browser = await puppeteer.launch({
         args: chromium.args,
-        executablePath: await chromium.executablePath(),
+        executablePath: await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'),
         headless: chromium.headless,
       });
 
