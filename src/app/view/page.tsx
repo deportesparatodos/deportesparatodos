@@ -37,13 +37,14 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
     const [isLoadingStreams, setIsLoadingStreams] = useState(false);
 
-    const getEventSelection = useCallback((eventTitle: string) => {
-        const selection = selectedEvents.map((se, i) => se && se.title === eventTitle ? i : null).filter(i => i !== null);
-        if (selection.length > 0 && selectedEvents[selection[0]!]) {
-            return { isSelected: true, window: selection[0]! + 1, selectedOption: selectedEvents[selection[0]!]!.selectedOption };
+    const getEventSelection = useCallback((eventTitle: string, eventTime: string) => {
+        const selectionIndex = selectedEvents.findIndex(se => se?.title === eventTitle && se?.time === eventTime);
+        if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
+            return { isSelected: true, window: selectionIndex + 1, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
         }
         return { isSelected: false, window: null, selectedOption: null };
     }, [selectedEvents]);
+
 
     const handleSubDialogSelect = (event: Event, option: string) => {
         onSelect(event, option);
@@ -82,7 +83,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     };
 
     const openSubDialogForEvent = async (event: Event) => {
-        const selection = getEventSelection(event.title);
+        const selection = getEventSelection(event.title, event.time);
         let eventForDialog = {...event};
         if(selection.isSelected && selection.selectedOption){
             eventForDialog.selectedOption = selection.selectedOption;
@@ -196,7 +197,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                     <EventCard
                                         key={`event-${index}`}
                                         event={event}
-                                        selection={getEventSelection(event.title)}
+                                        selection={getEventSelection(event.title, event.time)}
                                         onClick={() => openSubDialogForEvent(event)}
                                     />
                                 ))}
@@ -207,44 +208,50 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                     <TabsContent value="canales" className="flex-grow mt-4 h-0">
                          <ScrollArea className="h-full pr-4 -mr-4">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {filteredChannels.map((channel, index) => (
-                                     <Card 
-                                        key={`search-channel-${index}`}
-                                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
-                                        onClick={() => handleChannelClick(channel)}
-                                    >
-                                        <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
-                                            <Image
-                                                src={channel.logo}
-                                                alt={`${channel.name} logo`}
-                                                width={120}
-                                                height={67.5}
-                                                className="object-contain max-h-full max-w-full"
-                                                onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
-                                            />
-                                        </div>
-                                        <div className="p-3 bg-card flex-grow flex flex-col justify-center">
-                                            <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
-                                        </div>
-                                    </Card>
-                                ))}
+                                {filteredChannels.map((channel, index) => {
+                                    const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                    const selection = getEventSelection(channelAsEvent.title, channelAsEvent.time);
+                                     return (
+                                        <Card 
+                                            key={`search-channel-${index}`}
+                                            className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
+                                            onClick={() => handleChannelClick(channel)}
+                                        >
+                                            <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
+                                                <Image
+                                                    src={channel.logo}
+                                                    alt={`${channel.name} logo`}
+                                                    width={120}
+                                                    height={67.5}
+                                                    className="object-contain max-h-full max-w-full"
+                                                    onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
+                                                />
+                                            </div>
+                                            <div className="p-3 bg-card flex-grow flex flex-col justify-center">
+                                                <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
+                                            </div>
+                                        </Card>
+                                     )
+                                })}
                             </div>
                         </ScrollArea>
                     </TabsContent>
                 </Tabs>
             </DialogContent>
             {dialogEvent && (
-                <EventSelectionDialog
-                    isOpen={subDialogOpen}
-                    onOpenChange={setSubDialogOpen}
-                    event={dialogEvent}
-                    selectedEvents={selectedEvents}
-                    onSelect={handleSubDialogSelect}
-                    isModification={isModification}
-                    onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
-                    windowNumber={(modificationIndex ?? 0) + 1}
-                    isLoading={isLoadingStreams}
-                />
+                <Dialog open={subDialogOpen} onOpenChange={setSubDialogOpen}>
+                    <EventSelectionDialog
+                        isOpen={subDialogOpen}
+                        onOpenChange={setSubDialogOpen}
+                        event={dialogEvent}
+                        selectedEvents={selectedEvents}
+                        onSelect={handleSubDialogSelect}
+                        isModification={isModification}
+                        onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
+                        windowNumber={(modificationIndex ?? 0) + 1}
+                        isLoading={isLoadingStreams}
+                    />
+                </Dialog>
             )}
         </Dialog>
     );
@@ -349,14 +356,14 @@ function ViewPageContent() {
         throw new Error('Failed to fetch one or more event sources');
       }
 
-      const liveData: StreamedMatch[] = await liveResponse.json();
-      const todayData: StreamedMatch[] = await todayResponse.json();
+      const liveData = await liveResponse.json();
+      const todayData = await todayResponse.json();
       const ppvData = await ppvResponse.json();
       
       const allMatchesMap = new Map<string, any>();
       
-      todayData.forEach(match => allMatchesMap.set(match.id, match));
-      liveData.forEach(match => allMatchesMap.set(match.id, match));
+      todayData.forEach((match: any) => allMatchesMap.set(match.id, match));
+      liveData.forEach((match: any) => allMatchesMap.set(match.id, match));
 
       const combinedStreamedData = Array.from(allMatchesMap.values());
         
@@ -384,8 +391,8 @@ function ViewPageContent() {
           });
       }
       
-      const allEvents = [...combinedStreamedData, ...transformedPpvEvents];
-      setAllEventsData(allEvents);
+      const combinedFromApi = [...combinedStreamedData, ...transformedPpvEvents];
+      setAllEventsData(combinedFromApi);
 
     } catch (error) {
       console.error(error);
@@ -627,16 +634,18 @@ function ViewPageContent() {
   return (
     <div className="flex h-screen w-screen bg-background text-foreground">
         {modifyEvent && (
-            <EventSelectionDialog
-                isOpen={!!modifyEvent}
-                onOpenChange={(open) => { if (!open) setModifyEvent(null); }}
-                event={modifyEvent.event}
-                selectedEvents={selectedEvents}
-                onSelect={handleModifyEventSelect}
-                isModification={true}
-                onRemove={() => {}}
-                windowNumber={modifyEvent.index + 1}
-            />
+             <Dialog open={!!modifyEvent} onOpenChange={(open) => { if (!open) setModifyEvent(null); }}>
+                <EventSelectionDialog
+                    isOpen={!!modifyEvent}
+                    onOpenChange={(open) => { if (!open) setModifyEvent(null); }}
+                    event={modifyEvent.event}
+                    selectedEvents={selectedEvents}
+                    onSelect={handleModifyEventSelect}
+                    isModification={true}
+                    onRemove={() => {}}
+                    windowNumber={modifyEvent.index + 1}
+                />
+            </Dialog>
         )}
         <AddEventsDialog 
             open={addEventsDialogOpen}
@@ -748,19 +757,19 @@ function ViewPageContent() {
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
                                     <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos. Actúa como un "traductor" que le enseña a tu navegador a manejar estos videos.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
                                     <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge, ya que suelen tener la mejor compatibilidad con tecnologías de video web.</p>
                                     <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. La mayoría de estas extensiones te permiten añadir sitios a una "lista blanca" para que no actúen sobre ellos. Recarga la página después de desactivarlo.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web.</p>
                                     <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora. Esto asegura que haya suficientes recursos para manejar múltiples transmisiones de video simultáneamente.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora.</p>
                                     <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender". Un reinicio rápido de tu computadora y de tu router puede solucionar problemas transitorios de red, memoria o software que podrían estar afectando la reproducción de video.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender".</p>
                               </div>
                           </ScrollArea>
                           <DialogFooter>

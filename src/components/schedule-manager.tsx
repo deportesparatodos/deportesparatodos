@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -84,7 +85,7 @@ export function ScheduleManager({
     if (open) {
       resetToCurrentSelection();
     }
-  }, [open, JSON.stringify(currentSelection), JSON.stringify(currentOrder)]);
+  }, [open, currentSelection, currentOrder]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -140,10 +141,10 @@ export function ScheduleManager({
       const presentIndexes = new Set(newOrder);
       for(let i=0; i<9; i++) {
         if(!presentIndexes.has(i)) {
-          fullNewOrder.push(i);
+          newFullOrder.push(i);
         }
       }
-      setFutureOrder(fullNewOrder);
+      setFutureOrder(newFullOrder);
     }
   }
   
@@ -197,20 +198,20 @@ export function ScheduleManager({
             allChannels={allChannels}
           />
       </Dialog>
-      {modifyEventForSchedule && (
-        <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => !open && setModifyEventForSchedule(null)}>
+      
+      <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => !open && setModifyEventForSchedule(null)}>
           <EventSelectionDialog
             isOpen={!!modifyEventForSchedule}
             onOpenChange={(open) => !open && setModifyEventForSchedule(null)}
-            event={modifyEventForSchedule.event}
+            event={modifyEventForSchedule!.event}
             selectedEvents={futureSelection}
             onSelect={handleModifyEventForSchedule}
             isModification={true}
             onRemove={() => {}}
-            windowNumber={modifyEventForSchedule.index + 1}
+            windowNumber={modifyEventForSchedule!.index + 1}
           />
         </Dialog>
-      )}
+
 
       <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onOpenChange(false); }}>
         <DialogContent className="max-w-4xl w-full h-[90vh] flex flex-col p-0">
@@ -331,3 +332,5 @@ export function ScheduleManager({
     </>
   );
 }
+
+    

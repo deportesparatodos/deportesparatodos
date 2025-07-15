@@ -149,17 +149,19 @@ export default function HomePage() {
  const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [liveResponse, todayResponse] = await Promise.all([
+      const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
         fetch('https://streamed.su/api/matches/live', { cache: 'no-store' }),
-        fetch('https://streamed.su/api/matches/all-today', { cache: 'no-store' })
+        fetch('https://streamed.su/api/matches/all-today', { cache: 'no-store' }),
+        fetch('https://streamed.su/api/sports', { cache: 'no-store' })
       ]);
 
-      if (!liveResponse.ok || !todayResponse.ok) {
+      if (!liveResponse.ok || !todayResponse.ok || !sportsResponse.ok) {
         throw new Error('Failed to fetch events from one or more sources');
       }
 
       const liveData: StreamedMatch[] = await liveResponse.json();
       const todayData: StreamedMatch[] = await todayResponse.json();
+      const sportsData: {id: string; name: string}[] = await sportsResponse.json();
       
       const allMatchesMap = new Map<string, StreamedMatch>();
       
@@ -172,20 +174,10 @@ export default function HomePage() {
       const nowInBA = toZonedTime(new Date(), timeZone);
       const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
       
-      const categoryMap: { [key: string]: string } = {
-          football: "Fútbol",
-          basketball: "Baloncesto",
-          tennis: "Tenis",
-          hockey: "Hockey",
-          baseball: "Béisbol",
-          mma: "MMA",
-          boxing: "Boxeo",
-          motorsport: "Automovilismo",
-          handball: "Balonmano",
-          volleyball: "Voleibol",
-          cricket: "Críquet",
-          rugby: "Rugby",
-      };
+      const categoryMap = sportsData.reduce((acc, sport) => {
+          acc[sport.id] = sport.name;
+          return acc;
+      }, {} as Record<string, string>);
 
       const processedEvents: Event[] = combinedData.map((match: StreamedMatch) => {
         const eventDate = new Date(match.date);
@@ -499,7 +491,7 @@ export default function HomePage() {
   };
   
   const getEventSelection = (event: Event) => {
-    const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title);
+    const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
     
     if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
       const activeEventIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
@@ -565,7 +557,7 @@ export default function HomePage() {
         
         if (selection.isSelected) {
             setIsModification(true);
-            const originalIndex = selectedEvents.findIndex(se => se?.title === event.title);
+            const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
             setModificationIndex(originalIndex);
         } else {
             setIsModification(false);
@@ -588,10 +580,23 @@ export default function HomePage() {
       status: 'En Vivo',
       image: channel.logo,
     };
+
+    const selection = getEventSelection(channelAsEvent);
+    if (selection.isSelected && selection.selectedOption) {
+        channelAsEvent.selectedOption = selection.selectedOption;
+    }
+
     setDialogEvent(channelAsEvent);
-    setIsModification(false);
-    setModificationIndex(selectedEvents.findIndex(e => e === null));
     setDialogOpen(true);
+
+    if (selection.isSelected) {
+        setIsModification(true);
+        const originalIndex = selectedEvents.findIndex(se => se?.title === channelAsEvent.title && se?.time === channelAsEvent.time);
+        setModificationIndex(originalIndex);
+    } else {
+        setIsModification(false);
+        setModificationIndex(selectedEvents.findIndex(e => e === null));
+    }
   };
   
   const openDialogForModification = (event: Event, index: number) => {
