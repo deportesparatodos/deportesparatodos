@@ -8,7 +8,7 @@ const API_ENDPOINTS = {
   'live': 'https://streamed.su/api/matches/live',
   'all-today': 'https://streamed.su/api/matches/all-today',
   'sports': 'https://streamed.su/api/sports',
-  'ppv': 'https://ppvs.su/api/streams',
+  'ppv': 'https://ppv.to/api/streams',
   'stream': 'https://streamed.su/api/stream', // Base URL for specific streams
 };
 
