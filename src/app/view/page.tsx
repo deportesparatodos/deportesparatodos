@@ -27,7 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 
 
-export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[] }) {
+export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, isLoading }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], isLoading: boolean }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -127,6 +127,11 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         </DialogClose>
                     </div>
                 </DialogHeader>
+                 {isLoading ? (
+                    <div className="flex-grow flex items-center justify-center">
+                        <Loader2 className="h-10 w-10 animate-spin" />
+                    </div>
+                ) : (
                 <Tabs defaultValue="eventos" className="flex-grow flex flex-col mt-2">
                     <div className="flex flex-col gap-2">
                         <div className="relative flex-grow mt-[5px]">
@@ -202,6 +207,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         </ScrollArea>
                     </TabsContent>
                 </Tabs>
+                )}
             </DialogContent>
             {dialogEvent && (
                 <Dialog open={subDialogOpen} onOpenChange={setSubDialogOpen}>
@@ -241,6 +247,7 @@ function ViewPageContent() {
   
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [allEventsData, setAllEventsData] = useState<Event[]>([]);
+  const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
 
   const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
 
@@ -559,6 +566,15 @@ function ViewPageContent() {
     }
   }, [fetchAllEvents]);
 
+    useEffect(() => {
+        if (addEventsDialogOpen) {
+            setIsAddEventsLoading(true);
+            if (allEventsData.length > 0 && allChannelsList.length > 0) {
+                setIsAddEventsLoading(false);
+            }
+        }
+    }, [addEventsDialogOpen, allEventsData, allChannelsList]);
+
     const handleAddEventSelect = (event: Event, option: string) => {
         const newSelectedEvents = [...selectedEvents];
         const eventWithSelection = { ...event, selectedOption: option };
@@ -672,6 +688,7 @@ function ViewPageContent() {
             selectedEvents={selectedEvents}
             allEvents={allEventsData}
             allChannels={allChannelsList}
+            isLoading={isAddEventsLoading}
         />
 
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
@@ -720,7 +737,7 @@ function ViewPageContent() {
                                     <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
                                     <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
                                     <li><strong>Carruseles de Eventos:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
-                                    <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris).</li>
+                                    <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
                                 </ul>
 
                                 <h3 className="font-bold text-foreground mt-6">2. Cómo Seleccionar un Evento para Ver</h3>
@@ -971,3 +988,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    
