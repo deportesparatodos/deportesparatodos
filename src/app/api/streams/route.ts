@@ -1,4 +1,3 @@
-
 // /src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -85,6 +84,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
     // Return a generic server error if the fetch itself fails.
-    return NextResponse.json({ error: 'Internal Server Error while fetching ' + type }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error while fetching ' + type, data: [] }, { status: 200 });
   }
 }
