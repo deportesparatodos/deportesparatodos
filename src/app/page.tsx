@@ -663,12 +663,15 @@ export default function HomePage() {
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
   
   const pageTitle = (
-    <div className='flex items-center min-h-[75px] px-4'>
+    <div className={cn(
+        'flex items-center min-h-[75px] transition-all duration-300',
+        isMobile && isSearchOpen && currentView === 'home' ? 'w-0 opacity-0' : 'w-auto opacity-100'
+    )}>
         {currentView === 'home' ? (
-            <div className="flex items-center gap-0">
+            <div className="flex items-center gap-0 pl-4">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className={cn("rounded-none", isMobile && isSearchOpen && "hidden")}>
+                        <Button variant="ghost" size="icon" className="rounded-none">
                             <Menu className="h-6 w-6" />
                         </Button>
                     </SheetTrigger>
@@ -872,7 +875,7 @@ export default function HomePage() {
                         </div>
                     </SheetContent>
                 </Sheet>
-                <Link href="/" className={cn("shrink-0 ml-2", isMobile && isSearchOpen && "hidden")} onClick={handleBackToHome}>
+                <Link href="/" className="shrink-0 ml-2" onClick={handleBackToHome}>
                     <Image
                         src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
@@ -884,7 +887,7 @@ export default function HomePage() {
                 </Link>
             </div>
         ) : (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 pl-4">
             <Button variant="ghost" size="icon" onClick={handleBackToHome}>
                 <ArrowLeft />
             </Button>
@@ -1037,8 +1040,16 @@ export default function HomePage() {
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
          <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
             {pageTitle}
-            <div className="flex flex-1 items-center justify-end gap-2 px-2 md:px-8">
-                <div className={cn("flex-1 justify-end", isSearchOpen ? 'flex' : 'hidden', !isMobile && 'flex')}>
+            <div className={cn(
+                "flex flex-1 items-center justify-end gap-2 px-2 md:px-8 transition-all duration-300",
+                isMobile && isSearchOpen && currentView === 'home' && "pr-4"
+            )}>
+                <div className={cn(
+                    "flex-1 justify-end",
+                    isSearchOpen ? 'flex' : 'hidden', 
+                    !isMobile && 'flex',
+                     isMobile && isSearchOpen && 'max-w-full'
+                )}>
                     <div className="relative w-full max-w-sm">
                         <Input
                             type="text"
@@ -1054,10 +1065,15 @@ export default function HomePage() {
                 </div>
 
                 <Button variant="ghost" size="icon" onClick={() => {
-                    if (isSearchOpen) {
-                        setSearchTerm('');
+                    if (isMobile) {
+                        if (isSearchOpen) {
+                            setSearchTerm('');
+                        }
+                        setIsSearchOpen(!isSearchOpen);
+                    } else {
+                        setIsSearchOpen(!isSearchOpen);
+                        if(isSearchOpen) setSearchTerm('');
                     }
-                    setIsSearchOpen(!isSearchOpen);
                 }}>
                     {isSearchOpen ? <X /> : <Search />}
                 </Button>
