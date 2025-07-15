@@ -5,27 +5,6 @@ export interface Channel {
   logo: string;
 }
 
-export const channels247: Channel[] = [
-  { name: 'NBA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/nba.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/NBA_TV.svg/1200px-NBA_TV.svg.png' },
-  { name: 'MLB Network', url: 'https://embed.ksdjugfsddeports.fun/embed/mlbnetwork.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/ac/MLBNetworkLogo.svg/1200px-MLBNetworkLogo.svg.png' },
-  { name: 'Sky Sports F1 | Sky F1', url: 'https://embed.ksdjugfsddeports.fun/embed/skysportsf1.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQg9vzqbU-z482DKPxItcBGSto52zbdHqP5Mg&s' },
-  { name: 'DAZN Formula 1 | DAZN F1', url: 'https://embed.ksdjugfsddeports.fun/embed/daznf1.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/7/70/DAZN_F1_logo.png' },
-  { name: 'WWE Network', url: 'https://play.alangulotv.cloud/?channel=wwe', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/WWE_Network_logo.svg/1200px-WWE_Network_logo.svg.png' },
-  { name: 'Tennis Channel', url: 'https://streamtpglobal.com/global1.php?stream=eventos1', logo: 'https://i.imgur.com/vRB0S6g.png' },
-  { name: 'Sky Sports Darts', url: 'https://alangulotv2.com/?channel=darts', logo: 'https://i.imgur.com/rNBD38B.png' },
-  { name: 'NFL Network', url: 'https://streamtpglobal.com/global1.php?stream=nfl_network', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/8/8e/NFL_Network_logo.svg/1200px-NFL_Network_logo.svg.png' },
-  { name: 'ESPN First Take', url: 'https://streamtpglobal.com/global1.php?stream=eventos3', logo: 'https://i.imgur.com/mD2y5yq.png' },
-  { name: 'Sky Sports News | SSN Breaking Sports News', url: 'https://streamtpglobal.com/global1.php?stream=ssn_gb', logo: 'https://i.imgur.com/5B4YhV4.png' },
-  { name: 'NHL Network', url: 'https://streamtpglobal.com/global1.php?stream=nhl_network', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3f/NHL_Network_logo_2022.svg/1200px-NHL_Network_logo_2022.svg.png' },
-  { name: 'ESPN', url: 'https://embed.ksdjugfsddeports.fun/embed/espn.html', logo: 'https://themenschonabench.com/wp-content/uploads/2014/05/ESPN-Logo.png' },
-  { name: 'Sky Sports Golf', url: 'https://streamtpglobal.com/global1.php?stream=sky_sports_golf_gb', logo: 'https://i.imgur.com/5lVwSgJ.png' },
-  { name: 'PGA Tour 2025', url: 'https://streamtpglobal.com/global1.php?stream=eventos7', logo: 'https://i.imgur.com/J7t6zXo.png' },
-  { name: 'NBC Golf Channel', url: 'https://streamtpglobal.com/global1.php?stream=golf_channel_usa', logo: 'https://i.imgur.com/j1G5t6t.png' },
-  { name: 'Fox NRL TV', url: 'https://streamtpglobal.com/global1.php?stream=eventos2', logo: 'https://i.imgur.com/39bAUn2.png' },
-  { name: 'Wimbledon Open', url: 'https://streamtpglobal.com/global1.php?stream=eventos5', logo: 'https://i.imgur.com/eGjB6G1.png' },
-];
-
-
 export const channels: Channel[] = [
     { name: 'A24', url: 'https://www.youtube-nocookie.com/embed/QGpHLgRnrx4', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
     { name: 'A3SERIES', url: 'https://embed.ksdjugfsddeports.fun/embed/a3series.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnbtKSukxgLre37kBp2mHcm6FyWnotLCxKfA&s' },
@@ -156,7 +135,7 @@ export const channels: Channel[] = [
     { name: 'MTV', url: 'https://tvlibreonline.org/html/fl/?get=TVRWX0hE', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/MTV_2021_%28brand_version%29.svg/1200px-MTV_2021_%28brand_version%29.svg.png' },
     { name: 'Movistar Liga de Campeones', url: 'https://streamtpglobal.com/global1.php?stream=movistarligadecampeones', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Movistar_Liga_de_Campeones.svg/2560px-Movistar_Liga_de_Campeones.svg.png' },
     { name: 'NAT GEO MUNDO', url: 'https://embed.ksdjugfsddeports.fun/embed/natgeomundo.html', logo: 'https://pbs.twimg.com/profile_images/496293907886403584/yQYuZTjL_400x400.png' },
-    { name: 'NBA', url: 'https://embed.ksdjugfsddeports.fun/embed/nba.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/NBA_TV.svg/1200px-NBA_TV.svg.png' },
+    { name: 'NBA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/nba.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/NBA_TV.svg/1200px-NBA_TV.svg.png' },
     { name: 'NICK', url: 'https://embed.ksdjugfsddeports.fun/embed/nick.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTudsGNYzWPsnCOKE7v5BGeH6QswRB8oYkQ_A&s' },
     { name: 'NICK JR', url: 'https://embed.ksdjugfsddeports.fun/embed/nickjr.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Nick_Jr._logo_2023_%28outline%29.svg' },
     { name: 'National Geographic', url: 'https://tvlibreonline.org/html/fl/?get=TmF0R2VvSEQ=', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Nat_Geo_HD.png' },
@@ -296,5 +275,22 @@ export const channels: Channel[] = [
     { name: '(North) Korean Central Television 24/7', url: 'https://www.youtube.com/embed/juLIy_mH4wI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Kctv_logo.svg/1200px-Kctv_logo.svg.png'},
     { name: 'Los Simpsons 24/7', url: 'https://tvlibreonline.org/html/fl/?get=TG9zX1NpbXBzb24=', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/The_Simpsons_logo.svg/330px-The_Simpsons_logo.svg.png'},
     { name: 'Padre de Familia 24/7', url: 'https://tvlibreonline.org/html/fl/?get=UGFkcmVfZGVfRmFtaWxpYQ', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Family_Guy_Logo.svg/1200px-Family_Guy_Logo.svg.png'},
-    { name: 'South Park 24/7', url: 'https://tvlibreonline.org/html/fl/?get=U291dGhQYXJr', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/South_Park_logo.svg/1200px-South_Park_logo.svg.png'}
+    { name: 'South Park 24/7', url: 'https://tvlibreonline.org/html/fl/?get=U291dGhQYXJr', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/South_Park_logo.svg/1200px-South_Park_logo.svg.png'},
+    { name: 'NBA TV', url: 'https://embed.ksdjugfsddeports.fun/embed/nba.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/NBA_TV.svg/1200px-NBA_TV.svg.png' },
+    { name: 'MLB Network', url: 'https://embed.ksdjugfsddeports.fun/embed/mlbnetwork.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/ac/MLBNetworkLogo.svg/1200px-MLBNetworkLogo.svg.png' },
+    { name: 'Sky Sports F1 | Sky F1', url: 'https://embed.ksdjugfsddeports.fun/embed/skysportsf1.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQg9vzqbU-z482DKPxItcBGSto52zbdHqP5Mg&s' },
+    { name: 'DAZN Formula 1 | DAZN F1', url: 'https://embed.ksdjugfsddeports.fun/embed/daznf1.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/7/70/DAZN_F1_logo.png' },
+    { name: 'WWE Network', url: 'https://play.alangulotv.cloud/?channel=wwe', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/WWE_Network_logo.svg/1200px-WWE_Network_logo.svg.png' },
+    { name: 'Tennis Channel', url: 'https://streamtpglobal.com/global1.php?stream=eventos1', logo: 'https://i.imgur.com/vRB0S6g.png' },
+    { name: 'Sky Sports Darts', url: 'https://alangulotv2.com/?channel=darts', logo: 'https://i.imgur.com/rNBD38B.png' },
+    { name: 'NFL Network', url: 'https://streamtpglobal.com/global1.php?stream=nfl_network', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/8/8e/NFL_Network_logo.svg/1200px-NFL_Network_logo.svg.png' },
+    { name: 'ESPN First Take', url: 'https://streamtpglobal.com/global1.php?stream=eventos3', logo: 'https://i.imgur.com/mD2y5yq.png' },
+    { name: 'Sky Sports News | SSN Breaking Sports News', url: 'https://streamtpglobal.com/global1.php?stream=ssn_gb', logo: 'https://i.imgur.com/5B4YhV4.png' },
+    { name: 'NHL Network', url: 'https://streamtpglobal.com/global1.php?stream=nhl_network', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3f/NHL_Network_logo_2022.svg/1200px-NHL_Network_logo_2022.svg.png' },
+    { name: 'Sky Sports Golf', url: 'https://streamtpglobal.com/global1.php?stream=sky_sports_golf_gb', logo: 'https://i.imgur.com/5lVwSgJ.png' },
+    { name: 'PGA Tour 2025', url: 'https://streamtpglobal.com/global1.php?stream=eventos7', logo: 'https://i.imgur.com/J7t6zXo.png' },
+    { name: 'NBC Golf Channel', url: 'https://streamtpglobal.com/global1.php?stream=golf_channel_usa', logo: 'https://i.imgur.com/j1G5t6t.png' },
+    { name: 'Fox NRL TV', url: 'https://streamtpglobal.com/global1.php?stream=eventos2', logo: 'https://i.imgur.com/39bAUn2.png' },
+    { name: 'Wimbledon Open', url: 'https://streamtpglobal.com/global1.php?stream=eventos5', logo: 'https://i.imgur.com/eGjB6G1.png' },
 ];
+

@@ -36,7 +36,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
-import { channels, channels247 as staticChannels247 } from '@/components/channel-list';
+import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -174,7 +174,7 @@ export default function HomePage() {
       const combinedData = Array.from(allMatchesMap.values());
 
       const timeZone = 'America/Argentina/Buenos_Aires';
-      const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+      const nowInBA = toZonedTime(new Date(), timeZone);
       
       const categoryMap = sportsData.reduce((acc, sport) => {
           acc[sport.id] = sport.name;
@@ -197,7 +197,7 @@ export default function HomePage() {
             status = 'Finalizado';
         }
 
-        let imageUrl = placeholderImage;
+        let imageUrl = 'https://i.ibb.co/dHPWxr8/depete.jpg';
         if (match.teams?.home?.badge && match.teams?.away?.badge) {
             imageUrl = `https://streamed.su/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`;
         } else if (match.poster) {
@@ -354,7 +354,7 @@ export default function HomePage() {
     localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
   };
 
-  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, channels247, allChannels, searchResults, allSortedEvents, categoryFilteredEvents } = useMemo(() => {
+  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, allChannels, searchResults, allSortedEvents, categoryFilteredEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
 
@@ -398,27 +398,6 @@ export default function HomePage() {
     });
 
     const mergedEvents = Array.from(eventMap.values());
-
-    const isApiChannel247 = (e: Event) => e.title.toLowerCase().includes('24/7') || e.title.includes('(North) Korean Central Television');
-
-    const static247Events: Event[] = staticChannels247.map(channel => ({
-      title: channel.name,
-      options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}],
-      sources: [],
-      buttons: [],
-      time: 'AHORA',
-      category: 'Canal 24/7',
-      language: '',
-      date: '',
-      source: '',
-      status: 'En Vivo',
-      image: channel.logo,
-    }));
-    
-    const apiChannels247 = mergedEvents.filter(isApiChannel247);
-    const all247Channels = [...apiChannels247, ...static247Events];
-
-    const otherEvents = mergedEvents.filter(e => !isApiChannel247(e));
     
     const sortLogic = (a: Event, b: Event) => {
       const orderA = statusOrder[a.status] ?? 99;
@@ -439,13 +418,13 @@ export default function HomePage() {
         return 0;
     };
 
-    const live = otherEvents
-        .filter((e) => e.status === 'En Vivo' && !isApiChannel247(e))
+    const live = mergedEvents
+        .filter((e) => e.status === 'En Vivo')
         .sort(liveSortLogic);
     
-    const upcoming = otherEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
-    const unknown = otherEvents.filter((e) => e.status === 'Desconocido' && !isApiChannel247(e)).sort(sortLogic);
-    const finishedEvents = otherEvents.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
+    const upcoming = mergedEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
+    const unknown = mergedEvents.filter((e) => e.status === 'Desconocido').sort(sortLogic);
+    const finishedEvents = mergedEvents.filter((e) => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
     
     const allSorted = [...live, ...upcoming, ...unknown, ...finishedEvents];
 
@@ -454,8 +433,8 @@ export default function HomePage() {
         const lowercasedFilter = searchTerm.toLowerCase();
         
         const eventsSource = currentView === 'home' || currentView === 'channels' || currentView === 'live'
-            ? [...mergedEvents, ...static247Events]
-            : [...mergedEvents, ...static247Events].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
+            ? [...mergedEvents]
+            : [...mergedEvents].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
             
         const filteredEvents = eventsSource.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = (currentView === 'home' || currentView === 'channels') ? channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter)) : [];
@@ -475,17 +454,16 @@ export default function HomePage() {
 
     let categoryFilteredEvents: Event[] = [];
     if (currentView !== 'home' && currentView !== 'channels' && currentView !== 'live') {
-        const allCategoryEvents = [...mergedEvents, ...static247Events];
+        const allCategoryEvents = [...mergedEvents];
         const categoryEvents = allCategoryEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
-        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo' && !isApiChannel247(e)).sort(liveSortLogic);
+        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo').sort(liveSortLogic);
         const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(sortLogic);
-        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido' && !isApiChannel247(e)).sort(sortLogic);
-        const channels247Cat = categoryEvents.filter(isApiChannel247).sort(sortLogic);
+        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(sortLogic);
         const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort(sortLogic);
 
-        categoryFilteredEvents = [...liveCat, ...upcomingCat, ...channels247Cat, ...unknownCat, ...finishedCat];
+        categoryFilteredEvents = [...liveCat, ...upcomingCat, ...unknownCat, ...finishedCat];
     }
 
     return { 
@@ -493,7 +471,6 @@ export default function HomePage() {
         upcomingEvents: upcoming, 
         unknownEvents: unknown, 
         finishedEvents,
-        channels247: all247Channels.sort(sortLogic),
         allChannels: channels,
         searchResults,
         allSortedEvents: allSorted,
@@ -599,7 +576,7 @@ export default function HomePage() {
       options: [{url: channel.url, label: 'Ver Canal', hd: false, language: ''}],
       sources: [],
       buttons: [],
-      time: channel.name.toLowerCase().includes('24/7') ? '24/7' : '',
+      time: 'AHORA',
       category: 'Canal',
       language: '',
       date: '',
@@ -953,9 +930,6 @@ export default function HomePage() {
                         <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                    </div>
-                    <div className="mb-8">
                         <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
@@ -978,7 +952,7 @@ export default function HomePage() {
           {itemsToDisplay.map((item, index) => {
               if ('url' in item) { // It's a Channel
                   const channel = item as Channel;
-                  const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                  const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                   const selection = getEventSelection(channelAsEvent);
                   return (
                       <Card 
