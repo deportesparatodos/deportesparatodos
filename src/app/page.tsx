@@ -36,7 +36,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
-import { channels, channels247 } from '@/components/channel-list';
+import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -358,7 +358,7 @@ export default function HomePage() {
     localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
   };
 
-  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, allChannels, searchResults, allSortedEvents, categoryFilteredEvents } = useMemo(() => {
+  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, allChannels, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
     const excludedFromFinished = new Set([
@@ -368,12 +368,26 @@ export default function HomePage() {
         "ESPN", "Sky Sports Golf", "PGA Tour 2025", "NBC Golf Channel", "Fox NRL TV", "Wimbledon Open"
     ]);
 
+    const channels247Names = new Set([
+      '24/7 South Park',
+      '24/7 COWS',
+      '24/7 The Simpsons',
+      '24/7 Family Guy',
+      '(North) Korean Central Television'
+    ]);
+
     const normalizeTitle = (title: string): string => {
         const prefixes = /^(f[oó]rmula 1:|liga profesional:|amistoso:|primera nacional:|copa libertadores:|copa sudamericana:|f[uú]tbol:|wwe:|ufc:)/i;
         return title.replace(prefixes, '').trim().toLowerCase();
     };
     
-    const combinedEvents = [...events, ...ppvEvents];
+    // Separate 24/7 channels from ppvEvents
+    const regularPpvEvents = ppvEvents.filter(event => !channels247Names.has(event.title));
+    const channels247FromPpv = ppvEvents
+        .filter(event => channels247Names.has(event.title))
+        .map(e => ({...e, status: 'En Vivo' as const, time: 'AHORA'}));
+    
+    const combinedEvents = [...events, ...regularPpvEvents];
     
     const eventMap = new Map<string, Event>();
 
@@ -457,8 +471,8 @@ export default function HomePage() {
         const lowercasedFilter = searchTerm.toLowerCase();
         
         const eventsSource = currentView === 'home' || currentView === 'channels' || currentView === 'live'
-            ? [...processedEvents]
-            : [...processedEvents].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
+            ? [...processedEvents, ...channels247FromPpv]
+            : [...processedEvents, ...channels247FromPpv].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
             
         const filteredEvents = eventsSource.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = (currentView === 'home' || currentView === 'channels') ? channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter)) : [];
@@ -498,7 +512,8 @@ export default function HomePage() {
         allChannels: channels,
         searchResults,
         allSortedEvents: allSorted,
-        categoryFilteredEvents
+        categoryFilteredEvents,
+        channels247Events: channels247FromPpv,
     };
   }, [events, ppvEvents, searchTerm, currentView]);
 
@@ -694,7 +709,7 @@ export default function HomePage() {
                                             <ul className="list-disc pl-5 space-y-2">
                                                 <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
                                                 <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
-                                                <li><strong>Carruseles de Eventos:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
+                                                <li><strong>Carruseles de Eventos/Canales:</strong> El contenido está agrupado en filas por estado o tipo. Puedes deslizar cada carrusel para explorar los eventos. El orden es: Canales, En Vivo, Próximos, Canales 24/7, y más.</li>
                                                 <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris).</li>
                                             </ul>
 
@@ -945,16 +960,16 @@ export default function HomePage() {
             ) : (
                 <>
                     <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
-                    </div>
-                     <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" channels={channels247} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
-                    </div>
-                    <div className="mb-8">
                         <EventCarousel title="Canales" channels={allChannels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                    </div>
+                    <div className="mb-8">
                         <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                    </div>
+                     <div className="mb-8">
+                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />

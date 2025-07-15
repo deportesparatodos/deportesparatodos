@@ -91,7 +91,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             onChannelClick &&
             getEventSelection &&
             channels.map((channel, index) => {
-              const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+              const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
               const selection = getEventSelection(channelAsEvent);
               return (
               <CarouselItem
@@ -132,5 +132,3 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
-
-    
