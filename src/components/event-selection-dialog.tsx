@@ -43,7 +43,8 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
 }) => {
   if (!event) return null;
 
-  const timeDisplay = isValidTimeFormat(event.time) ? event.time : '';
+  const isLive = event.status?.toLowerCase() === 'en vivo';
+  const timeDisplay = isLive ? 'AHORA' : isValidTimeFormat(event.time) ? event.time : '';
   
   const selectedOptionUrl = event.selectedOption;
 

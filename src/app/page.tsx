@@ -427,14 +427,26 @@ export default function HomePage() {
 
         return 0;
     };
+    
+    const timeZone = 'America/Argentina/Buenos_Aires';
+    const nowInBA = toZonedTime(new Date(), timeZone);
+    const currentHour = nowInBA.getHours();
+    const isNight = currentHour >= 20 || currentHour < 6;
 
-    const live = mergedEvents
+    const processedEvents = mergedEvents.map(e => {
+        if (isNight && e.status === 'Próximo') {
+            return { ...e, status: 'Desconocido' as const };
+        }
+        return e;
+    });
+
+    const live = processedEvents
         .filter((e) => e.status === 'En Vivo')
         .sort(liveSortLogic);
     
-    const upcoming = mergedEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
-    const unknown = mergedEvents.filter((e) => e.status === 'Desconocido').sort(sortLogic);
-    const finished = mergedEvents
+    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
+    const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort(sortLogic);
+    const finished = processedEvents
         .filter((e) => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
         .sort((a,b) => b.time.localeCompare(a.time));
     
@@ -445,8 +457,8 @@ export default function HomePage() {
         const lowercasedFilter = searchTerm.toLowerCase();
         
         const eventsSource = currentView === 'home' || currentView === 'channels' || currentView === 'live'
-            ? [...mergedEvents]
-            : [...mergedEvents].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
+            ? [...processedEvents]
+            : [...processedEvents].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
             
         const filteredEvents = eventsSource.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
         const sChannels = (currentView === 'home' || currentView === 'channels') ? channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter)) : [];
@@ -466,7 +478,7 @@ export default function HomePage() {
 
     let categoryFilteredEvents: Event[] = [];
     if (currentView !== 'home' && currentView !== 'channels' && currentView !== 'live') {
-        const allCategoryEvents = [...mergedEvents];
+        const allCategoryEvents = [...processedEvents];
         const categoryEvents = allCategoryEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
