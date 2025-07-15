@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
   try {
     const headers: HeadersInit = { 'Accept': 'application/json' };
     if (type === 'ppv') {
+      // This User-Agent can help bypass simple bot checks, but won't defeat advanced systems like Cloudflare's.
       headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0';
     }
 
@@ -70,9 +71,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
+      // Log the specific error from the external API for debugging in Vercel.
       const errorBody = await response.text();
       console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, errorBody);
-      return NextResponse.json({ error: `Failed to fetch data for type '${type}': ${response.statusText}` }, { status: response.status });
+      // Instead of throwing, return an empty array or an error object specific to this type.
+      // This prevents the entire page from failing if one source is down.
+      return NextResponse.json({ error: `Failed to fetch data for type '${type}': ${response.statusText}`, data: [] }, { status: 200 });
     }
     
     const data = await response.json();
@@ -80,6 +84,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    // Return a generic server error if the fetch itself fails.
+    return NextResponse.json({ error: 'Internal Server Error while fetching ' + type }, { status: 500 });
   }
 }
