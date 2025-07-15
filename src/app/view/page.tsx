@@ -315,12 +315,13 @@ function ViewPageContent() {
   const numCameras = useMemo(() => selectedEvents.filter(Boolean).length, [selectedEvents]);
 
    const fetchAllEvents = useCallback(async () => {
+    setIsAddEventsLoading(true);
     try {
       const [liveResponse, todayResponse, sportsResponse, ppvResponse] = await Promise.all([
-        fetch('/api/matches/live'),
-        fetch('/api/matches/all-today'),
-        fetch('/api/sports'),
-        fetch('/api/streams?source=ppv'),
+        fetch('/api/streams?type=live'),
+        fetch('/api/streams?type=all-today'),
+        fetch('/api/streams?type=sports'),
+        fetch('/api/streams?type=ppv'),
       ]);
 
       if (!liveResponse.ok || !todayResponse.ok || !ppvResponse.ok || !sportsResponse.ok) {
@@ -376,7 +377,7 @@ function ViewPageContent() {
             try {
               const streamOptions: StreamOption[] = [];
               const sourcePromises = event.sources.map(async (source) => {
-                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
+                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
                 if (response.ok) {
                   const streams: any[] = await response.json();
                   return streams.map(stream => ({
@@ -477,6 +478,8 @@ function ViewPageContent() {
     } catch (error) {
       console.error(error);
       setAllEventsData([]);
+    } finally {
+        setIsAddEventsLoading(false);
     }
   }, []);
 
@@ -568,12 +571,14 @@ function ViewPageContent() {
 
     useEffect(() => {
         if (addEventsDialogOpen) {
-            setIsAddEventsLoading(true);
-            if (allEventsData.length > 0 && allChannelsList.length > 0) {
+            if (allEventsData.length === 0) {
+                setIsAddEventsLoading(true);
+                fetchAllEvents();
+            } else {
                 setIsAddEventsLoading(false);
             }
         }
-    }, [addEventsDialogOpen, allEventsData, allChannelsList]);
+    }, [addEventsDialogOpen, allEventsData, fetchAllEvents]);
 
     const handleAddEventSelect = (event: Event, option: string) => {
         const newSelectedEvents = [...selectedEvents];
@@ -988,5 +993,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    

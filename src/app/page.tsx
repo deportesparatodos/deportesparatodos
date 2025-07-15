@@ -89,7 +89,7 @@ export default function HomePage() {
 
   const fetchPpvEvents = useCallback(async () => {
     try {
-      const response = await fetch('/api/streams?source=ppv');
+      const response = await fetch('/api/streams?type=ppv');
       if (!response.ok) {
         throw new Error('Failed to fetch PPV events');
       }
@@ -153,9 +153,9 @@ export default function HomePage() {
  const fetchEvents = useCallback(async () => {
     try {
       const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
-        fetch('/api/matches/live'),
-        fetch('/api/matches/all-today'),
-        fetch('/api/sports')
+        fetch('/api/streams?type=live'),
+        fetch('/api/streams?type=all-today'),
+        fetch('/api/streams?type=sports')
       ]);
 
       if (!liveResponse.ok || !todayResponse.ok || !sportsResponse.ok) {
@@ -226,7 +226,7 @@ export default function HomePage() {
             try {
               const streamOptions: StreamOption[] = [];
               const sourcePromises = event.sources.map(async (source) => {
-                const response = await fetch(`/api/streams?source=${source.source}&id=${source.id}`);
+                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
                 if (response.ok) {
                   const streams: any[] = await response.json();
                   return streams.map(stream => ({
@@ -1145,7 +1145,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-
-
-
