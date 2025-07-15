@@ -458,7 +458,7 @@ export default function HomePage() {
     
     const channels247FromEvents = processedEvents.filter(e => e.category === '24/7' && e.status === 'En Vivo');
     
-    const allSorted = [...live, ...upcoming, ...unknown, ...finished];
+    const allSorted = [...live, ...channels247FromEvents, ...upcoming, ...unknown, ...finished];
     const mobileSorted = [...live, ...channels247FromEvents, ...upcoming, ...unknown, ...finished];
 
     let searchResults: (Event | Channel)[] = [];
@@ -1038,7 +1038,7 @@ export default function HomePage() {
          <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
             {pageTitle}
             <div className="flex flex-1 items-center justify-end gap-2 px-2 md:px-8">
-                <div className={cn("flex-1 justify-end", isSearchOpen ? 'flex' : 'hidden')}>
+                <div className={cn("flex-1 justify-end", isSearchOpen ? 'flex' : 'hidden', !isMobile && 'flex')}>
                     <div className="relative w-full max-w-sm">
                         <Input
                             type="text"
