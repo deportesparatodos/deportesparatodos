@@ -183,8 +183,12 @@ export default function HomePage() {
 
       const allMatchesMap = new Map<string, StreamedMatch>();
       
-      todayData.forEach(match => allMatchesMap.set(match.id, match));
-      liveData.forEach(match => allMatchesMap.set(match.id, match));
+      if (Array.isArray(todayData)) {
+        todayData.forEach(match => allMatchesMap.set(match.id, match));
+      }
+      if (Array.isArray(liveData)) {
+        liveData.forEach(match => allMatchesMap.set(match.id, match));
+      }
 
       const combinedData = Array.from(allMatchesMap.values());
 
@@ -194,7 +198,7 @@ export default function HomePage() {
       const categoryMap = sportsData.reduce((acc, sport) => {
           acc[sport.id] = sport.name;
           return acc;
-      }, {} as Record<string, string>);
+      }, {} as Record<string, string>());
 
       const initialEvents: Event[] = combinedData.map((match: StreamedMatch) => {
         const eventDate = new Date(match.date);
@@ -1142,7 +1146,7 @@ export default function HomePage() {
                  isMobile && isSearchOpen && 'w-full'
              )}>
                 {isSearchOpen ? (
-                    <div className="relative w-full max-w-sm">
+                    <div className="relative w-full">
                         <Input
                             ref={r => { if (r) r.focus(); }}
                             type="text"
@@ -1259,4 +1263,3 @@ export default function HomePage() {
   );
 }
 
-    
