@@ -82,23 +82,29 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     };
 
     const sortedAndFilteredEvents = useMemo(() => {
-      const lowercasedFilter = searchTerm.toLowerCase();
-      const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+        const lowercasedFilter = searchTerm.toLowerCase();
+        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+        const chronologicalSortLogic = (a: Event, b: Event): number => {
+            if (!a.time || !b.time) return 0;
+            return a.time.localeCompare(b.time);
+        };
+        const liveSortLogic = (a: Event, b: Event): number => {
+            const hasCustomImageA = a.image && a.image !== placeholderImage;
+            const hasCustomImageB = b.image && b.image !== placeholderImage;
+            if (hasCustomImageA && !hasCustomImageB) return -1;
+            if (!hasCustomImageA && hasCustomImageB) return 1;
+            return 0;
+        };
 
-      const filtered = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
+        const filtered = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
 
-      const chronologicalSortLogic = (a: Event, b: Event): number => {
-          if (!a.time || !b.time) return 0;
-          return a.time.localeCompare(b.time);
-      };
-      
-      const liveCustom = filtered.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage));
-      const liveDefault = filtered.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage));
-      const upcoming = filtered.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
-      const unknown = filtered.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
-      const finished = filtered.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
+        const liveCustom = filtered.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
+        const liveDefault = filtered.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
+        const upcoming = filtered.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
+        const unknown = filtered.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
+        const finished = filtered.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
-      return [...liveCustom, ...liveDefault, ...upcoming, ...unknown, ...finished];
+        return [...liveCustom, ...liveDefault, ...upcoming, ...unknown, ...finished];
     }, [searchTerm, allEvents]);
 
 
@@ -986,3 +992,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    

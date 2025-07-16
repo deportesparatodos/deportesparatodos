@@ -143,7 +143,9 @@ export default function HomePage() {
   const router = useRouter();
 
   const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
 
@@ -166,6 +168,7 @@ export default function HomePage() {
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
  const fetchEvents = useCallback(async () => {
+    setIsDataLoading(true);
     try {
       const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
         fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []),
@@ -316,8 +319,13 @@ export default function HomePage() {
     } catch (error) {
       console.error('Error fetching events:', error);
       setEvents([]); // Ensure it's an empty array on error
+    } finally {
+        setIsDataLoading(false);
+        if (isInitialLoad) {
+            setIsInitialLoad(false);
+        }
     }
-  }, []);
+  }, [isInitialLoad]);
 
   // Load state from localStorage once on initial mount
   useEffect(() => {
@@ -360,9 +368,7 @@ export default function HomePage() {
   // Fetch event data
   useEffect(() => {
     const loadAllData = async () => {
-      setIsLoading(true);
       await fetchEvents();
-      setIsLoading(false);
     };
 
     loadAllData();
@@ -537,7 +543,7 @@ export default function HomePage() {
         .filter((e) => e.status === 'En Vivo' && e.category !== '24/7')
         .sort(liveSortLogic);
     
-    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(upcomingSortLogic);
+    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(chronologicalSortLogic);
     const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort(upcomingSortLogic);
 
     const finished = processedEvents
@@ -551,8 +557,8 @@ export default function HomePage() {
     // Mobile sort logic
     const mobileLiveCustom = processedEvents.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
     const mobileLiveDefault = processedEvents.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
-    const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
-    const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
+    const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
+    const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
     const mobileFinished = finished;
     const mobileSorted = [...mobileLiveCustom, ...mobileLiveDefault, ...channels247FromEvents, ...mobileUpcoming, ...mobileUnknown, ...mobileFinished];
 
@@ -749,7 +755,7 @@ export default function HomePage() {
     setCurrentView('home');
   };
 
-  if (isLoading) {
+  if (isInitialLoad) {
     return <LoadingScreen />;
   }
 
@@ -1133,92 +1139,106 @@ export default function HomePage() {
         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
             {pageTitle}
              <div className={cn(
-                "flex items-center justify-end gap-2 px-4 flex-1 md:flex-initial",
-                !isSearchOpen && isMobile && "flex-1 justify-end",
-                isSearchOpen && isMobile && "w-full"
-            )}>
-                <div className={cn(
-                    "relative w-full max-w-sm",
-                    isSearchOpen ? 'block' : 'hidden md:block'
-                )}>
-                    <Input
-                        ref={r => { if (isSearchOpen && r) r.focus(); }}
-                        type="text"
-                        placeholder="Buscar evento o canal..."
-                        className="w-full pr-10"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                     <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
-                        onClick={() => { if(searchTerm) { setSearchTerm(''); } else if (!isMobile) { fetchEvents(); } else { setIsSearchOpen(false); } }}
-                      >
-                         {searchTerm ? <X className="h-4 w-4" /> : <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />}
-                     </Button>
-                </div>
-
-                <Button variant="ghost" size="icon" className={cn("md:hidden", isMobile && isSearchOpen && "hidden")} onClick={() => setIsSearchOpen(true)}>
-                    <Search />
-                </Button>
-
-                <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className={cn(isMobile && isSearchOpen && "hidden")}>
-                            <Settings />
+                "flex items-center justify-end gap-2 px-4",
+                isSearchOpen ? "w-full md:w-auto md:flex-initial" : "flex-1 md:flex-initial"
+             )}>
+                {isSearchOpen ? (
+                    <div className="relative w-full max-w-sm">
+                        <Input
+                            ref={r => { if (r) r.focus(); }}
+                            type="text"
+                            placeholder="Buscar evento o canal..."
+                            className="w-full pr-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                         <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
+                            onClick={() => {
+                                if (searchTerm) {
+                                    setSearchTerm('');
+                                } else {
+                                    setIsSearchOpen(false);
+                                }
+                            }}
+                          >
+                             <X className="h-4 w-4" />
+                         </Button>
+                    </div>
+                ) : (
+                    <>
+                        <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
+                            <Search />
                         </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-h-[90vh] flex flex-col">
-                        <DialogHeader className="text-center">
-                        <DialogTitle>Configuración y Eventos</DialogTitle>
-                        <DialogDescription>
-                            Personaliza la vista y gestiona tus eventos seleccionados.
-                        </DialogDescription>
-                        </DialogHeader>
-                        <ScrollArea className="pr-4 -mr-4">
-                           <LayoutConfigurator
-                                gridGap={gridGap}
-                                onGridGapChange={(value) => {
-                                    setGridGap(value);
-                                    localStorage.setItem('gridGap', value.toString());
-                                }}
-                                borderColor={borderColor}
-                                onBorderColorChange={(value) => {
-                                    setBorderColor(value);
-                                    localStorage.setItem('borderColor', value);
-                                }}
-                                isChatEnabled={isChatEnabled}
-                                onIsChatEnabledChange={(value) => {
-                                    setIsChatEnabled(value);
-                                    localStorage.setItem('isChatEnabled', JSON.stringify(value));
-                                }}
-                                
-                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                onOrderChange={handleOrderChange}
-                                eventDetails={selectedEvents}
-                                onRemove={handleEventRemove} 
-                                onModify={openDialogForModification}
-                                isViewPage={false}
-                                onAddEvent={() => {}}
-                            />
-                        </ScrollArea>
-                    </DialogContent>
-                </Dialog>
 
-                <Button
-                    size="icon"
-                    onClick={handleStartView}
-                    disabled={selectedEventsCount === 0}
-                    className={cn("bg-green-600 hover:bg-green-700 text-white relative", isMobile && isSearchOpen && "hidden")}
-                >
-                    <Play />
-                     {selectedEventsCount > 0 && (
-                        <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
-                            {selectedEventsCount}
-                        </Badge>
-                    )}
-                </Button>
+                        <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <Settings />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-h-[90vh] flex flex-col">
+                                <DialogHeader className="text-center">
+                                <DialogTitle>Configuración y Eventos</DialogTitle>
+                                <DialogDescription>
+                                    Personaliza la vista y gestiona tus eventos seleccionados.
+                                </DialogDescription>
+                                </DialogHeader>
+                                <ScrollArea className="pr-4 -mr-4">
+                                   <LayoutConfigurator
+                                        gridGap={gridGap}
+                                        onGridGapChange={(value) => {
+                                            setGridGap(value);
+                                            localStorage.setItem('gridGap', value.toString());
+                                        }}
+                                        borderColor={borderColor}
+                                        onBorderColorChange={(value) => {
+                                            setBorderColor(value);
+                                            localStorage.setItem('borderColor', value);
+                                        }}
+                                        isChatEnabled={isChatEnabled}
+                                        onIsChatEnabledChange={(value) => {
+                                            setIsChatEnabled(value);
+                                            localStorage.setItem('isChatEnabled', JSON.stringify(value));
+                                        }}
+                                        
+                                        order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                        onOrderChange={handleOrderChange}
+                                        eventDetails={selectedEvents}
+                                        onRemove={handleEventRemove} 
+                                        onModify={openDialogForModification}
+                                        isViewPage={false}
+                                        onAddEvent={() => {}}
+                                    />
+                                </ScrollArea>
+                            </DialogContent>
+                        </Dialog>
+
+                        <Button
+                            size="icon"
+                            onClick={handleStartView}
+                            disabled={selectedEventsCount === 0}
+                            className="bg-green-600 hover:bg-green-700 text-white relative"
+                        >
+                            <Play />
+                             {selectedEventsCount > 0 && (
+                                <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
+                                    {selectedEventsCount}
+                                </Badge>
+                            )}
+                        </Button>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={fetchEvents}
+                            disabled={isDataLoading}
+                        >
+                            <RotateCw className={cn("h-4 w-4", isDataLoading && "animate-spin")} />
+                        </Button>
+                    </>
+                )}
             </div>
         </header>
 
@@ -1242,3 +1262,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
