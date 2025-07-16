@@ -60,6 +60,14 @@ interface StreamedMatch {
   sources: { source: string; id: string }[];
 }
 
+interface StreamTpEvent {
+    title: string;
+    time: string;
+    category: string;
+    status: string; // "en vivo", "pronto"
+    link: string;
+}
+
 const channels247: Event[] = [
   {
     title: "24/7 South Park",
@@ -157,20 +165,18 @@ export default function HomePage() {
 
  const fetchEvents = useCallback(async () => {
     try {
-      const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
-        fetch('/api/streams?type=live'),
-        fetch('/api/streams?type=all-today'),
-        fetch('/api/streams?type=sports')
+      const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
+        fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []),
+        fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []),
+        fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []),
+        fetch('https://streamtpglobal.com/eventos.json').then(res => res.ok ? res.json() : [])
       ]);
 
-      if (!liveResponse.ok || !todayResponse.ok || !sportsResponse.ok) {
-        throw new Error('Failed to fetch events from one or more sources');
-      }
+      const liveData: StreamedMatch[] = liveResponse;
+      const todayData: StreamedMatch[] = todayResponse;
+      const sportsData: {id: string; name: string}[] = sportsResponse;
+      const streamTpData: StreamTpEvent[] = streamTpResponse;
 
-      const liveData: StreamedMatch[] = await liveResponse.json();
-      const todayData: StreamedMatch[] = await todayResponse.json();
-      const sportsData: {id: string; name: string}[] = await sportsResponse.json();
-      
       const allMatchesMap = new Map<string, StreamedMatch>();
       
       todayData.forEach(match => allMatchesMap.set(match.id, match));
@@ -224,10 +230,41 @@ export default function HomePage() {
         };
       });
 
-      // Fetch all stream options concurrently
+      const streamTpEvents: Event[] = streamTpData.map(event => {
+          let status: Event['status'] = 'Desconocido';
+          if (event.status.toLowerCase() === 'en vivo') {
+              status = 'En Vivo';
+          } else if (event.status.toLowerCase() === 'pronto') {
+              status = 'Próximo';
+          }
+          
+          let optionLabel = 'Ver';
+          try {
+              const url = new URL(event.link);
+              optionLabel = url.searchParams.get('stream') || 'Ver';
+          } catch (e) { /* ignore invalid URLs */ }
+          
+          return {
+              title: event.title,
+              time: event.time,
+              options: [{ url: event.link, label: optionLabel.toUpperCase(), hd: false, language: '' }],
+              sources: [],
+              buttons: [],
+              category: event.category === 'Other' ? 'Otros' : event.category,
+              language: '',
+              date: format(nowInBA, 'yyyy-MM-dd'), // No date provided, use today
+              source: 'streamtpglobal',
+              image: 'https://i.ibb.co/dHPWxr8/depete.jpg',
+              status: status,
+          };
+      });
+      
+      const combinedInitialEvents = [...initialEvents, ...streamTpEvents];
+
+      // Fetch all stream options for streamed.su events concurrently
       const eventsWithStreams = await Promise.all(
-        initialEvents.map(async (event) => {
-          if (event.sources && event.sources.length > 0) {
+        combinedInitialEvents.map(async (event) => {
+          if (event.source === 'streamed.su' && event.sources && event.sources.length > 0) {
             try {
               const streamOptions: StreamOption[] = [];
               const sourcePromises = event.sources.map(async (source) => {
@@ -257,7 +294,7 @@ export default function HomePage() {
         })
       );
 
-      // Filter out events that have no options
+      // Filter out events that have no options after fetching
       const finalEvents = eventsWithStreams.filter(event => event.options.length > 0);
 
       setEvents(finalEvents);
@@ -385,17 +422,21 @@ export default function HomePage() {
 
     combinedEvents.forEach(event => {
         const normalized = normalizeTitle(event.title);
-        const key = `${normalized}|${event.time}`;
+        // Use date for streamed.su events to differentiate, but not for others that may not have it
+        const key = event.source === 'streamed.su' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${event.time}`;
 
         if (eventMap.has(key)) {
             const existingEvent = eventMap.get(key)!;
             
             // Merge logic
             const newOptions = [...existingEvent.options, ...event.options];
+             // Remove duplicate options based on URL
+            const uniqueOptions = Array.from(new Map(newOptions.map(item => [item.url, item])).values());
+            
             const newSources = [...existingEvent.sources, ...(event.sources || [])];
-            const newImage = (existingEvent.image !== placeholderImage && existingEvent.image) 
+            const newImage = (existingEvent.image && existingEvent.image !== placeholderImage) 
                              ? existingEvent.image 
-                             : (event.image !== placeholderImage && event.image) 
+                             : (event.image && event.image !== placeholderImage) 
                                ? event.image 
                                : placeholderImage;
             const newTitle = event.title.length > existingEvent.title.length ? event.title : existingEvent.title;
@@ -404,7 +445,7 @@ export default function HomePage() {
                 ...existingEvent,
                 title: newTitle,
                 image: newImage,
-                options: newOptions,
+                options: uniqueOptions,
                 sources: newSources,
                 buttons: [],
             });
@@ -1157,3 +1198,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
