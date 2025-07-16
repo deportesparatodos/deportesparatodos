@@ -45,7 +45,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse } from 'date-fns';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid } from 'date-fns';
 
 
 interface StreamedMatch {
@@ -467,25 +467,6 @@ export default function HomePage() {
 
     const mergedEvents = Array.from(eventMap.values());
     
-    const sortLogic = (a: Event, b: Event) => {
-      const orderA = statusOrder[a.status] ?? 99;
-      const orderB = statusOrder[b.status] ?? 99;
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
-      return a.time.localeCompare(b.time);
-    };
-
-    const liveSortLogic = (a: Event, b: Event) => {
-        const hasCustomImageA = a.image && a.image !== placeholderImage;
-        const hasCustomImageB = b.image && b.image !== placeholderImage;
-
-        if (hasCustomImageA && !hasCustomImageB) return -1;
-        if (!hasCustomImageA && hasCustomImageB) return 1;
-
-        return 0;
-    };
-    
     const timeZone = 'America/Argentina/Buenos_Aires';
     const nowInBA = toZonedTime(new Date(), timeZone);
     const currentHour = nowInBA.getHours();
@@ -500,10 +481,46 @@ export default function HomePage() {
 
     const live = processedEvents
         .filter((e) => e.status === 'En Vivo' && e.category !== '24/7')
-        .sort(liveSortLogic);
-    
-    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(sortLogic);
-    const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort(sortLogic);
+        .sort((a, b) => {
+            const hasCustomImageA = a.image && a.image !== placeholderImage;
+            const hasCustomImageB = b.image && b.image !== placeholderImage;
+
+            if (hasCustomImageA && !hasCustomImageB) return -1;
+            if (!hasCustomImageA && hasCustomImageB) return 1;
+
+            return 0;
+        });
+
+    const upcomingSortLogic = (a: Event, b: Event): number => {
+        const now = new Date();
+        const parseTime = (timeStr: string) => {
+            const parsed = parse(timeStr, 'HH:mm', now);
+            return isValid(parsed) ? parsed : null;
+        };
+
+        const timeA = parseTime(a.time);
+        const timeB = parseTime(b.time);
+        
+        if (!timeA && !timeB) return 0;
+        if (!timeA) return 1;
+        if (!timeB) return -1;
+        
+        // If time is in the past, push it to the end
+        if (timeA < now && timeB >= now) return 1;
+        if (timeA >= now && timeB < now) return -1;
+
+        const diffA = Math.abs(differenceInMinutes(timeA, now));
+        const diffB = Math.abs(differenceInMinutes(timeB, now));
+
+        if (diffA < diffB) return -1;
+        if (diffA > diffB) return 1;
+
+        // If time difference is the same, sort by time
+        return timeA.getTime() - timeB.getTime();
+    };
+
+    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(upcomingSortLogic);
+    const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time));
     const finished = processedEvents
         .filter((e) => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
         .sort((a,b) => b.time.localeCompare(a.time));
@@ -543,10 +560,18 @@ export default function HomePage() {
         const categoryEvents = allCategoryEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
-        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo').sort(liveSortLogic);
-        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(sortLogic);
-        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(sortLogic);
-        const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort(sortLogic);
+        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo').sort((a, b) => {
+            const hasCustomImageA = a.image && a.image !== placeholderImage;
+            const hasCustomImageB = b.image && b.image !== placeholderImage;
+
+            if (hasCustomImageA && !hasCustomImageB) return -1;
+            if (!hasCustomImageA && hasCustomImageB) return 1;
+
+            return 0;
+        });
+        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
+        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time));
+        const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
         categoryFilteredEvents = [...liveCat, ...upcomingCat, ...unknownCat, ...finishedCat];
     }
@@ -717,7 +742,7 @@ export default function HomePage() {
   const pageTitle = (
     <div className={cn(
         'flex items-center min-h-[75px] transition-all duration-300',
-        isMobile && isSearchOpen && currentView === 'home' ? 'w-0 opacity-0' : 'w-auto opacity-100'
+        isMobile && isSearchOpen ? 'w-0 opacity-0' : 'w-auto opacity-100'
     )}>
         {currentView === 'home' ? (
             <div className="flex items-center gap-0 pl-4">
@@ -1046,7 +1071,7 @@ export default function HomePage() {
                   return (
                       <Card 
                           key={`search-channel-${index}`}
-                          className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col"
+                          className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
                           onClick={() => handleChannelClick(channel)}
                       >
                           <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10 aspect-video">
@@ -1098,7 +1123,8 @@ export default function HomePage() {
             )}>
                 <div className={cn(
                     "relative w-full max-w-sm",
-                    isSearchOpen ? 'block' : 'hidden'
+                     isSearchOpen ? 'block' : 'hidden',
+                     !isMobile && 'block'
                 )}>
                     <Input
                         type="text"
@@ -1113,7 +1139,7 @@ export default function HomePage() {
                 </div>
 
                 <Button variant="ghost" size="icon" onClick={() => {
-                    if (isSearchOpen) {
+                     if (isSearchOpen && searchTerm) {
                         setSearchTerm('');
                     }
                     setIsSearchOpen(!isSearchOpen);
