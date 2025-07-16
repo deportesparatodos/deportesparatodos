@@ -143,7 +143,7 @@ export default function HomePage() {
   const router = useRouter();
 
   const [events, setEvents] = useState<Event[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(true); // Start as true
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
@@ -369,9 +369,11 @@ export default function HomePage() {
 
   // Fetch event data only once on initial mount
   useEffect(() => {
-    fetchEvents();
+    if (!isInitialLoadDone) {
+      fetchEvents();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isInitialLoadDone]);
 
   // Persist selectedEvents to localStorage
   useEffect(() => {
@@ -1123,7 +1125,7 @@ export default function HomePage() {
                  isMobile && isSearchOpen && 'w-full'
              )}>
                 {isSearchOpen ? (
-                    <div className={cn("relative", isMobile ? 'w-full' : 'w-auto max-w-sm')}>
+                    <div className={cn("relative", isMobile ? 'w-full' : 'w-auto')}>
                         <Input
                             ref={r => { if (r) r.focus(); }}
                             type="text"

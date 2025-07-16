@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -260,7 +261,10 @@ export function CameraConfigurationComponent({
           allChannels={allChannels}
           onFetchEvents={onFetchScheduleEvents}
           isLoading={isScheduleEventsLoading}
-          onAddEvent={onAddEvent}
+          onAddEvent={() => {
+            setScheduleManagerOpen(false); // Close schedule dialog
+            onAddEvent(); // Open add event dialog
+          }}
         />
       )}
     </>

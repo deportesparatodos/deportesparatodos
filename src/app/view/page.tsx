@@ -27,7 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 
 
-export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, isLoading }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], isLoading: boolean }) {
+export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, isLoading, onFetchEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], isLoading: boolean, onFetchEvents: () => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -172,16 +172,21 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-                             {searchTerm && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                                    onClick={() => setSearchTerm('')}
-                                >
-                                    <X className="h-5 w-5" />
+                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onFetchEvents}>
+                                    <RotateCw className="h-5 w-5" />
                                 </Button>
-                            )}
+                                {searchTerm && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => setSearchTerm('')}
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="eventos">Eventos</TabsTrigger>
@@ -710,6 +715,7 @@ function ViewPageContent() {
             allEvents={allEventsData}
             allChannels={allChannelsList}
             isLoading={isAddEventsLoading}
+            onFetchEvents={() => fetchAllEvents()}
         />
 
        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
