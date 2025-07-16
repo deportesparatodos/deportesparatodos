@@ -26,8 +26,10 @@ const AnimatedEllipsis = () => {
 export function LoadingScreen() {
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground p-8">
-      <div className="flex-grow flex items-center justify-center">
-        <div className="max-w-2xl w-full text-center">
+      {/* Main container to center content */}
+      <div className="flex-grow flex flex-col justify-center items-center">
+        {/* Logo Section */}
+        <div className="mb-10">
             <Image
                 src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                 alt="Deportes Para Todos Logo"
@@ -38,9 +40,8 @@ export function LoadingScreen() {
                 className="mx-auto"
             />
         </div>
-      </div>
-      
-      <div className="flex-grow flex items-center justify-center flex-col -mt-16">
+        
+        {/* Centered Text Section */}
         <div className="max-w-2xl w-full space-y-8">
             <div className="space-y-4">
                 <h1 className="text-3xl font-bold text-primary text-center">¡Bienvenidos a Deportes para Todos!</h1>
@@ -60,6 +61,7 @@ export function LoadingScreen() {
         </div>
       </div>
       
+      {/* Animated loading text at the bottom */}
       <div className="absolute bottom-5 right-5 text-lg text-primary font-semibold flex items-center">
         Cargando<AnimatedEllipsis />
       </div>
