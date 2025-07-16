@@ -566,8 +566,8 @@ export default function HomePage() {
 
             return 0;
         });
-        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
-        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time));
+        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort((a, b) => a.time.localeCompare(b.time));
+        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort((a, b) => a.time.localeCompare(b.time));
         const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
         categoryFilteredEvents = [...liveCat, ...upcomingCat, ...unknownCat, ...finishedCat];
@@ -1218,5 +1218,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    

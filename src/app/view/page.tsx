@@ -22,7 +22,7 @@ import type { Channel } from '@/components/channel-list';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, isPast } from 'date-fns';
+import { addHours, isBefore, isAfter, parse, isPast, isValid } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 
@@ -93,7 +93,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                 if (orderA !== orderB) {
                     return orderA - orderB;
                 }
-                if (a.time && b.time) {
+                if (a.time && b.time && (a.status === 'Próximo' || a.status === 'Desconocido')) {
                     return a.time.localeCompare(b.time);
                 }
                 return 0;
@@ -379,10 +379,19 @@ function ViewPageContent() {
               const url = new URL(event.link);
               optionLabel = url.searchParams.get('stream') || 'Ver';
           } catch (e) { /* ignore invalid URLs */ }
+
+          let eventTime = event.time;
+           try {
+              const originalTime = parse(event.time, 'HH:mm', new Date());
+              if (isValid(originalTime)) {
+                const adjustedTime = addHours(originalTime, 2);
+                eventTime = format(adjustedTime, 'HH:mm');
+              }
+           } catch(e) { console.error("Could not parse time for streamtpglobal event", e); }
           
           return {
               title: event.title,
-              time: event.time,
+              time: eventTime,
               options: [{ url: event.link, label: optionLabel.toUpperCase(), hd: false, language: '' }],
               sources: [],
               buttons: [],
@@ -436,8 +445,8 @@ function ViewPageContent() {
         let newEvent = {...e};
         
         if (e.source === 'streamed.su') {
-            const eventDate = new Date(e.date);
-            const zonedEventTime = toZonedTime(eventDate, timeZone);
+            const eventDate = parse(e.date, 'yyyy-MM-dd', new Date());
+            const zonedEventTime = toZonedTime(new Date(`${e.date}T${e.time}`), timeZone);
             const eventEndTime = addHours(zonedEventTime, 3);
 
             if (liveData.some((liveMatch:any) => liveMatch.id === e.sources[0]?.id)) {
