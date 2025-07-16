@@ -25,32 +25,32 @@ const AnimatedEllipsis = () => {
 
 export function LoadingScreen() {
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground p-8">
-      <div className="max-w-2xl w-full space-y-8">
-        <div className="flex justify-center">
-          <Image
-              src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
-              alt="Deportes Para Todos Logo"
-              width={300}
-              height={75}
-              priority
-              data-ai-hint="logo"
-          />
+    <div className="flex h-screen w-screen flex-col bg-background text-foreground p-8">
+      <div className="flex-grow flex items-center justify-center">
+        <div className="max-w-2xl w-full text-center">
+            <Image
+                src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
+                alt="Deportes Para Todos Logo"
+                width={300}
+                height={75}
+                priority
+                data-ai-hint="logo"
+                className="mx-auto"
+            />
         </div>
-        <div className="text-center space-y-4">
-            <h1 className="text-3xl font-bold text-primary">¡Bienvenidos a Deportes para Todos!</h1>
-            <div className="text-muted-foreground">
-              <p className="text-justify">
-                ¡Te damos la bienvenida! En nuestra plataforma, podes explorar una gran variedad de eventos y canales en vivo. 
-                Solo selecciona la cantidad de partidos, carreras o programas favoritos QUE QUIERAS (hasta 9 eventos) y 
-                combínalos en una única pantalla para no perderte nada. Revisa el Tutorial en el el icono de menú <Menu className="inline-block h-4 w-4 align-middle" /> en la esquina superior izquierda del inicio.
-              </p>
+      </div>
+      
+      <div className="flex-grow flex items-center justify-center flex-col -mt-16">
+        <div className="max-w-2xl w-full space-y-8">
+            <div className="space-y-4">
+                <h1 className="text-3xl font-bold text-primary text-center">¡Bienvenidos a Deportes para Todos!</h1>
+                <p className="text-justify text-muted-foreground">
+                  ¡Te damos la bienvenida! En nuestra plataforma, podes explorar una gran variedad de eventos y canales en vivo. Solo selecciona la cantidad de partidos, carreras o programas favoritos QUE QUIERAS (hasta 9 eventos) y combínalos en una única pantalla para no perderte nada. ¿Necesitas ayuda? Revisa el Tutorial en el el icono de menú <Menu className="inline-block h-4 w-4 align-middle" /> en la esquina superior izquierda del inicio.
+                </p>
             </div>
-        </div>
-        <div className="space-y-4 pt-4">
-            <h2 className="text-3xl font-bold text-primary text-center">¿Qué hacer en caso de errores?</h2>
-            <div className="text-muted-foreground">
-                <p className="text-justify">
+            <div className="space-y-4 pt-4">
+                <h2 className="text-3xl font-bold text-primary text-center">¿Qué hacer en caso de errores?</h2>
+                <p className="text-justify text-muted-foreground">
                 Si durante la carga un video no funciona o ves una pantalla en negro, no te preocupes, suele tener fácil solución. 
                 El paso más efectivo es probar con las diferentes opciones de transmisión disponibles para cada evento. 
                 Si el problema continúa, te recomendamos consultar nuestra guía detallada de "Errores y Soluciones" 
@@ -59,6 +59,7 @@ export function LoadingScreen() {
             </div>
         </div>
       </div>
+      
       <div className="absolute bottom-5 right-5 text-lg text-primary font-semibold flex items-center">
         Cargando<AnimatedEllipsis />
       </div>
