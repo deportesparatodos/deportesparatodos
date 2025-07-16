@@ -153,7 +153,7 @@ export default function HomePage() {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile(700);
   
   const [gridGap, setGridGap] = useState<number>(2);
   const [borderColor, setBorderColor] = useState<string>('#000000');
@@ -510,7 +510,7 @@ export default function HomePage() {
     
     const channels247FromEvents = processedEvents.filter(e => e.category === '24/7' && e.status === 'En Vivo');
     
-    const allSorted = [...live, ...channels247FromEvents, ...upcoming, ...unknown, ...finished];
+    const allSorted = [...live, ...upcoming, ...unknown, ...finished];
     const mobileSorted = [...live, ...channels247FromEvents, ...upcoming, ...unknown, ...finished];
 
     let searchResults: (Event | Channel)[] = [];
@@ -1090,30 +1090,27 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
+        <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
             {pageTitle}
             <div className={cn(
-                "flex flex-1 items-center justify-end gap-2 px-2 md:px-8 transition-all duration-300",
-                isMobile && isSearchOpen && currentView === 'home' && "w-full"
+                "flex items-center justify-end gap-2 px-4 transition-all duration-300",
+                isMobile && isSearchOpen ? "flex-1" : "flex-initial"
             )}>
                 <div className={cn(
-                    "flex-1 justify-end",
-                    isSearchOpen ? 'flex' : 'hidden', 
-                    !isMobile && 'flex',
-                     isMobile && isSearchOpen && 'max-w-full'
+                    "relative w-full max-w-sm",
+                    isSearchOpen ? 'block' : 'hidden',
+                    !isMobile && 'block'
                 )}>
-                    <div className="relative w-full max-w-sm ml-auto">
-                        <Input
-                            type="text"
-                            placeholder="Buscar evento o canal..."
-                            className="w-full pr-10"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                         <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { fetchEvents(); }}>
-                            <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                        </Button>
-                    </div>
+                    <Input
+                        type="text"
+                        placeholder="Buscar evento o canal..."
+                        className="w-full pr-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                     <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { fetchEvents(); }}>
+                        <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    </Button>
                 </div>
 
                 <Button variant="ghost" size="icon" onClick={() => {

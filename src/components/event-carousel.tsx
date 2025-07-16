@@ -121,8 +121,8 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                       </div>
                     )}
                   </div>
-                  <div className="p-3 bg-card flex-grow flex flex-col justify-center">
-                    <h3 className="font-bold truncate text-sm text-center">{channel.name}</h3>
+                  <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
+                    <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
                   </div>
                 </Card>
               </CarouselItem>
