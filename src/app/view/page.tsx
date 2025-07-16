@@ -84,24 +84,45 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const sortedAndFilteredEvents = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
         const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-        const chronologicalSortLogic = (a: Event, b: Event): number => {
-            if (!a.time || !b.time) return 0;
-            return a.time.localeCompare(b.time);
-        };
+        
         const liveSortLogic = (a: Event, b: Event): number => {
             const hasCustomImageA = a.image && a.image !== placeholderImage;
             const hasCustomImageB = b.image && b.image !== placeholderImage;
             if (hasCustomImageA && !hasCustomImageB) return -1;
             if (!hasCustomImageA && hasCustomImageB) return 1;
-            return 0;
+            return a.title.localeCompare(b.title);
+        };
+
+        const upcomingSortLogic = (a: Event, b: Event): number => {
+            const now = new Date();
+            const parseTime = (timeStr: string) => {
+                if (!/^\d{2}:\d{2}$/.test(timeStr)) return null;
+                const parsed = parse(timeStr, 'HH:mm', now);
+                return isValid(parsed) ? parsed : null;
+            };
+
+            const timeA = parseTime(a.time);
+            const timeB = parseTime(b.time);
+            
+            if (timeA && !timeB) return -1;
+            if (!timeA && timeB) return 1;
+            if (!timeA && !timeB) return 0;
+            
+            const isPastA = isBefore(timeA!, now);
+            const isPastB = isBefore(timeB!, now);
+            
+            if (isPastA && !isPastB) return 1;
+            if (!isPastA && isPastB) return -1;
+            
+            return timeA!.getTime() - timeB!.getTime();
         };
 
         const filtered = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
 
         const liveCustom = filtered.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
         const liveDefault = filtered.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
-        const upcoming = filtered.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
-        const unknown = filtered.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
+        const upcoming = filtered.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
+        const unknown = filtered.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
         const finished = filtered.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
         return [...liveCustom, ...liveDefault, ...upcoming, ...unknown, ...finished];
@@ -323,6 +344,7 @@ function ViewPageContent() {
   const numCameras = useMemo(() => selectedEvents.filter(Boolean).length, [selectedEvents]);
 
    const fetchAllEvents = useCallback(async () => {
+    if (allEventsData.length > 0) return; // Fetch only if data is not already loaded
     setIsAddEventsLoading(true);
     try {
       const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
@@ -479,7 +501,7 @@ function ViewPageContent() {
     } finally {
         setIsAddEventsLoading(false);
     }
-  }, []);
+  }, [allEventsData]);
 
   // Handle schedules
   useEffect(() => {
@@ -511,8 +533,6 @@ function ViewPageContent() {
   
   useEffect(() => {
     setIsMounted(true);
-    
-    fetchAllEvents();
     
     const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
     if (!hasVisited) {
@@ -565,18 +585,13 @@ function ViewPageContent() {
             console.error("Failed to parse viewOrder from localStorage", e);
         }
     }
-  }, [fetchAllEvents]);
+  }, []);
 
     useEffect(() => {
         if (addEventsDialogOpen) {
-            if (allEventsData.length === 0) {
-                setIsAddEventsLoading(true);
-                fetchAllEvents();
-            } else {
-                setIsAddEventsLoading(false);
-            }
+            fetchAllEvents();
         }
-    }, [addEventsDialogOpen, allEventsData, fetchAllEvents]);
+    }, [addEventsDialogOpen, fetchAllEvents]);
 
     const handleAddEventSelect = (event: Event, option: string) => {
         const newSelectedEvents = [...selectedEvents];

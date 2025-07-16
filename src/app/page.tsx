@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -432,22 +433,18 @@ export default function HomePage() {
         return title.replace(prefixes, '').trim().toLowerCase();
     };
     
-    // Combine fetched events with static 24/7 channels
     const combinedEvents = [...events, ...channels247];
     
     const eventMap = new Map<string, Event>();
 
     combinedEvents.forEach(event => {
         const normalized = normalizeTitle(event.title);
-        // Use date for streamed.su events to differentiate, but not for others that may not have it
         const key = event.source === 'streamed.su' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${event.time}`;
 
         if (eventMap.has(key)) {
             const existingEvent = eventMap.get(key)!;
             
-            // Merge logic
             const newOptions = [...existingEvent.options, ...event.options];
-             // Remove duplicate options based on URL
             const uniqueOptions = Array.from(new Map(newOptions.map(item => [item.url, item])).values());
             
             const newSources = [...existingEvent.sources, ...(event.sources || [])];
@@ -492,7 +489,7 @@ export default function HomePage() {
       if (hasCustomImageA && !hasCustomImageB) return -1;
       if (!hasCustomImageA && hasCustomImageB) return 1;
 
-      return 0;
+      return a.title.localeCompare(b.title);
     };
     
     const upcomingSortLogic = (a: Event, b: Event): number => {
@@ -506,7 +503,6 @@ export default function HomePage() {
         const timeA = parseTime(a.time);
         const timeB = parseTime(b.time);
         
-        // Push events with invalid times to the end
         if (timeA && !timeB) return -1;
         if (!timeA && timeB) return 1;
         if (!timeA && !timeB) return 0;
@@ -517,7 +513,6 @@ export default function HomePage() {
         if (isPastA && !isPastB) return 1;
         if (!isPastA && isPastB) return -1;
         
-        // If both are past or both are future, sort chronologically
         return timeA!.getTime() - timeB!.getTime();
     };
 
@@ -539,9 +534,8 @@ export default function HomePage() {
     
     const allSorted = [...live, ...upcoming, ...unknown, ...finished];
     
-    // Mobile sort logic
-    const mobileLiveCustom = processedEvents.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
-    const mobileLiveDefault = processedEvents.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
+    const mobileLiveCustom = processedEvents.filter(e => e.status === 'En Vivo' && e.category !== '24/7' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
+    const mobileLiveDefault = processedEvents.filter(e => e.status === 'En Vivo' && e.category !== '24/7' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
     const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
     const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
     const mobileFinished = finished;
