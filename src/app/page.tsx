@@ -186,6 +186,7 @@ function HomePageContent() {
   // Schedule related states
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
+  const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -206,11 +207,14 @@ function HomePageContent() {
   }, [isMobile]);
   
  const fetchEvents = useCallback(async (manualTrigger = false) => {
+    const setLoadingState = dialogContext === 'schedule' ? setIsScheduleEventsLoading : setIsAddEventsLoading;
+    
     if(!manualTrigger) {
       setIsDataLoading(true);
     } else {
-      setIsAddEventsLoading(true);
+      setLoadingState(true);
     }
+
     try {
       const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
         fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []).catch(() => []),
@@ -333,12 +337,14 @@ function HomePageContent() {
                 const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
                 if (response.ok) {
                   const streams: any[] = await response.json();
-                  return streams.map(stream => ({
-                    url: stream.embedUrl,
-                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                    hd: stream.hd,
-                    language: stream.language,
-                  }));
+                  if (Array.isArray(streams)) {
+                    return streams.map(stream => ({
+                      url: stream.embedUrl,
+                      label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                      hd: stream.hd,
+                      language: stream.language,
+                    }));
+                  }
                 }
                 return [];
               });
@@ -363,12 +369,12 @@ function HomePageContent() {
       setEvents([]); 
     } finally {
         setIsDataLoading(false);
-        setIsAddEventsLoading(false);
+        setLoadingState(false);
         if (!isInitialLoadDone) {
             setIsInitialLoadDone(true);
         }
     }
-  }, [isInitialLoadDone]);
+  }, [isInitialLoadDone, dialogContext]);
 
   // Load state from localStorage on initial mount
   useEffect(() => {
@@ -405,6 +411,17 @@ function HomePageContent() {
     const storedChatEnabled = localStorage.getItem('isChatEnabled');
     if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
     
+    const storedSchedules = localStorage.getItem('schedules');
+    if (storedSchedules) {
+        try {
+            const parsedSchedules: Schedule[] = JSON.parse(storedSchedules).map((s: any) => ({
+                ...s,
+                dateTime: new Date(s.dateTime) // Re-hydrate Date objects
+            }));
+            setSchedules(parsedSchedules);
+        } catch(e) { console.error("Failed to parse schedules from localStorage", e); }
+    }
+    
     // Welcome popup logic for view mode
     if (isViewMode) {
       const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
@@ -417,12 +434,44 @@ function HomePageContent() {
     
   }, [isViewMode]);
 
+  // Schedule activation checker
+  useEffect(() => {
+    if (!isViewMode || schedules.length === 0) return;
+
+    const interval = setInterval(() => {
+        const now = new Date();
+        const dueSchedules = schedules.filter(s => isBefore(s.dateTime, now));
+
+        if (dueSchedules.length > 0) {
+            // Apply the first due schedule
+            const scheduleToApply = dueSchedules.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())[0];
+            
+            setSelectedEvents(scheduleToApply.events);
+            setViewOrder(scheduleToApply.order);
+
+            // Remove the applied schedule
+            const remainingSchedules = schedules.filter(s => s.id !== scheduleToApply.id);
+            setSchedules(remainingSchedules);
+        }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [isViewMode, schedules, setSelectedEvents, setViewOrder, setSchedules]);
+
+
   // Fetch event data only once on initial mount
   useEffect(() => {
     if (!isInitialLoadDone) {
       fetchEvents();
     }
   }, [isInitialLoadDone, fetchEvents]);
+  
+  // Fetch events when add dialog is opened
+  useEffect(() => {
+    if (addEventsDialogOpen) {
+      fetchEvents(true);
+    }
+  }, [addEventsDialogOpen, fetchEvents]);
 
   // Persist state to localStorage
   useEffect(() => {
@@ -432,8 +481,9 @@ function HomePageContent() {
         localStorage.setItem('gridGap', gridGap.toString());
         localStorage.setItem('borderColor', borderColor);
         localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
+        localStorage.setItem('schedules', JSON.stringify(schedules));
     }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, isInitialLoadDone]); 
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
 
   // Timer logic for welcome popup
   const startTimer = useCallback(() => {
@@ -876,8 +926,6 @@ function HomePageContent() {
 
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
   
-  
-  
   const getItemClasses = (orderedIndex: number, count: number) => {
     if (isMobile) return '';
     if (count === 3) {
@@ -894,9 +942,6 @@ function HomePageContent() {
     }
     return '';
  };
-
-  // This state determines which selection function to use in the AddEventsDialog
-  const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
 
   const handleSelectForCurrentDialog = (event: Event, option: string) => {
     if (dialogContext === 'schedule') {
@@ -949,14 +994,15 @@ function HomePageContent() {
                   setScheduleManagerOpen(true);
                 }
               } else {
+                setDialogContext(isScheduleEventsLoading ? 'schedule' : 'view');
                 setAddEventsDialogOpen(true);
               }
             }}
             onSelect={handleSelectForCurrentDialog}
-            selectedEvents={selectedEvents}
+            selectedEvents={dialogContext === 'schedule' ? futureSelection : selectedEvents}
             allEvents={[...events, ...channels247]} 
             allChannels={channels}
-            isLoading={isAddEventsLoading}
+            isLoading={dialogContext === 'schedule' ? isScheduleEventsLoading : isAddEventsLoading}
             onFetchEvents={() => fetchEvents(true)}
         />
         <ScheduleManager 
@@ -973,7 +1019,6 @@ function HomePageContent() {
           isLoading={isScheduleEventsLoading}
           onAddEvent={() => {
             setDialogContext('schedule');
-            fetchEvents(true);
             setAddEventsDialogOpen(true);
           }}
           setFutureSelection={setFutureSelection}
@@ -1134,7 +1179,6 @@ function HomePageContent() {
                 onIsChatEnabledChange={setIsChatEnabled}
                 onAddEvent={() => {
                   setDialogContext('view');
-                  fetchEvents(true);
                   setAddEventsDialogOpen(true);
                 }}
                 onSchedule={() => setScheduleManagerOpen(true)}
@@ -1683,7 +1727,6 @@ function HomePageContent() {
                                         onRemove={handleEventRemove} 
                                         onModify={openDialogForModification}
                                         isViewPage={false}
-                                        onAddEvent={() => {}}
                                     />
                                 </ScrollArea>
                             </DialogContent>
@@ -1992,6 +2035,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 

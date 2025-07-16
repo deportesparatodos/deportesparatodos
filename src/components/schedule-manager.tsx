@@ -45,8 +45,6 @@ interface ScheduleManagerProps {
   schedules: Schedule[];
   onSchedulesChange: (schedules: Schedule[]) => void;
   onModifyEventInView: (event: Event, index: number) => void;
-  allEvents: Event[];
-  allChannels: Channel[];
   onFetchEvents: () => void;
   isLoading: boolean;
   onAddEvent: () => void;
@@ -64,8 +62,6 @@ export function ScheduleManager({
   schedules,
   onSchedulesChange,
   onModifyEventInView,
-  allEvents,
-  allChannels,
   onFetchEvents,
   isLoading,
   onAddEvent,
@@ -182,7 +178,7 @@ export function ScheduleManager({
                 setModifyEventForSchedule(null)
             }
         }}>
-           <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+           <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} data-sub-dialog="true">
               <EventSelectionDialog
                 isOpen={!!modifyEventForSchedule}
                 onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
@@ -205,9 +201,10 @@ export function ScheduleManager({
                 // Allow interacting with elements inside other dialogs/popovers
                 if (target.closest('[role="dialog"]') || target.closest('[data-radix-popper-content-wrapper]')) {
                     const isSubDialog = (target.closest('[role="dialog"]') as HTMLElement)?.dataset?.subDialog;
-                    if (!isSubDialog) {
-                       e.preventDefault();
+                    if (isSubDialog) {
+                       return;
                     }
+                    e.preventDefault();
                 }
             }}
              onOpenAutoFocus={(e) => e.preventDefault()}
@@ -329,3 +326,4 @@ export function ScheduleManager({
     </>
   );
 }
+

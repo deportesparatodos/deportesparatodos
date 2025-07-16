@@ -144,7 +144,7 @@ export function EventListManagement({
 }
 
 
-interface LayoutConfiguratorProps extends EventListManagementProps {
+interface LayoutConfiguratorProps extends Omit<EventListManagementProps, 'onReload'> {
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
@@ -253,3 +253,4 @@ export function LayoutConfigurator({
     </div>
   );
 }
+
