@@ -367,10 +367,11 @@ export default function HomePage() {
     
   }, []);
 
-  // Fetch event data
+  // Fetch event data only once on initial mount
   useEffect(() => {
     fetchEvents();
-  }, [fetchEvents]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Persist selectedEvents to localStorage
   useEffect(() => {
@@ -505,7 +506,7 @@ export default function HomePage() {
         
         if (timeA && !timeB) return -1;
         if (!timeA && timeB) return 1;
-        if (!timeA && !timeB) return 0;
+        if (!timeA && !timeB) return a.title.localeCompare(b.title); // Fallback for invalid times
         
         const isPastA = isBefore(timeA!, now);
         const isPastB = isBefore(timeB!, now);
@@ -1204,14 +1205,6 @@ export default function HomePage() {
                                     {selectedEventsCount}
                                 </Badge>
                             )}
-                        </Button>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={fetchEvents}
-                            disabled={isDataLoading}
-                        >
-                            <RotateCw className={cn("h-4 w-4", isDataLoading && "animate-spin")} />
                         </Button>
                     </>
                 )}
