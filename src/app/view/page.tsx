@@ -277,6 +277,8 @@ function ViewPageContent() {
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [allEventsData, setAllEventsData] = useState<Event[]>([]);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
+  const [isScheduleEventsLoading, setIsScheduleEventsLoading] = useState(false);
+
 
   const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
 
@@ -343,9 +345,12 @@ function ViewPageContent() {
   
   const numCameras = useMemo(() => selectedEvents.filter(Boolean).length, [selectedEvents]);
 
-   const fetchAllEvents = useCallback(async () => {
-    if (allEventsData.length > 0) return; // Fetch only if data is not already loaded
-    setIsAddEventsLoading(true);
+   const fetchAllEvents = useCallback(async (isForSchedule = false) => {
+    if (allEventsData.length > 0 && !isForSchedule) return;
+    
+    const setLoading = isForSchedule ? setIsScheduleEventsLoading : setIsAddEventsLoading;
+    setLoading(true);
+
     try {
       const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
         fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []),
@@ -499,7 +504,7 @@ function ViewPageContent() {
       console.error("Failed to fetch all events:", error);
       setAllEventsData([]);
     } finally {
-        setIsAddEventsLoading(false);
+        setLoading(false);
     }
   }, [allEventsData]);
 
@@ -885,6 +890,8 @@ function ViewPageContent() {
              allEvents={allEventsData}
              allChannels={allChannelsList}
              currentOrder={viewOrder}
+             onFetchScheduleEvents={() => fetchAllEvents(true)}
+             isScheduleEventsLoading={isScheduleEventsLoading}
           />
 
           {isChatEnabled && (
@@ -1008,4 +1015,3 @@ export default function Page() {
   );
 }
 
-    

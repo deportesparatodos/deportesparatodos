@@ -34,6 +34,8 @@ interface CameraConfigurationProps {
   allEvents: Event[];
   allChannels: Channel[];
   currentOrder: number[];
+  onFetchScheduleEvents: () => void;
+  isScheduleEventsLoading: boolean;
 }
 
 export function CameraConfigurationComponent({ 
@@ -55,7 +57,9 @@ export function CameraConfigurationComponent({
   onSchedulesChange,
   allEvents,
   allChannels,
-  currentOrder
+  currentOrder,
+  onFetchScheduleEvents,
+  isScheduleEventsLoading
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
@@ -254,6 +258,8 @@ export function CameraConfigurationComponent({
           onModifyEventInView={onModify}
           allEvents={allEvents}
           allChannels={allChannels}
+          onFetchEvents={onFetchScheduleEvents}
+          isLoading={isScheduleEventsLoading}
         />
       )}
     </>

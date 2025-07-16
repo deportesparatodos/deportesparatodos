@@ -48,6 +48,8 @@ interface ScheduleManagerProps {
   onModifyEventInView: (event: Event, index: number) => void;
   allEvents: Event[];
   allChannels: Channel[];
+  onFetchEvents: () => void;
+  isLoading: boolean;
 }
 
 export function ScheduleManager({
@@ -59,7 +61,9 @@ export function ScheduleManager({
   onSchedulesChange,
   onModifyEventInView,
   allEvents,
-  allChannels
+  allChannels,
+  onFetchEvents,
+  isLoading
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -198,6 +202,7 @@ export function ScheduleManager({
         selectedEvents={futureSelection}
         allEvents={allEvents}
         allChannels={allChannels}
+        isLoading={isLoading}
       />
       
       {modifyEventForSchedule && (
@@ -313,7 +318,10 @@ export function ScheduleManager({
                                 setModifyEventForSchedule({ event: eventForModification, index });
                               }}
                               isViewPage={true}
-                              onAddEvent={() => setAddEventsDialogOpen(true)}
+                              onAddEvent={() => {
+                                onFetchEvents();
+                                setAddEventsDialogOpen(true);
+                              }}
                           />
                       </div>
                   </ScrollArea>
