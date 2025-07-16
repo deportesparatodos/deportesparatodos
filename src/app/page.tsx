@@ -46,6 +46,7 @@ import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
 import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid } from 'date-fns';
+import { LoadingScreen } from '@/components/loading-screen';
 
 
 interface StreamedMatch {
@@ -249,8 +250,10 @@ export default function HomePage() {
           try {
             // Parse time string, add 2 hours, and format it back
             const originalTime = parse(event.time, 'HH:mm', new Date());
-            const adjustedTime = addHours(originalTime, 2);
-            eventTime = format(adjustedTime, 'HH:mm');
+            if (isValid(originalTime)) {
+              const adjustedTime = addHours(originalTime, 2);
+              eventTime = format(adjustedTime, 'HH:mm');
+            }
           } catch(e) {
             console.error("Could not parse time for streamtpglobal event", e);
           }
@@ -506,8 +509,8 @@ export default function HomePage() {
         if (!timeB) return -1;
         
         // If time is in the past, push it to the end
-        if (timeA < now && timeB >= now) return 1;
-        if (timeA >= now && timeB < now) return -1;
+        if (isBefore(timeA, now) && isAfter(timeB, now)) return 1;
+        if (isAfter(timeA, now) && isBefore(timeB, now)) return -1;
 
         const diffA = Math.abs(differenceInMinutes(timeA, now));
         const diffB = Math.abs(differenceInMinutes(timeB, now));
@@ -730,11 +733,7 @@ export default function HomePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
