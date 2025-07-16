@@ -186,7 +186,16 @@ export function ScheduleManager({
 
 
       <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onOpenChange(false); }}>
-        <DialogContent className="max-w-4xl w-full h-[90vh] flex flex-col p-0">
+        <DialogContent 
+            className="max-w-4xl w-full h-[90vh] flex flex-col p-0"
+            onInteractOutside={(e) => {
+                const target = e.target as HTMLElement;
+                // Allow interacting with elements inside other dialogs/popovers
+                if (target.closest('[role="dialog"]') || target.closest('[data-radix-popper-content-wrapper]')) {
+                    e.preventDefault();
+                }
+            }}
+        >
           <DialogHeader className="p-4 border-b flex-shrink-0">
             <DialogTitle>Programar Selección</DialogTitle>
             <DialogDescription>
@@ -283,10 +292,7 @@ export function ScheduleManager({
                                 setModifyEventForSchedule({ event: eventForModification, index });
                               }}
                               isViewPage={true}
-                              onAddEvent={() => {
-                                onOpenChange(false);
-                                onAddEvent();
-                              }}
+                              onAddEvent={onAddEvent}
                           />
                       </div>
                   </ScrollArea>

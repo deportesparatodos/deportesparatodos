@@ -143,7 +143,7 @@ const channels247: Event[] = [
 ];
 
 function HomePageContent() {
-  // Global state
+  const isMobile = useIsMobile();
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
   const [gridGap, setGridGap] = useState<number>(2);
@@ -182,11 +182,13 @@ function HomePageContent() {
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [isScheduleEventsLoading, setIsScheduleEventsLoading] = useState(false);
 
-  const isMobile = useIsMobile();
-
 
  const fetchEvents = useCallback(async (manualTrigger = false) => {
-    if(!manualTrigger) setIsDataLoading(true);
+    if(!manualTrigger) {
+      setIsDataLoading(true);
+    } else {
+      setIsAddEventsLoading(true);
+    }
     try {
       const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
         fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []).catch(() => []),
@@ -339,6 +341,7 @@ function HomePageContent() {
       setEvents([]); 
     } finally {
         setIsDataLoading(false);
+        setIsAddEventsLoading(false);
         if (!isInitialLoadDone) {
             setIsInitialLoadDone(true);
         }
@@ -700,6 +703,7 @@ function HomePageContent() {
   
   const handleStopView = () => {
     setIsViewMode(false);
+    setIsInitialLoadDone(false); // Trigger loading screen and re-fetch
   }
 
   const openDialogForEvent = (event: Event) => {
@@ -893,7 +897,7 @@ function HomePageContent() {
             onOpenChange={setAddEventsDialogOpen}
             onSelect={handleAddEventSelect}
             selectedEvents={selectedEvents}
-            allEvents={events} 
+            allEvents={[...events, ...channels247]} 
             allChannels={channels}
             isLoading={isAddEventsLoading}
             onFetchEvents={() => fetchEvents(true)}
@@ -1049,7 +1053,10 @@ function HomePageContent() {
                 onBorderColorChange={setBorderColor}
                 isChatEnabled={isChatEnabled}
                 onIsChatEnabledChange={setIsChatEnabled}
-                onAddEvent={() => setAddEventsDialogOpen(true)}
+                onAddEvent={() => {
+                  setAddEventsDialogOpen(true);
+                  fetchEvents(true);
+                }}
                 schedules={schedules}
                 onSchedulesChange={setSchedules}
                 allEvents={events}
