@@ -493,18 +493,22 @@ export default function HomePage() {
 
             return 0;
         });
-
-    const upcomingSortLogic = (a: Event, b: Event): number => {
+    
+    const chronologicalSortLogic = (a: Event, b: Event): number => {
         const now = new Date();
         const parseTime = (timeStr: string) => {
+            if (!/^\d{2}:\d{2}$/.test(timeStr)) return null;
             const parsed = parse(timeStr, 'HH:mm', now);
             return isValid(parsed) ? parsed : null;
         };
 
         const timeA = parseTime(a.time);
         const timeB = parseTime(b.time);
-        
-        if (!timeA || !timeB) return !timeA ? 1 : -1;
+
+        // Handle invalid or missing times
+        if (!timeA && !timeB) return 0; // Both are invalid, treat as equal
+        if (!timeA) return 1;           // A is invalid, so it goes to the end
+        if (!timeB) return -1;          // B is invalid, so it goes to the end
 
         const isPastA = isBefore(timeA, now);
         const isPastB = isBefore(timeB, now);
@@ -516,8 +520,9 @@ export default function HomePage() {
         return timeA.getTime() - timeB.getTime();
     };
 
-    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(upcomingSortLogic);
-    const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort((a,b) => a.time.localeCompare(b.time));
+    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(chronologicalSortLogic);
+    const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort(chronologicalSortLogic);
+
     const finished = processedEvents
         .filter((e) => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
         .sort((a,b) => b.time.localeCompare(a.time));
@@ -566,8 +571,8 @@ export default function HomePage() {
 
             return 0;
         });
-        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort((a, b) => a.time.localeCompare(b.time));
-        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort((a, b) => a.time.localeCompare(b.time));
+        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
+        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
         const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
         categoryFilteredEvents = [...liveCat, ...upcomingCat, ...unknownCat, ...finishedCat];
@@ -734,11 +739,11 @@ export default function HomePage() {
   
   const pageTitle = (
     <div className={cn(
-        'flex items-center min-h-[75px] transition-all duration-300',
-        isMobile && isSearchOpen ? 'w-0 opacity-0' : 'w-auto opacity-100'
+        'flex items-center min-h-[75px] transition-all duration-300 pl-4',
+        isMobile && isSearchOpen && 'w-0 opacity-0'
     )}>
         {currentView === 'home' ? (
-            <div className="flex items-center gap-0 pl-4">
+            <div className="flex items-center gap-0">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="rounded-none">
@@ -920,7 +925,6 @@ export default function HomePage() {
                                             <p>Estos ingresos publicitarios permiten el mantenimiento del sitio, pero no están directamente vinculados al contenido embebido ni implican relación comercial con las plataformas desde las cuales se obtiene dicho contenido.</p>
                                             <p>Deportes para Todos no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.</p>
                                             <p>Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.</p>
-                                            <p>Nos reservamos el derecho de incluir o remover campañas publicitarias en cualquier momento, y recomendamos a los usuarios consultar la política de privacidad de cada plataforma externa a la que accedan desde este sitio.</p>
                                             <p>The Blogger Network, LLC) for the purposes of placing advertising on the Site, and Monumetric will collect and use certain data for advertising purposes. To learn more about Monumetric’s data usage, click here: <a href="https://www.monumetric.com/publisher-advertising-privacy-policy/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Publisher Advertising Privacy</a></p>
                                             <h3 className="font-bold text-foreground">Notificaciones de derechos de autor:</h3>
                                             <p>Si usted es titular de derechos o su representante y considera que un contenido embebido desde una fuente externa infringe sus derechos, puede enviarnos una notificación formal mandando un mail a deportesparatodosvercel@gmail.com. Aunque no estamos sujetos a la legislación DMCA de EE.UU., colaboramos voluntariamente con cualquier requerimiento legítimo bajo dicho marco.</p>
@@ -1110,38 +1114,40 @@ export default function HomePage() {
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
             {pageTitle}
-            <div className={cn(
-                "flex items-center justify-end gap-2 px-4 transition-all duration-300",
-                isMobile && isSearchOpen ? "flex-1" : "flex-initial"
+             <div className={cn(
+                "flex items-center justify-end gap-2 px-4 flex-1 md:flex-initial",
+                !isSearchOpen && isMobile && "flex-1 justify-end",
+                isSearchOpen && isMobile && "w-full"
             )}>
                 <div className={cn(
                     "relative w-full max-w-sm",
-                    isSearchOpen ? 'block' : 'hidden'
+                    isSearchOpen ? 'block' : 'hidden md:block'
                 )}>
                     <Input
+                        ref={r => r?.focus()}
                         type="text"
                         placeholder="Buscar evento o canal..."
                         className="w-full pr-10"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                     <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => { fetchEvents(); }}>
-                        <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                    </Button>
+                     <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
+                        onClick={() => { if(searchTerm) { setSearchTerm(''); } else { fetchEvents(); } }}
+                      >
+                         {searchTerm ? <X className="h-4 w-4" /> : <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />}
+                     </Button>
                 </div>
 
-                <Button variant="ghost" size="icon" onClick={() => {
-                     if (isSearchOpen && searchTerm) {
-                        setSearchTerm('');
-                    }
-                    setIsSearchOpen(!isSearchOpen);
-                }}>
+                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSearchOpen(!isSearchOpen)}>
                     {isSearchOpen ? <X /> : <Search />}
                 </Button>
 
                 <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className={cn(isMobile && isSearchOpen && "hidden")}>
                             <Settings />
                         </Button>
                     </DialogTrigger>
@@ -1186,7 +1192,7 @@ export default function HomePage() {
                     size="icon"
                     onClick={handleStartView}
                     disabled={selectedEventsCount === 0}
-                    className="bg-green-600 hover:bg-green-700 text-white relative"
+                    className={cn("bg-green-600 hover:bg-green-700 text-white relative", isMobile && isSearchOpen && "hidden")}
                 >
                     <Play />
                      {selectedEventsCount > 0 && (

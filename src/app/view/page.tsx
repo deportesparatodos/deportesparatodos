@@ -94,7 +94,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                     return orderA - orderB;
                 }
                 if (a.time && b.time && (a.status === 'Próximo' || a.status === 'Desconocido')) {
-                    return a.time.localeCompare(b.time);
+                     return a.time.localeCompare(b.time);
+                }
+                 if (a.time && b.time && a.status === 'Finalizado') {
+                    return b.time.localeCompare(a.time); // Sort finished descending
                 }
                 return 0;
             });
