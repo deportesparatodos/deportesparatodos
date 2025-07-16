@@ -27,6 +27,76 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 
 
+// This hardcoded list is a temporary data source for 24/7 channels
+const channels247: Event[] = [
+  {
+    title: "24/7 South Park",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/3b146825-9e54-4e17-b96e-c172ced342ad", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://thumbs.poocloud.in/southpark/preview.jpg",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  },
+  {
+    title: "24/7 COWS",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://extension.usu.edu/drought/images/drought-mitigation-cows-thumbnail.png",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  },
+  {
+    title: "24/7 Family Guy",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/d2b4b104-853f-4e4e-9edd-425a1275e90a", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://thumbs.poocloud.in/familyguy/preview.jpg",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  },
+  {
+    title: "24/7 The Simpsons",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/d2b4b104-853f-4e4e-9edd-425a1275e90a", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://thumbs.poocloud.in/thesimpsons/preview.jpg",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  },
+  {
+    title: "(North) Korean Central Television",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/4a68d34f-7052-4a60-ac79-728320fa0531", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://i.imgur.com/CnphStu.png",
+    sources: [],
+    buttons: [],
+    category: "24/7",
+    language: "",
+    date: "",
+    source: "",
+  }
+];
+
+
 export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, isLoading, onFetchEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], isLoading: boolean, onFetchEvents: () => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -168,7 +238,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                             <Input
                                 type="text"
                                 placeholder="Buscar..."
-                                className="w-full pl-10 pr-10"
+                                className="w-full pl-10 pr-20"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -355,153 +425,145 @@ function ViewPageContent() {
     setLoading(true);
 
     try {
-      const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
-        fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []),
-        fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []),
-        fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []),
-        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : [])
-      ]);
+        const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
+            fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []).catch(() => []),
+            fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []).catch(() => []),
+            fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []).catch(() => []),
+            fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => [])
+        ]);
 
-      const liveData: any[] = Array.isArray(liveResponse) ? liveResponse : [];
-      const todayData: any[] = Array.isArray(todayResponse) ? todayResponse : [];
-      const sportsData: {id: string; name: string}[] = Array.isArray(sportsResponse) ? sportsResponse : [];
-      const streamTpData: any[] = Array.isArray(streamTpResponse) ? streamTpResponse : [];
-      
-      const allMatchesMap = new Map<string, any>();
-      
-      todayData.forEach((match: any) => allMatchesMap.set(match.id, match));
-      liveData.forEach((match: any) => allMatchesMap.set(match.id, match));
+        const liveData: any[] = Array.isArray(liveResponse) ? liveResponse : [];
+        const todayData: any[] = Array.isArray(todayResponse) ? todayResponse : [];
+        const sportsData: {id: string; name: string}[] = Array.isArray(sportsResponse) ? sportsResponse : [];
+        const streamTpData: any[] = Array.isArray(streamTpResponse) ? streamTpResponse : [];
 
-      const combinedStreamedData = Array.from(allMatchesMap.values());
+        const allMatchesMap = new Map<string, any>();
+        todayData.forEach(match => allMatchesMap.set(match.id, match));
+        liveData.forEach(match => allMatchesMap.set(match.id, match));
+
+        const combinedStreamedData = Array.from(allMatchesMap.values());
         
-      const timeZone = 'America/Argentina/Buenos_Aires';
-      const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-      
-      const categoryMap = sportsData.reduce((acc: any, sport: any) => {
-          acc[sport.id] = sport.name;
-          return acc;
-      }, {} as Record<string, string>);
-
-      const initialEvents: Event[] = combinedStreamedData.map((match: any) => {
-        let imageUrl = placeholderImage;
-        if (match.teams?.home?.badge && match.teams?.away?.badge) {
-            imageUrl = `https://streamed.su/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`;
-        } else if (match.poster) {
-            imageUrl = `https://streamed.su${match.poster}`;
-        }
+        const timeZone = 'America/Argentina/Buenos_Aires';
+        const nowInBA = toZonedTime(new Date(), timeZone);
+        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
         
-        return {
-        title: match.title,
-        time: format(toZonedTime(new Date(match.date), timeZone), 'HH:mm'),
-        options: [], 
-        sources: match.sources,
-        buttons: [],
-        category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
-        language: '',
-        date: format(toZonedTime(new Date(match.date), timeZone), 'yyyy-MM-dd'),
-        source: 'streamed.su',
-        image: imageUrl,
-        status: 'Desconocido', // Will be updated later
-      }});
+        const categoryMap = sportsData.reduce((acc: any, sport: any) => {
+            acc[sport.id] = sport.name;
+            return acc;
+        }, {} as Record<string, string>);
 
-      const streamTpEvents: Event[] = streamTpData.map((event: any) => {
-          let status: Event['status'] = 'Desconocido';
-          if (event.status.toLowerCase() === 'en vivo') {
-              status = 'En Vivo';
-          } else if (event.status.toLowerCase() === 'pronto') {
-              status = 'Próximo';
-          }
-          
-          let optionLabel = 'Ver';
-          try {
-              const url = new URL(event.link);
-              optionLabel = url.searchParams.get('stream') || 'Ver';
-          } catch (e) { /* ignore invalid URLs */ }
+        const streamedSuEvents: Event[] = combinedStreamedData.map((match: any) => ({
+            title: match.title,
+            time: format(toZonedTime(new Date(match.date), timeZone), 'HH:mm'),
+            options: [], 
+            sources: match.sources,
+            buttons: [],
+            category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
+            language: '',
+            date: format(toZonedTime(new Date(match.date), timeZone), 'yyyy-MM-dd'),
+            source: 'streamed.su',
+            image: match.teams?.home?.badge && match.teams?.away?.badge 
+                   ? `https://streamed.su/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
+                   : (match.poster ? `https://streamed.su${match.poster}` : placeholderImage),
+            status: 'Desconocido',
+        }));
 
-          let eventTime = event.time;
-           try {
-              const originalTime = parse(event.time, 'HH:mm', new Date());
-              if (isValid(originalTime)) {
-                const adjustedTime = addHours(originalTime, 2);
-                eventTime = format(adjustedTime, 'HH:mm');
-              }
-           } catch(e) { console.error("Could not parse time for streamtpglobal event", e); }
-          
-          return {
-              title: event.title,
-              time: eventTime,
-              options: [{ url: event.link, label: optionLabel.toUpperCase(), hd: false, language: '' }],
-              sources: [],
-              buttons: [],
-              category: event.category === 'Other' ? 'Otros' : event.category,
-              language: '',
-              date: format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd'), // No date provided, use today
-              source: 'streamtpglobal',
-              image: 'https://i.ibb.co/dHPWxr8/depete.jpg',
-              status: status,
-          };
-      });
-
-      const combinedInitialEvents = [...initialEvents, ...streamTpEvents];
-
-      // Fetch all stream options concurrently
-      const eventsWithStreams = await Promise.all(
-        combinedInitialEvents.map(async (event) => {
-          if (event.source === 'streamed.su' && event.sources && event.sources.length > 0) {
+        const streamTpEvents: Event[] = streamTpData.map((event: any) => {
+            let status: Event['status'] = event.status.toLowerCase() === 'en vivo' ? 'En Vivo' : 'Próximo';
+            let optionLabel = 'Ver';
             try {
-              const streamOptions: StreamOption[] = [];
-              const sourcePromises = event.sources.map(async (source) => {
-                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                if (response.ok) {
-                  const streams: any[] = await response.json();
-                  return streams.map(stream => ({
-                    url: stream.embedUrl,
-                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                    hd: stream.hd,
-                    language: stream.language,
-                  }));
+                const url = new URL(event.link);
+                optionLabel = url.searchParams.get('stream') || 'Ver';
+            } catch (e) {}
+
+            let eventTime = event.time;
+            try {
+                const originalTime = parse(event.time, 'HH:mm', new Date());
+                if (isValid(originalTime)) {
+                    eventTime = format(addHours(originalTime, 2), 'HH:mm');
                 }
-                return [];
-              });
-              
-              const results = await Promise.all(sourcePromises);
-              results.forEach(options => streamOptions.push(...options));
-              return { ...event, options: streamOptions };
-            } catch (error) {
-              return { ...event, options: [] };
+            } catch(e) {}
+            
+            return {
+                title: event.title,
+                time: eventTime,
+                options: [{ url: event.link, label: optionLabel.toUpperCase(), hd: false, language: '' }],
+                sources: [], buttons: [],
+                category: event.category === 'Other' ? 'Otros' : event.category,
+                language: '', date: format(nowInBA, 'yyyy-MM-dd'),
+                source: 'streamtpglobal', image: placeholderImage, status,
+            };
+        });
+
+        // Merge all sources
+        const eventMap = new Map<string, Event>();
+        const normalizeTitle = (title: string): string => title.replace(/^(f[oó]rmula 1:|liga profesional:|amistoso:|primera nacional:|copa libertadores:|copa sudamericana:|f[uú]tbol:|wwe:|ufc:)/i, '').trim().toLowerCase();
+
+        [...streamedSuEvents, ...streamTpEvents, ...channels247].forEach(event => {
+            const normalized = normalizeTitle(event.title);
+            const key = event.source === 'streamed.su' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${event.time}`;
+
+            if (eventMap.has(key)) {
+                const existing = eventMap.get(key)!;
+                const newOptions = [...existing.options, ...event.options];
+                existing.options = Array.from(new Map(newOptions.map(item => [item.url, item])).values());
+                if ((!existing.image || existing.image === placeholderImage) && event.image && event.image !== placeholderImage) {
+                    existing.image = event.image;
+                }
+            } else {
+                eventMap.set(key, { ...event, image: event.image || placeholderImage, buttons: [] });
             }
-          }
-          return event;
-        })
-      );
-      
-      const allEvents = eventsWithStreams.filter(e => e.options.length > 0);
-      
-      // Update statuses for all events
-      const nowInBA = toZonedTime(new Date(), timeZone);
-      const updatedEvents = allEvents.map(e => {
-        let newEvent = {...e};
+        });
         
-        if (e.source === 'streamed.su') {
-            const zonedEventTime = toZonedTime(new Date(`${e.date}T${e.time}`), timeZone);
-            const eventEndTime = addHours(zonedEventTime, 3);
-
-            if (liveData.some((liveMatch:any) => liveMatch.id === e.sources[0]?.id)) {
-                newEvent.status = 'En Vivo';
-            } else if (isBefore(nowInBA, zonedEventTime)) {
-                newEvent.status = 'Próximo';
-            } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
-                newEvent.status = 'En Vivo';
-            } else if (isAfter(nowInBA, eventEndTime)) {
-                newEvent.status = 'Finalizado';
+        const mergedEvents = Array.from(eventMap.values());
+        
+        const eventsWithFullOptions = await Promise.all(
+            mergedEvents.map(async (event) => {
+                if (event.source === 'streamed.su' && event.sources.length > 0) {
+                    try {
+                        const sourcePromises = event.sources.map(async (source) => {
+                            const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                            if (!response.ok) return [];
+                            const streams: any[] = await response.json();
+                            return streams.map(stream => ({
+                                url: stream.embedUrl,
+                                label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                                hd: stream.hd,
+                                language: stream.language,
+                            }));
+                        });
+                        const results = await Promise.all(sourcePromises);
+                        event.options.push(...results.flat());
+                        event.options = Array.from(new Map(event.options.map(item => [item.url, item])).values());
+                    } catch (error) {
+                        console.error(`Failed to fetch streams for ${event.title}`, error);
+                    }
+                }
+                return event;
+            })
+        );
+        
+        const allEvents = eventsWithFullOptions.filter(e => e.options.length > 0 || e.category === '24/7');
+        
+        const updatedWithStatus = allEvents.map(e => {
+            let newEvent = {...e};
+            if (e.source === 'streamed.su') {
+                const zonedEventTime = toZonedTime(new Date(`${e.date}T${e.time}`), timeZone);
+                const eventEndTime = addHours(zonedEventTime, 3);
+                if (liveData.some((liveMatch:any) => liveMatch.id === e.sources[0]?.id)) {
+                    newEvent.status = 'En Vivo';
+                } else if (isBefore(nowInBA, zonedEventTime)) {
+                    newEvent.status = 'Próximo';
+                } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
+                    newEvent.status = 'En Vivo';
+                } else {
+                    newEvent.status = 'Finalizado';
+                }
             }
-        }
-        
-        return newEvent;
-      });
+            return newEvent;
+        });
 
-      setAllEventsData(updatedEvents);
-
+        setAllEventsData(updatedWithStatus);
     } catch (error) {
       console.error("Failed to fetch all events:", error);
       setAllEventsData([]);
