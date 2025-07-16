@@ -27,7 +27,7 @@ export function LoadingScreen() {
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground p-8">
       {/* Main container to center content */}
-      <div className="flex-grow flex flex-col justify-start pt-[85px] items-center">
+      <div className="flex-grow flex flex-col justify-start pt-[90px] items-center">
         {/* Logo Section */}
         <div className="mb-10">
             <Image
