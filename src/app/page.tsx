@@ -481,20 +481,35 @@ export default function HomePage() {
         }
         return e;
     });
+    
+    const liveSortLogic = (a: Event, b: Event): number => {
+      const hasCustomImageA = a.image && a.image !== placeholderImage;
+      const hasCustomImageB = b.image && b.image !== placeholderImage;
 
-    const live = processedEvents
-        .filter((e) => e.status === 'En Vivo' && e.category !== '24/7')
-        .sort((a, b) => {
-            const hasCustomImageA = a.image && a.image !== placeholderImage;
-            const hasCustomImageB = b.image && b.image !== placeholderImage;
+      if (hasCustomImageA && !hasCustomImageB) return -1;
+      if (!hasCustomImageA && hasCustomImageB) return 1;
 
-            if (hasCustomImageA && !hasCustomImageB) return -1;
-            if (!hasCustomImageA && hasCustomImageB) return 1;
-
-            return 0;
-        });
+      return 0;
+    };
     
     const chronologicalSortLogic = (a: Event, b: Event): number => {
+        const now = new Date();
+        const parseTime = (timeStr: string) => {
+            if (!/^\d{2}:\d{2}$/.test(timeStr)) return null;
+            const parsed = parse(timeStr, 'HH:mm', now);
+            return isValid(parsed) ? parsed : null;
+        };
+        const timeA = parseTime(a.time);
+        const timeB = parseTime(b.time);
+
+        if (!timeA && timeB) return 1;
+        if (timeA && !timeB) return -1;
+        if (!timeA && !timeB) return 0;
+        
+        return timeA!.getTime() - timeB!.getTime();
+    };
+    
+    const upcomingSortLogic = (a: Event, b: Event): number => {
         const now = new Date();
         const parseTime = (timeStr: string) => {
             if (!/^\d{2}:\d{2}$/.test(timeStr)) return null;
@@ -505,23 +520,25 @@ export default function HomePage() {
         const timeA = parseTime(a.time);
         const timeB = parseTime(b.time);
 
-        // Handle invalid or missing times
-        if (!timeA && !timeB) return 0; // Both are invalid, treat as equal
-        if (!timeA) return 1;           // A is invalid, so it goes to the end
-        if (!timeB) return -1;          // B is invalid, so it goes to the end
+        if (!timeA && timeB) return 1; // a is invalid, goes last
+        if (timeA && !timeB) return -1; // b is invalid, goes last
+        if (!timeA && !timeB) return 0; // both invalid, equal
 
-        const isPastA = isBefore(timeA, now);
-        const isPastB = isBefore(timeB, now);
-
-        if (isPastA && !isPastB) return 1;
-        if (!isPastA && isPastB) return -1;
-
-        // If both are in the past or both in the future, sort by time
-        return timeA.getTime() - timeB.getTime();
+        const isPastA = isBefore(timeA!, now);
+        const isPastB = isBefore(timeB!, now);
+        
+        if (isPastA && !isPastB) return 1; // a is past, b is future -> b comes first
+        if (!isPastA && isPastB) return -1; // b is past, a is future -> a comes first
+        
+        return timeA!.getTime() - timeB!.getTime();
     };
 
-    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(chronologicalSortLogic);
-    const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort(chronologicalSortLogic);
+    const live = processedEvents
+        .filter((e) => e.status === 'En Vivo' && e.category !== '24/7')
+        .sort(liveSortLogic);
+    
+    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(upcomingSortLogic);
+    const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort(upcomingSortLogic);
 
     const finished = processedEvents
         .filter((e) => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
@@ -530,7 +547,15 @@ export default function HomePage() {
     const channels247FromEvents = processedEvents.filter(e => e.category === '24/7' && e.status === 'En Vivo');
     
     const allSorted = [...live, ...upcoming, ...unknown, ...finished];
-    const mobileSorted = [...live, ...channels247FromEvents, ...upcoming, ...unknown, ...finished];
+    
+    // Mobile sort logic
+    const mobileLiveCustom = processedEvents.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
+    const mobileLiveDefault = processedEvents.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
+    const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
+    const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
+    const mobileFinished = finished;
+    const mobileSorted = [...mobileLiveCustom, ...mobileLiveDefault, ...channels247FromEvents, ...mobileUpcoming, ...mobileUnknown, ...mobileFinished];
+
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -562,20 +587,13 @@ export default function HomePage() {
         const categoryEvents = allCategoryEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
-        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo').sort((a, b) => {
-            const hasCustomImageA = a.image && a.image !== placeholderImage;
-            const hasCustomImageB = b.image && b.image !== placeholderImage;
-
-            if (hasCustomImageA && !hasCustomImageB) return -1;
-            if (!hasCustomImageA && hasCustomImageB) return 1;
-
-            return 0;
-        });
+        const liveCatCustom = categoryEvents.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
+        const liveCatDefault = categoryEvents.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
         const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
         const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
         const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
-        categoryFilteredEvents = [...liveCat, ...upcomingCat, ...unknownCat, ...finishedCat];
+        categoryFilteredEvents = [...liveCatCustom, ...liveCatDefault, ...upcomingCat, ...unknownCat, ...finishedCat];
     }
 
     return { 
@@ -1124,7 +1142,7 @@ export default function HomePage() {
                     isSearchOpen ? 'block' : 'hidden md:block'
                 )}>
                     <Input
-                        ref={r => r?.focus()}
+                        ref={r => { if (isSearchOpen && r) r.focus(); }}
                         type="text"
                         placeholder="Buscar evento o canal..."
                         className="w-full pr-10"
@@ -1135,14 +1153,14 @@ export default function HomePage() {
                         variant="ghost" 
                         size="icon" 
                         className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
-                        onClick={() => { if(searchTerm) { setSearchTerm(''); } else { fetchEvents(); } }}
+                        onClick={() => { if(searchTerm) { setSearchTerm(''); } else if (!isMobile) { fetchEvents(); } else { setIsSearchOpen(false); } }}
                       >
                          {searchTerm ? <X className="h-4 w-4" /> : <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />}
                      </Button>
                 </div>
 
-                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSearchOpen(!isSearchOpen)}>
-                    {isSearchOpen ? <X /> : <Search />}
+                <Button variant="ghost" size="icon" className={cn("md:hidden", isMobile && isSearchOpen && "hidden")} onClick={() => setIsSearchOpen(true)}>
+                    <Search />
                 </Button>
 
                 <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>

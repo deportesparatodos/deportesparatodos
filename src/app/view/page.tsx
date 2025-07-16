@@ -82,26 +82,25 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     };
 
     const sortedAndFilteredEvents = useMemo(() => {
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
-        const lowercasedFilter = searchTerm.toLowerCase();
+      const lowercasedFilter = searchTerm.toLowerCase();
+      const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
 
-        return allEvents
-            .filter(e => e.title.toLowerCase().includes(lowercasedFilter))
-            .sort((a, b) => {
-                const orderA = statusOrder[a.status] ?? 99;
-                const orderB = statusOrder[b.status] ?? 99;
-                if (orderA !== orderB) {
-                    return orderA - orderB;
-                }
-                if (a.time && b.time && (a.status === 'Próximo' || a.status === 'Desconocido')) {
-                     return a.time.localeCompare(b.time);
-                }
-                 if (a.time && b.time && a.status === 'Finalizado') {
-                    return b.time.localeCompare(a.time); // Sort finished descending
-                }
-                return 0;
-            });
+      const filtered = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
+
+      const chronologicalSortLogic = (a: Event, b: Event): number => {
+          if (!a.time || !b.time) return 0;
+          return a.time.localeCompare(b.time);
+      };
+      
+      const liveCustom = filtered.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage));
+      const liveDefault = filtered.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage));
+      const upcoming = filtered.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
+      const unknown = filtered.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
+      const finished = filtered.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
+
+      return [...liveCustom, ...liveDefault, ...upcoming, ...unknown, ...finished];
     }, [searchTerm, allEvents]);
+
 
     const filteredChannels = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
