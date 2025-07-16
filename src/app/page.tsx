@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -198,7 +197,7 @@ export default function HomePage() {
       const categoryMap = sportsData.reduce((acc, sport) => {
           acc[sport.id] = sport.name;
           return acc;
-      }, {} as Record<string, string>());
+      }, {} as Record<string, string>);
 
       const initialEvents: Event[] = combinedData.map((match: StreamedMatch) => {
         const eventDate = new Date(match.date);
@@ -494,23 +493,6 @@ export default function HomePage() {
       if (!hasCustomImageA && hasCustomImageB) return 1;
 
       return 0;
-    };
-    
-    const chronologicalSortLogic = (a: Event, b: Event): number => {
-        const now = new Date();
-        const parseTime = (timeStr: string) => {
-            if (!/^\d{2}:\d{2}$/.test(timeStr)) return null;
-            const parsed = parse(timeStr, 'HH:mm', now);
-            return isValid(parsed) ? parsed : null;
-        };
-        const timeA = parseTime(a.time);
-        const timeB = parseTime(b.time);
-
-        if (!timeA && !timeB) return 0;
-        if (timeA && !timeB) return -1;
-        if (!timeA && timeB) return 1;
-        
-        return timeA!.getTime() - timeB!.getTime();
     };
     
     const upcomingSortLogic = (a: Event, b: Event): number => {
@@ -1146,7 +1128,7 @@ export default function HomePage() {
                  isMobile && isSearchOpen && 'w-full'
              )}>
                 {isSearchOpen ? (
-                    <div className="relative w-full">
+                    <div className={cn("relative", isMobile ? 'w-full' : 'w-auto max-w-sm')}>
                         <Input
                             ref={r => { if (r) r.focus(); }}
                             type="text"
@@ -1262,4 +1244,3 @@ export default function HomePage() {
     </div>
   );
 }
-
