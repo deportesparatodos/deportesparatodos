@@ -1098,8 +1098,7 @@ export default function HomePage() {
             )}>
                 <div className={cn(
                     "relative w-full max-w-sm",
-                    isSearchOpen ? 'block' : 'hidden',
-                    !isMobile && 'block'
+                    isSearchOpen ? 'block' : 'hidden'
                 )}>
                     <Input
                         type="text"
