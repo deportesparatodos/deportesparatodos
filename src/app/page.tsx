@@ -183,6 +183,9 @@ function HomePageContent() {
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [isScheduleEventsLoading, setIsScheduleEventsLoading] = useState(false);
 
+  // Schedule related states
+  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
+  const [futureOrder, setFutureOrder] = useState<number[]>([]);
 
  const fetchEvents = useCallback(async (manualTrigger = false) => {
     if(!manualTrigger) {
@@ -704,6 +707,7 @@ function HomePageContent() {
   const handleStopView = () => {
     setIsViewMode(false);
     setIsInitialLoadDone(false); // Trigger loading screen and re-fetch
+    fetchEvents();
   };
 
   const openDialogForEvent = (event: Event) => {
@@ -808,12 +812,21 @@ function HomePageContent() {
       }
 
       // Close dialogs
-      if (isViewMode) {
-        setModifyEvent(null);
-      } else {
-        setModifyEventDialogOpen(false);
-        setModifyEvent(null);
-      }
+      setModifyEvent(null);
+      setModifyEventDialogOpen(false);
+  };
+  
+  const handleAddEventToSchedule = (event: Event, option: string) => {
+    const newFutureSelection = [...futureSelection];
+    const eventWithSelection = { ...event, selectedOption: option };
+    const emptyIndex = newFutureSelection.findIndex(e => e === null);
+    if (emptyIndex !== -1) {
+        newFutureSelection[emptyIndex] = eventWithSelection;
+        setFutureSelection(newFutureSelection);
+    } else {
+        alert("No hay espacios disponibles en la programación.");
+    }
+    setAddEventsDialogOpen(false);
   };
 
   const handleAddEventSelect = (event: Event, option: string) => {
@@ -875,6 +888,17 @@ function HomePageContent() {
     return '';
  };
 
+  // This state determines which selection function to use in the AddEventsDialog
+  const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
+
+  const handleSelectForCurrentDialog = (event: Event, option: string) => {
+    if (dialogContext === 'schedule') {
+        handleAddEventToSchedule(event, option);
+    } else {
+        handleAddEventSelect(event, option);
+    }
+  };
+
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
@@ -912,12 +936,34 @@ function HomePageContent() {
         <AddEventsDialog 
             open={addEventsDialogOpen}
             onOpenChange={setAddEventsDialogOpen}
-            onSelect={handleAddEventSelect}
+            onSelect={handleSelectForCurrentDialog}
             selectedEvents={selectedEvents}
             allEvents={[...events, ...channels247]} 
             allChannels={channels}
             isLoading={isAddEventsLoading}
             onFetchEvents={() => fetchEvents(true)}
+        />
+        <ScheduleManager 
+          open={scheduleManagerOpen}
+          onOpenChange={setScheduleManagerOpen}
+          currentSelection={futureSelection}
+          currentOrder={futureOrder}
+          schedules={schedules}
+          onSchedulesChange={setSchedules}
+          onModifyEventInView={onModify}
+          allEvents={events}
+          allChannels={channels}
+          onFetchEvents={() => fetchEvents(true)}
+          isLoading={isScheduleEventsLoading}
+          onAddEvent={() => {
+            setDialogContext('schedule');
+            fetchEvents(true);
+            setAddEventsDialogOpen(true);
+          }}
+          setFutureSelection={setFutureSelection}
+          setFutureOrder={setFutureOrder}
+          initialSelection={selectedEvents}
+          initialOrder={viewOrder}
         />
         <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
            <DialogContent className="sm:max-w-md p-0" hideClose={true}>
@@ -1073,16 +1119,11 @@ function HomePageContent() {
                 isChatEnabled={isChatEnabled}
                 onIsChatEnabledChange={setIsChatEnabled}
                 onAddEvent={() => {
+                  setDialogContext('view');
                   fetchEvents(true);
                   setAddEventsDialogOpen(true);
                 }}
-                schedules={schedules}
-                onSchedulesChange={setSchedules}
-                allEvents={events}
-                allChannels={channels}
-                currentOrder={viewOrder}
-                onFetchScheduleEvents={() => fetchEvents(true)}
-                isScheduleEventsLoading={isScheduleEventsLoading}
+                onSchedule={() => setScheduleManagerOpen(true)}
             />
 
             {isChatEnabled && (
@@ -1621,7 +1662,7 @@ function HomePageContent() {
                                         borderColor={borderColor}
                                         onBorderColorChange={setBorderColor}
                                         isChatEnabled={isChatEnabled}
-                                        onIsChatEnabledChange={onIsChatEnabledChange}
+                                        onIsChatEnabledChange={setIsChatEnabled}
                                         order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                         onOrderChange={handleOrderChange}
                                         eventDetails={selectedEvents}
@@ -1673,7 +1714,14 @@ function HomePageContent() {
         {modifyEvent && (
             <EventSelectionDialog
                 isOpen={modifyEventDialogOpen}
-                onOpenChange={setModifyEventDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setModifyEvent(null);
+                        setModifyEventDialogOpen(false);
+                    } else {
+                        setModifyEventDialogOpen(true);
+                    }
+                }}
                 event={modifyEvent.event}
                 onSelect={handleModifyEventSelect}
                 isModification={true}
@@ -1927,4 +1975,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 

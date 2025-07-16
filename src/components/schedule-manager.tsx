@@ -50,6 +50,10 @@ interface ScheduleManagerProps {
   onFetchEvents: () => void;
   isLoading: boolean;
   onAddEvent: () => void;
+  initialSelection: (Event | null)[];
+  initialOrder: number[];
+  setFutureSelection: (selection: (Event | null)[]) => void;
+  setFutureOrder: (order: number[]) => void;
 }
 
 export function ScheduleManager({
@@ -65,18 +69,20 @@ export function ScheduleManager({
   onFetchEvents,
   isLoading,
   onAddEvent,
+  initialSelection,
+  initialOrder,
+  setFutureSelection,
+  setFutureOrder,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
   
-  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
-  const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [modifyEventForSchedule, setModifyEventForSchedule] = useState<{ event: Event, index: number } | null>(null);
 
   const resetToCurrentSelection = () => {
-    setFutureSelection([...currentSelection]);
-    const activeCurrentOrder = currentOrder.filter(i => currentSelection[i] !== null);
+    setFutureSelection([...initialSelection]);
+    const activeCurrentOrder = initialOrder.filter(i => initialSelection[i] !== null);
     const fullOrder = Array.from({ length: 9 }, (_, i) => i);
     const finalOrder = [...activeCurrentOrder, ...fullOrder.filter(i => !activeCurrentOrder.includes(i))];
     setFutureOrder(finalOrder);
@@ -104,7 +110,7 @@ export function ScheduleManager({
       // Update existing schedule
       const updatedSchedules = schedules.map(s => 
         s.id === editingScheduleId 
-          ? { ...s, dateTime: combinedDateTime, events: futureSelection, order: futureOrder }
+          ? { ...s, dateTime: combinedDateTime, events: currentSelection, order: currentOrder }
           : s
       );
       onSchedulesChange(updatedSchedules);
@@ -113,8 +119,8 @@ export function ScheduleManager({
       const newSchedule: Schedule = {
         id: new Date().toISOString(),
         dateTime: combinedDateTime,
-        events: futureSelection,
-        order: futureOrder,
+        events: currentSelection,
+        order: currentOrder,
       };
       onSchedulesChange([...schedules, newSchedule]);
     }
@@ -139,7 +145,7 @@ export function ScheduleManager({
   };
   
   const handleRemoveEventFromFuture = (indexToRemove: number) => {
-    const newSelection = [...futureSelection];
+    const newSelection = [...currentSelection];
     newSelection[indexToRemove] = null;
     setFutureSelection(newSelection);
   };
@@ -159,28 +165,34 @@ export function ScheduleManager({
   
   const handleModifyEventForSchedule = (event: Event, option: string) => {
     if (modifyEventForSchedule) {
-      const newFutureSelection = [...futureSelection];
+      const newFutureSelection = [...currentSelection];
       newFutureSelection[modifyEventForSchedule.index] = { ...event, selectedOption: option };
       setFutureSelection(newFutureSelection);
       setModifyEventForSchedule(null);
     }
   };
 
-  const activeFutureEventsCount = futureOrder?.filter(i => futureSelection[i] !== null).length ?? 0;
+  const activeFutureEventsCount = currentOrder?.filter(i => currentSelection[i] !== null).length ?? 0;
 
   return (
     <>
       {modifyEventForSchedule && (
-        <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}>
-          <EventSelectionDialog
-            isOpen={!!modifyEventForSchedule}
-            onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
-            event={modifyEventForSchedule.event}
-            onSelect={handleModifyEventForSchedule}
-            isModification={true}
-            onRemove={() => {}}
-            windowNumber={modifyEventForSchedule.index + 1}
-          />
+        <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {
+            if(!open) {
+                setModifyEventForSchedule(null)
+            }
+        }}>
+           <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+              <EventSelectionDialog
+                isOpen={!!modifyEventForSchedule}
+                onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
+                event={modifyEventForSchedule.event}
+                onSelect={handleModifyEventForSchedule}
+                isModification={true}
+                onRemove={() => {}}
+                windowNumber={modifyEventForSchedule.index + 1}
+              />
+           </DialogContent>
         </Dialog>
       )}
 
@@ -192,9 +204,13 @@ export function ScheduleManager({
                 const target = e.target as HTMLElement;
                 // Allow interacting with elements inside other dialogs/popovers
                 if (target.closest('[role="dialog"]') || target.closest('[data-radix-popper-content-wrapper]')) {
-                    e.preventDefault();
+                    const isSubDialog = (target.closest('[role="dialog"]') as HTMLElement)?.dataset?.subDialog;
+                    if (!isSubDialog) {
+                       e.preventDefault();
+                    }
                 }
             }}
+             onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <DialogHeader className="p-4 border-b flex-shrink-0">
             <DialogTitle>Programar Selección</DialogTitle>
@@ -281,12 +297,12 @@ export function ScheduleManager({
                   <ScrollArea className="flex-grow h-0">
                       <div className="p-4">
                           <EventListManagement
-                              order={futureOrder ? futureOrder.filter(i => futureSelection[i] !== null) : []}
+                              order={currentOrder ? currentOrder.filter(i => currentSelection[i] !== null) : []}
                               onOrderChange={handleOrderChange}
-                              eventDetails={futureSelection}
+                              eventDetails={currentSelection}
                               onRemove={handleRemoveEventFromFuture}
                               onModify={(event, index) => {
-                                const currentEventState = futureSelection[index];
+                                const currentEventState = currentSelection[index];
                                 if (!currentEventState) return;
                                 const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
                                 setModifyEventForSchedule({ event: eventForModification, index });
