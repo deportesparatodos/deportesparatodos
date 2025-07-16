@@ -817,11 +817,6 @@ function HomePageContent() {
     setAddEventsDialogOpen(false);
   };
 
-
-  if (!isInitialLoadDone) {
-    return <LoadingScreen />;
-  }
-
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
   const numCameras = selectedEventsCount;
   
@@ -859,6 +854,11 @@ function HomePageContent() {
     }
     return '';
  };
+
+  if (!isInitialLoadDone) {
+    return <LoadingScreen />;
+  }
+
 
   if (isViewMode) {
      if (numCameras === 0) {
@@ -1889,4 +1889,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
