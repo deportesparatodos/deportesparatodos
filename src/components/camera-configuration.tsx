@@ -30,13 +30,7 @@ interface CameraConfigurationProps {
   onIsChatEnabledChange: (value: boolean) => void;
   isViewPage: boolean;
   onAddEvent: () => void;
-  schedules: Schedule[];
-  onSchedulesChange: (schedules: Schedule[]) => void;
-  allEvents: Event[];
-  allChannels: Channel[];
-  currentOrder: number[];
-  onFetchScheduleEvents: () => void;
-  isScheduleEventsLoading: boolean;
+  onSchedule: () => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -54,16 +48,9 @@ export function CameraConfigurationComponent({
   onIsChatEnabledChange,
   isViewPage,
   onAddEvent,
-  schedules,
-  onSchedulesChange,
-  allEvents,
-  allChannels,
-  currentOrder,
-  onFetchScheduleEvents,
-  isScheduleEventsLoading
+  onSchedule,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
 
   return (
     <>
@@ -94,10 +81,7 @@ export function CameraConfigurationComponent({
                   onModify={onModify}
                   isViewPage={isViewPage}
                   onAddEvent={onAddEvent}
-                  onSchedule={() => {
-                      setSheetOpen(false);
-                      setScheduleManagerOpen(true);
-                  }}
+                  onSchedule={onSchedule}
               />
           </ScrollArea>
           {isViewPage && (
@@ -124,7 +108,7 @@ export function CameraConfigurationComponent({
                                     <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
                                     <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
                                     <li><strong>Carruseles de Eventos:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
-                                    <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris).</li>
+                                    <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
                                 </ul>
 
                                 <h3 className="font-bold text-foreground mt-6">2. Cómo Seleccionar un Evento para Ver</h3>
@@ -248,22 +232,6 @@ export function CameraConfigurationComponent({
           )}
         </SheetContent>
       </Sheet>
-      {isViewPage && (
-        <ScheduleManager 
-          open={scheduleManagerOpen}
-          onOpenChange={setScheduleManagerOpen}
-          currentSelection={eventDetails}
-          currentOrder={currentOrder}
-          schedules={schedules}
-          onSchedulesChange={onSchedulesChange}
-          onModifyEventInView={onModify}
-          allEvents={allEvents}
-          allChannels={allChannels}
-          onFetchEvents={onFetchScheduleEvents}
-          isLoading={isScheduleEventsLoading}
-          onAddEvent={onAddEvent}
-        />
-      )}
     </>
   );
 }

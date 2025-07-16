@@ -187,6 +187,24 @@ function HomePageContent() {
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
 
+  const getGridClasses = useCallback((count: number) => {
+    if (isMobile) {
+        return `grid-cols-1 grid-rows-${count > 0 ? count : 1}`;
+    }
+    switch (count) {
+        case 1: return 'grid-cols-1 grid-rows-1';
+        case 2: return 'grid-cols-2 grid-rows-1';
+        case 3: return 'grid-cols-2 grid-rows-2'; 
+        case 4: return 'grid-cols-2 grid-rows-2';
+        case 5: return 'grid-cols-3 grid-rows-2';
+        case 6: return 'grid-cols-3 grid-rows-2';
+        case 7: return 'grid-cols-3 grid-rows-3';
+        case 8: return 'grid-cols-3 grid-rows-3';
+        case 9: return 'grid-cols-3 grid-rows-3';
+        default: return 'grid-cols-1 grid-rows-1';
+    }
+  }, [isMobile]);
+  
  const fetchEvents = useCallback(async (manualTrigger = false) => {
     if(!manualTrigger) {
       setIsDataLoading(true);
@@ -766,11 +784,12 @@ function HomePageContent() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
+    setConfigDialogOpen(false); // Close main config dialog
     const currentEventState = selectedEvents[index];
     if (!currentEventState) return;
     const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
     setModifyEvent({ event: eventForModification, index });
-    setModifyEventDialogOpen(true);
+    setModifyEventDialogOpen(true); // Open the specific modification dialog
   };
 
   const handleViewChange = (view: string) => {
@@ -797,9 +816,8 @@ function HomePageContent() {
       const eventWithSelection = { ...event, selectedOption: option };
       
       let targetIndex = -1;
-      if (isViewMode && modifyEvent) {
-          targetIndex = modifyEvent.index;
-      } else if (!isViewMode && modifyEvent) {
+      // This function can be called from the main page config or the view page config
+      if (modifyEvent) {
           targetIndex = modifyEvent.index;
       }
 
@@ -814,6 +832,10 @@ function HomePageContent() {
       // Close dialogs
       setModifyEvent(null);
       setModifyEventDialogOpen(false);
+      // Re-open config dialog if we are not in view mode
+      if (!isViewMode) {
+        setConfigDialogOpen(true);
+      }
   };
   
   const handleAddEventToSchedule = (event: Event, option: string) => {
@@ -827,6 +849,7 @@ function HomePageContent() {
         alert("No hay espacios disponibles en la programación.");
     }
     setAddEventsDialogOpen(false);
+    setScheduleManagerOpen(true);
   };
 
   const handleAddEventSelect = (event: Event, option: string) => {
@@ -853,25 +876,9 @@ function HomePageContent() {
 
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
   
-  const getGridClasses = useCallback((count: number) => {
-    if (isMobile) {
-        return `grid-cols-1 grid-rows-${count > 0 ? count : 1}`;
-    }
-    switch (count) {
-        case 1: return 'grid-cols-1 grid-rows-1';
-        case 2: return 'grid-cols-2 grid-rows-1';
-        case 3: return 'grid-cols-2 grid-rows-2'; 
-        case 4: return 'grid-cols-2 grid-rows-2';
-        case 5: return 'grid-cols-3 grid-rows-2';
-        case 6: return 'grid-cols-3 grid-rows-2';
-        case 7: return 'grid-cols-3 grid-rows-3';
-        case 8: return 'grid-cols-3 grid-rows-3';
-        case 9: return 'grid-cols-3 grid-rows-3';
-        default: return 'grid-cols-1 grid-rows-1';
-    }
-  }, [isMobile]);
   
- const getItemClasses = (orderedIndex: number, count: number) => {
+  
+  const getItemClasses = (orderedIndex: number, count: number) => {
     if (isMobile) return '';
     if (count === 3) {
       return orderedIndex === 0 ? 'col-span-2' : 'col-span-1';
@@ -921,10 +928,10 @@ function HomePageContent() {
     return (
       <div className="flex h-screen w-screen bg-background text-foreground">
         {modifyEvent && (
-             <Dialog open={!!modifyEvent} onOpenChange={(open) => { if (!open) setModifyEvent(null); }}>
+             <Dialog open={modifyEventDialogOpen} onOpenChange={(open) => { if (!open) { setModifyEvent(null); setModifyEventDialogOpen(false); } else { setModifyEventDialogOpen(true); } }}>
                 <EventSelectionDialog
-                    isOpen={!!modifyEvent}
-                    onOpenChange={(open) => { if (!open) setModifyEvent(null); }}
+                    isOpen={modifyEventDialogOpen}
+                    onOpenChange={(open) => { if (!open) { setModifyEvent(null); setModifyEventDialogOpen(false); } else { setModifyEventDialogOpen(true); } }}
                     event={modifyEvent.event}
                     onSelect={handleModifyEventSelect}
                     isModification={true}
@@ -935,7 +942,16 @@ function HomePageContent() {
         )}
         <AddEventsDialog 
             open={addEventsDialogOpen}
-            onOpenChange={setAddEventsDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setAddEventsDialogOpen(false);
+                if (dialogContext === 'schedule') {
+                  setScheduleManagerOpen(true);
+                }
+              } else {
+                setAddEventsDialogOpen(true);
+              }
+            }}
             onSelect={handleSelectForCurrentDialog}
             selectedEvents={selectedEvents}
             allEvents={[...events, ...channels247]} 
@@ -950,7 +966,7 @@ function HomePageContent() {
           currentOrder={futureOrder}
           schedules={schedules}
           onSchedulesChange={setSchedules}
-          onModifyEventInView={onModify}
+          onModifyEventInView={openDialogForModification}
           allEvents={events}
           allChannels={channels}
           onFetchEvents={() => fetchEvents(true)}
@@ -1108,9 +1124,7 @@ function HomePageContent() {
                 eventDetails={selectedEvents}
                 onReload={handleReloadCamera}
                 onRemove={handleEventRemove}
-                onModify={(event, index) => {
-                    setModifyEvent({ event, index });
-                }}
+                onModify={openDialogForModification}
                 isViewPage={true}
                 gridGap={gridGap}
                 onGridGapChange={setGridGap}
@@ -1718,6 +1732,9 @@ function HomePageContent() {
                     if (!open) {
                         setModifyEvent(null);
                         setModifyEventDialogOpen(false);
+                         if (!isViewMode) {
+                           setConfigDialogOpen(true);
+                         }
                     } else {
                         setModifyEventDialogOpen(true);
                     }
@@ -1975,5 +1992,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
