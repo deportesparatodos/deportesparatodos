@@ -593,6 +593,7 @@ function ViewPageContent() {
           newSelectedEvents[modifyEvent.index] = eventWithSelection;
           setSelectedEvents(newSelectedEvents);
           localStorage.setItem('selectedEvents', JSON.stringify(newSelectedEvents));
+          handleReloadCamera(modifyEvent.index); // Recarga el iframe
           setModifyEvent(null);
       }
     };
