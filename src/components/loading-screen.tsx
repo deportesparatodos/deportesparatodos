@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,8 +31,7 @@ export function LoadingScreen() {
               <p className="text-justify">
                 ¡Te damos la bienvenida! En nuestra plataforma, podes explorar una gran variedad de eventos y canales en vivo. 
                 Solo selecciona la cantidad de partidos, carreras o programas favoritos QUE QUIERAS (hasta 9 eventos) y 
-                combínalos en una única pantalla para no perderte nada. en caso de no entender la pagina, revisa el 
-                Tutorial en el el icono de menú <Menu className="inline-block h-4 w-4 align-middle" /> en la esquina superior izquierda del inicio.
+                combínalos en una única pantalla para no perderte nada. Revisa el Tutorial en el el icono de menú <Menu className="inline-block h-4 w-4 align-middle" /> en la esquina superior izquierda del inicio.
               </p>
             </div>
         </div>
@@ -44,7 +42,7 @@ export function LoadingScreen() {
                 Si durante la carga un video no funciona o ves una pantalla en negro, no te preocupes, suele tener fácil solución. 
                 El paso más efectivo es probar con las diferentes opciones de transmisión disponibles para cada evento. 
                 Si el problema continúa, te recomendamos consultar nuestra guía detallada de "Errores y Soluciones" 
-                que encontrarás en el menú de ayuda para resolverlo rápidamente.
+                que encontras en el menú de ayuda para resolverlo.
                 </p>
             </div>
         </div>
