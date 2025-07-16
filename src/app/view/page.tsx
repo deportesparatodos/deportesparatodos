@@ -346,12 +346,6 @@ function ViewPageContent() {
   const numCameras = useMemo(() => selectedEvents.filter(Boolean).length, [selectedEvents]);
 
    const fetchAllEvents = useCallback(async (isForSchedule = false) => {
-    // For "Add Event/Channel" dialog, we always re-fetch.
-    if (isForSchedule && allEventsData.length > 0) {
-      // For schedule manager, only fetch once if not already loaded.
-      return;
-    }
-    
     const setLoading = isForSchedule ? setIsScheduleEventsLoading : setIsAddEventsLoading;
     setLoading(true);
 
@@ -363,10 +357,10 @@ function ViewPageContent() {
         fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : [])
       ]);
 
-      const liveData: any[] = liveResponse || [];
-      const todayData: any[] = todayResponse || [];
-      const sportsData: {id: string; name: string}[] = sportsResponse || [];
-      const streamTpData: any[] = streamTpResponse || [];
+      const liveData: any[] = Array.isArray(liveResponse) ? liveResponse : [];
+      const todayData: any[] = Array.isArray(todayResponse) ? todayResponse : [];
+      const sportsData: {id: string; name: string}[] = Array.isArray(sportsResponse) ? sportsResponse : [];
+      const streamTpData: any[] = Array.isArray(streamTpResponse) ? streamTpResponse : [];
       
       const allMatchesMap = new Map<string, any>();
       
@@ -484,7 +478,6 @@ function ViewPageContent() {
         let newEvent = {...e};
         
         if (e.source === 'streamed.su') {
-            const eventDate = parse(e.date, 'yyyy-MM-dd', new Date());
             const zonedEventTime = toZonedTime(new Date(`${e.date}T${e.time}`), timeZone);
             const eventEndTime = addHours(zonedEventTime, 3);
 
@@ -510,7 +503,7 @@ function ViewPageContent() {
     } finally {
         setLoading(false);
     }
-  }, [allEventsData]);
+  }, []);
 
   // Handle schedules
   useEffect(() => {
@@ -598,7 +591,7 @@ function ViewPageContent() {
 
     useEffect(() => {
         if (addEventsDialogOpen) {
-            fetchAllEvents(false); // `false` indicates it's for the main "Add Events" dialog
+            fetchAllEvents();
         }
     }, [addEventsDialogOpen, fetchAllEvents]);
 

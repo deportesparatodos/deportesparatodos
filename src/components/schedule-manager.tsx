@@ -28,7 +28,6 @@ import { EventListManagement } from './layout-configurator';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import type { Channel } from './channel-list';
-import { AddEventsDialog } from '@/app/view/page'; 
 import { EventSelectionDialog } from './event-selection-dialog';
 
 export interface Schedule {
@@ -50,6 +49,7 @@ interface ScheduleManagerProps {
   allChannels: Channel[];
   onFetchEvents: () => void;
   isLoading: boolean;
+  onAddEvent: () => void; // Add this prop
 }
 
 export function ScheduleManager({
@@ -63,7 +63,8 @@ export function ScheduleManager({
   allEvents,
   allChannels,
   onFetchEvents,
-  isLoading
+  isLoading,
+  onAddEvent, // Destructure the new prop
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -71,7 +72,6 @@ export function ScheduleManager({
   
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
-  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [modifyEventForSchedule, setModifyEventForSchedule] = useState<{ event: Event, index: number } | null>(null);
 
   const resetToCurrentSelection = () => {
@@ -87,9 +87,10 @@ export function ScheduleManager({
   
   useEffect(() => {
     if (open) {
+      onFetchEvents();
       resetToCurrentSelection();
     }
-  }, [open, currentSelection, currentOrder]);
+  }, [open]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -164,7 +165,6 @@ export function ScheduleManager({
           newFutureSelection[emptyIndex] = eventWithSelection;
           setFutureSelection(newFutureSelection);
 
-          // Update order if needed
           const newFutureOrder = [...(futureOrder || [])];
            const activeIndexes = newFutureSelection.map((e, i) => e ? i : -1).filter(i => i !== -1);
            const currentOrderActive = newFutureOrder.filter(i => activeIndexes.includes(i));
@@ -179,7 +179,8 @@ export function ScheduleManager({
       } else {
           alert("Todos los espacios están ocupados.");
       }
-      setAddEventsDialogOpen(false);
+      onOpenChange(false); // Close schedule manager to open add dialog
+      onAddEvent();
   };
 
   const handleModifyEventForSchedule = (event: Event, option: string) => {
@@ -195,16 +196,6 @@ export function ScheduleManager({
 
   return (
     <>
-      <AddEventsDialog 
-        open={addEventsDialogOpen}
-        onOpenChange={setAddEventsDialogOpen}
-        onSelect={handleAddEventToFuture}
-        selectedEvents={futureSelection}
-        allEvents={allEvents}
-        allChannels={allChannels}
-        isLoading={isLoading}
-      />
-      
       {modifyEventForSchedule && (
         <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}>
           <EventSelectionDialog
@@ -319,8 +310,8 @@ export function ScheduleManager({
                               }}
                               isViewPage={true}
                               onAddEvent={() => {
-                                onFetchEvents();
-                                setAddEventsDialogOpen(true);
+                                  onOpenChange(false); // Close schedule dialog
+                                  onAddEvent(); // Open add event dialog
                               }}
                           />
                       </div>
