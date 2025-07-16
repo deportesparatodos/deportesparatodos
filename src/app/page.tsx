@@ -169,7 +169,7 @@ export default function HomePage() {
         fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []),
         fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []),
         fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []),
-        fetch('https://streamtpglobal.com/eventos.json').then(res => res.ok ? res.json() : [])
+        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : [])
       ]);
 
       const liveData: StreamedMatch[] = liveResponse;

@@ -10,6 +10,7 @@ const API_ENDPOINTS = {
   'sports': 'https://streamed.su/api/sports',
   'ppv': 'https://ppv.to/api/streams',
   'stream': 'https://streamed.su/api/stream',
+  'streamtp': 'https://streamtpglobal.com/eventos.json',
 };
 
 export async function GET(request: NextRequest) {
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
   }
 
 
-  // Handle other list-based requests (live, all-today, sports)
+  // Handle other list-based requests (live, all-today, sports, streamtp)
   const apiUrl = API_ENDPOINTS[type as keyof typeof API_ENDPOINTS];
 
   if (!apiUrl) {
