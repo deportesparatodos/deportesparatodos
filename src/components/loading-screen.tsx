@@ -27,7 +27,7 @@ export function LoadingScreen() {
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground p-8">
       {/* Main container to center content */}
-      <div className="flex-grow flex flex-col justify-center items-center">
+      <div className="flex-grow flex flex-col justify-start pt-20 items-center">
         {/* Logo Section */}
         <div className="mb-10">
             <Image
@@ -46,7 +46,7 @@ export function LoadingScreen() {
             <div className="space-y-4">
                 <h1 className="text-3xl font-bold text-primary text-center">¡Bienvenidos a Deportes para Todos!</h1>
                 <p className="text-justify text-muted-foreground">
-                  ¡Te damos la bienvenida! En nuestra plataforma, podes explorar una gran variedad de eventos y canales en vivo. Solo selecciona la cantidad de partidos, carreras o programas favoritos QUE QUIERAS (hasta 9 eventos) y combínalos en una única pantalla para no perderte nada. ¿Necesitas ayuda? Revisa el Tutorial en el el icono de menú <Menu className="inline-block h-4 w-4 align-middle" /> en la esquina superior izquierda del inicio.
+                  ¡Te damos la bienvenida! En nuestra plataforma, podes explorar una gran variedad de eventos y canales en vivo. Solo selecciona la cantidad EVENTOS O CANALES QUE QUIERAS (hasta 9 selecciones) y combínalos en una única pantalla para no perderte nada. ¿Necesitas ayuda? Revisa el Tutorial en el el icono de menú <Menu className="inline-block h-4 w-4 align-middle" /> en la esquina superior izquierda del inicio.
                 </p>
             </div>
             <div className="space-y-4 pt-4">
