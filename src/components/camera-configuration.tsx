@@ -260,6 +260,7 @@ export function CameraConfigurationComponent({
           allChannels={allChannels}
           onFetchEvents={onFetchScheduleEvents}
           isLoading={isScheduleEventsLoading}
+          onAddEvent={onAddEvent}
         />
       )}
     </>

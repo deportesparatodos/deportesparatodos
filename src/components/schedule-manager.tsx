@@ -49,7 +49,7 @@ interface ScheduleManagerProps {
   allChannels: Channel[];
   onFetchEvents: () => void;
   isLoading: boolean;
-  onAddEvent: () => void; // Add this prop
+  onAddEvent: () => void;
 }
 
 export function ScheduleManager({
@@ -64,7 +64,7 @@ export function ScheduleManager({
   allChannels,
   onFetchEvents,
   isLoading,
-  onAddEvent, // Destructure the new prop
+  onAddEvent,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -90,6 +90,7 @@ export function ScheduleManager({
       onFetchEvents();
       resetToCurrentSelection();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const handleSaveOrUpdateSchedule = () => {
@@ -156,33 +157,6 @@ export function ScheduleManager({
     }
   }
   
-  const handleAddEventToFuture = (event: Event, option: string) => {
-      const newFutureSelection = [...futureSelection];
-      const eventWithSelection = { ...event, selectedOption: option };
-      
-      const emptyIndex = newFutureSelection.findIndex(e => e === null);
-      if (emptyIndex !== -1) {
-          newFutureSelection[emptyIndex] = eventWithSelection;
-          setFutureSelection(newFutureSelection);
-
-          const newFutureOrder = [...(futureOrder || [])];
-           const activeIndexes = newFutureSelection.map((e, i) => e ? i : -1).filter(i => i !== -1);
-           const currentOrderActive = newFutureOrder.filter(i => activeIndexes.includes(i));
-           const finalOrder = [...currentOrderActive];
-           for (let i = 0; i < 9; i++) {
-               if (!finalOrder.includes(i)) {
-                   finalOrder.push(i);
-               }
-           }
-           setFutureOrder(finalOrder);
-
-      } else {
-          alert("Todos los espacios están ocupados.");
-      }
-      onOpenChange(false); // Close schedule manager to open add dialog
-      onAddEvent();
-  };
-
   const handleModifyEventForSchedule = (event: Event, option: string) => {
     if (modifyEventForSchedule) {
       const newFutureSelection = [...futureSelection];
@@ -310,8 +284,8 @@ export function ScheduleManager({
                               }}
                               isViewPage={true}
                               onAddEvent={() => {
-                                  onOpenChange(false); // Close schedule dialog
-                                  onAddEvent(); // Open add event dialog
+                                onOpenChange(false);
+                                onAddEvent();
                               }}
                           />
                       </div>
