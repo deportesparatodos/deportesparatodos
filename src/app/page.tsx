@@ -143,8 +143,8 @@ export default function HomePage() {
   const router = useRouter();
 
   const [events, setEvents] = useState<Event[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(true); // Start as true
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
@@ -165,7 +165,6 @@ export default function HomePage() {
   
   const [currentView, setCurrentView] = useState<string>('home'); // home, live, channels, or category name
 
-  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
  const fetchEvents = useCallback(async () => {
     setIsDataLoading(true);
@@ -321,15 +320,15 @@ export default function HomePage() {
       setEvents([]); // Ensure it's an empty array on error
     } finally {
         setIsDataLoading(false);
-        if (isInitialLoad) {
-            setIsInitialLoad(false);
+        if (!isInitialLoadDone) {
+            setIsInitialLoadDone(true);
         }
     }
-  }, [isInitialLoad]);
+  }, [isInitialLoadDone]);
 
   // Load state from localStorage once on initial mount
   useEffect(() => {
-    if (typeof window === 'undefined' || isInitialLoadDone) return;
+    if (typeof window === 'undefined') return;
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
     if (storedSelectedEvents) {
       try {
@@ -362,16 +361,11 @@ export default function HomePage() {
     const storedChatEnabled = localStorage.getItem('isChatEnabled');
     if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
     
-    setIsInitialLoadDone(true);
-  }, [isInitialLoadDone]);
+  }, []);
 
   // Fetch event data
   useEffect(() => {
-    const loadAllData = async () => {
-      await fetchEvents();
-    };
-
-    loadAllData();
+    fetchEvents();
   }, [fetchEvents]);
 
   // Persist selectedEvents to localStorage
@@ -508,9 +502,9 @@ export default function HomePage() {
         const timeA = parseTime(a.time);
         const timeB = parseTime(b.time);
 
-        if (!timeA && timeB) return 1;
-        if (timeA && !timeB) return -1;
         if (!timeA && !timeB) return 0;
+        if (timeA && !timeB) return -1;
+        if (!timeA && timeB) return 1;
         
         return timeA!.getTime() - timeB!.getTime();
     };
@@ -525,16 +519,16 @@ export default function HomePage() {
 
         const timeA = parseTime(a.time);
         const timeB = parseTime(b.time);
-
-        if (!timeA && timeB) return 1; // a is invalid, goes last
-        if (timeA && !timeB) return -1; // b is invalid, goes last
-        if (!timeA && !timeB) return 0; // both invalid, equal
+        
+        if (!timeA && timeB) return 1;
+        if (timeA && !timeB) return -1;
+        if (!timeA && !timeB) return 0;
 
         const isPastA = isBefore(timeA!, now);
         const isPastB = isBefore(timeB!, now);
         
-        if (isPastA && !isPastB) return 1; // a is past, b is future -> b comes first
-        if (!isPastA && isPastB) return -1; // b is past, a is future -> a comes first
+        if (isPastA && !isPastB) return 1;
+        if (!isPastA && isPastB) return -1;
         
         return timeA!.getTime() - timeB!.getTime();
     };
@@ -543,7 +537,7 @@ export default function HomePage() {
         .filter((e) => e.status === 'En Vivo' && e.category !== '24/7')
         .sort(liveSortLogic);
     
-    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(chronologicalSortLogic);
+    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(upcomingSortLogic);
     const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort(upcomingSortLogic);
 
     const finished = processedEvents
@@ -557,8 +551,8 @@ export default function HomePage() {
     // Mobile sort logic
     const mobileLiveCustom = processedEvents.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
     const mobileLiveDefault = processedEvents.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
-    const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
-    const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
+    const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
+    const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
     const mobileFinished = finished;
     const mobileSorted = [...mobileLiveCustom, ...mobileLiveDefault, ...channels247FromEvents, ...mobileUpcoming, ...mobileUnknown, ...mobileFinished];
 
@@ -595,8 +589,8 @@ export default function HomePage() {
         
         const liveCatCustom = categoryEvents.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
         const liveCatDefault = categoryEvents.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
-        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(chronologicalSortLogic);
-        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(chronologicalSortLogic);
+        const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
+        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
         const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
         categoryFilteredEvents = [...liveCatCustom, ...liveCatDefault, ...upcomingCat, ...unknownCat, ...finishedCat];
@@ -755,7 +749,7 @@ export default function HomePage() {
     setCurrentView('home');
   };
 
-  if (isInitialLoad) {
+  if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
 
@@ -763,7 +757,7 @@ export default function HomePage() {
   
   const pageTitle = (
     <div className={cn(
-        'flex items-center min-h-[75px] transition-all duration-300 pl-4',
+        'flex items-center min-h-[75px] transition-all duration-300 pl-4 shrink-0',
         isMobile && isSearchOpen && 'w-0 opacity-0'
     )}>
         {currentView === 'home' ? (
@@ -1139,8 +1133,8 @@ export default function HomePage() {
         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
             {pageTitle}
              <div className={cn(
-                "flex items-center justify-end gap-2 px-4",
-                isSearchOpen ? "w-full md:w-auto md:flex-initial" : "flex-1 md:flex-initial"
+                "flex items-center justify-end gap-2 px-4 flex-1",
+                 isSearchOpen && 'w-full'
              )}>
                 {isSearchOpen ? (
                     <div className="relative w-full max-w-sm">
@@ -1157,11 +1151,8 @@ export default function HomePage() {
                             size="icon" 
                             className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
                             onClick={() => {
-                                if (searchTerm) {
-                                    setSearchTerm('');
-                                } else {
-                                    setIsSearchOpen(false);
-                                }
+                                setSearchTerm('');
+                                setIsSearchOpen(false);
                             }}
                           >
                              <X className="h-4 w-4" />
