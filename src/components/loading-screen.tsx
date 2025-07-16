@@ -1,7 +1,9 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
+import Image from 'next/image';
 
 const AnimatedEllipsis = () => {
   const [dots, setDots] = useState('');
@@ -25,6 +27,16 @@ export function LoadingScreen() {
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-background text-foreground p-8">
       <div className="max-w-2xl w-full space-y-8">
+        <div className="flex justify-center">
+          <Image
+              src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
+              alt="Deportes Para Todos Logo"
+              width={300}
+              height={75}
+              priority
+              data-ai-hint="logo"
+          />
+        </div>
         <div className="text-center space-y-4">
             <h1 className="text-3xl font-bold text-primary">¡Bienvenidos a Deportes para Todos!</h1>
             <div className="text-muted-foreground">
