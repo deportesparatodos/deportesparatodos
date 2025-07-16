@@ -133,14 +133,23 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const errorBody = await response.text();
       console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, errorBody);
-      return NextResponse.json({ error: `Failed to fetch data for type '${type}': ${response.statusText}`, data: [] }, { status: 200 });
+       // Return an empty array to prevent frontend errors
+      return NextResponse.json([], { status: 200 });
     }
     
     const data = await response.json();
+    
+    // Ensure the response is always an array
+    if (!Array.isArray(data)) {
+        console.warn(`API for type '${type}' did not return an array. Returning empty array instead.`);
+        return NextResponse.json([], { status: 200 });
+    }
+
     return NextResponse.json(data);
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
-    return NextResponse.json({ error: 'Internal Server Error while fetching ' + type, data: [] }, { status: 200 });
+     // Return an empty array to prevent frontend errors
+    return NextResponse.json([], { status: 200 });
   }
 }

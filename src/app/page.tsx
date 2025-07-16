@@ -176,10 +176,10 @@ export default function HomePage() {
         fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : [])
       ]);
 
-      const liveData: StreamedMatch[] = liveResponse;
-      const todayData: StreamedMatch[] = todayResponse;
-      const sportsData: {id: string; name: string}[] = sportsResponse;
-      const streamTpData: StreamTpEvent[] = streamTpResponse;
+      const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
+      const todayData: StreamedMatch[] = Array.isArray(todayResponse) ? todayResponse : [];
+      const sportsData: {id: string; name: string}[] = Array.isArray(sportsResponse) ? sportsResponse : [];
+      const streamTpData: StreamTpEvent[] = Array.isArray(streamTpResponse) ? streamTpResponse : [];
 
       const allMatchesMap = new Map<string, StreamedMatch>();
       
@@ -520,16 +520,18 @@ export default function HomePage() {
         const timeA = parseTime(a.time);
         const timeB = parseTime(b.time);
         
-        if (!timeA && timeB) return 1;
+        // Push events with invalid times to the end
         if (timeA && !timeB) return -1;
+        if (!timeA && timeB) return 1;
         if (!timeA && !timeB) return 0;
-
+        
         const isPastA = isBefore(timeA!, now);
         const isPastB = isBefore(timeB!, now);
         
         if (isPastA && !isPastB) return 1;
         if (!isPastA && isPastB) return -1;
         
+        // If both are past or both are future, sort chronologically
         return timeA!.getTime() - timeB!.getTime();
     };
 
@@ -538,7 +540,10 @@ export default function HomePage() {
         .sort(liveSortLogic);
     
     const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(upcomingSortLogic);
-    const unknown = processedEvents.filter((e) => e.status === 'Desconocido').sort(upcomingSortLogic);
+    
+    const unknown = processedEvents
+      .filter((e) => e.status === 'Desconocido')
+      .sort(upcomingSortLogic);
 
     const finished = processedEvents
         .filter((e) => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
@@ -1134,7 +1139,7 @@ export default function HomePage() {
             {pageTitle}
              <div className={cn(
                 "flex items-center justify-end gap-2 px-4 flex-1",
-                 isSearchOpen && 'w-full'
+                 isMobile && isSearchOpen && 'w-full'
              )}>
                 {isSearchOpen ? (
                     <div className="relative w-full max-w-sm">
