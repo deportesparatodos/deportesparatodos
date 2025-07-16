@@ -1,12 +1,11 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -47,6 +46,11 @@ import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
 import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
+import { CameraConfigurationComponent } from '@/components/camera-configuration';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertTitle } from '@/components/ui/alert';
+import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 interface StreamedMatch {
@@ -138,17 +142,27 @@ const channels247: Event[] = [
   }
 ];
 
+function HomePageContent() {
+  // Global state
+  const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
+  const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
+  const [gridGap, setGridGap] = useState<number>(2);
+  const [borderColor, setBorderColor] = useState<string>('#000000');
+  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
 
-export default function HomePage() {
-  const router = useRouter();
+  // View mode state
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
+  const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
+  const [progress, setProgress] = useState(100);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Home mode state
   const [events, setEvents] = useState<Event[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
-
-  const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
-  const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [isModification, setIsModification] = useState(false);
@@ -156,24 +170,29 @@ export default function HomePage() {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const isMobile = useIsMobile(700);
+  const [currentView, setCurrentView] = useState<string>('home');
   
-  const [gridGap, setGridGap] = useState<number>(2);
-  const [borderColor, setBorderColor] = useState<string>('#000000');
-  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  // Dialog/Popup states
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
-  
-  const [currentView, setCurrentView] = useState<string>('home'); // home, live, channels, or category name
+  const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
+  const [errorsDialogOpen, setErrorsDialogOpen] = useState(false);
+  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
+  const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
+  const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
+  const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
+  const [isScheduleEventsLoading, setIsScheduleEventsLoading] = useState(false);
+
+  const isMobile = useIsMobile();
 
 
- const fetchEvents = useCallback(async () => {
-    setIsDataLoading(true);
+ const fetchEvents = useCallback(async (manualTrigger = false) => {
+    if(!manualTrigger) setIsDataLoading(true);
     try {
       const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
-        fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []),
-        fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []),
-        fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []),
-        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : [])
+        fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []).catch(() => []),
+        fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []).catch(() => []),
+        fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []).catch(() => []),
+        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => [])
       ]);
 
       const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
@@ -281,10 +300,9 @@ export default function HomePage() {
       
       const combinedInitialEvents = [...initialEvents, ...streamTpEvents];
 
-      // Fetch all stream options for streamed.su events concurrently
       const eventsWithStreams = await Promise.all(
         combinedInitialEvents.map(async (event) => {
-          if (event.source === 'streamed.su' && event.sources && event.sources.length > 0) {
+          if (event.source === 'streamed.su' && event.sources && event.sources.length > 0 && event.options.length === 0) {
             try {
               const streamOptions: StreamOption[] = [];
               const sourcePromises = event.sources.map(async (source) => {
@@ -307,21 +325,18 @@ export default function HomePage() {
               return { ...event, options: streamOptions };
             } catch (error) {
               console.error(`Failed to fetch streams for ${event.title}`, error);
-              return { ...event, options: [] }; // Keep event even if streams fail
+              return { ...event, options: [] };
             }
           }
           return event;
         })
       );
 
-      // Filter out events that have no options after fetching
       const finalEvents = eventsWithStreams.filter(event => event.options.length > 0);
-
       setEvents(finalEvents);
-
     } catch (error) {
       console.error('Error fetching events:', error);
-      setEvents([]); // Ensure it's an empty array on error
+      setEvents([]); 
     } finally {
         setIsDataLoading(false);
         if (!isInitialLoadDone) {
@@ -330,7 +345,7 @@ export default function HomePage() {
     }
   }, [isInitialLoadDone]);
 
-  // Load state from localStorage once on initial mount
+  // Load state from localStorage on initial mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
@@ -365,49 +380,66 @@ export default function HomePage() {
     const storedChatEnabled = localStorage.getItem('isChatEnabled');
     if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
     
-  }, []);
+    // Welcome popup logic for view mode
+    if (isViewMode) {
+      const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
+      if (!hasVisited) {
+          setWelcomePopupOpen(true);
+          sessionStorage.setItem('hasVisitedViewPage', 'true');
+          setProgress(100);
+      }
+    }
+    
+  }, [isViewMode]);
 
   // Fetch event data only once on initial mount
   useEffect(() => {
     if (!isInitialLoadDone) {
       fetchEvents();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInitialLoadDone]);
+  }, [isInitialLoadDone, fetchEvents]);
 
-  // Persist selectedEvents to localStorage
+  // Persist state to localStorage
   useEffect(() => {
     if (isInitialLoadDone) {
         localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-    }
-  }, [selectedEvents, isInitialLoadDone]); 
-  
-  // Persist viewOrder to localStorage
-  useEffect(() => {
-    if (isInitialLoadDone) {
-      const activeEventIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
-      const currentOrderActive = viewOrder.filter(i => activeEventIndexes.includes(i));
-      
-      const activeOrderChanged = JSON.stringify(currentOrderActive) !== JSON.stringify(viewOrder.filter(i => selectedEvents[i] !== null));
-
-      if (activeOrderChanged) {
-          const newOrder = [...currentOrderActive];
-          for (let i = 0; i < 9; i++) {
-              if (!newOrder.includes(i)) {
-                  newOrder.push(i);
-              }
-          }
-          
-          const stringifiedNewOrder = JSON.stringify(newOrder);
-          if (stringifiedNewOrder !== localStorage.getItem('viewOrder')) {
-              setViewOrder(newOrder);
-              localStorage.setItem('viewOrder', stringifiedNewOrder);
-          }
-      } else {
         localStorage.setItem('viewOrder', JSON.stringify(viewOrder));
-      }
+        localStorage.setItem('gridGap', gridGap.toString());
+        localStorage.setItem('borderColor', borderColor);
+        localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
     }
-  }, [selectedEvents, viewOrder, isInitialLoadDone]);
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, isInitialLoadDone]); 
+
+  // Timer logic for welcome popup
+  const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setProgress((prev) => {
+        if (prev <= 0) {
+          clearInterval(timerRef.current!);
+          setWelcomePopupOpen(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 100); 
+  }, []);
+
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (welcomePopupOpen && !tutorialDialogOpen && !errorsDialogOpen) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+    return stopTimer;
+  }, [welcomePopupOpen, tutorialDialogOpen, errorsDialogOpen, startTimer, stopTimer]);
+
 
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
@@ -418,7 +450,6 @@ export default function HomePage() {
         }
     }
     setViewOrder(fullNewOrder);
-    localStorage.setItem('viewOrder', JSON.stringify(fullNewOrder));
   };
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
@@ -664,32 +695,36 @@ export default function HomePage() {
   };
 
   const handleStartView = () => {
-    router.push('/view');
+    setIsViewMode(true);
   };
   
-    const openDialogForEvent = (event: Event) => {
-        const selection = getEventSelection(event);
-        let eventForDialog = { ...event };
-        
-        if (selection.isSelected && selection.selectedOption) {
-            eventForDialog.selectedOption = selection.selectedOption;
-        }
+  const handleStopView = () => {
+    setIsViewMode(false);
+  }
 
-        setDialogEvent(eventForDialog);
-        setDialogOpen(true);
+  const openDialogForEvent = (event: Event) => {
+      const selection = getEventSelection(event);
+      let eventForDialog = { ...event };
+      
+      if (selection.isSelected && selection.selectedOption) {
+          eventForDialog.selectedOption = selection.selectedOption;
+      }
 
-        if (selection.isSelected) {
-            setIsModification(true);
-            const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
-            setModificationIndex(originalIndex);
-        } else {
-            setIsModification(false);
-            setModificationIndex(selectedEvents.findIndex(e => e === null));
-        }
-    };
+      setDialogEvent(eventForDialog);
+      setDialogOpen(true);
+
+      if (selection.isSelected) {
+          setIsModification(true);
+          const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
+          setModificationIndex(originalIndex);
+      } else {
+          setIsModification(false);
+          setModificationIndex(selectedEvents.findIndex(e => e === null));
+      }
+  };
 
 
-   const handleChannelClick = (channel: Channel) => {
+  const handleChannelClick = (channel: Channel) => {
     const channelAsEvent: Event = {
       title: channel.name,
       options: [{url: channel.url, label: 'Ver Canal', hd: false, language: ''}],
@@ -724,7 +759,10 @@ export default function HomePage() {
   
   const openDialogForModification = (event: Event, index: number) => {
     setConfigDialogOpen(false);
-    openDialogForEvent(event);
+    const currentEventState = selectedEvents[index];
+    if (!currentEventState) return;
+    const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
+    setModifyEvent({ event: eventForModification, index });
   }
 
   const handleViewChange = (view: string) => {
@@ -737,12 +775,397 @@ export default function HomePage() {
     setCurrentView('home');
   };
 
+  // View Mode specific handlers
+  const handleReloadCamera = (index: number) => {
+    setReloadCounters(prevCounters => {
+      const newCounters = [...prevCounters];
+      newCounters[index] = (newCounters[index] || 0) + 1;
+      return newCounters;
+    });
+  };
+
+  const handleModifyEventSelect = (event: Event, option: string) => {
+    if (modifyEvent) {
+        const newSelectedEvents = [...selectedEvents];
+        const eventWithSelection = { ...event, selectedOption: option };
+        newSelectedEvents[modifyEvent.index] = eventWithSelection;
+        setSelectedEvents(newSelectedEvents);
+        handleReloadCamera(modifyEvent.index);
+        setModifyEvent(null);
+    }
+  };
+
+  const handleAddEventSelect = (event: Event, option: string) => {
+    const newSelectedEvents = [...selectedEvents];
+    const eventWithSelection = { ...event, selectedOption: option };
+
+    const existingIndex = newSelectedEvents.findIndex(se => se?.title === event.title);
+
+    if (existingIndex !== -1) {
+        newSelectedEvents[existingIndex] = eventWithSelection;
+    } else {
+        const emptyIndex = newSelectedEvents.findIndex(e => e === null);
+        if (emptyIndex !== -1) {
+            newSelectedEvents[emptyIndex] = eventWithSelection;
+        } else {
+            alert("No empty slots available.");
+            return;
+        }
+    }
+    
+    setSelectedEvents(newSelectedEvents);
+    setAddEventsDialogOpen(false);
+  };
+
+
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
 
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
+  const numCameras = selectedEventsCount;
   
+  const getGridClasses = useCallback((count: number) => {
+    if (isMobile) {
+        return `grid-cols-1 grid-rows-${count > 0 ? count : 1}`;
+    }
+    switch (count) {
+        case 1: return 'grid-cols-1 grid-rows-1';
+        case 2: return 'grid-cols-2 grid-rows-1';
+        case 3: return 'grid-cols-2 grid-rows-2'; 
+        case 4: return 'grid-cols-2 grid-rows-2';
+        case 5: return 'grid-cols-3 grid-rows-2';
+        case 6: return 'grid-cols-3 grid-rows-2';
+        case 7: return 'grid-cols-3 grid-rows-3';
+        case 8: return 'grid-cols-3 grid-rows-3';
+        case 9: return 'grid-cols-3 grid-rows-3';
+        default: return 'grid-cols-1 grid-rows-1';
+    }
+  }, [isMobile]);
+  
+ const getItemClasses = (orderedIndex: number, count: number) => {
+    if (isMobile) return '';
+    if (count === 3) {
+      return orderedIndex === 0 ? 'col-span-2' : 'col-span-1';
+    }
+    if (count === 5) {
+      return orderedIndex < 2 ? 'col-span-1' : 'col-span-1';
+    }
+    if (count === 7) {
+       return orderedIndex === 6 ? 'col-start-2' : '';
+    }
+    if (count === 8) {
+       return orderedIndex === 6 ? 'col-start-1' : orderedIndex === 7 ? 'col-start-2' : '';
+    }
+    return '';
+ };
+
+  if (isViewMode) {
+     if (numCameras === 0) {
+      return (
+        <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
+          <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
+          <Button onClick={handleStopView}>
+            <X className="mr-2 h-4 w-4" /> Volver Atrás
+          </Button>
+        </div>
+      );
+    }
+    const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
+    
+    return (
+      <div className="flex h-screen w-screen bg-background text-foreground">
+        {modifyEvent && (
+             <Dialog open={!!modifyEvent} onOpenChange={(open) => { if (!open) setModifyEvent(null); }}>
+                <EventSelectionDialog
+                    isOpen={!!modifyEvent}
+                    onOpenChange={(open) => { if (!open) setModifyEvent(null); }}
+                    event={modifyEvent.event}
+                    onSelect={handleModifyEventSelect}
+                    isModification={true}
+                    onRemove={() => {}}
+                    windowNumber={modifyEvent.index + 1}
+                />
+            </Dialog>
+        )}
+        <AddEventsDialog 
+            open={addEventsDialogOpen}
+            onOpenChange={setAddEventsDialogOpen}
+            onSelect={handleAddEventSelect}
+            selectedEvents={selectedEvents}
+            allEvents={events} 
+            allChannels={channels}
+            isLoading={isAddEventsLoading}
+            onFetchEvents={() => fetchEvents(true)}
+        />
+        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
+           <DialogContent className="sm:max-w-md p-0" hideClose={true}>
+              <DialogHeader className="sr-only">
+                  <DialogTitle>Bienvenida</DialogTitle>
+              </DialogHeader>
+               <DialogClose className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
+              <div className="relative">
+                  <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
+              </div>
+              <div className="px-6 pt-8 pb-2 text-center">
+                  <h2 className="text-lg font-bold">¡Bienvenido a Deportes para Todos!</h2>
+              </div>
+              <div className="px-6 pb-6 pt-0 text-sm text-muted-foreground text-left space-y-4">
+                  <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
+                  <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500'>
+                      <AlertTriangle className="h-4 w-4 !text-yellow-500" />
+                      <AlertTitle className="font-bold">¡Atención!</AlertTitle>
+                      <DialogDescription className="text-yellow-500/80">
+                         Algunos canales pueden tardar mas en cargar que otros, hasta no ver un mensaje de error, NO CAMBIAR DE CANAL.
+                      </DialogDescription>
+                  </Alert>
+              </div>
+               <DialogFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
+                  <Dialog open={tutorialDialogOpen} onOpenChange={setTutorialDialogOpen}>
+                    <DialogTrigger asChild>
+                       <Button variant="outline" className="gap-2">
+                          <BookOpen /> Tutorial
+                       </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Tutorial de Uso</DialogTitle>
+                        </DialogHeader>
+                        <ScrollArea className="h-96 pr-6">
+                           <div className="text-sm text-muted-foreground space-y-4">
+                               <p>¡Bienvenido a <strong>Deportes para Todos</strong>! Esta guía detallada te enseñará a usar la plataforma como un experto para que no te pierdas ni un segundo de tus eventos deportivos favoritos.</p>
+                                
+                                <h3 className="font-bold text-foreground mt-6">1. Entendiendo la Pantalla Principal</h3>
+                                <p>La página de inicio es tu centro de comando. Aquí encontrarás todo el contenido organizado para un acceso rápido y sencillo.</p>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
+                                    <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
+                                    <li><strong>Carruseles de Eventos:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
+                                    <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
+                                </ul>
+
+                                <h3 className="font-bold text-foreground mt-6">2. Cómo Seleccionar un Evento para Ver</h3>
+                                <p>Este es el paso fundamental para construir tu vista múltiple.</p>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li><strong>Haz clic en una Tarjeta:</strong> Cuando encuentres un evento o canal que te interese, simplemente haz clic en su tarjeta.</li>
+                                    <li><strong>Elige una Opción de Transmisión:</strong> Se abrirá una ventana emergente (diálogo) con uno o más botones. Cada botón representa una fuente o calidad de transmisión diferente (ej: "Opción 1", "Opción 2"). <br/>
+                                    <span className="text-xs italic"><strong>Consejo:</strong> Si una opción no funciona, puedes volver a esta ventana y probar otra.</span></li>
+                                    <li><strong>Asignación Automática a Ventana:</strong> Al seleccionar una opción, el evento se asigna automáticamente a la primera "ventana" de visualización disponible (tienes hasta 9). Verás que la tarjeta del evento en la página principal ahora muestra un número, indicando en qué ventana se verá.</li>
+                                </ul>
+
+                                <h3 className="font-bold text-foreground mt-6">3. Gestiona tu Selección Personalizada</h3>
+                                <p>Una vez que has elegido uno o más eventos, puedes gestionarlos desde el panel de configuración.</p>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li><strong>Botón de Configuración (icono de engranaje <Settings className="inline-block h-4 w-4" />):</strong> Ubicado en la esquina superior derecha, este botón abre un panel donde puedes ver y administrar todos los eventos que has seleccionado.</li>
+                                    <li><strong>Dentro del Panel:</strong> Cada evento seleccionado aparece en una lista. Aquí puedes:
+                                        <ul className="list-disc pl-6 mt-1">
+                                            <li><strong>Reordenar:</strong> Usa las flechas hacia arriba y abajo para cambiar la posición de los eventos en la cuadrícula de visualización.</li>
+                                            <li><strong>Modificar:</strong> Haz clic en el icono del lápiz (<Pencil className="inline-block h-4 w-4" />) para volver a abrir el diálogo de opciones y cambiar la fuente de transmisión sin tener que eliminar el evento.</li>
+                                            <li><strong>Eliminar:</strong> Haz clic en el icono de la papelera (<Trash2 className="inline-block h-4 w-4" />) para quitar un evento de tu selección y liberar esa ventana.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+
+                                <h3 className="font-bold text-foreground mt-6">4. ¡A Disfrutar! Iniciar la Vista Múltiple</h3>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li><strong>Botón de "Play" (<Play className="inline-block h-4 w-4" />):</strong> Este es el botón más importante. Una vez que hayas seleccionado al menos un evento, este botón (ubicado en la esquina superior derecha) se activará. Haz clic en él para ir a la pantalla de visualización.</li>
+                                    <li><strong>La Magia de la Cuadrícula Dinámica:</strong> La pantalla de visualización se dividirá automáticamente para mostrar todos los eventos que seleccionaste. La cuadrícula se adapta de forma inteligente: si eliges 2 eventos, verás 2 ventanas; si eliges 4, verás una cuadrícula de 2x2, y así hasta 9.</li>
+                                </ul>
+                            </div>
+                        </ScrollArea>
+                        <DialogFooter>
+                            <DialogClose asChild><Button>Entendido</Button></DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={errorsDialogOpen} onOpenChange={setErrorsDialogOpen}>
+                      <DialogTrigger asChild>
+                          <Button variant="outline" className="gap-2">
+                             <AlertCircle /> Solución de Errores
+                          </Button>
+                      </DialogTrigger>
+                       <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                              <DialogTitle>Solución de Errores Comunes</DialogTitle>
+                          </DialogHeader>
+                          <ScrollArea className="h-96 pr-6">
+                              <div className="text-sm text-muted-foreground space-y-4">
+                                    <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
+                                    <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
+                                    <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
+                                    <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge, ya que suelen tener la mejor compatibilidad con tecnologías de video web.</p>
+                                    <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web.</p>
+                                    <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora.</p>
+                                    <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender".</p>
+                              </div>
+                          </ScrollArea>
+                          <DialogFooter>
+                              <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                          </DialogFooter>
+                      </DialogContent>
+                  </Dialog>
+               </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <div className="relative flex flex-col h-screen flex-grow">
+          <div
+            className={cn(
+              "absolute z-20 flex items-center gap-2",
+              isChatOpen && !isMobile ? "flex-row-reverse left-0" : "right-0"
+            )}
+            style={
+              isChatOpen && !isMobile 
+                ? { top: `${gridGap}px`, left: `${gridGap}px` } 
+                : { top: `${gridGap}px`, right: `${gridGap}px` }
+            }
+          >
+            <CameraConfigurationComponent
+                order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                onOrderChange={handleOrderChange}
+                eventDetails={selectedEvents}
+                onReload={handleReloadCamera}
+                onRemove={handleEventRemove}
+                onModify={(event, index) => openDialogForModification(event, index)}
+                isViewPage={true}
+                gridGap={gridGap}
+                onGridGapChange={setGridGap}
+                borderColor={borderColor}
+                onBorderColorChange={setBorderColor}
+                isChatEnabled={isChatEnabled}
+                onIsChatEnabledChange={setIsChatEnabled}
+                onAddEvent={() => setAddEventsDialogOpen(true)}
+                schedules={schedules}
+                onSchedulesChange={setSchedules}
+                allEvents={events}
+                allChannels={channels}
+                currentOrder={viewOrder}
+                onFetchScheduleEvents={() => fetchEvents(true)}
+                isScheduleEventsLoading={isScheduleEventsLoading}
+            />
+
+            {isChatEnabled && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="bg-transparent hover:bg-accent/80 text-white h-10 w-10" 
+                onClick={() => setIsChatOpen(!isChatOpen)}
+                aria-label="Abrir o cerrar chat"
+              >
+                <MessageSquare className="h-5 w-5" />
+              </Button>
+            )}
+            
+            <Button
+              onClick={handleStopView}
+              variant="ghost"
+              size="icon"
+              className="bg-transparent hover:bg-accent/80 text-white h-10 w-10"
+              aria-label="Cerrar Vista"
+            >
+              <X className="h-7 w-7 text-white" />
+            </Button>
+          </div>
+          
+          <main 
+            className={gridContainerClasses} 
+            style={{ 
+              gap: `${gridGap}px`,
+              padding: `${gridGap}px`,
+              backgroundColor: borderColor
+            }}
+          >
+            {selectedEvents.map((event, originalIndex) => {
+                if (!event) return null;
+                
+                const windowClasses = cn(
+                    "overflow-hidden",
+                    "relative",
+                    "bg-black",
+                    "order-[var(--order)]",
+                    getItemClasses(viewOrder.filter(i => selectedEvents[i] !== null).indexOf(originalIndex), numCameras)
+                );
+
+                let iframeSrc = event.selectedOption
+                    ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`
+                    : '';
+                
+                if (iframeSrc.includes("youtube-nocookie.com")) {
+                    iframeSrc += `&autoplay=1`;
+                }
+
+                return (
+                    <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
+                        <iframe
+                            src={iframeSrc}
+                            title={`Stream ${originalIndex + 1}`}
+                            className="w-full h-full border-0"
+                            loading="eager"
+                            allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                            allowFullScreen
+                        />
+                    </div>
+                );
+            })}
+          </main>
+        </div>
+        
+        {/* Chat Sidebar for Desktop */}
+        <div
+          className={cn(
+            'w-80 flex-shrink-0 bg-background flex-col border-l border-border',
+            isChatOpen && !isMobile ? 'flex' : 'hidden'
+          )}
+        >
+          <div className="p-2 border-b border-border flex justify-between items-center">
+            <h2 className="font-semibold">Chat en Vivo</h2>
+            <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <iframe
+            src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
+            title="Chat en Vivo"
+            className="w-full flex-grow border-0"
+          />
+        </div>
+
+        {/* Chat Dialog for Mobile */}
+        {isMobile && (
+          <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+            <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
+              <DialogHeader className="p-4 border-b">
+                  <DialogTitle>Chat en Vivo</DialogTitle>
+                  <DialogDescription className="sr-only">Contenedor del chat en vivo de Minnit.</DialogDescription>
+              </DialogHeader>
+              <iframe
+                src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
+                title="Chat en Vivo"
+                className="w-full flex-grow border-0"
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+    );
+  }
+
+  // --- HOME VIEW (DEFAULT) ---
   const pageTitle = (
     <div className={cn(
         'flex items-center min-h-[75px] transition-all duration-300 pl-4 shrink-0',
@@ -1168,21 +1591,11 @@ export default function HomePage() {
                                 <ScrollArea className="pr-4 -mr-4">
                                    <LayoutConfigurator
                                         gridGap={gridGap}
-                                        onGridGapChange={(value) => {
-                                            setGridGap(value);
-                                            localStorage.setItem('gridGap', value.toString());
-                                        }}
+                                        onGridGapChange={setGridGap}
                                         borderColor={borderColor}
-                                        onBorderColorChange={(value) => {
-                                            setBorderColor(value);
-                                            localStorage.setItem('borderColor', value);
-                                        }}
+                                        onBorderColorChange={setBorderColor}
                                         isChatEnabled={isChatEnabled}
-                                        onIsChatEnabledChange={(value) => {
-                                            setIsChatEnabled(value);
-                                            localStorage.setItem('isChatEnabled', JSON.stringify(value));
-                                        }}
-                                        
+                                        onIsChatEnabledChange={setIsChatEnabled}
                                         order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                         onOrderChange={handleOrderChange}
                                         eventDetails={selectedEvents}
@@ -1233,3 +1646,247 @@ export default function HomePage() {
     </div>
   );
 }
+
+// Wrapper to handle Suspense for client components
+export default function Page() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <HomePageContent />
+    </Suspense>
+  )
+}
+
+
+export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, isLoading, onFetchEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], isLoading: boolean, onFetchEvents: () => void }) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isFullScreen, setIsFullScreen] = useState(false);
+
+    const [subDialogOpen, setSubDialogOpen] = useState(false);
+    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+    const [isModification, setIsModification] = useState(false);
+    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+
+    const getEventSelection = useCallback((eventTitle: string, eventTime: string) => {
+        const selectionIndex = selectedEvents.findIndex(se => se?.title === eventTitle && se?.time === eventTime);
+        if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
+            return { isSelected: true, window: selectionIndex + 1, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
+        }
+        return { isSelected: false, window: null, selectedOption: null };
+    }, [selectedEvents]);
+
+
+    const handleSubDialogSelect = (event: Event, option: string) => {
+        onSelect(event, option);
+        setSubDialogOpen(false);
+    };
+    
+    const openSubDialogForEvent = (event: Event) => {
+        const selection = getEventSelection(event.title, event.time);
+        let eventForDialog = {...event};
+        if(selection.isSelected && selection.selectedOption){
+            eventForDialog.selectedOption = selection.selectedOption;
+        }
+
+        setDialogEvent(eventForDialog);
+        setSubDialogOpen(true);
+
+        setIsModification(selection.isSelected);
+        setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
+    };
+
+    const handleChannelClick = (channel: Channel) => {
+        const event: Event = {
+            title: channel.name,
+            options: [{url: channel.url, label: 'Ver canal', hd: false, language: ''}],
+            sources: [],
+            buttons: [],
+            time: channel.name.includes('24/7') ? '24/7' : '',
+            category: 'Canal',
+            language: '',
+            date: '',
+            source: '',
+            status: 'En Vivo',
+            image: channel.logo,
+        };
+        openSubDialogForEvent(event);
+    };
+
+    const sortedAndFilteredEvents = useMemo(() => {
+        const lowercasedFilter = searchTerm.toLowerCase();
+        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+        
+        const liveSortLogic = (a: Event, b: Event): number => {
+            const hasCustomImageA = a.image && a.image !== placeholderImage;
+            const hasCustomImageB = b.image && b.image !== placeholderImage;
+            if (hasCustomImageA && !hasCustomImageB) return -1;
+            if (!hasCustomImageA && hasCustomImageB) return 1;
+            return a.title.localeCompare(b.title);
+        };
+
+        const upcomingSortLogic = (a: Event, b: Event): number => {
+            const now = new Date();
+            const parseTime = (timeStr: string) => {
+                if (!/^\d{2}:\d{2}$/.test(timeStr)) return null;
+                const parsed = parse(timeStr, 'HH:mm', now);
+                return isValid(parsed) ? parsed : null;
+            };
+
+            const timeA = parseTime(a.time);
+            const timeB = parseTime(b.time);
+            
+            if (timeA && !timeB) return -1;
+            if (!timeA && timeB) return 1;
+            if (!timeA && !timeB) return a.title.localeCompare(b.title);
+            
+            const isPastA = isBefore(timeA!, now);
+            const isPastB = isBefore(timeB!, now);
+            
+            if (isPastA && !isPastB) return 1;
+            if (!isPastA && isPastB) return -1;
+            
+            return timeA!.getTime() - timeB!.getTime();
+        };
+
+        const filtered = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
+
+        const liveCustom = filtered.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
+        const liveDefault = filtered.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
+        const upcoming = filtered.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
+        const unknown = filtered.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
+        const finished = filtered.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
+
+        return [...liveCustom, ...liveDefault, ...upcoming, ...unknown, ...finished];
+    }, [searchTerm, allEvents]);
+
+
+    const filteredChannels = useMemo(() => {
+        const lowercasedFilter = searchTerm.toLowerCase();
+        return allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
+    }, [searchTerm, allChannels]);
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent 
+                hideClose={true}
+                className={cn(
+                    "max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4 transition-all duration-300",
+                    isFullScreen && "w-screen h-screen max-w-none rounded-none"
+                )}
+            >
+                <DialogHeader className='flex-row items-center justify-between pb-0'>
+                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
+                     <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
+                            {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                        </Button>
+                        <DialogClose asChild>
+                           <Button variant="ghost" size="icon">
+                               <X className="h-5 w-5" />
+                           </Button>
+                        </DialogClose>
+                    </div>
+                </DialogHeader>
+                 {isLoading ? (
+                    <div className="flex-grow flex items-center justify-center">
+                        <Loader2 className="h-10 w-10 animate-spin" />
+                    </div>
+                ) : (
+                <Tabs defaultValue="eventos" className="flex-grow flex flex-col mt-2">
+                    <div className="flex flex-col gap-2">
+                        <div className="relative flex-grow mt-[5px]">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Buscar..."
+                                className="w-full pl-10 pr-20"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onFetchEvents}>
+                                    <RotateCw className="h-5 w-5" />
+                                </Button>
+                                {searchTerm && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => setSearchTerm('')}
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="eventos">Eventos</TabsTrigger>
+                            <TabsTrigger value="canales">Canales</TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <TabsContent value="eventos" className="flex-grow mt-4 h-0">
+                        <ScrollArea className="h-full pr-4 -mr-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {sortedAndFilteredEvents.map((event, index) => (
+                                    <EventCard
+                                        key={`event-${index}`}
+                                        event={event}
+                                        selection={getEventSelection(event.title, event.time)}
+                                        onClick={() => openSubDialogForEvent(event)}
+                                    />
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="canales" className="flex-grow mt-4 h-0">
+                         <ScrollArea className="h-full pr-4 -mr-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {filteredChannels.map((channel, index) => {
+                                    const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                    const selection = getEventSelection(channelAsEvent.title, channelAsEvent.time);
+                                     return (
+                                        <Card 
+                                            key={`search-channel-${index}`}
+                                            className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
+                                            onClick={() => handleChannelClick(channel)}
+                                        >
+                                            <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
+                                                <Image
+                                                    src={channel.logo}
+                                                    alt={`${channel.name} logo`}
+                                                    width={120}
+                                                    height={67.5}
+                                                    className="object-contain max-h-full max-w-full"
+                                                    onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
+                                                />
+                                            </div>
+                                            <div className="p-3 bg-card flex-grow flex flex-col justify-center">
+                                                <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
+                                            </div>
+                                        </Card>
+                                     )
+                                })}
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+                </Tabs>
+                )}
+            </DialogContent>
+            {dialogEvent && (
+                <Dialog open={subDialogOpen} onOpenChange={setSubDialogOpen}>
+                    <EventSelectionDialog
+                        isOpen={subDialogOpen}
+                        onOpenChange={setSubDialogOpen}
+                        event={dialogEvent}
+                        onSelect={handleSubDialogSelect}
+                        isModification={isModification}
+                        onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
+                        windowNumber={(modificationIndex ?? 0) + 1}
+                    />
+                </Dialog>
+            )}
+        </Dialog>
+    );
+}
+
