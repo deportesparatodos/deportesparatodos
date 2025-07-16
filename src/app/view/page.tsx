@@ -106,7 +106,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             
             if (timeA && !timeB) return -1;
             if (!timeA && timeB) return 1;
-            if (!timeA && !timeB) return 0;
+            if (!timeA && !timeB) return a.title.localeCompare(b.title);
             
             const isPastA = isBefore(timeA!, now);
             const isPastB = isBefore(timeB!, now);
@@ -346,7 +346,11 @@ function ViewPageContent() {
   const numCameras = useMemo(() => selectedEvents.filter(Boolean).length, [selectedEvents]);
 
    const fetchAllEvents = useCallback(async (isForSchedule = false) => {
-    if (allEventsData.length > 0 && !isForSchedule) return;
+    // For "Add Event/Channel" dialog, we always re-fetch.
+    if (isForSchedule && allEventsData.length > 0) {
+      // For schedule manager, only fetch once if not already loaded.
+      return;
+    }
     
     const setLoading = isForSchedule ? setIsScheduleEventsLoading : setIsAddEventsLoading;
     setLoading(true);
@@ -594,7 +598,7 @@ function ViewPageContent() {
 
     useEffect(() => {
         if (addEventsDialogOpen) {
-            fetchAllEvents();
+            fetchAllEvents(false); // `false` indicates it's for the main "Add Events" dialog
         }
     }, [addEventsDialogOpen, fetchAllEvents]);
 
@@ -1014,4 +1018,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
