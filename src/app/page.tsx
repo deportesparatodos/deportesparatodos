@@ -47,6 +47,7 @@ import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
 import { addHours, isBefore, isAfter, parse } from 'date-fns';
 
+
 interface StreamedMatch {
   id: string;
   title: string;
@@ -243,10 +244,20 @@ export default function HomePage() {
               const url = new URL(event.link);
               optionLabel = url.searchParams.get('stream') || 'Ver';
           } catch (e) { /* ignore invalid URLs */ }
+
+          let eventTime = event.time;
+          try {
+            // Parse time string, add 2 hours, and format it back
+            const originalTime = parse(event.time, 'HH:mm', new Date());
+            const adjustedTime = addHours(originalTime, 2);
+            eventTime = format(adjustedTime, 'HH:mm');
+          } catch(e) {
+            console.error("Could not parse time for streamtpglobal event", e);
+          }
           
           return {
               title: event.title,
-              time: event.time,
+              time: eventTime,
               options: [{ url: event.link, label: optionLabel.toUpperCase(), hd: false, language: '' }],
               sources: [],
               buttons: [],
@@ -1083,7 +1094,7 @@ export default function HomePage() {
             {pageTitle}
             <div className={cn(
                 "flex flex-1 items-center justify-end gap-2 px-2 md:px-8 transition-all duration-300",
-                isMobile && isSearchOpen && currentView === 'home' && "pr-4"
+                isMobile && isSearchOpen && currentView === 'home' && "w-full"
             )}>
                 <div className={cn(
                     "flex-1 justify-end",
@@ -1091,7 +1102,7 @@ export default function HomePage() {
                     !isMobile && 'flex',
                      isMobile && isSearchOpen && 'max-w-full'
                 )}>
-                    <div className="relative w-full max-w-sm">
+                    <div className="relative w-full max-w-sm ml-auto">
                         <Input
                             type="text"
                             placeholder="Buscar evento o canal..."
@@ -1106,15 +1117,10 @@ export default function HomePage() {
                 </div>
 
                 <Button variant="ghost" size="icon" onClick={() => {
-                    if (isMobile) {
-                        if (isSearchOpen) {
-                            setSearchTerm('');
-                        }
-                        setIsSearchOpen(!isSearchOpen);
-                    } else {
-                        setIsSearchOpen(!isSearchOpen);
-                        if(isSearchOpen) setSearchTerm('');
+                    if (isSearchOpen) {
+                        setSearchTerm('');
                     }
+                    setIsSearchOpen(!isSearchOpen);
                 }}>
                     {isSearchOpen ? <X /> : <Search />}
                 </Button>
@@ -1198,5 +1204,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
