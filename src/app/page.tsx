@@ -1116,7 +1116,7 @@ export default function HomePage() {
             )}>
                 <div className={cn(
                     "relative w-full max-w-sm",
-                     isMobile ? (isSearchOpen ? 'block' : 'hidden') : 'block'
+                    isSearchOpen ? 'block' : 'hidden'
                 )}>
                     <Input
                         type="text"
@@ -1218,3 +1218,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
