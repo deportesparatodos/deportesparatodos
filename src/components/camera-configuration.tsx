@@ -261,10 +261,7 @@ export function CameraConfigurationComponent({
           allChannels={allChannels}
           onFetchEvents={onFetchScheduleEvents}
           isLoading={isScheduleEventsLoading}
-          onAddEvent={() => {
-            setScheduleManagerOpen(false); // Close schedule dialog
-            onAddEvent(); // Open add event dialog
-          }}
+          onAddEvent={onAddEvent}
         />
       )}
     </>
