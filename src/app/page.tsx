@@ -504,21 +504,15 @@ export default function HomePage() {
         const timeA = parseTime(a.time);
         const timeB = parseTime(b.time);
         
-        if (!timeA && !timeB) return 0;
-        if (!timeA) return 1;
-        if (!timeB) return -1;
-        
-        // If time is in the past, push it to the end
-        if (isBefore(timeA, now) && isAfter(timeB, now)) return 1;
-        if (isAfter(timeA, now) && isBefore(timeB, now)) return -1;
+        if (!timeA || !timeB) return !timeA ? 1 : -1;
 
-        const diffA = Math.abs(differenceInMinutes(timeA, now));
-        const diffB = Math.abs(differenceInMinutes(timeB, now));
+        const isPastA = isBefore(timeA, now);
+        const isPastB = isBefore(timeB, now);
 
-        if (diffA < diffB) return -1;
-        if (diffA > diffB) return 1;
+        if (isPastA && !isPastB) return 1;
+        if (!isPastA && isPastB) return -1;
 
-        // If time difference is the same, sort by time
+        // If both are in the past or both in the future, sort by time
         return timeA.getTime() - timeB.getTime();
     };
 
@@ -1122,8 +1116,7 @@ export default function HomePage() {
             )}>
                 <div className={cn(
                     "relative w-full max-w-sm",
-                     isSearchOpen ? 'block' : 'hidden',
-                     !isMobile && 'block'
+                     isMobile ? (isSearchOpen ? 'block' : 'hidden') : 'block'
                 )}>
                     <Input
                         type="text"
