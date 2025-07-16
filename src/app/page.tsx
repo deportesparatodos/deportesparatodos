@@ -179,6 +179,7 @@ function HomePageContent() {
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
+  const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [isScheduleEventsLoading, setIsScheduleEventsLoading] = useState(false);
 
@@ -443,7 +444,6 @@ function HomePageContent() {
     return stopTimer;
   }, [welcomePopupOpen, tutorialDialogOpen, errorsDialogOpen, startTimer, stopTimer]);
 
-
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
     const presentIndexes = new Set(newOrder);
@@ -704,7 +704,7 @@ function HomePageContent() {
   const handleStopView = () => {
     setIsViewMode(false);
     setIsInitialLoadDone(false); // Trigger loading screen and re-fetch
-  }
+  };
 
   const openDialogForEvent = (event: Event) => {
       const selection = getEventSelection(event);
@@ -762,12 +762,12 @@ function HomePageContent() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
-    setConfigDialogOpen(false);
     const currentEventState = selectedEvents[index];
     if (!currentEventState) return;
     const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
     setModifyEvent({ event: eventForModification, index });
-  }
+    setModifyEventDialogOpen(true);
+  };
 
   const handleViewChange = (view: string) => {
     setSearchTerm('');
@@ -789,14 +789,31 @@ function HomePageContent() {
   };
 
   const handleModifyEventSelect = (event: Event, option: string) => {
-    if (modifyEvent) {
-        const newSelectedEvents = [...selectedEvents];
-        const eventWithSelection = { ...event, selectedOption: option };
-        newSelectedEvents[modifyEvent.index] = eventWithSelection;
-        setSelectedEvents(newSelectedEvents);
-        handleReloadCamera(modifyEvent.index);
+      const newSelectedEvents = [...selectedEvents];
+      const eventWithSelection = { ...event, selectedOption: option };
+      
+      let targetIndex = -1;
+      if (isViewMode && modifyEvent) {
+          targetIndex = modifyEvent.index;
+      } else if (!isViewMode && modifyEvent) {
+          targetIndex = modifyEvent.index;
+      }
+
+      if (targetIndex !== -1) {
+          newSelectedEvents[targetIndex] = eventWithSelection;
+          setSelectedEvents(newSelectedEvents);
+          if (isViewMode) {
+              handleReloadCamera(targetIndex);
+          }
+      }
+
+      // Close dialogs
+      if (isViewMode) {
         setModifyEvent(null);
-    }
+      } else {
+        setModifyEventDialogOpen(false);
+        setModifyEvent(null);
+      }
   };
 
   const handleAddEventSelect = (event: Event, option: string) => {
@@ -822,7 +839,6 @@ function HomePageContent() {
   };
 
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
-  const numCameras = selectedEventsCount;
   
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -865,6 +881,7 @@ function HomePageContent() {
 
 
   if (isViewMode) {
+     const numCameras = selectedEventsCount;
      if (numCameras === 0) {
       return (
         <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
@@ -1045,7 +1062,9 @@ function HomePageContent() {
                 eventDetails={selectedEvents}
                 onReload={handleReloadCamera}
                 onRemove={handleEventRemove}
-                onModify={(event, index) => openDialogForModification(event, index)}
+                onModify={(event, index) => {
+                    setModifyEvent({ event, index });
+                }}
                 isViewPage={true}
                 gridGap={gridGap}
                 onGridGapChange={setGridGap}
@@ -1054,8 +1073,8 @@ function HomePageContent() {
                 isChatEnabled={isChatEnabled}
                 onIsChatEnabledChange={setIsChatEnabled}
                 onAddEvent={() => {
-                  setAddEventsDialogOpen(true);
                   fetchEvents(true);
+                  setAddEventsDialogOpen(true);
                 }}
                 schedules={schedules}
                 onSchedulesChange={setSchedules}
@@ -1555,7 +1574,7 @@ function HomePageContent() {
                  isMobile && isSearchOpen && 'w-full'
              )}>
                 {isSearchOpen ? (
-                    <div className={cn("relative", isMobile ? 'w-full' : 'w-auto')}>
+                    <div className="relative w-full">
                         <Input
                             ref={r => { if (r) r.focus(); }}
                             type="text"
@@ -1602,7 +1621,7 @@ function HomePageContent() {
                                         borderColor={borderColor}
                                         onBorderColorChange={setBorderColor}
                                         isChatEnabled={isChatEnabled}
-                                        onIsChatEnabledChange={setIsChatEnabled}
+                                        onIsChatEnabledChange={onIsChatEnabledChange}
                                         order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                         onOrderChange={handleOrderChange}
                                         eventDetails={selectedEvents}
@@ -1648,6 +1667,18 @@ function HomePageContent() {
                 isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
                 windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
+            />
+        )}
+
+        {modifyEvent && (
+            <EventSelectionDialog
+                isOpen={modifyEventDialogOpen}
+                onOpenChange={setModifyEventDialogOpen}
+                event={modifyEvent.event}
+                onSelect={handleModifyEventSelect}
+                isModification={true}
+                onRemove={() => {}} 
+                windowNumber={modifyEvent.index + 1}
             />
         )}
     </div>
@@ -1896,3 +1927,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
