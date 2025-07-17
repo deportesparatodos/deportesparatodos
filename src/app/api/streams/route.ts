@@ -1,6 +1,5 @@
 // /src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
-const playwright = require('playwright-aws-lambda');
 
 export const dynamic = 'force-dynamic';
 
@@ -8,14 +7,13 @@ const API_ENDPOINTS = {
   'live': 'https://streamed.su/api/matches/live',
   'all-today': 'https://streamed.su/api/matches/all-today',
   'sports': 'https://streamed.su/api/sports',
-  'ppv': 'https://ppv.to/api/streams',
   'stream': 'https://streamed.su/api/stream',
   'streamtp': 'https://streamtpglobal.com/eventos.json',
 };
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type');
+  const type = searchParams.get('type') as keyof typeof API_ENDPOINTS;
   
   if (!type) {
     return NextResponse.json({ error: '`type` parameter is required' }, { status: 400 });
@@ -52,71 +50,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Handle PPV requests with Playwright (CORREGIDO)
-  if (type === 'ppv') {
-    let browser = null;
-    try {
-      console.log('Launching Playwright for PPV...');
-      
-      // Usar playwright-aws-lambda en lugar de playwright regular
-      browser = await playwright.launchChromium({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-extensions'
-        ]
-      });
-
-      const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      });
-      
-      const page = await context.newPage();
-      
-      // Establecer un timeout más alto y manejar errores de navegación
-      await page.goto(API_ENDPOINTS.ppv, { 
-        waitUntil: 'networkidle',
-        timeout: 30000 // 30 segundos
-      });
-      
-      const jsonText = await page.evaluate(() => {
-          // Access the pre element which contains the JSON
-          const preElement = document.querySelector('pre');
-          return preElement ? preElement.innerText : document.body.innerText;
-      });
-      
-      const data = JSON.parse(jsonText);
-      console.log('Successfully fetched PPV data with Playwright.');
-      return NextResponse.json(data);
-
-    } catch (error: any) {
-      console.error(`Error during Playwright execution for PPV:`, error);
-      // Return an empty array or an error object to prevent the entire page from failing.
-      return NextResponse.json({ 
-        success: false, 
-        streams: [], 
-        error: process.env.NODE_ENV === 'development' ? error.message : 'PPV service temporarily unavailable'
-      }, { status: 200 });
-    } finally {
-        if (browser) {
-            try {
-                await browser.close();
-            } catch (closeError) {
-                console.error('Error closing browser:', closeError);
-            }
-        }
-    }
-  }
-
-
   // Handle other list-based requests (live, all-today, sports, streamtp)
-  const apiUrl = API_ENDPOINTS[type as keyof typeof API_ENDPOINTS];
+  const apiUrl = API_ENDPOINTS[type];
 
   if (!apiUrl) {
     return NextResponse.json({ error: 'Invalid `type` parameter' }, { status: 400 });
