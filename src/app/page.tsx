@@ -256,7 +256,6 @@ function HomePageContent() {
       const combinedData = Array.from(allMatchesMap.values());
 
       const timeZone = 'America/Argentina/Buenos_Aires';
-      const nowInBA = toZonedTime(new Date(), timeZone);
       
       const categoryMap = sportsData.reduce((acc, sport) => {
           acc[sport.id] = sport.name;
@@ -266,17 +265,10 @@ function HomePageContent() {
       const initialEvents: Event[] = combinedData.map((match: StreamedMatch) => {
         const eventDate = new Date(match.date);
         const zonedEventTime = toZonedTime(eventDate, timeZone);
-        const eventEndTime = addHours(zonedEventTime, 3);
         
         let status: Event['status'] = 'Desconocido';
         if (liveData.some(liveMatch => liveMatch.id === match.id)) {
             status = 'En Vivo';
-        } else if (isBefore(nowInBA, zonedEventTime)) {
-            status = 'Próximo';
-        } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
-            status = 'En Vivo';
-        } else if (isAfter(nowInBA, eventEndTime)) {
-            status = 'Finalizado';
         }
 
         let imageUrl = 'https://i.ibb.co/dHPWxr8/depete.jpg';
@@ -335,7 +327,7 @@ function HomePageContent() {
               buttons: [],
               category: event.category === 'Other' ? 'Otros' : event.category,
               language: '',
-              date: format(nowInBA, 'yyyy-MM-dd'), // No date provided, use today
+              date: format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd'),
               source: 'streamtpglobal',
               image: 'https://i.ibb.co/dHPWxr8/depete.jpg',
               status: status,
@@ -373,19 +365,24 @@ function HomePageContent() {
             try {
               const streamOptions: StreamOption[] = [];
               const sourcePromises = event.sources.map(async (source) => {
-                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                if (response.ok) {
-                  const streams: any[] = await response.json();
-                  if (Array.isArray(streams)) {
-                    return streams.map(stream => ({
-                      url: stream.embedUrl,
-                      label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                      hd: stream.hd,
-                      language: stream.language,
-                    }));
+                try {
+                  const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                  if (response.ok) {
+                    const streams: any[] = await response.json();
+                    if (Array.isArray(streams)) {
+                      return streams.map(stream => ({
+                        url: stream.embedUrl,
+                        label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                        hd: stream.hd,
+                        language: stream.language,
+                      }));
+                    }
                   }
+                  return [];
+                } catch(e) {
+                  console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
+                  return [];
                 }
-                return [];
               });
               
               const results = await Promise.all(sourcePromises);
@@ -565,6 +562,8 @@ function HomePageContent() {
     setViewOrder(fullNewOrder);
   };
 
+  const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
+
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
@@ -623,10 +622,37 @@ function HomePageContent() {
     const isNight = currentHour >= 20 || currentHour < 6;
 
     const processedEvents = mergedEvents.map(e => {
-        if (isNight && e.status === 'Próximo') {
-            return { ...e, status: 'Desconocido' as const };
+        let currentStatus = e.status;
+
+        // Apply time-based logic ONLY for events with 'Desconocido' status and a valid time
+        if (currentStatus === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
+             try {
+                const eventDateTimeStr = `${e.date}T${e.time}:00`;
+                const eventDate = parse(eventDateTimeStr, "yyyy-MM-dd'T'HH:mm:ss", new Date());
+                
+                if(isValid(eventDate)) {
+                    const zonedEventTime = toZonedTime(eventDate, timeZone);
+                    const eventEndTime = addHours(zonedEventTime, 3);
+                    
+                    if (isAfter(nowInBA, eventEndTime)) {
+                        currentStatus = 'Finalizado';
+                    } else if (isAfter(nowInBA, zonedEventTime) && isBefore(nowInBA, eventEndTime)) {
+                        currentStatus = 'En Vivo';
+                    } else if (isBefore(nowInBA, zonedEventTime)) {
+                        currentStatus = 'Próximo';
+                    }
+                }
+            } catch (error) {
+                console.error("Error parsing date/time for status logic:", error);
+            }
         }
-        return e;
+        
+        // Apply night-time rule: Próximo -> Desconocido
+        if (isNight && currentStatus === 'Próximo') {
+            currentStatus = 'Desconocido';
+        }
+
+        return { ...e, status: currentStatus };
     });
     
     const liveSortLogic = (a: Event, b: Event): number => {
