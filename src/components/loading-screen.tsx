@@ -26,8 +26,7 @@ const AnimatedEllipsis = () => {
 export function LoadingScreen() {
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground p-4 overflow-hidden">
-      {/* Main content area that grows and allows internal scrolling if needed */}
-      <div className="flex flex-1 flex-col items-center justify-center overflow-hidden py-4">
+      <div className="flex-1 flex flex-col justify-center items-center overflow-hidden py-4">
         <div className="w-full max-w-2xl text-center flex flex-col items-center">
             <div className="w-4/5 max-w-[200px] md:max-w-[300px] flex-shrink-0 mb-4">
             <Image
@@ -61,7 +60,6 @@ export function LoadingScreen() {
         </div>
       </div>
       
-      {/* Footer-like element that stays at the bottom */}
       <div className="w-full text-right text-base md:text-lg text-primary font-semibold flex items-center justify-end flex-shrink-0 pt-2">
         <span>Cargando</span><AnimatedEllipsis />
       </div>

@@ -156,6 +156,8 @@ const channels247: Event[] = [
   }
 ];
 
+const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
+
 function HomePageContent() {
   const isMobile = useIsMobile();
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
@@ -227,7 +229,9 @@ function HomePageContent() {
 
     if (!manualTrigger && lastFetchTimestamp && (now - lastFetchTimestamp < thirtyMinutes)) {
         console.log("Skipping fetch, data is fresh.");
-        setIsInitialLoadDone(true); // Ensure loading screen is dismissed
+        if (!isInitialLoadDone) {
+          setIsInitialLoadDone(true); // Ensure loading screen is dismissed if data is already there
+        }
         return;
     }
 
@@ -579,8 +583,6 @@ function HomePageContent() {
     }
     setViewOrder(fullNewOrder);
   };
-
-  const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
