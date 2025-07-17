@@ -1,4 +1,4 @@
-// /src/app/api/streams/route.ts
+/src/app/api/streams/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
