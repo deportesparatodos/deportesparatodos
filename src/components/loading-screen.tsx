@@ -25,7 +25,10 @@ const AnimatedEllipsis = () => {
 
 export function LoadingScreen() {
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden">
+    <div className="flex h-screen w-screen flex-col items-center justify-between bg-background text-foreground p-4 overflow-hidden">
+      {/* This empty div helps with vertical alignment when using justify-between */}
+      <div></div>
+
       <div className="w-full max-w-2xl text-center flex flex-col items-center">
         <div className="w-4/5 max-w-[200px] md:max-w-[300px] mb-6 md:mb-10">
           <Image
@@ -41,8 +44,8 @@ export function LoadingScreen() {
 
         <div className="space-y-6 md:space-y-8">
           <div className="space-y-2 md:space-y-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-primary">¡Bienvenidos a Deportes para Todos!</h1>
-            <p className="text-sm md:text-base text-justify text-muted-foreground">
+            <h1 className="text-xl md:text-3xl font-bold text-primary">¡Bienvenidos a Deportes para Todos!</h1>
+            <p className="text-xs md:text-base text-justify text-muted-foreground">
               ¡Te damos la bienvenida! En nuestra plataforma, podes explorar una gran variedad de eventos y canales en vivo. Solo selecciona la cantidad EVENTOS O CANALES QUE QUIERAS (hasta 9 selecciones) y combínalos en una única pantalla para no perderte nada. ¿Necesitas ayuda? Revisa el Tutorial en el el icono de menú <Menu className="inline-block h-4 w-4 align-middle" /> en la esquina superior izquierda del inicio.
             </p>
           </div>
@@ -58,7 +61,7 @@ export function LoadingScreen() {
         </div>
       </div>
       
-      <div className="absolute bottom-4 right-4 text-base md:text-lg text-primary font-semibold flex items-center">
+      <div className="w-full text-right text-base md:text-lg text-primary font-semibold flex items-center justify-end">
         Cargando<AnimatedEllipsis />
       </div>
     </div>
