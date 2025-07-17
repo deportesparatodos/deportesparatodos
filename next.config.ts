@@ -309,6 +309,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'wearechecking.online',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
   typescript: {
@@ -320,4 +326,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
 

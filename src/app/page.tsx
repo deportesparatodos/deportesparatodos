@@ -74,6 +74,19 @@ interface StreamTpEvent {
     link: string;
 }
 
+interface AgendaDptEvent {
+    time: string;
+    title: string;
+    options: string[];
+    buttons: string[];
+    category: string;
+    language: string;
+    date: string;
+    source: string;
+    image: string;
+    status: string;
+}
+
 const channels247: Event[] = [
   {
     title: "24/7 South Park",
@@ -216,17 +229,20 @@ function HomePageContent() {
     }
 
     try {
-      const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
+      const [liveResponse, todayResponse, sportsResponse, streamTpResponse, agendaDptResponse] = await Promise.all([
         fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []).catch(() => []),
-        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => [])
+        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => []),
+        fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => [])
       ]);
 
       const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
       const todayData: StreamedMatch[] = Array.isArray(todayResponse) ? todayResponse : [];
       const sportsData: {id: string; name: string}[] = Array.isArray(sportsResponse) ? sportsResponse : [];
       const streamTpData: StreamTpEvent[] = Array.isArray(streamTpResponse) ? streamTpResponse : [];
+      const agendaData: AgendaDptEvent[] = Array.isArray(agendaDptResponse) ? agendaDptResponse : [];
+
 
       const allMatchesMap = new Map<string, StreamedMatch>();
       
@@ -326,7 +342,30 @@ function HomePageContent() {
           };
       });
       
-      const combinedInitialEvents = [...initialEvents, ...streamTpEvents];
+      const agendaDptEvents: Event[] = agendaData.map(event => {
+        const options: StreamOption[] = event.options.map((url, index) => ({
+            url: url,
+            label: event.buttons[index] || `STREAM ${index + 1}`,
+            hd: false,
+            language: '',
+        }));
+
+        return {
+            title: event.title,
+            time: '--:--',
+            options: options,
+            sources: [],
+            buttons: [],
+            category: 'Motor Sports',
+            language: '',
+            date: event.date,
+            source: event.source,
+            image: event.image.replace(/\\/g, '/'),
+            status: 'Desconocido',
+        };
+      });
+      
+      const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaDptEvents];
 
       const eventsWithStreams = await Promise.all(
         combinedInitialEvents.map(async (event) => {
@@ -1636,9 +1675,9 @@ function HomePageContent() {
                                       target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                                   }}
                               />
-                              {selection.isSelected && selection.window && (
+                              {selection.isSelected && (
                                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                                      <span className="text-5xl font-extrabold text-white drop-shadow-lg">{selection.window}</span>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
                                   </div>
                               )}
                           </div>
@@ -2045,6 +2084,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 
