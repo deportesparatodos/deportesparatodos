@@ -27,7 +27,7 @@ export function LoadingScreen() {
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground p-4 overflow-hidden">
       {/* Main content area that grows and allows internal scrolling if needed */}
-      <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto py-4">
+      <div className="flex flex-1 flex-col items-center justify-center overflow-hidden py-4">
         <div className="w-full max-w-2xl text-center flex flex-col items-center">
             <div className="w-4/5 max-w-[200px] md:max-w-[300px] flex-shrink-0 mb-4">
             <Image
