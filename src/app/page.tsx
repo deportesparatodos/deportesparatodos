@@ -146,7 +146,7 @@ function HomePageContent() {
   const isMobile = useIsMobile();
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
   const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
-  const [gridGap, setGridGap] = useState<number>(2);
+  const [gridGap, setGridGap] = useState<number>(0);
   const [borderColor, setBorderColor] = useState<string>('#000000');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -456,7 +456,7 @@ function HomePageContent() {
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [isViewMode, schedules]);
+  }, [isViewMode, schedules, setSelectedEvents, setViewOrder]);
 
 
   // Fetch event data only once on initial mount
@@ -1335,7 +1335,7 @@ function HomePageContent() {
                                                 <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
                                                 <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
                                                 <li><strong>Carruseles de Eventos/Canales:</strong> El contenido está agrupado en filas por estado o tipo. Puedes deslizar cada carrusel para explorar los eventos. El orden es: Canales, En Vivo, Próximos, Canales 24/7, y más.</li>
-                                                <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris).</li>
+                                                <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
                                             </ul>
 
                                             <h3 className="font-bold text-foreground mt-6">2. Cómo Seleccionar un Evento para Ver</h3>
@@ -1810,6 +1810,12 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const [isModification, setIsModification] = useState(false);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
 
+    useEffect(() => {
+        if (!open) {
+            setSearchTerm('');
+        }
+    }, [open]);
+
     const getEventSelection = useCallback((eventTitle: string, eventTime: string) => {
         const selectionIndex = selectedEvents.findIndex(se => se?.title === eventTitle && se?.time === eventTime);
         if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
@@ -2039,6 +2045,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 
