@@ -235,9 +235,7 @@ function HomePageContent() {
         fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => []),
-        fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => [])
-        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => []),
-        fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => [])
+        fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => []),
       ]);
 
       const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
@@ -1194,7 +1192,7 @@ function HomePageContent() {
           </DialogContent>
         </Dialog>
 
-        <div className="relative flex flex-col h-screen flex-grow">
+        <div className="relative flex flex-col h-screen w-screen flex-grow">
           <div
             className={cn(
               "absolute z-20 flex items-center gap-2",
@@ -1503,7 +1501,7 @@ function HomePageContent() {
                                     </DialogHeader>
                                     <ScrollArea className="h-96 pr-6">
                                         <div className="text-sm text-muted-foreground space-y-4">
-                                            <p>Deportes para Todos es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.</p>
+                                            <p>Deportes para Todos es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustrados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.</p>
                                             <p>No participamos en la creación, alteración ni distribución de dichas señales, y no somos responsables de la legalidad de los contenidos a los que se accede a través de estos terceros. Cualquier infracción potencial corresponde a dichos proveedores externos.</p>
                                             <h3 className="font-bold text-foreground">Sobre la legalidad y responsabilidad de terceros:</h3>
                                             <p>Existen antecedentes de sitios sancionados por alojar y retransmitir directamente contenido con derechos de autor. En contraste, Deportes para Todos no aloja señales ni transmite contenido, y se limita exclusivamente a insertar enlaces públicos de terceros mediante código iframe. No participamos en la obtención ni distribución del contenido audiovisual y no tenemos control sobre su disponibilidad o legalidad.</p>
@@ -2091,10 +2089,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     );
 }
 
-
-
-
-
-
-
-
+    
