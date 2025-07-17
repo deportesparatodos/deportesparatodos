@@ -1882,6 +1882,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     useEffect(() => {
         if (!open) {
             setSearchTerm('');
+            setIsFullScreen(false); // Reset fullscreen state on close
         }
     }, [open]);
 
@@ -1998,11 +1999,9 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
                             {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                         </Button>
-                        <DialogClose asChild>
-                           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
-                               <X className="h-5 w-5" />
-                           </Button>
-                        </DialogClose>
+                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                           <X className="h-5 w-5" />
+                        </Button>
                     </div>
                 </DialogHeader>
                  {isLoading ? (

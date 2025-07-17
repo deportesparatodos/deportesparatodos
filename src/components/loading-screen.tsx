@@ -20,7 +20,7 @@ const AnimatedEllipsis = () => {
     return () => clearInterval(interval);
   }, []);
 
-  return <span className="w-4 inline-block">{dots}</span>;
+  return <span className="w-4 inline-block text-left">{dots}</span>;
 };
 
 export function LoadingScreen() {
@@ -63,7 +63,7 @@ export function LoadingScreen() {
       
       {/* Footer-like element that stays at the bottom */}
       <div className="w-full text-right text-base md:text-lg text-primary font-semibold flex items-center justify-end flex-shrink-0 pt-2">
-        Cargando<AnimatedEllipsis />
+        <span>Cargando</span><AnimatedEllipsis />
       </div>
     </div>
   );

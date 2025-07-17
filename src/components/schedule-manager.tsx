@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Trash2, Plus, Pencil } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2, Plus, Pencil, Maximize, Minimize, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -73,6 +73,7 @@ export function ScheduleManager({
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
   const [modifyEventForSchedule, setModifyEventForSchedule] = useState<{ event: Event, index: number } | null>(null);
 
@@ -91,6 +92,8 @@ export function ScheduleManager({
     if (open) {
       onFetchEvents();
       resetToCurrentSelection();
+    } else {
+      setIsFullScreen(false); // Reset on close
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -195,7 +198,11 @@ export function ScheduleManager({
 
       <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onOpenChange(false); }}>
         <DialogContent 
-            className="max-w-4xl w-full h-[90vh] flex flex-col p-0"
+            hideClose={true}
+            className={cn(
+                "max-w-4xl w-full h-[90vh] flex flex-col p-0 transition-all duration-300",
+                 isFullScreen && "w-screen h-screen max-w-none rounded-none"
+            )}
             onInteractOutside={(e) => {
                 const target = e.target as HTMLElement;
                 // Allow interacting with elements inside other dialogs/popovers
@@ -209,11 +216,21 @@ export function ScheduleManager({
             }}
              onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <DialogHeader className="p-4 border-b flex-shrink-0">
-            <DialogTitle>Programar Selección</DialogTitle>
-            <DialogDescription>
-              Configura o modifica una selección de eventos para que se activen en un momento específico.
-            </DialogDescription>
+          <DialogHeader className="p-4 border-b flex-shrink-0 flex-row items-center justify-between">
+            <div>
+              <DialogTitle>Programar Selección</DialogTitle>
+              <DialogDescription>
+                Configura o modifica una selección de eventos para que se activen en un momento específico.
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
+                    {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                    <X className="h-5 w-5" />
+                </Button>
+            </div>
           </DialogHeader>
 
           <div className="grid md:grid-cols-2 flex-grow h-0 overflow-hidden">
