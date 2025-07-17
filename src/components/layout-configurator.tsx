@@ -164,7 +164,7 @@ export function LayoutConfigurator({
 }: LayoutConfiguratorProps) {
   
   const handleRestoreDefaults = () => {
-    onGridGapChange(2);
+    onGridGapChange(0);
     onBorderColorChange('#000000');
   }
 
@@ -253,4 +253,5 @@ export function LayoutConfigurator({
     </div>
   );
 }
+
 
