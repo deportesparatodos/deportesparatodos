@@ -236,6 +236,8 @@ function HomePageContent() {
         fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => [])
+        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => []),
+        fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => [])
       ]);
 
       const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
@@ -1679,9 +1681,9 @@ function HomePageContent() {
                                       target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                                   }}
                               />
-                              {selection.isSelected && selection.window && (
+                              {selection.isSelected && (
                                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                                      <span className="text-5xl font-extrabold text-white drop-shadow-lg">{selection.window}</span>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
                                   </div>
                               )}
                           </div>
@@ -2088,6 +2090,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 
