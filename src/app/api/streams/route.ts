@@ -1,3 +1,4 @@
+
 import { NextResponse, type NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Handle specific stream requests (e.g., /api/streams?type=stream&source=xxx&id=yyy)
+  // These should not be cached for long periods to avoid expired URLs.
   if (type === 'stream') {
     const source = searchParams.get('source');
     const id = searchParams.get('id');
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
     try {
       const response = await fetch(apiUrl, {
         headers: { 'Accept': 'application/json' },
-        cache: 'no-store',
+        cache: 'no-store', // Individual streams should be fresh
       });
 
       if (!response.ok) {
@@ -50,6 +52,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Handle other list-based requests (live, all-today, sports, streamtp)
+  // These are good candidates for caching to reduce CPU load.
   const apiUrl = API_ENDPOINTS[type];
 
   if (!apiUrl) {
@@ -61,7 +64,7 @@ export async function GET(request: NextRequest) {
     
     const response = await fetch(apiUrl, {
       headers,
-      cache: 'no-store',
+      next: { revalidate: 1800 }, // Cache for 30 minutes (1800 seconds)
     });
 
     if (!response.ok) {
