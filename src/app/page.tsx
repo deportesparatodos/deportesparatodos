@@ -177,6 +177,7 @@ function HomePageContent() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
+  const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [isModification, setIsModification] = useState(false);
@@ -220,13 +221,26 @@ function HomePageContent() {
     }
   }, [isMobile]);
   
- const fetchEvents = useCallback(async (manualTrigger = false) => {
+  const fetchEvents = useCallback(async (manualTrigger = false) => {
+    const now = Date.now();
+    const thirtyMinutes = 30 * 60 * 1000;
+
+    if (!manualTrigger && lastFetchTimestamp && (now - lastFetchTimestamp < thirtyMinutes)) {
+        console.log("Skipping fetch, data is fresh.");
+        setIsInitialLoadDone(true); // Ensure loading screen is dismissed
+        return;
+    }
+
     const setLoadingState = dialogContext === 'schedule' ? setIsScheduleEventsLoading : setIsAddEventsLoading;
     
-    if(!manualTrigger) {
-      setIsDataLoading(true);
-    } else {
-      setLoadingState(true);
+    // Use the appropriate loading state based on context
+    if(manualTrigger || !isInitialLoadDone) {
+      if (dialogContext === 'schedule') {
+        setIsScheduleEventsLoading(true);
+      } else {
+        setIsAddEventsLoading(true);
+        if(!isInitialLoadDone) setIsDataLoading(true);
+      }
     }
 
     try {
@@ -237,6 +251,8 @@ function HomePageContent() {
         fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => []),
       ]);
+
+      setLastFetchTimestamp(Date.now()); // Update timestamp after successful fetch
 
       const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
       const todayData: StreamedMatch[] = Array.isArray(todayResponse) ? todayResponse : [];
@@ -406,11 +422,13 @@ function HomePageContent() {
     } finally {
         setIsDataLoading(false);
         setLoadingState(false);
+        setIsScheduleEventsLoading(false);
+        setIsAddEventsLoading(false);
         if (!isInitialLoadDone) {
             setIsInitialLoadDone(true);
         }
     }
-  }, [isInitialLoadDone, dialogContext]);
+  }, [isInitialLoadDone, dialogContext, lastFetchTimestamp]);
 
   // Load state from localStorage on initial mount
   useEffect(() => {
@@ -505,7 +523,7 @@ function HomePageContent() {
   // Fetch events when add dialog is opened
   useEffect(() => {
     if (addEventsDialogOpen) {
-      fetchEvents(true);
+      fetchEvents(false); // Should check timestamp
     }
   }, [addEventsDialogOpen, fetchEvents]);
 
@@ -843,8 +861,7 @@ function HomePageContent() {
   
   const handleStopView = () => {
     setIsViewMode(false);
-    setIsInitialLoadDone(false); // Trigger loading screen and re-fetch
-    fetchEvents();
+    fetchEvents(false); // Check timestamp before fetching
   };
 
   const openDialogForEvent = (event: Event) => {
