@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -192,19 +191,50 @@ export function CameraConfigurationComponent({
                       </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
-                      <DialogModalHeader>
-                          <DialogModalTitle>Descargo de Responsabilidad</DialogModalTitle>
-                      </DialogModalHeader>
-                      <ScrollArea className="h-96 pr-6">
-                          <div className="text-sm text-muted-foreground space-y-4">
-                              <p>Deportes para Todos es una plataforma que actúa únicamente como agregador de enlaces embebidos de terceros. No alojamos ni retransmitimos ninguna señal. Cualquier infracción potencial corresponde a los proveedores externos.</p>
-                              <p>Todas las marcas y logotipos son propiedad de sus respectivos dueños y se utilizan con fines informativos. El acceso y uso de la página se realiza bajo responsabilidad del usuario.</p>
-                          </div>
-                      </ScrollArea>
-                      <DialogModalFooter>
-                          <DialogClose asChild><Button>Cerrar</Button></DialogClose>
-                      </DialogModalFooter>
-                  </DialogContent>
+                        <DialogModalHeader>
+                            <DialogModalTitle>Descargo de Responsabilidad – Derechos de Autor</DialogModalTitle>
+                        </DialogModalHeader>
+                        <ScrollArea className="h-96 pr-6">
+                            <div className="text-sm text-muted-foreground space-y-4">
+                                <p>Deportes para Todos es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustrados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.</p>
+                                <p>No participamos en la creación, alteración ni distribución de dichas señales, y no somos responsables de la legalidad de los contenidos a los que se accede a través de estos terceros. Cualquier infracción potencial corresponde a dichos proveedores externos.</p>
+                                <h3 className="font-bold text-foreground">Sobre la legalidad y responsabilidad de terceros:</h3>
+                                <p>Existen antecedentes de sitios sancionados por alojar y retransmitir directamente contenido con derechos de autor. En contraste, Deportes para Todos no aloja señales ni transmite contenido, y se limita exclusivamente a insertar enlaces públicos de terceros mediante código iframe. No participamos en la obtención ni distribución del contenido audiovisual y no tenemos control sobre su disponibilidad o legalidad.</p>
+                                <h3 className="font-bold text-foreground">Uso de marcas y logos:</h3>
+                                <p>Todas las marcas, nombres comerciales, logotipos o imágenes presentes en el sitio son propiedad de sus respectivos dueños. En Deportes para Todos se utilizan exclusivamente con fines informativos o ilustrativos, respetando el derecho de cita previsto por el Artículo 32 de la Ley 11.723 de Propiedad Intelectual de Argentina.</p>
+                                <h3 className="font-bold text-foreground">Legislación aplicable:</h3>
+                                <p>Este sitio opera bajo las leyes de la República Argentina. El mero hecho de insertar un iframe público no configura, por sí solo, un delito conforme al derecho argentino, siempre que no se participe en la obtención o manipulación del contenido protegido.</p>
+                                <h3 className="font-bold text-foreground">Uso personal y responsabilidad del usuario:</h3>
+                                <p>El acceso a esta página se realiza bajo responsabilidad del usuario. Si en tu país este tipo de contenido se encuentra restringido, es tu obligación cumplir con las leyes locales. No nos responsabilizamos por el uso indebido o ilegal de los enlaces por parte de los visitantes.</p>
+                                <h3 className="font-bold text-foreground">Sobre el uso de subdominios:</h3>
+                                <p>Deportes para Todos utiliza subdominios como https://www.google.com/search?q=gh.deportesparatodos.com con fines exclusivamente organizativos y técnicos, para centralizar y facilitar el acceso a iframes de terceros. Estos subdominios no almacenan, manipulan ni retransmiten contenido audiovisual, sino que actúan como una ventana hacia los streams originales disponibles públicamente en sitios como streamtp3.com, la12hd.com y otros. En ningún caso se modifica la fuente original ni se interviene en el contenido emitido por dichos terceros.</p>
+                                <h3 className="font-bold text-foreground">Sobre la experiencia del usuario:</h3>
+                                <p>Deportes para Todos puede aplicar medidas para mejorar la experiencia de navegación, como la reducción de anuncios emergentes o contenido intrusivo de terceros. Estas medidas no interfieren con el contenido audiovisual transmitido dentro de los reproductores embebidos, ni modifican las señales originales. Cualquier bloqueo se limita a elementos externos ajenos a la emisión en sí.</p>
+                                <h3 className="font-bold text-foreground">Monetización, publicidad y patrocinadores</h3>
+                                <p>Deportes para Todos puede exhibir anuncios publicitarios proporcionados por plataformas de monetización de terceros (como Monetag) y/o incluir contenido patrocinado de empresas vinculadas al sector iGaming (casas de apuestas, juegos online y plataformas similares).</p>
+                                <p>Estos ingresos publicitarios permiten el mantenimiento del sitio, pero no están directamente vinculados al contenido embebido ni implican relación comercial con las plataformas desde las cuales se obtiene dicho contenido.</p>
+                                <p>Deportes para Todos no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.</p>
+                                <p>Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.</p>
+                                <p>The Blogger Network, LLC) for the purposes of placing advertising on the Site, and Monumetric will collect and use certain data for advertising purposes. To learn more about Monumetric’s data usage, click here: <a href="https://www.monumetric.com/publisher-advertising-privacy-policy/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Publisher Advertising Privacy</a></p>
+                                <h3 className="font-bold text-foreground">Notificaciones de derechos de autor:</h3>
+                                <p>Si usted es titular de derechos o su representante y considera que un contenido embebido desde una fuente externa infringe sus derechos, puede enviarnos una notificación formal mandando un mail a deportesparatodosvercel@gmail.com. Aunque no estamos sujetos a la legislación DMCA de EE.UU., colaboramos voluntariamente con cualquier requerimiento legítimo bajo dicho marco.</p>
+                                <p>Por favor incluya en su notificación:</p>
+                                <ul className="list-disc pl-6 space-y-1">
+                                    <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
+                                    <li>(b) Identificación clara del contenido presuntamente infringido.</li>
+                                    <li>(c) Enlace directo al contenido incrustado en Deportes para Todos.</li>
+                                    <li>(d) Datos de contacto válidos (correo electrónico).</li>
+                                    <li>(e) Una declaración de buena fe indicando que el uso no está autorizado por usted, su agente o la ley.</li>
+                                    <li>(f) Una declaración de veracidad de la información, bajo pena de perjurio.</li>
+                                </ul>
+                                <p>Una vez recibida y analizada la notificación, procederemos a desactivar el enlace correspondiente si así corresponde. También podremos notificar al proveedor del iframe, si fuera posible.</p>
+                                <p className="font-bold">Al utilizar este sitio web, usted declara haber leído, comprendido y aceptado este descargo de responsabilidad en su totalidad.</p>
+                            </div>
+                        </ScrollArea>
+                        <DialogModalFooter>
+                            <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                        </DialogModalFooter>
+                    </DialogContent>
               </Dialog>
                 <Dialog>
                   <DialogTrigger asChild>
@@ -218,12 +248,12 @@ export function CameraConfigurationComponent({
                           <DialogModalTitle>Contacto</DialogModalTitle>
                       </DialogModalHeader>
                       <div className="text-sm text-muted-foreground py-4">
-                          <p>¿Tienes alguna sugerencia o encontraste un error? Contáctanos a nuestro correo para ayudarnos a mejorar.</p>
+                          <p>¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales a deportesparatodosvercel@gmail.com.</p>
                       </div>
                       <DialogModalFooter>
-                          <a href="mailto:deportesparatodosvercel@gmail.com" className={cn(buttonVariants({ variant: 'default' }), 'w-full')}>
-                              Contactar
-                          </a>
+                          <DialogClose asChild>
+                              <Button variant={'outline'}>Cerrar</Button>
+                          </DialogClose>
                       </DialogModalFooter>
                   </DialogContent>
               </Dialog>

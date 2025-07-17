@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -223,11 +222,11 @@ export function ScheduleManager({
                 Configura o modifica una selección de eventos para que se activen en un momento específico.
               </DialogDescription>
             </div>
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
+             <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)} className="h-9 w-9">
                     {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-9 w-9">
                     <X className="h-5 w-5" />
                 </Button>
             </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -227,11 +226,8 @@ function HomePageContent() {
     const now = Date.now();
     const thirtyMinutes = 30 * 60 * 1000;
 
-    if (!manualTrigger && lastFetchTimestamp && (now - lastFetchTimestamp < thirtyMinutes)) {
+    if (!manualTrigger && isInitialLoadDone && lastFetchTimestamp && (now - lastFetchTimestamp < thirtyMinutes)) {
         console.log("Skipping fetch, data is fresh.");
-        if (!isInitialLoadDone) {
-          setIsInitialLoadDone(true); 
-        }
         return;
     }
 
@@ -240,7 +236,10 @@ function HomePageContent() {
     if(manualTrigger || !isInitialLoadDone) {
       if (dialogContext === 'schedule') {
         setIsScheduleEventsLoading(true);
-      } else {
+      } else if (!isInitialLoadDone) {
+        setIsDataLoading(true);
+      }
+       else {
         setIsAddEventsLoading(true);
       }
     }
@@ -421,9 +420,9 @@ function HomePageContent() {
       console.error('Error fetching events:', error);
       setEvents([]); 
     } finally {
-        setLoadingState(false);
-        setIsScheduleEventsLoading(false);
         setIsAddEventsLoading(false);
+        setIsScheduleEventsLoading(false);
+        // Only update these after the very first load is fully complete
         if (!isInitialLoadDone) {
             setIsDataLoading(false);
             setIsInitialLoadDone(true);
@@ -634,7 +633,7 @@ function HomePageContent() {
     const processedEvents = mergedEvents.map(e => {
         let currentStatus = e.status;
 
-        if (currentStatus === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
+        if (e.status === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
              try {
                 const eventDateTimeStr = `${e.date}T${e.time}:00`;
                 const eventDate = parse(eventDateTimeStr, "yyyy-MM-dd'T'HH:mm:ss", new Date());
@@ -1027,7 +1026,7 @@ function HomePageContent() {
     }
   };
 
-  if (isDataLoading) {
+  if (isDataLoading && !isInitialLoadDone) {
     return <LoadingScreen />;
   }
 
@@ -1512,12 +1511,12 @@ function HomePageContent() {
                                         <DialogTitle>Contacto</DialogTitle>
                                     </DialogHeader>
                                     <div className="text-sm text-muted-foreground py-4">
-                                        <p>¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales.</p>
+                                        <p>¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales a deportesparatodosvercel@gmail.com.</p>
                                     </div>
                                     <DialogFooter>
-                                         <a href="mailto:deportesparatodosvercel@gmail.com" className={cn(buttonVariants({ variant: 'default' }), 'w-full')}>
-                                            Contactar
-                                        </a>
+                                        <DialogClose asChild>
+                                            <Button variant={'outline'}>Cerrar</Button>
+                                        </DialogClose>
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
@@ -1999,6 +1998,11 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                     "max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4 transition-all duration-300",
                     isFullScreen && "w-screen h-screen max-w-none rounded-none"
                 )}
+                onCloseAutoFocus={(e) => {
+                    if (isFullScreen) {
+                        e.preventDefault();
+                    }
+                }}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
                     <DialogTitle>Añadir Evento/Canal</DialogTitle>
@@ -2122,4 +2126,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 }
 
     
+
+
 
