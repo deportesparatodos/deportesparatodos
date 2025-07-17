@@ -456,7 +456,7 @@ function HomePageContent() {
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [isViewMode, schedules, setSelectedEvents, setViewOrder, setSchedules]);
+  }, [isViewMode, schedules]);
 
 
   // Fetch event data only once on initial mount
@@ -1013,8 +1013,6 @@ function HomePageContent() {
           schedules={schedules}
           onSchedulesChange={setSchedules}
           onModifyEventInView={openDialogForModification}
-          allEvents={events}
-          allChannels={channels}
           onFetchEvents={() => fetchEvents(true)}
           isLoading={isScheduleEventsLoading}
           onAddEvent={() => {
@@ -1926,7 +1924,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                             {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                         </Button>
                         <DialogClose asChild>
-                           <Button variant="ghost" size="icon">
+                           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
                                <X className="h-5 w-5" />
                            </Button>
                         </DialogClose>
@@ -1979,6 +1977,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                         event={event}
                                         selection={getEventSelection(event.title, event.time)}
                                         onClick={() => openSubDialogForEvent(event)}
+                                        displayMode="checkmark"
                                     />
                                 ))}
                             </div>
@@ -2006,6 +2005,11 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                                     className="object-contain max-h-full max-w-full"
                                                     onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
                                                 />
+                                                 {selection.isSelected && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="p-3 bg-card flex-grow flex flex-col justify-center">
                                                 <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
@@ -2035,6 +2039,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 
