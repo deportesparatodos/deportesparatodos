@@ -230,20 +230,18 @@ function HomePageContent() {
     if (!manualTrigger && lastFetchTimestamp && (now - lastFetchTimestamp < thirtyMinutes)) {
         console.log("Skipping fetch, data is fresh.");
         if (!isInitialLoadDone) {
-          setIsInitialLoadDone(true); // Ensure loading screen is dismissed if data is already there
+          setIsInitialLoadDone(true); 
         }
         return;
     }
 
     const setLoadingState = dialogContext === 'schedule' ? setIsScheduleEventsLoading : setIsAddEventsLoading;
     
-    // Use the appropriate loading state based on context
     if(manualTrigger || !isInitialLoadDone) {
       if (dialogContext === 'schedule') {
         setIsScheduleEventsLoading(true);
       } else {
         setIsAddEventsLoading(true);
-        if(!isInitialLoadDone) setIsDataLoading(true);
       }
     }
 
@@ -256,7 +254,7 @@ function HomePageContent() {
         fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => []),
       ]);
 
-      setLastFetchTimestamp(Date.now()); // Update timestamp after successful fetch
+      setLastFetchTimestamp(Date.now()); 
 
       const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
       const todayData: StreamedMatch[] = Array.isArray(todayResponse) ? todayResponse : [];
@@ -301,7 +299,7 @@ function HomePageContent() {
         return {
           title: match.title,
           time: format(zonedEventTime, 'HH:mm'),
-          options: [], // Will be fetched
+          options: [], 
           sources: match.sources, 
           buttons: [],
           category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
@@ -329,7 +327,6 @@ function HomePageContent() {
 
           let eventTime = event.time;
           try {
-            // Parse time string, add 2 hours, and format it back
             const originalTime = parse(event.time, 'HH:mm', new Date());
             if (isValid(originalTime)) {
               const adjustedTime = addHours(originalTime, 2);
@@ -372,7 +369,7 @@ function HomePageContent() {
             language: event.language,
             date: event.date,
             source: event.source,
-            image: event.image.replace(/\\/g, '/'), // Fix backslashes in image URL
+            image: event.image.replace(/\\/g, '/'), 
             status: 'Desconocido',
           };
       });
@@ -424,11 +421,11 @@ function HomePageContent() {
       console.error('Error fetching events:', error);
       setEvents([]); 
     } finally {
-        setIsDataLoading(false);
         setLoadingState(false);
         setIsScheduleEventsLoading(false);
         setIsAddEventsLoading(false);
         if (!isInitialLoadDone) {
+            setIsDataLoading(false);
             setIsInitialLoadDone(true);
         }
     }
@@ -480,7 +477,6 @@ function HomePageContent() {
         } catch(e) { console.error("Failed to parse schedules from localStorage", e); }
     }
     
-    // Welcome popup logic for view mode
     if (isViewMode) {
       const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
       if (!hasVisited) {
@@ -501,37 +497,32 @@ function HomePageContent() {
         const dueSchedules = schedules.filter(s => isBefore(s.dateTime, now));
 
         if (dueSchedules.length > 0) {
-            // Apply the first due schedule
             const scheduleToApply = dueSchedules.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())[0];
             
             setSelectedEvents(scheduleToApply.events);
             setViewOrder(scheduleToApply.order);
 
-            // Remove the applied schedule
             const remainingSchedules = schedules.filter(s => s.id !== scheduleToApply.id);
             setSchedules(remainingSchedules);
         }
-    }, 30000); // Check every 30 seconds
+    }, 30000); 
 
     return () => clearInterval(interval);
   }, [isViewMode, schedules, setSelectedEvents, setViewOrder]);
 
 
-  // Fetch event data only once on initial mount
   useEffect(() => {
     if (!isInitialLoadDone) {
       fetchEvents();
     }
   }, [isInitialLoadDone, fetchEvents]);
   
-  // Fetch events when add dialog is opened
   useEffect(() => {
     if (addEventsDialogOpen) {
-      fetchEvents(false); // Should check timestamp
+      fetchEvents(false);
     }
   }, [addEventsDialogOpen, fetchEvents]);
 
-  // Persist state to localStorage
   useEffect(() => {
     if (isInitialLoadDone) {
         localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
@@ -543,7 +534,6 @@ function HomePageContent() {
     }
   }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
 
-  // Timer logic for welcome popup
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -644,7 +634,6 @@ function HomePageContent() {
     const processedEvents = mergedEvents.map(e => {
         let currentStatus = e.status;
 
-        // Apply time-based logic ONLY for events with 'Desconocido' status and a valid time
         if (currentStatus === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
              try {
                 const eventDateTimeStr = `${e.date}T${e.time}:00`;
@@ -667,7 +656,6 @@ function HomePageContent() {
             }
         }
         
-        // Apply night-time rule: Próximo -> Desconocido
         if (isNight && currentStatus === 'Próximo') {
             currentStatus = 'Desconocido';
         }
@@ -1039,7 +1027,7 @@ function HomePageContent() {
     }
   };
 
-  if (!isInitialLoadDone) {
+  if (isDataLoading) {
     return <LoadingScreen />;
   }
 
@@ -2134,3 +2122,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 }
 
     
+
