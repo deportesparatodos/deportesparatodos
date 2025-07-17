@@ -74,6 +74,20 @@ interface StreamTpEvent {
     link: string;
 }
 
+interface AgendaEvent {
+  time: string;
+  title: string;
+  options: string[];
+  buttons: string[];
+  category: string;
+  language: string;
+  date: string;
+  source: string;
+  image: string;
+  status: string;
+}
+
+
 const channels247: Event[] = [
   {
     title: "24/7 South Park",
@@ -216,17 +230,19 @@ function HomePageContent() {
     }
 
     try {
-      const [liveResponse, todayResponse, sportsResponse, streamTpResponse] = await Promise.all([
+      const [liveResponse, todayResponse, sportsResponse, streamTpResponse, agendaResponse] = await Promise.all([
         fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []).catch(() => []),
         fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []).catch(() => []),
-        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => [])
+        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => []),
+        fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => [])
       ]);
 
       const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
       const todayData: StreamedMatch[] = Array.isArray(todayResponse) ? todayResponse : [];
       const sportsData: {id: string; name: string}[] = Array.isArray(sportsResponse) ? sportsResponse : [];
       const streamTpData: StreamTpEvent[] = Array.isArray(streamTpResponse) ? streamTpResponse : [];
+      const agendaData: AgendaEvent[] = Array.isArray(agendaResponse) ? agendaResponse : [];
 
       const allMatchesMap = new Map<string, StreamedMatch>();
       
@@ -325,8 +341,31 @@ function HomePageContent() {
               status: status,
           };
       });
+
+      const agendaEvents: Event[] = agendaData.map((event: AgendaEvent): Event => {
+          const streamOptions: StreamOption[] = event.options.map((optionUrl, index) => ({
+            url: optionUrl,
+            label: event.buttons[index] || `STREAM ${index + 1}`,
+            hd: false, 
+            language: event.language || '',
+          }));
+
+          return {
+            title: event.title,
+            time: '--:--',
+            options: streamOptions,
+            sources: [],
+            buttons: event.buttons,
+            category: 'Motor Sports',
+            language: event.language,
+            date: event.date,
+            source: event.source,
+            image: event.image.replace(/\\/g, '/'), // Fix backslashes in image URL
+            status: 'Desconocido',
+          };
+      });
       
-      const combinedInitialEvents = [...initialEvents, ...streamTpEvents];
+      const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaEvents];
 
       const eventsWithStreams = await Promise.all(
         combinedInitialEvents.map(async (event) => {
@@ -714,9 +753,13 @@ function HomePageContent() {
 
     const allCategories = Array.from(categorySet);
     const otrosCategory = allCategories.find(c => c.toLowerCase() === 'otros');
-    const otherCategories = allCategories.filter(c => c.toLowerCase() !== 'otros').sort((a, b) => a.localeCompare(b));
+    const motorSportsCategory = allCategories.find(c => c.toLowerCase() === 'motor sports');
+    const otherCategories = allCategories.filter(c => c.toLowerCase() !== 'otros' && c.toLowerCase() !== 'motor sports').sort((a, b) => a.localeCompare(b));
 
     const sortedCategories = [...otherCategories];
+    if (motorSportsCategory) {
+        sortedCategories.unshift(motorSportsCategory);
+    }
     if (otrosCategory) {
         sortedCategories.push(otrosCategory);
     }
@@ -2045,6 +2088,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 
