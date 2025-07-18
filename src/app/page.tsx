@@ -178,7 +178,6 @@ function HomePageContent() {
   // Home mode state
   const [events, setEvents] = useState<Event[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
-  const [isManualFetch, setIsManualFetch] = useState(false);
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -196,11 +195,11 @@ function HomePageContent() {
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
   const [errorsDialogOpen, setErrorsDialogOpen] = useState(false);
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
-  const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
   const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [isScheduleEventsLoading, setIsScheduleEventsLoading] = useState(false);
+  const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
 
   // Schedule related states
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
@@ -234,16 +233,10 @@ function HomePageContent() {
         return;
     }
     
-    // Determine which loading indicator to show
-    if (manualTrigger) {
-        setIsManualFetch(true);
-        if (fromDialog) {
-            setIsAddEventsLoading(true);
-        } else {
-            setIsDataLoading(true);
-        }
-    } else if (!isInitialLoadDone) {
-        setIsDataLoading(true); // Full screen loader
+    if (fromDialog) {
+        setIsAddEventsLoading(true);
+    } else {
+        setIsDataLoading(true);
     }
     
     try {
@@ -383,13 +376,11 @@ function HomePageContent() {
       console.error('Error fetching events:', error);
       setEvents([]); 
     } finally {
-        setIsManualFetch(false);
         setIsAddEventsLoading(false);
+        setIsDataLoading(false);
         if (!isInitialLoadDone) {
             setIsInitialLoadDone(true);
         }
-        // Always turn off main loading indicator at the end
-        setIsDataLoading(false);
     }
   }, [isInitialLoadDone, lastFetchTimestamp]);
 
@@ -1810,10 +1801,10 @@ function HomePageContent() {
                           variant="ghost"
                           size="icon"
                           onClick={() => fetchEvents(true)}
-                          disabled={isManualFetch || isDataLoading}
+                          disabled={isDataLoading}
                           aria-label="Refrescar eventos"
                         >
-                          <RotateCw className={cn((isManualFetch || isDataLoading) && "animate-spin")} />
+                          <RotateCw className={cn(isDataLoading && "animate-spin")} />
                         </Button>
 
                         <Button
@@ -2162,7 +2153,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         </TabsContent>
                     </Tabs>
                     {isAddEventsLoading && (
-                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-lg">
+                        <div className="absolute inset-0 bg-background flex items-center justify-center z-10 rounded-lg">
                             <Loader2 className="h-10 w-10 animate-spin" />
                         </div>
                     )}
