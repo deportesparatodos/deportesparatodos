@@ -376,10 +376,13 @@ function HomePageContent() {
       console.error('Error fetching events:', error);
       setEvents([]); 
     } finally {
-        setIsAddEventsLoading(false);
-        setIsDataLoading(false);
-        if (!isInitialLoadDone) {
-            setIsInitialLoadDone(true);
+        if (fromDialog) {
+            setIsAddEventsLoading(false);
+        } else {
+            setIsDataLoading(false);
+            if (!isInitialLoadDone) {
+                setIsInitialLoadDone(true);
+            }
         }
     }
   }, [isInitialLoadDone, lastFetchTimestamp]);
@@ -472,7 +475,7 @@ function HomePageContent() {
   
   useEffect(() => {
     if (addEventsDialogOpen) {
-      fetchEvents(false);
+      fetchEvents(false, true);
     }
   }, [addEventsDialogOpen, fetchEvents]);
 
@@ -823,6 +826,9 @@ function HomePageContent() {
     }
     
     let eventForDialog = { ...event };
+    if (selection.isSelected && selection.selectedOption) {
+      eventForDialog.selectedOption = selection.selectedOption;
+    }
     
     // Fetch options if they are missing
     if (event.source === 'streamed.su' && event.options.length === 0) {
@@ -1017,7 +1023,7 @@ function HomePageContent() {
     }
   };
 
-  if (isDataLoading && !isInitialLoadDone) {
+  if (isDataLoading) {
     return <LoadingScreen />;
   }
 
@@ -1729,9 +1735,9 @@ function HomePageContent() {
     );
   };
   
-    if (isDataLoading) {
+  if (isDataLoading && !isInitialLoadDone) {
       return <LoadingScreen />;
-    }
+  }
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
@@ -2002,6 +2008,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             status: 'En Vivo',
             image: channel.logo,
         };
+        const selection = getEventSelection(event.title, event.time);
+        if (selection.isSelected && selection.selectedOption) {
+            event.selectedOption = selection.selectedOption;
+        }
         openSubDialogForEvent(event);
     };
 

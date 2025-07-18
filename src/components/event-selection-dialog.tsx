@@ -96,7 +96,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="py-4 px-6 flex-grow">
+        <div className="px-6 flex-grow">
              {isLoading ? (
                 <div className="flex items-center justify-center h-24">
                     <Loader2 className="h-8 w-8 animate-spin" />
