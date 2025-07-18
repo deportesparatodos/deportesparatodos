@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { FC } from 'react';
@@ -11,7 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import type { Event } from './event-carousel';
+import type { Event, StreamOption } from './event-carousel';
 import { Badge } from './ui/badge';
 import { cn, getDomainFromUrl } from '@/lib/utils';
 import {
@@ -31,6 +32,8 @@ interface EventSelectionDialogProps {
   onRemove: () => void;
   windowNumber: number;
   isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+  setEventForDialog: (event: Event) => void;
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);

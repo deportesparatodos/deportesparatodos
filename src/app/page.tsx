@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1066,6 +1067,8 @@ function HomePageContent() {
                     onRemove={() => {}}
                     windowNumber={modifyEvent.index + 1}
                     isLoading={isOptionsLoading}
+                    setIsLoading={setIsOptionsLoading}
+                    setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}
                 />
             </Dialog>
         )}
@@ -1084,10 +1087,10 @@ function HomePageContent() {
             }}
             onSelect={handleSelectForCurrentDialog}
             selectedEvents={dialogContext === 'schedule' ? futureSelection : selectedEvents}
-            allEvents={[...events, ...channels247]} 
+            allEvents={events} 
             allChannels={channels}
-            isLoading={dialogContext === 'schedule' ? isScheduleEventsLoading : isAddEventsLoading}
             onFetchEvents={() => fetchEvents(true)}
+            updateAllEvents={setEvents}
         />
         <ScheduleManager 
           open={scheduleManagerOpen}
@@ -1858,6 +1861,8 @@ function HomePageContent() {
                 onRemove={() => handleEventRemove(modificationIndex!)}
                 windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
                 isLoading={isOptionsLoading}
+                setIsLoading={setIsOptionsLoading}
+                setEventForDialog={setDialogEvent}
             />
         )}
 
@@ -1881,6 +1886,8 @@ function HomePageContent() {
                 onRemove={() => {}} 
                 windowNumber={modifyEvent.index + 1}
                 isLoading={isOptionsLoading}
+                setIsLoading={setIsOptionsLoading}
+                setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}
             />
         )}
     </div>
@@ -1897,12 +1904,14 @@ export default function Page() {
 }
 
 
-export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, isLoading, onFetchEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], isLoading: boolean, onFetchEvents: () => void }) {
+export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
-
+    const [isLoading, setIsLoading] = useState(false);
+    
     const [subDialogOpen, setSubDialogOpen] = useState(false);
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+    const [isSubDialogLoading, setIsSubDialogLoading] = useState(false);
     const [isModification, setIsModification] = useState(false);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
 
@@ -1912,6 +1921,12 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             setIsFullScreen(false); // Reset fullscreen state on close
         }
     }, [open]);
+
+    const handleForceFetch = async () => {
+        setIsLoading(true);
+        await onFetchEvents();
+        setIsLoading(false);
+    };
 
     const getEventSelection = useCallback((eventTitle: string, eventTime: string) => {
         const selectionIndex = selectedEvents.findIndex(se => se?.title === eventTitle && se?.time === eventTime);
@@ -1927,7 +1942,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         setSubDialogOpen(false);
     };
     
-    const openSubDialogForEvent = (event: Event) => {
+    const openSubDialogForEvent = async (event: Event) => {
         const selection = getEventSelection(event.title, event.time);
         let eventForDialog = {...event};
         if(selection.isSelected && selection.selectedOption){
@@ -1939,6 +1954,47 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 
         setIsModification(selection.isSelected);
         setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
+        
+        if (event.source === 'streamed.su' && event.options.length === 0) {
+            setIsSubDialogLoading(true);
+            try {
+                const streamOptions: StreamOption[] = [];
+                const sourcePromises = event.sources.map(async (source) => {
+                    try {
+                        const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                        if (response.ok) {
+                            const streams: any[] = await response.json();
+                            if (Array.isArray(streams)) {
+                                return streams.map(stream => ({
+                                    url: stream.embedUrl,
+                                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                                    hd: stream.hd,
+                                    language: stream.language,
+                                }));
+                            }
+                        }
+                    } catch (e) {
+                        console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
+                    }
+                    return [];
+                });
+                const results = await Promise.all(sourcePromises);
+                results.forEach(options => {
+                    if (options) streamOptions.push(...options);
+                });
+
+                const updatedEvent = { ...eventForDialog, options: streamOptions };
+                setDialogEvent(updatedEvent);
+
+                // Also update the main events array so we don't fetch again
+                updateAllEvents(prevEvents => prevEvents.map(e => e.title === updatedEvent.title && e.time === updatedEvent.time ? updatedEvent : e));
+            } catch (error) {
+                console.error(`Failed to fetch streams for ${event.title}`, error);
+                setDialogEvent({ ...eventForDialog, options: [] });
+            } finally {
+                setIsSubDialogLoading(false);
+            }
+        }
     };
 
     const handleChannelClick = (channel: Channel) => {
@@ -2012,11 +2068,11 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     }, [searchTerm, allChannels]);
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={(isOpen) => { if (isFullScreen) return; onOpenChange(isOpen); }}>
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4 transition-all duration-300",
+                    "max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4 transition-all duration-300 relative",
                     isFullScreen && "w-screen h-screen max-w-none rounded-none"
                 )}
                  onCloseAutoFocus={(e) => {
@@ -2031,16 +2087,12 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
                             {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                        <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); setIsFullScreen(false); }}>
                            <X className="h-5 w-5" />
                         </Button>
                     </div>
                 </DialogHeader>
-                 {isLoading ? (
-                    <div className="flex-grow flex items-center justify-center">
-                        <Loader2 className="h-10 w-10 animate-spin" />
-                    </div>
-                ) : (
+                 
                 <Tabs defaultValue="eventos" className="flex-grow flex flex-col mt-2">
                     <div className="flex flex-col gap-2">
                         <div className="relative flex-grow mt-[5px]">
@@ -2053,8 +2105,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onFetchEvents}>
-                                    <RotateCw className="h-5 w-5" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleForceFetch} disabled={isLoading}>
+                                    <RotateCw className={cn("h-5 w-5", isLoading && "animate-spin")} />
                                 </Button>
                                 {searchTerm && (
                                     <Button
@@ -2127,6 +2179,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         </ScrollArea>
                     </TabsContent>
                 </Tabs>
+                {isLoading && (
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+                        <Loader2 className="h-10 w-10 animate-spin" />
+                    </div>
                 )}
             </DialogContent>
             {dialogEvent && (
@@ -2139,7 +2195,9 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         isModification={isModification}
                         onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
                         windowNumber={(modificationIndex ?? 0) + 1}
-                        isLoading={false} 
+                        isLoading={isSubDialogLoading}
+                        setIsLoading={setIsSubDialogLoading}
+                        setEventForDialog={setDialogEvent}
                     />
                 </Dialog>
             )}
@@ -2148,6 +2206,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 }
 
     
+
 
 
 
