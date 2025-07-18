@@ -131,7 +131,7 @@ const channels247: Event[] = [
     title: "24/7 The Simpsons",
     time: "AHORA",
     status: "En Vivo",
-    options: [{ url: "https://veplay.top/stream/d2b4b104-853f-4e4e-9edd-425a1275e90a", label: "UNICA OPCION", hd: false, language: '' }],
+    options: [{ url: "https://veplay.top/stream/8b48e26f-e89d-47ab-abf5-04b4119273d0", label: "UNICA OPCION", hd: false, language: '' }],
     image: "https://thumbs.poocloud.in/thesimpsons/preview.jpg",
     sources: [],
     buttons: [],
@@ -2003,9 +2003,9 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                     "max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4 transition-all duration-300",
                     isFullScreen && "w-screen h-screen max-w-none rounded-none"
                 )}
-                onCloseAutoFocus={(e) => {
+                 onCloseAutoFocus={(e) => {
                     if (isFullScreen) {
-                        e.preventDefault();
+                      e.preventDefault();
                     }
                 }}
             >
@@ -2132,6 +2132,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 }
 
     
+
 
 
 
