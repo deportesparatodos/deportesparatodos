@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Handle specific stream requests (e.g., /api/streams?type=stream&source=xxx&id=yyy)
-  // These should not be cached for long periods to avoid expired URLs.
+  // These should be cached for a short period to avoid expired URLs while reducing load.
   if (type === 'stream') {
     const source = searchParams.get('source');
     const id = searchParams.get('id');
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     try {
       const response = await fetch(apiUrl, {
         headers: { 'Accept': 'application/json' },
-        cache: 'no-store', // Individual streams should be fresh
+        next: { revalidate: 300 }, // Cache for 5 minutes (300 seconds)
       });
 
       if (!response.ok) {

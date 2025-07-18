@@ -181,6 +181,7 @@ function HomePageContent() {
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  const [isOptionsLoading, setIsOptionsLoading] = useState(false);
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
@@ -231,8 +232,6 @@ function HomePageContent() {
         return;
     }
 
-    const setLoadingState = dialogContext === 'schedule' ? setIsScheduleEventsLoading : setIsAddEventsLoading;
-    
     if(manualTrigger || !isInitialLoadDone) {
       if (dialogContext === 'schedule') {
         setIsScheduleEventsLoading(true);
@@ -298,7 +297,7 @@ function HomePageContent() {
         return {
           title: match.title,
           time: format(zonedEventTime, 'HH:mm'),
-          options: [], 
+          options: [], // Options will be fetched on demand
           sources: match.sources, 
           buttons: [],
           category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
@@ -374,48 +373,9 @@ function HomePageContent() {
       });
       
       const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaEvents];
+      
+      setEvents(combinedInitialEvents);
 
-      const eventsWithStreams = await Promise.all(
-        combinedInitialEvents.map(async (event) => {
-          if (event.source === 'streamed.su' && event.sources && event.sources.length > 0 && event.options.length === 0) {
-            try {
-              const streamOptions: StreamOption[] = [];
-              const sourcePromises = event.sources.map(async (source) => {
-                try {
-                  const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                  if (response.ok) {
-                    const streams: any[] = await response.json();
-                    if (Array.isArray(streams)) {
-                      return streams.map(stream => ({
-                        url: stream.embedUrl,
-                        label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                        hd: stream.hd,
-                        language: stream.language,
-                      }));
-                    }
-                  }
-                  return [];
-                } catch(e) {
-                  console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
-                  return [];
-                }
-              });
-              
-              const results = await Promise.all(sourcePromises);
-              results.forEach(options => streamOptions.push(...options));
-              
-              return { ...event, options: streamOptions };
-            } catch (error) {
-              console.error(`Failed to fetch streams for ${event.title}`, error);
-              return { ...event, options: [] };
-            }
-          }
-          return event;
-        })
-      );
-
-      const finalEvents = eventsWithStreams.filter(event => event.options.length > 0);
-      setEvents(finalEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
       setEvents([]); 
@@ -853,25 +813,66 @@ function HomePageContent() {
     fetchEvents(false); // Check timestamp before fetching
   };
 
-  const openDialogForEvent = (event: Event) => {
-      const selection = getEventSelection(event);
-      let eventForDialog = { ...event };
-      
-      if (selection.isSelected && selection.selectedOption) {
-          eventForDialog.selectedOption = selection.selectedOption;
-      }
+  const openDialogForEvent = async (event: Event) => {
+    const selection = getEventSelection(event);
+    let eventForDialog = { ...event };
 
-      setDialogEvent(eventForDialog);
-      setDialogOpen(true);
+    setDialogEvent(eventForDialog);
+    setDialogOpen(true);
 
-      if (selection.isSelected) {
-          setIsModification(true);
-          const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
-          setModificationIndex(originalIndex);
-      } else {
-          setIsModification(false);
-          setModificationIndex(selectedEvents.findIndex(e => e === null));
-      }
+    if (selection.isSelected) {
+      setIsModification(true);
+      const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
+      setModificationIndex(originalIndex);
+    } else {
+      setIsModification(false);
+      setModificationIndex(selectedEvents.findIndex(e => e === null));
+    }
+    
+    if (event.source === 'streamed.su' && event.options.length === 0) {
+        setIsOptionsLoading(true);
+        try {
+            const streamOptions: StreamOption[] = [];
+            const sourcePromises = event.sources.map(async (source) => {
+                try {
+                    const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                    if (response.ok) {
+                        const streams: any[] = await response.json();
+                        if (Array.isArray(streams)) {
+                            return streams.map(stream => ({
+                                url: stream.embedUrl,
+                                label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                                hd: stream.hd,
+                                language: stream.language,
+                            }));
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
+                }
+                return [];
+            });
+            const results = await Promise.all(sourcePromises);
+            results.forEach(options => {
+              if (options) streamOptions.push(...options);
+            });
+            
+            const updatedEvent = { ...eventForDialog, options: streamOptions };
+            setDialogEvent(updatedEvent); // Update the dialog with fetched options
+
+            // Also update the main events array so we don't fetch again
+            setEvents(prevEvents => prevEvents.map(e => e.title === updatedEvent.title && e.time === updatedEvent.time ? updatedEvent : e));
+            
+            if (selection.isSelected && selection.selectedOption) {
+                updatedEvent.selectedOption = selection.selectedOption;
+            }
+        } catch (error) {
+            console.error(`Failed to fetch streams for ${event.title}`, error);
+            setDialogEvent({ ...eventForDialog, options: [] });
+        } finally {
+            setIsOptionsLoading(false);
+        }
+    }
   };
 
 
@@ -897,6 +898,7 @@ function HomePageContent() {
 
     setDialogEvent(channelAsEvent);
     setDialogOpen(true);
+    setIsOptionsLoading(false); // Channels don't need to load options
 
     if (selection.isSelected) {
         setIsModification(true);
@@ -1057,6 +1059,7 @@ function HomePageContent() {
                     isModification={true}
                     onRemove={() => {}}
                     windowNumber={modifyEvent.index + 1}
+                    isLoading={isOptionsLoading}
                 />
             </Dialog>
         )}
@@ -1494,7 +1497,7 @@ function HomePageContent() {
                                     </ScrollArea>
                                     <DialogFooter>
                                         <DialogClose asChild>
-                                            <Button>Cerrar</Button>
+                                            <Button>Entendido</Button>
                                         </DialogClose>
                                     </DialogFooter>
                                 </DialogContent>
@@ -1838,6 +1841,7 @@ function HomePageContent() {
                 isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
                 windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
+                isLoading={isOptionsLoading}
             />
         )}
 
@@ -1860,6 +1864,7 @@ function HomePageContent() {
                 isModification={true}
                 onRemove={() => {}} 
                 windowNumber={modifyEvent.index + 1}
+                isLoading={isOptionsLoading}
             />
         )}
     </div>
@@ -2118,6 +2123,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         isModification={isModification}
                         onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
                         windowNumber={(modificationIndex ?? 0) + 1}
+                        isLoading={false} 
                     />
                 </Dialog>
             )}
@@ -2126,6 +2132,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 }
 
     
+
 
 
 

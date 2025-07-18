@@ -30,6 +30,7 @@ interface EventSelectionDialogProps {
   isModification: boolean;
   onRemove: () => void;
   windowNumber: number;
+  isLoading: boolean;
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
@@ -40,6 +41,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   onOpenChange,
   event,
   onSelect,
+  isLoading,
 }) => {
   if (!event) return null;
 
@@ -90,9 +92,13 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         </DialogHeader>
 
         <div className="py-4 px-6">
-             {event.options.length === 0 ? (
+             {isLoading ? (
                 <div className="flex items-center justify-center h-24">
                     <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            ) : event.options.length === 0 ? (
+                 <div className="text-center text-muted-foreground py-8">
+                    No se encontraron opciones de transmisión.
                 </div>
             ) : (
                 <TooltipProvider>
