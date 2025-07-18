@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -177,6 +178,7 @@ function HomePageContent() {
   // Home mode state
   const [events, setEvents] = useState<Event[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isManualFetch, setIsManualFetch] = useState(false);
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -232,7 +234,11 @@ function HomePageContent() {
         return;
     }
 
-    if(manualTrigger || !isInitialLoadDone) {
+    if(manualTrigger) {
+      setIsManualFetch(true);
+    }
+
+    if(manualTrigger || dialogContext === 'schedule' || !isInitialLoadDone) {
       if (dialogContext === 'schedule') {
         setIsScheduleEventsLoading(true);
       } else if (!isInitialLoadDone) {
@@ -382,7 +388,7 @@ function HomePageContent() {
     } finally {
         setIsAddEventsLoading(false);
         setIsScheduleEventsLoading(false);
-        // Only update these after the very first load is fully complete
+        setIsManualFetch(false);
         if (!isInitialLoadDone) {
             setIsDataLoading(false);
             setIsInitialLoadDone(true);
@@ -1028,7 +1034,7 @@ function HomePageContent() {
     }
   };
 
-  if (isDataLoading && !isInitialLoadDone) {
+  if ((isDataLoading && !isInitialLoadDone) || isManualFetch) {
     return <LoadingScreen />;
   }
 
@@ -1809,6 +1815,16 @@ function HomePageContent() {
                         </Dialog>
 
                         <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => fetchEvents(true)}
+                          disabled={isManualFetch}
+                          aria-label="Refrescar eventos"
+                        >
+                          <RotateCw className={cn(isManualFetch && "animate-spin")} />
+                        </Button>
+
+                        <Button
                             size="icon"
                             onClick={handleStartView}
                             disabled={selectedEventsCount === 0}
@@ -2132,6 +2148,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 }
 
     
+
 
 
 
