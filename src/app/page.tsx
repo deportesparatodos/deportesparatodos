@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -238,18 +237,18 @@ function HomePageContent() {
     if(manualTrigger) {
       setIsManualFetch(true);
     }
-
-    if(manualTrigger || dialogContext === 'schedule' || !isInitialLoadDone) {
-      if (dialogContext === 'schedule') {
-        setIsScheduleEventsLoading(true);
-      } else if (!isInitialLoadDone) {
-        setIsDataLoading(true);
-      }
-       else {
-        setIsAddEventsLoading(true);
-      }
+    
+    // Determine which loading indicator to show
+    if (!isInitialLoadDone) {
+      setIsDataLoading(true); // Full screen loader
+    } else if (manualTrigger && !addEventsDialogOpen) {
+      // Logic for main page refresh button can go here if needed
+    } else if (addEventsDialogOpen) {
+      setIsAddEventsLoading(true);
+    } else if (scheduleManagerOpen) {
+      setIsScheduleEventsLoading(true);
     }
-
+    
     try {
       const [liveResponse, todayResponse, sportsResponse, streamTpResponse, agendaResponse] = await Promise.all([
         fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []).catch(() => []),
@@ -395,7 +394,7 @@ function HomePageContent() {
             setIsInitialLoadDone(true);
         }
     }
-  }, [isInitialLoadDone, dialogContext, lastFetchTimestamp]);
+  }, [isInitialLoadDone, lastFetchTimestamp, addEventsDialogOpen, scheduleManagerOpen]);
 
   // Load state from localStorage on initial mount
   useEffect(() => {
@@ -839,7 +838,6 @@ function HomePageContent() {
     if (event.source === 'streamed.su' && event.options.length === 0) {
         setIsOptionsLoading(true);
         try {
-            const streamOptions: StreamOption[] = [];
             const sourcePromises = event.sources.map(async (source) => {
                 try {
                     const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
@@ -860,19 +858,14 @@ function HomePageContent() {
                 return [];
             });
             const results = await Promise.all(sourcePromises);
-            results.forEach(options => {
-              if (options) streamOptions.push(...options);
-            });
+            const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
             
             const updatedEvent = { ...eventForDialog, options: streamOptions };
-            setDialogEvent(updatedEvent); // Update the dialog with fetched options
+            setDialogEvent(updatedEvent);
 
             // Also update the main events array so we don't fetch again
             setEvents(prevEvents => prevEvents.map(e => e.title === updatedEvent.title && e.time === updatedEvent.time ? updatedEvent : e));
             
-            if (selection.isSelected && selection.selectedOption) {
-                updatedEvent.selectedOption = selection.selectedOption;
-            }
         } catch (error) {
             console.error(`Failed to fetch streams for ${event.title}`, error);
             setDialogEvent({ ...eventForDialog, options: [] });
@@ -1958,7 +1951,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         if (event.source === 'streamed.su' && event.options.length === 0) {
             setIsSubDialogLoading(true);
             try {
-                const streamOptions: StreamOption[] = [];
                 const sourcePromises = event.sources.map(async (source) => {
                     try {
                         const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
@@ -1979,9 +1971,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                     return [];
                 });
                 const results = await Promise.all(sourcePromises);
-                results.forEach(options => {
-                    if (options) streamOptions.push(...options);
-                });
+                const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
 
                 const updatedEvent = { ...eventForDialog, options: streamOptions };
                 setDialogEvent(updatedEvent);
@@ -2201,11 +2191,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 }
 
     
-
-
-
-
-
-
-
-
