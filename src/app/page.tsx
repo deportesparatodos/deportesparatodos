@@ -225,7 +225,7 @@ function HomePageContent() {
     }
   }, [isMobile]);
   
-  const fetchEvents = useCallback(async (manualTrigger = false) => {
+  const fetchEvents = useCallback(async (manualTrigger = false, fromDialog = false) => {
     const now = Date.now();
     const thirtyMinutes = 30 * 60 * 1000;
 
@@ -233,20 +233,17 @@ function HomePageContent() {
         console.log("Skipping fetch, data is fresh.");
         return;
     }
-
-    if(manualTrigger) {
-      setIsManualFetch(true);
-    }
     
     // Determine which loading indicator to show
-    if (!isInitialLoadDone) {
-      setIsDataLoading(true); // Full screen loader
-    } else if (manualTrigger && !addEventsDialogOpen) {
-      // Logic for main page refresh button can go here if needed
-    } else if (addEventsDialogOpen) {
-      setIsAddEventsLoading(true);
-    } else if (scheduleManagerOpen) {
-      setIsScheduleEventsLoading(true);
+    if (manualTrigger) {
+        setIsManualFetch(true);
+        if (fromDialog) {
+            setIsAddEventsLoading(true);
+        } else {
+            setIsDataLoading(true);
+        }
+    } else if (!isInitialLoadDone) {
+        setIsDataLoading(true); // Full screen loader
     }
     
     try {
@@ -386,15 +383,15 @@ function HomePageContent() {
       console.error('Error fetching events:', error);
       setEvents([]); 
     } finally {
-        setIsAddEventsLoading(false);
-        setIsScheduleEventsLoading(false);
         setIsManualFetch(false);
+        setIsAddEventsLoading(false);
         if (!isInitialLoadDone) {
-            setIsDataLoading(false);
             setIsInitialLoadDone(true);
         }
+        // Always turn off main loading indicator at the end
+        setIsDataLoading(false);
     }
-  }, [isInitialLoadDone, lastFetchTimestamp, addEventsDialogOpen, scheduleManagerOpen]);
+  }, [isInitialLoadDone, lastFetchTimestamp]);
 
   // Load state from localStorage on initial mount
   useEffect(() => {
@@ -820,12 +817,11 @@ function HomePageContent() {
   };
 
   const openDialogForEvent = async (event: Event) => {
-    const selection = getEventSelection(event);
-    let eventForDialog = { ...event };
-
-    setDialogEvent(eventForDialog);
+    setDialogEvent(null); // Clear previous event data
+    setIsOptionsLoading(true); // Always show loader first
     setDialogOpen(true);
 
+    const selection = getEventSelection(event);
     if (selection.isSelected) {
       setIsModification(true);
       const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
@@ -835,8 +831,10 @@ function HomePageContent() {
       setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     
+    let eventForDialog = { ...event };
+    
+    // Fetch options if they are missing
     if (event.source === 'streamed.su' && event.options.length === 0) {
-        setIsOptionsLoading(true);
         try {
             const sourcePromises = event.sources.map(async (source) => {
                 try {
@@ -860,19 +858,19 @@ function HomePageContent() {
             const results = await Promise.all(sourcePromises);
             const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
             
-            const updatedEvent = { ...eventForDialog, options: streamOptions };
-            setDialogEvent(updatedEvent);
+            eventForDialog.options = streamOptions;
 
-            // Also update the main events array so we don't fetch again
-            setEvents(prevEvents => prevEvents.map(e => e.title === updatedEvent.title && e.time === updatedEvent.time ? updatedEvent : e));
+            // Update main events array to cache the options
+            setEvents(prevEvents => prevEvents.map(e => (e.title === event.title && e.time === event.time) ? { ...e, options: streamOptions } : e));
             
         } catch (error) {
             console.error(`Failed to fetch streams for ${event.title}`, error);
-            setDialogEvent({ ...eventForDialog, options: [] });
-        } finally {
-            setIsOptionsLoading(false);
+            eventForDialog.options = [];
         }
     }
+    
+    setDialogEvent(eventForDialog);
+    setIsOptionsLoading(false);
   };
 
 
@@ -1082,7 +1080,7 @@ function HomePageContent() {
             selectedEvents={dialogContext === 'schedule' ? futureSelection : selectedEvents}
             allEvents={events} 
             allChannels={channels}
-            onFetchEvents={() => fetchEvents(true)}
+            onFetchEvents={() => fetchEvents(true, true)}
             updateAllEvents={setEvents}
         />
         <ScheduleManager 
@@ -1814,10 +1812,10 @@ function HomePageContent() {
                           variant="ghost"
                           size="icon"
                           onClick={() => fetchEvents(true)}
-                          disabled={isManualFetch}
+                          disabled={isManualFetch || isDataLoading}
                           aria-label="Refrescar eventos"
                         >
-                          <RotateCw className={cn(isManualFetch && "animate-spin")} />
+                          <RotateCw className={cn((isManualFetch || isDataLoading) && "animate-spin")} />
                         </Button>
 
                         <Button
@@ -1942,14 +1940,13 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             eventForDialog.selectedOption = selection.selectedOption;
         }
 
-        setDialogEvent(eventForDialog);
+        setIsSubDialogLoading(true);
         setSubDialogOpen(true);
 
         setIsModification(selection.isSelected);
         setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
         
         if (event.source === 'streamed.su' && event.options.length === 0) {
-            setIsSubDialogLoading(true);
             try {
                 const sourcePromises = event.sources.map(async (source) => {
                     try {
@@ -1973,18 +1970,16 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                 const results = await Promise.all(sourcePromises);
                 const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
 
-                const updatedEvent = { ...eventForDialog, options: streamOptions };
-                setDialogEvent(updatedEvent);
-
+                eventForDialog.options = streamOptions;
                 // Also update the main events array so we don't fetch again
-                updateAllEvents(prevEvents => prevEvents.map(e => e.title === updatedEvent.title && e.time === updatedEvent.time ? updatedEvent : e));
+                updateAllEvents(prevEvents => prevEvents.map(e => e.title === eventForDialog.title && e.time === eventForDialog.time ? { ...e, options: streamOptions } : e));
             } catch (error) {
                 console.error(`Failed to fetch streams for ${event.title}`, error);
-                setDialogEvent({ ...eventForDialog, options: [] });
-            } finally {
-                setIsSubDialogLoading(false);
+                eventForDialog.options = [];
             }
         }
+        setDialogEvent(eventForDialog);
+        setIsSubDialogLoading(false);
     };
 
     const handleChannelClick = (channel: Channel) => {
@@ -2062,8 +2057,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "max-w-4xl h-[90vh] flex flex-col p-4 transition-all duration-300 relative",
-                    isFullScreen && "w-screen h-screen max-w-none rounded-none"
+                    "max-w-4xl flex flex-col p-4 transition-all duration-300",
+                    isFullScreen ? "w-screen h-screen max-w-none rounded-none" : "h-[90vh]"
                 )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
@@ -2078,97 +2073,99 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                     </div>
                 </DialogHeader>
                  
-                <Tabs defaultValue="eventos" className="flex-grow flex flex-col mt-2">
-                    <div className="flex flex-col gap-2">
-                        <div className="relative flex-grow mt-[5px]">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <Input
-                                type="text"
-                                placeholder="Buscar..."
-                                className="w-full pl-10 pr-20"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleForceFetch} disabled={isAddEventsLoading}>
-                                    <RotateCw className={cn("h-5 w-5", isAddEventsLoading && "animate-spin")} />
-                                </Button>
-                                {searchTerm && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => setSearchTerm('')}
-                                    >
-                                        <X className="h-5 w-5" />
+                <div className="relative flex-grow flex flex-col mt-2">
+                    <Tabs defaultValue="eventos" className="flex-grow flex flex-col">
+                        <div className="flex flex-col gap-2">
+                            <div className="relative flex-grow mt-[5px]">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                <Input
+                                    type="text"
+                                    placeholder="Buscar..."
+                                    className="w-full pl-10 pr-20"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleForceFetch} disabled={isAddEventsLoading}>
+                                        <RotateCw className={cn("h-5 w-5", isAddEventsLoading && "animate-spin")} />
                                     </Button>
-                                )}
-                            </div>
-                        </div>
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="eventos">Eventos</TabsTrigger>
-                            <TabsTrigger value="canales">Canales</TabsTrigger>
-                        </TabsList>
-                    </div>
-
-                    <TabsContent value="eventos" className="flex-grow mt-4 h-0">
-                        <ScrollArea className="h-full pr-4 -mr-4">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {sortedAndFilteredEvents.map((event, index) => (
-                                    <EventCard
-                                        key={`event-${index}`}
-                                        event={event}
-                                        selection={getEventSelection(event.title, event.time)}
-                                        onClick={() => openSubDialogForEvent(event)}
-                                        displayMode="checkmark"
-                                    />
-                                ))}
-                            </div>
-                        </ScrollArea>
-                    </TabsContent>
-
-                    <TabsContent value="canales" className="flex-grow mt-4 h-0">
-                         <ScrollArea className="h-full pr-4 -mr-4">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {filteredChannels.map((channel, index) => {
-                                    const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
-                                    const selection = getEventSelection(channelAsEvent.title, channelAsEvent.time);
-                                     return (
-                                        <Card 
-                                            key={`search-channel-${index}`}
-                                            className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
-                                            onClick={() => handleChannelClick(channel)}
+                                    {searchTerm && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            onClick={() => setSearchTerm('')}
                                         >
-                                            <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
-                                                <Image
-                                                    src={channel.logo}
-                                                    alt={`${channel.name} logo`}
-                                                    width={120}
-                                                    height={67.5}
-                                                    className="object-contain max-h-full max-w-full"
-                                                    onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
-                                                />
-                                                 {selection.isSelected && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="p-3 bg-card flex-grow flex flex-col justify-center">
-                                                <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
-                                            </div>
-                                        </Card>
-                                     )
-                                })}
+                                            <X className="h-5 w-5" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
-                        </ScrollArea>
-                    </TabsContent>
-                </Tabs>
-                {isAddEventsLoading && (
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-lg">
-                        <Loader2 className="h-10 w-10 animate-spin" />
-                    </div>
-                )}
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="eventos">Eventos</TabsTrigger>
+                                <TabsTrigger value="canales">Canales</TabsTrigger>
+                            </TabsList>
+                        </div>
+
+                        <TabsContent value="eventos" className="flex-grow mt-4 h-0">
+                            <ScrollArea className="h-full pr-4 -mr-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    {sortedAndFilteredEvents.map((event, index) => (
+                                        <EventCard
+                                            key={`event-${index}`}
+                                            event={event}
+                                            selection={getEventSelection(event.title, event.time)}
+                                            onClick={() => openSubDialogForEvent(event)}
+                                            displayMode="checkmark"
+                                        />
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
+
+                        <TabsContent value="canales" className="flex-grow mt-4 h-0">
+                            <ScrollArea className="h-full pr-4 -mr-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    {filteredChannels.map((channel, index) => {
+                                        const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                        const selection = getEventSelection(channelAsEvent.title, channelAsEvent.time);
+                                        return (
+                                            <Card 
+                                                key={`search-channel-${index}`}
+                                                className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
+                                                onClick={() => handleChannelClick(channel)}
+                                            >
+                                                <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
+                                                    <Image
+                                                        src={channel.logo}
+                                                        alt={`${channel.name} logo`}
+                                                        width={120}
+                                                        height={67.5}
+                                                        className="object-contain max-h-full max-w-full"
+                                                        onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
+                                                    />
+                                                    {selection.isSelected && (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="p-3 bg-card flex-grow flex flex-col justify-center">
+                                                    <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
+                                                </div>
+                                            </Card>
+                                        )
+                                    })}
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
+                    </Tabs>
+                    {isAddEventsLoading && (
+                        <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-lg">
+                            <Loader2 className="h-10 w-10 animate-spin" />
+                        </div>
+                    )}
+                </div>
             </DialogContent>
             {dialogEvent && (
                 <Dialog open={subDialogOpen} onOpenChange={setSubDialogOpen}>
