@@ -1035,7 +1035,7 @@ function HomePageContent() {
     }
   };
 
-  if ((isDataLoading && !isInitialLoadDone) || isManualFetch) {
+  if (isDataLoading && !isInitialLoadDone) {
     return <LoadingScreen />;
   }
 
@@ -1907,7 +1907,7 @@ export default function Page() {
 export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
     
     const [subDialogOpen, setSubDialogOpen] = useState(false);
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -1923,9 +1923,9 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     }, [open]);
 
     const handleForceFetch = async () => {
-        setIsLoading(true);
+        setIsAddEventsLoading(true);
         await onFetchEvents();
-        setIsLoading(false);
+        setIsAddEventsLoading(false);
     };
 
     const getEventSelection = useCallback((eventTitle: string, eventTime: string) => {
@@ -2072,14 +2072,9 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "max-w-4xl w-[90vw] h-[90vh] flex flex-col p-4 transition-all duration-300 relative",
+                    "max-w-4xl h-[90vh] flex flex-col p-4 transition-all duration-300 relative",
                     isFullScreen && "w-screen h-screen max-w-none rounded-none"
                 )}
-                 onCloseAutoFocus={(e) => {
-                    if (isFullScreen) {
-                      e.preventDefault();
-                    }
-                }}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
                     <DialogTitle>Añadir Evento/Canal</DialogTitle>
@@ -2105,8 +2100,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                             <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleForceFetch} disabled={isLoading}>
-                                    <RotateCw className={cn("h-5 w-5", isLoading && "animate-spin")} />
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleForceFetch} disabled={isAddEventsLoading}>
+                                    <RotateCw className={cn("h-5 w-5", isAddEventsLoading && "animate-spin")} />
                                 </Button>
                                 {searchTerm && (
                                     <Button
@@ -2179,8 +2174,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         </ScrollArea>
                     </TabsContent>
                 </Tabs>
-                {isLoading && (
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+                {isAddEventsLoading && (
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-lg">
                         <Loader2 className="h-10 w-10 animate-spin" />
                     </div>
                 )}
@@ -2206,6 +2201,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 }
 
     
+
 
 
 

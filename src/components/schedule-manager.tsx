@@ -189,28 +189,25 @@ export function ScheduleManager({
                 isModification={true}
                 onRemove={() => {}}
                 windowNumber={modifyEventForSchedule.index + 1}
+                isLoading={false}
+                setIsLoading={() => {}}
+                setEventForDialog={() => {}}
               />
            </DialogContent>
         </Dialog>
       )}
 
 
-      <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onOpenChange(false); }}>
+      <Dialog open={open} onOpenChange={(isOpen) => { if (isFullScreen) return; onOpenChange(isOpen); }}>
         <DialogContent 
             hideClose={true}
             className={cn(
-                "max-w-4xl w-full h-[90vh] flex flex-col p-0 transition-all duration-300",
+                "max-w-4xl h-[90vh] flex flex-col p-0 transition-all duration-300",
                  isFullScreen && "w-screen h-screen max-w-none rounded-none"
             )}
-            onInteractOutside={(e) => {
-                const target = e.target as HTMLElement;
-                // Allow interacting with elements inside other dialogs/popovers
-                if (target.closest('[role="dialog"]') || target.closest('[data-radix-popper-content-wrapper]')) {
-                    const isSubDialog = (target.closest('[role="dialog"]') as HTMLElement)?.dataset?.subDialog;
-                    if (isSubDialog) {
-                       return;
-                    }
-                    e.preventDefault();
+            onCloseAutoFocus={(e) => {
+                if (isFullScreen) {
+                  e.preventDefault();
                 }
             }}
              onOpenAutoFocus={(e) => e.preventDefault()}
