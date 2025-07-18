@@ -45,6 +45,8 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   event,
   onSelect,
   isLoading,
+  isModification,
+  onRemove,
 }) => {
   if (!event) return null;
 
@@ -57,7 +59,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-md bg-secondary border-border text-foreground p-0"
+        className="sm:max-w-md bg-secondary border-border text-foreground p-0 flex flex-col"
         onInteractOutside={(e) => {
            // This allows tooltips to work inside the dialog without closing it.
           if ((e.target as HTMLElement)?.closest('[data-radix-popper-content-wrapper]')) {
@@ -94,7 +96,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="py-4 px-6">
+        <div className="py-4 px-6 flex-grow">
              {isLoading ? (
                 <div className="flex items-center justify-center h-24">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -108,14 +110,16 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {event.options.map((option, index) => {
                         const domain = getDomainFromUrl(option.url);
+                        const isSelected = selectedOptionUrl === option.url;
                         return (
                             <Tooltip key={index} delayDuration={300}>
                                 <TooltipTrigger asChild>
                                     <Button
-                                    variant={selectedOptionUrl === option.url ? 'default' : 'secondary'}
+                                    variant={isSelected ? 'default' : 'secondary'}
                                     className={cn(
-                                    "w-full border border-border hover:scale-105 transition-transform duration-200", 
-                                    event.options.length === 1 && "sm:col-span-2"
+                                        "w-full border border-border hover:scale-105 transition-transform duration-200", 
+                                        event.options.length === 1 && "sm:col-span-2",
+                                        isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
                                     )}
                                     onClick={() => onSelect(event, option.url)}
                                     >
@@ -134,7 +138,22 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 </TooltipProvider>
             )}
         </div>
-
+         <DialogFooter className="mt-auto p-0">
+          {isModification && (
+            <div className="w-full px-6 pb-6 pt-0">
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => {
+                  onRemove();
+                  onOpenChange(false);
+                }}
+              >
+                Eliminar Selección
+              </Button>
+            </div>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
