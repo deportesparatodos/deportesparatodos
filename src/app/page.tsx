@@ -1728,6 +1728,10 @@ function HomePageContent() {
       </div>
     );
   };
+  
+    if (isDataLoading) {
+      return <LoadingScreen />;
+    }
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
@@ -1870,6 +1874,16 @@ function HomePageContent() {
                 setEventForDialog={event => setModifyEvent(prev => prev ? {...prev, event} : null)}
             />
         )}
+        <AddEventsDialog 
+            open={addEventsDialogOpen}
+            onOpenChange={setAddEventsDialogOpen}
+            onSelect={handleSelectForCurrentDialog}
+            selectedEvents={selectedEvents}
+            allEvents={events} 
+            allChannels={channels}
+            onFetchEvents={() => fetchEvents(true, true)}
+            updateAllEvents={setEvents}
+        />
     </div>
   );
 }
@@ -2049,8 +2063,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "max-w-4xl flex flex-col p-4 transition-all duration-300",
-                    isFullScreen ? "w-screen h-screen max-w-none rounded-none" : "h-[90vh]"
+                    "flex flex-col p-4 transition-all duration-300",
+                    isFullScreen ? "w-screen h-screen max-w-none rounded-none" : "sm:max-w-4xl h-[90vh]"
                 )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
@@ -2182,3 +2196,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
