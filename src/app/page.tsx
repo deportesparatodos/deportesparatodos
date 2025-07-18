@@ -660,17 +660,17 @@ function HomePageContent() {
     };
 
     const live = processedEvents
-        .filter((e) => e.status === 'En Vivo' && e.category !== '24/7')
+        .filter(e => e.status === 'En Vivo' && e.category !== '24/7')
         .sort(liveSortLogic);
     
-    const upcoming = processedEvents.filter((e) => e.status === 'Próximo').sort(upcomingSortLogic);
+    const upcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
     
     const unknown = processedEvents
-      .filter((e) => e.status === 'Desconocido')
+      .filter(e => e.status === 'Desconocido')
       .sort(upcomingSortLogic);
 
     const finished = processedEvents
-        .filter((e) => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
+        .filter(e => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
         .sort((a,b) => b.time.localeCompare(a.time));
     
     const channels247FromEvents = processedEvents.filter(e => e.category === '24/7' && e.status === 'En Vivo');
@@ -740,7 +740,7 @@ function HomePageContent() {
 
   const categories = useMemo(() => {
     const categorySet = new Set<string>();
-    [...events, ...channels247].forEach((event) => {
+    [...events, ...channels247].forEach(event => {
         if (event.category) {
             const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
             categorySet.add(category);
@@ -1496,9 +1496,7 @@ function HomePageContent() {
                                         </div>
                                     </ScrollArea>
                                     <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button>Entendido</Button>
-                                        </DialogClose>
+                                        <DialogClose asChild><Button>Entendido</Button></DialogClose>
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
@@ -1634,7 +1632,7 @@ function HomePageContent() {
                                 Canales
                             </Button>
                         </CarouselItem>
-                    {categories.map((category) => (
+                    {categories.map(category => (
                         <CarouselItem key={category} className="basis-auto pl-4">
                             <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => handleViewChange(category)}>
                                 {category}
@@ -1679,7 +1677,7 @@ function HomePageContent() {
                 </>
             )}
         </>
-       )
+       );
     } else if (currentView === 'live') {
       itemsToDisplay = liveEvents;
     } else if (currentView === 'channels') {
@@ -1708,7 +1706,7 @@ function HomePageContent() {
                                   width={120}
                                   height={67.5}
                                   className="object-contain max-h-full max-w-full"
-                                  onError={(e) => {
+                                  onError={e => {
                                       const target = e.target as HTMLImageElement;
                                       target.onerror = null; 
                                       target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
@@ -1737,8 +1735,8 @@ function HomePageContent() {
               }
           })}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
@@ -1756,7 +1754,7 @@ function HomePageContent() {
                             placeholder="Buscar evento o canal..."
                             className="w-full pr-10"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={e => setSearchTerm(e.target.value)}
                         />
                          <Button 
                             variant="ghost" 
@@ -1860,7 +1858,7 @@ function HomePageContent() {
         {modifyEvent && (
             <EventSelectionDialog
                 isOpen={modifyEventDialogOpen}
-                onOpenChange={(open) => {
+                onOpenChange={open => {
                     if (!open) {
                         setModifyEvent(null);
                         setModifyEventDialogOpen(false);
@@ -1878,7 +1876,7 @@ function HomePageContent() {
                 windowNumber={modifyEvent.index + 1}
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
-                setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}
+                setEventForDialog={event => setModifyEvent(prev => prev ? {...prev, event} : null)}
             />
         )}
     </div>
@@ -1891,7 +1889,7 @@ export default function Page() {
     <Suspense fallback={<LoadingScreen />}>
       <HomePageContent />
     </Suspense>
-  )
+  );
 }
 
 
@@ -1941,6 +1939,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         }
 
         setIsSubDialogLoading(true);
+        setDialogEvent(eventForDialog); // Set event immediately to show dialog
         setSubDialogOpen(true);
 
         setIsModification(selection.isSelected);
@@ -1970,15 +1969,17 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                 const results = await Promise.all(sourcePromises);
                 const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
 
-                eventForDialog.options = streamOptions;
+                const updatedEventForDialog = { ...eventForDialog, options: streamOptions };
+                setDialogEvent(updatedEventForDialog);
+
                 // Also update the main events array so we don't fetch again
-                updateAllEvents(prevEvents => prevEvents.map(e => e.title === eventForDialog.title && e.time === eventForDialog.time ? { ...e, options: streamOptions } : e));
+                updateAllEvents(allEvents.map(e => e.title === updatedEventForDialog.title && e.time === updatedEventForDialog.time ? { ...e, options: streamOptions } : e));
             } catch (error) {
                 console.error(`Failed to fetch streams for ${event.title}`, error);
-                eventForDialog.options = [];
+                const updatedEventForDialog = { ...eventForDialog, options: [] };
+                setDialogEvent(updatedEventForDialog);
             }
         }
-        setDialogEvent(eventForDialog);
         setIsSubDialogLoading(false);
     };
 
@@ -2053,7 +2054,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     }, [searchTerm, allChannels]);
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => { if (isFullScreen) return; onOpenChange(isOpen); }}>
+        <Dialog open={open} onOpenChange={isOpen => { if (isFullScreen) return; onOpenChange(isOpen); }}>
             <DialogContent 
                 hideClose={true}
                 className={cn(
@@ -2083,7 +2084,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                     placeholder="Buscar..."
                                     className="w-full pl-10 pr-20"
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={e => setSearchTerm(e.target.value)}
                                 />
                                 <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
                                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleForceFetch} disabled={isAddEventsLoading}>
@@ -2112,7 +2113,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                     {sortedAndFilteredEvents.map((event, index) => (
                                         <EventCard
-                                            key={`event-${index}`}
+                                            key={`event-${event.title}-${index}`}
                                             event={event}
                                             selection={getEventSelection(event.title, event.time)}
                                             onClick={() => openSubDialogForEvent(event)}
@@ -2131,7 +2132,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                         const selection = getEventSelection(channelAsEvent.title, channelAsEvent.time);
                                         return (
                                             <Card 
-                                                key={`search-channel-${index}`}
+                                                key={`search-channel-${channel.name}-${index}`}
                                                 className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
                                                 onClick={() => handleChannelClick(channel)}
                                             >
@@ -2142,7 +2143,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                                         width={120}
                                                         height={67.5}
                                                         className="object-contain max-h-full max-w-full"
-                                                        onError={(e) => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
+                                                        onError={e => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
                                                     />
                                                     {selection.isSelected && (
                                                         <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -2154,7 +2155,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                                     <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
                                                 </div>
                                             </Card>
-                                        )
+                                        );
                                     })}
                                 </div>
                             </ScrollArea>
@@ -2186,5 +2187,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
+    
 
     
