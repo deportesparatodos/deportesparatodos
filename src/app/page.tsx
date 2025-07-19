@@ -174,6 +174,8 @@ function HomePageContent() {
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
   const [progress, setProgress] = useState(100);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [areControlsVisible, setAreControlsVisible] = useState(true);
 
   // Home mode state
   const [events, setEvents] = useState<Event[]>([]);
@@ -198,7 +200,6 @@ function HomePageContent() {
   const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
   const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
-  const [isScheduleEventsLoading, setIsScheduleEventsLoading] = useState(false);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
 
   // Schedule related states
@@ -518,6 +519,30 @@ function HomePageContent() {
     }
     return stopTimer;
   }, [welcomePopupOpen, tutorialDialogOpen, errorsDialogOpen, startTimer, stopTimer]);
+
+  useEffect(() => {
+    if (!isViewMode) {
+      setAreControlsVisible(true);
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      return;
+    };
+
+    const handleMouseMove = () => {
+      setAreControlsVisible(true);
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      inactivityTimerRef.current = setTimeout(() => {
+        setAreControlsVisible(false);
+      }, 2500); // 2.5 seconds
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    handleMouseMove();
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    };
+  }, [isViewMode]);
 
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
@@ -887,8 +912,8 @@ function HomePageContent() {
     };
 
     const selection = getEventSelection(channelAsEvent);
-    if (selection.isSelected && selection.selectedOption) {
-        channelAsEvent.selectedOption = selection.selectedOption;
+    if (selection.isSelected) {
+        channelAsEvent.selectedOption = selectedEvents.find(se => se?.title === channelAsEvent.title)?.selectedOption;
     }
 
     setDialogEvent(channelAsEvent);
@@ -1043,7 +1068,7 @@ function HomePageContent() {
     const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
     
     return (
-      <div className="flex h-screen w-screen bg-background text-foreground">
+      <div className="flex h-screen w-screen bg-background text-foreground group">
         {modifyEvent && (
              <Dialog open={modifyEventDialogOpen} onOpenChange={(open) => { if (!open) { setModifyEvent(null); setModifyEventDialogOpen(false); } else { setModifyEventDialogOpen(true); } }}>
                 <EventSelectionDialog
@@ -1069,7 +1094,7 @@ function HomePageContent() {
                   setScheduleManagerOpen(true);
                 }
               } else {
-                setDialogContext(isScheduleEventsLoading ? 'schedule' : 'view');
+                setDialogContext(isAddEventsLoading ? 'schedule' : 'view');
                 setAddEventsDialogOpen(true);
               }
             }}
@@ -1088,8 +1113,7 @@ function HomePageContent() {
           schedules={schedules}
           onSchedulesChange={setSchedules}
           onModifyEventInView={openDialogForModification}
-          onFetchEvents={() => fetchEvents(true)}
-          isLoading={isScheduleEventsLoading}
+          isLoading={isAddEventsLoading}
           onAddEvent={() => {
             setDialogContext('schedule');
             setAddEventsDialogOpen(true);
@@ -1227,8 +1251,9 @@ function HomePageContent() {
         <div className="relative flex flex-col h-screen w-screen flex-grow">
           <div
             className={cn(
-              "absolute z-20 flex items-center gap-2",
-              isChatOpen && !isMobile ? "flex-row-reverse left-0" : "right-0"
+              "absolute z-20 flex items-center gap-2 transition-opacity duration-300 group-hover:opacity-100",
+              isChatOpen && !isMobile ? "flex-row-reverse left-0" : "right-0",
+              areControlsVisible ? "opacity-100" : "opacity-0"
             )}
             style={
               isChatOpen && !isMobile 
@@ -2009,8 +2034,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             image: channel.logo,
         };
         const selection = getEventSelection(event.title, event.time);
-        if (selection.isSelected && selection.selectedOption) {
-            event.selectedOption = selection.selectedOption;
+        if (selection.isSelected) {
+            event.selectedOption = selectedEvents.find(se => se?.title === event.title)?.selectedOption;
         }
         openSubDialogForEvent(event);
     };
@@ -2206,4 +2231,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 

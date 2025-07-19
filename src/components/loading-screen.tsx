@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,12 +10,7 @@ const AnimatedEllipsis = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setDots(prev => {
-        if (prev.length >= 3) {
-          return '';
-        }
-        return prev + '.';
-      });
+      setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
     }, 400);
     return () => clearInterval(interval);
   }, []);

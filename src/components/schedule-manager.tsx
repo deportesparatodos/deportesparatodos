@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -44,7 +45,6 @@ interface ScheduleManagerProps {
   schedules: Schedule[];
   onSchedulesChange: (schedules: Schedule[]) => void;
   onModifyEventInView: (event: Event, index: number) => void;
-  onFetchEvents: () => void;
   isLoading: boolean;
   onAddEvent: () => void;
   initialSelection: (Event | null)[];
@@ -61,7 +61,6 @@ export function ScheduleManager({
   schedules,
   onSchedulesChange,
   onModifyEventInView,
-  onFetchEvents,
   isLoading,
   onAddEvent,
   initialSelection,
@@ -338,3 +337,4 @@ export function ScheduleManager({
     </>
   );
 }
+
