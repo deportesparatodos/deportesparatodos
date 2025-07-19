@@ -89,7 +89,6 @@ export function ScheduleManager({
   
   useEffect(() => {
     if (open) {
-      onFetchEvents();
       resetToCurrentSelection();
     } else {
       setIsFullScreen(false); // Reset on close
