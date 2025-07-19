@@ -196,7 +196,7 @@ export function ScheduleManager({
       )}
 
 
-      <Dialog open={open} onOpenChange={(isOpen) => { if (isFullScreen) return; onOpenChange(isOpen); }}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent 
             hideClose={true}
             className={cn(
@@ -337,4 +337,5 @@ export function ScheduleManager({
     </>
   );
 }
+
 
