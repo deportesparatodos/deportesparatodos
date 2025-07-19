@@ -1060,7 +1060,7 @@ function HomePageContent() {
     }
   };
 
-  if (isDataLoading) {
+  if (isDataLoading && !isInitialLoadDone) {
     return <LoadingScreen />;
   }
 
@@ -1685,6 +1685,7 @@ function HomePageContent() {
                             event={event}
                             selection={getEventSelection(event)}
                             onClick={() => openDialogForEvent(event)}
+                            displayMode='checkmark'
                         />
                     ))}
                 </div>
@@ -1764,6 +1765,7 @@ function HomePageContent() {
                         event={item as Event}
                         selection={getEventSelection(item as Event)}
                         onClick={() => openDialogForEvent(item as Event)}
+                        displayMode='checkmark'
                       />
                   );
               }
@@ -2246,6 +2248,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
 
