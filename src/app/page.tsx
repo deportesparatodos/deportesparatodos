@@ -239,6 +239,7 @@ function HomePageContent() {
     } else if (fromDialog) {
         setIsAddEventsLoading(true);
     } else {
+        // Initial load
         setIsDataLoading(true);
     }
     
@@ -1060,7 +1061,7 @@ function HomePageContent() {
     }
   };
 
-  if (isDataLoading && !isInitialLoadDone) {
+  if (isDataLoading) {
     return <LoadingScreen />;
   }
 
@@ -1511,7 +1512,7 @@ function HomePageContent() {
                                             <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
                                             <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
                                             <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
-                                            <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
+                                            <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
                                             <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                                             <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
                                             <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
@@ -1774,10 +1775,6 @@ function HomePageContent() {
     );
   };
   
-  if (isDataLoading && !isInitialLoadDone) {
-      return <LoadingScreen />;
-  }
-
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
         <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
@@ -2025,7 +2022,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                 // Also update the main events array so we don't fetch again
                 updateAllEvents(allEvents.map(e => e.title === updatedEventForDialog.title && e.time === updatedEventForDialog.time ? { ...e, options: streamOptions } : e));
             } catch (error) {
-                console.error(`Failed to fetch streams for ${event.title}`, error);
+                console.error(`Failed to fetch streams for ${event.title}`);
                 const updatedEventForDialog = { ...eventForDialog, options: [] };
                 setDialogEvent(updatedEventForDialog);
             }
@@ -2115,10 +2112,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "flex flex-col p-4 transition-all duration-300",
+                    "flex flex-col p-4 transition-all duration-300 h-[90vh]",
                     isFullScreen 
                         ? "w-screen h-screen max-w-none rounded-none" 
-                        : "h-[90vh] sm:max-w-4xl"
+                        : "sm:max-w-4xl"
                 )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
@@ -2257,3 +2254,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 
 
 
+
+
+    
