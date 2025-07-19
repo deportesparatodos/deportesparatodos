@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -835,64 +836,69 @@ function HomePageContent() {
     fetchEvents(false); // Check timestamp before fetching
   };
 
-  const openDialogForEvent = async (event: Event) => {
-    setDialogEvent(null); // Clear previous event data
-    setIsOptionsLoading(true); // Always show loader first
-    setDialogOpen(true);
-
+  const openDialogForEvent = (event: Event) => {
     const selection = getEventSelection(event);
+    let eventForDialog = {...event};
+    
     if (selection.isSelected) {
-      setIsModification(true);
-      const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
-      setModificationIndex(originalIndex);
+        setIsModification(true);
+        const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
+        setModificationIndex(originalIndex);
+        if(selection.selectedOption) {
+            eventForDialog.selectedOption = selection.selectedOption;
+        }
     } else {
-      setIsModification(false);
-      setModificationIndex(selectedEvents.findIndex(e => e === null));
+        setIsModification(false);
+        setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     
-    let eventForDialog = { ...event };
-    if (selection.isSelected && selection.selectedOption) {
-      eventForDialog.selectedOption = selection.selectedOption;
-    }
+    setIsOptionsLoading(true);
+    setDialogEvent(eventForDialog); // Set event immediately for the dialog to open
+    setDialogOpen(true); // Open dialog
     
     // Fetch options if they are missing
     if (event.source === 'streamed.su' && event.options.length === 0) {
-        try {
-            const sourcePromises = event.sources.map(async (source) => {
-                try {
-                    const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                    if (response.ok) {
-                        const streams: any[] = await response.json();
-                        if (Array.isArray(streams)) {
-                            return streams.map(stream => ({
-                                url: stream.embedUrl,
-                                label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                                hd: stream.hd,
-                                language: stream.language,
-                            }));
+        const fetchStreamOptions = async () => {
+            try {
+                const sourcePromises = event.sources.map(async (source) => {
+                    try {
+                        const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                        if (response.ok) {
+                            const streams: any[] = await response.json();
+                            if (Array.isArray(streams)) {
+                                return streams.map(stream => ({
+                                    url: stream.embedUrl,
+                                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                                    hd: stream.hd,
+                                    language: stream.language,
+                                }));
+                            }
                         }
+                    } catch (e) {
+                        console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
                     }
-                } catch (e) {
-                    console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
-                }
-                return [];
-            });
-            const results = await Promise.all(sourcePromises);
-            const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
-            
-            eventForDialog.options = streamOptions;
-
-            // Update main events array to cache the options
-            setEvents(prevEvents => prevEvents.map(e => (e.title === event.title && e.time === event.time) ? { ...e, options: streamOptions } : e));
-            
-        } catch (error) {
-            console.error(`Failed to fetch streams for ${event.title}`, error);
-            eventForDialog.options = [];
-        }
+                    return [];
+                });
+                const results = await Promise.all(sourcePromises);
+                const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
+                
+                // Update the event in the dialog with the fetched options
+                setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: streamOptions } : null);
+                
+                // Also update the main events array to cache the options
+                setEvents(prevEvents => prevEvents.map(e => (e.title === event.title && e.time === event.time) ? { ...e, options: streamOptions } : e));
+                
+            } catch (error) {
+                console.error(`Failed to fetch streams for ${event.title}`, error);
+                setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: [] } : null);
+            } finally {
+                setIsOptionsLoading(false);
+            }
+        };
+        fetchStreamOptions();
+    } else {
+        setIsOptionsLoading(false); // No fetching needed, options already exist
     }
-    
-    setDialogEvent(eventForDialog);
-    setIsOptionsLoading(false);
   };
 
 
@@ -913,7 +919,10 @@ function HomePageContent() {
 
     const selection = getEventSelection(channelAsEvent);
     if (selection.isSelected) {
-        channelAsEvent.selectedOption = selectedEvents.find(se => se?.title === channelAsEvent.title)?.selectedOption;
+        const selectedEvent = selectedEvents.find(se => se?.title === channelAsEvent.title);
+        if (selectedEvent) {
+          channelAsEvent.selectedOption = selectedEvent.selectedOption;
+        }
     }
 
     setDialogEvent(channelAsEvent);
@@ -2231,5 +2240,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
