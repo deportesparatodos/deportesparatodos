@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -235,7 +234,9 @@ function HomePageContent() {
         return;
     }
     
-    if (fromDialog) {
+    if (manualTrigger && !fromDialog) {
+        setIsDataLoading(true);
+    } else if (fromDialog) {
         setIsAddEventsLoading(true);
     } else {
         setIsDataLoading(true);
@@ -579,13 +580,15 @@ function HomePageContent() {
         const normalized = normalizeTitle(event.title);
         const key = event.source === 'streamed.su' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${event.time}`;
 
-        if (eventMap.has(key)) {
-            const existingEvent = eventMap.get(key)!;
-            
+        const existingEvent = eventMap.get(key);
+
+        if (existingEvent) {
             const newOptions = [...existingEvent.options, ...event.options];
             const uniqueOptions = Array.from(new Map(newOptions.map(item => [item.url, item])).values());
+
+            const newSources = [...(existingEvent.sources || []), ...(event.sources || [])];
+            const uniqueSources = Array.from(new Map(newSources.map(item => [`${item.source}|${item.id}`, item])).values());
             
-            const newSources = [...existingEvent.sources, ...(event.sources || [])];
             const newImage = (existingEvent.image && existingEvent.image !== placeholderImage) 
                              ? existingEvent.image 
                              : (event.image && event.image !== placeholderImage) 
@@ -598,8 +601,8 @@ function HomePageContent() {
                 title: newTitle,
                 image: newImage,
                 options: uniqueOptions,
-                sources: newSources,
-                buttons: [],
+                sources: uniqueSources,
+                status: existingEvent.status === 'En Vivo' || event.status === 'En Vivo' ? 'En Vivo' : existingEvent.status,
             });
         } else {
             eventMap.set(key, { ...event, image: event.image || placeholderImage, buttons: [] });
@@ -1260,9 +1263,9 @@ function HomePageContent() {
         <div className="relative flex flex-col h-screen w-screen flex-grow">
           <div
             className={cn(
-              "absolute z-20 flex items-center gap-2 transition-opacity duration-300 group-hover:opacity-100",
-              isChatOpen && !isMobile ? "flex-row-reverse left-0" : "right-0",
-              areControlsVisible ? "opacity-100" : "opacity-0"
+              "absolute z-20 flex items-center gap-2 transition-opacity duration-300",
+              areControlsVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+              isChatOpen && !isMobile ? "flex-row-reverse left-0" : "right-0"
             )}
             style={
               isChatOpen && !isMobile 
@@ -2044,7 +2047,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         };
         const selection = getEventSelection(event.title, event.time);
         if (selection.isSelected) {
-            event.selectedOption = selectedEvents.find(se => se?.title === event.title)?.selectedOption;
+            const selectedEvent = selectedEvents.find(se => se?.title === event.title);
+            if (selectedEvent) {
+                event.selectedOption = selectedEvent.selectedOption;
+            }
         }
         openSubDialogForEvent(event);
     };
@@ -2107,8 +2113,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "flex flex-col p-4 transition-all duration-300",
-                    isFullScreen ? "w-screen h-screen max-w-none rounded-none" : "sm:max-w-4xl h-[90vh]"
+                    "flex flex-col p-4 transition-all duration-300 sm:max-w-4xl",
+                    isFullScreen ? "w-screen h-screen max-w-none rounded-none" : "h-[90vh]"
                 )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
@@ -2240,6 +2246,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
 
