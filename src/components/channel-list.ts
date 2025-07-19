@@ -172,7 +172,7 @@ export const channels: Channel[] = [
     { name: 'Sport TV 5 PT', url: 'https://streamtpglobal.com/global1.php?stream=sporttv5', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'Sport TV 6 PT', url: 'https://streamtpglobal.com/global1.php?stream=sporttv6', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/26/SporTV_2021.png' },
     { name: 'TLC', url: 'https://tvlibreonline.org/html/fl/?get=VExD', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/TLC_logo_%282023%29.svg' },
-    { name: 'TN', url: 'https://www.youtube-nocookie.com/embed/cb12KmMMDJA', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TN_todo_noticias_logo.svg/1200px-TN_todo_noticias_logo.svg.png' },
+    { name: 'TN', url: 'https://www.youtube.com/embed/cb12KmMMDJA?si=cX9P4WQnvFfJuYdl', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TN_todo_noticias_logo.svg/1200px-TN_todo_noticias_logo.svg.png' },
     { name: 'TNT', url: 'https://tvlibreonline.org/html/fl/?get=VE5UX0hEX0FyZw==', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'TNT GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_1_gb', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
     { name: 'TNT 2 GB', url: 'https://streamtpglobal.com/global1.php?stream=tnt_2_gb', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg' },
@@ -289,3 +289,5 @@ export const channels: Channel[] = [
     { name: 'Fox NRL TV', url: 'https://streamtpglobal.com/global1.php?stream=eventos2', logo: 'https://origin.go.foxsports.com.au/wp-content/uploads/2017/02/aaaa_log_foxl_a-1.png' },
     { name: 'Wimbledon Open', url: 'https://streamtpglobal.com/global1.php?stream=eventos5', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Wimbledon.svg/1200px-Wimbledon.svg.png' },
 ];
+
+    
