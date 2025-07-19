@@ -2111,12 +2111,14 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     }, [searchTerm, allChannels]);
 
     return (
-        <Dialog open={open} onOpenChange={isOpen => { if (isFullScreen) return; onOpenChange(isOpen); }}>
+        <Dialog open={open} onOpenChange={isOpen => { onOpenChange(isOpen); }}>
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "flex flex-col p-4 transition-all duration-300 sm:max-w-4xl",
-                    isFullScreen ? "w-screen h-screen max-w-none rounded-none" : "h-[90vh]"
+                    "flex flex-col p-4 transition-all duration-300",
+                    isFullScreen 
+                        ? "w-screen h-screen max-w-none rounded-none" 
+                        : "h-[90vh] sm:max-w-4xl"
                 )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
@@ -2248,6 +2250,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
 
