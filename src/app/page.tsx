@@ -1805,107 +1805,111 @@ function HomePageContent() {
   };
   
   return (
-    <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-        <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
-            {pageTitle}
-             <div className={cn(
-                "flex items-center justify-end gap-2 px-4 flex-1",
-                 isMobile && isSearchOpen && 'w-full'
-             )}>
-                {isSearchOpen ? (
-                    <div className="relative w-full">
-                        <Input
-                            ref={r => { if (r) r.focus(); }}
-                            type="text"
-                            placeholder="Buscar evento o canal..."
-                            className="w-full pr-10"
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                        />
-                         <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
-                            onClick={() => {
-                                setSearchTerm('');
-                                setIsSearchOpen(false);
-                            }}
-                          >
-                             <X className="h-4 w-4" />
-                         </Button>
-                    </div>
-                ) : (
-                    <>
-                        <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
-                            <Search />
-                        </Button>
-
-                        <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <Settings />
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-h-[90vh] flex flex-col">
-                                <DialogHeader className="text-center">
-                                <DialogTitle>Configuración y Eventos</DialogTitle>
-                                <DialogDescription>
-                                    Personaliza la vista y gestiona tus eventos seleccionados.
-                                </DialogDescription>
-                                </DialogHeader>
-                                <ScrollArea className="pr-4 -mr-4">
-                                   <LayoutConfigurator
-                                        gridGap={gridGap}
-                                        onGridGapChange={setGridGap}
-                                        borderColor={borderColor}
-                                        onBorderColorChange={setBorderColor}
-                                        isChatEnabled={isChatEnabled}
-                                        onIsChatEnabledChange={setIsChatEnabled}
-                                        order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                        onOrderChange={handleOrderChange}
-                                        eventDetails={selectedEvents}
-                                        onRemove={handleEventRemove} 
-                                        onModify={openDialogForModification}
-                                        isViewPage={false}
-                                    />
-                                </ScrollArea>
-                            </DialogContent>
-                        </Dialog>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => fetchEvents(true)}
-                          disabled={isDataLoading}
-                          aria-label="Refrescar eventos"
-                        >
-                          <RotateCw className={cn(isDataLoading && "animate-spin")} />
-                        </Button>
-
-                        <Button
-                            size="icon"
-                            onClick={handleStartView}
-                            disabled={selectedEventsCount === 0}
-                            className="bg-green-600 hover:bg-green-700 text-white relative"
-                        >
-                            <Play />
-                             {selectedEventsCount > 0 && (
-                                <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
-                                    {selectedEventsCount}
-                                </Badge>
-                            )}
-                        </Button>
-                    </>
-                )}
+    <div className="relative flex h-screen w-screen flex-col bg-background text-foreground">
+       {isDataLoading && isInitialLoadDone && (
+            <div className="absolute inset-0 z-50">
+                <LoadingScreen />
             </div>
-        </header>
+        )}
+        <div className={cn("flex h-full w-full flex-col", isDataLoading && isInitialLoadDone && "invisible")}>
+            <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
+                {pageTitle}
+                 <div className={cn(
+                    "flex items-center justify-end gap-2 px-4 flex-1",
+                     isMobile && isSearchOpen && 'w-full'
+                 )}>
+                    {isSearchOpen ? (
+                        <div className="relative w-full">
+                            <Input
+                                ref={r => { if (r) r.focus(); }}
+                                type="text"
+                                placeholder="Buscar evento o canal..."
+                                className="w-full pr-10"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                             <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setIsSearchOpen(false);
+                                }}
+                              >
+                                 <X className="h-4 w-4" />
+                             </Button>
+                        </div>
+                    ) : (
+                        <>
+                            <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
+                                <Search />
+                            </Button>
 
-        <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8 relative">
-            {isDataLoading && isInitialLoadDone && <LoadingScreen />}
-            <div className={cn("space-y-2", isDataLoading && "invisible")}>
+                            <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <Settings />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-h-[90vh] flex flex-col">
+                                    <DialogHeader className="text-center">
+                                    <DialogTitle>Configuración y Eventos</DialogTitle>
+                                    <DialogDescription>
+                                        Personaliza la vista y gestiona tus eventos seleccionados.
+                                    </DialogDescription>
+                                    </DialogHeader>
+                                    <ScrollArea className="pr-4 -mr-4">
+                                       <LayoutConfigurator
+                                            gridGap={gridGap}
+                                            onGridGapChange={setGridGap}
+                                            borderColor={borderColor}
+                                            onBorderColorChange={setBorderColor}
+                                            isChatEnabled={isChatEnabled}
+                                            onIsChatEnabledChange={setIsChatEnabled}
+                                            order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                            onOrderChange={handleOrderChange}
+                                            eventDetails={selectedEvents}
+                                            onRemove={handleEventRemove} 
+                                            onModify={openDialogForModification}
+                                            isViewPage={false}
+                                        />
+                                    </ScrollArea>
+                                </DialogContent>
+                            </Dialog>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => fetchEvents(true)}
+                              disabled={isDataLoading}
+                              aria-label="Refrescar eventos"
+                            >
+                              <RotateCw className={cn(isDataLoading && "animate-spin")} />
+                            </Button>
+
+                            <Button
+                                size="icon"
+                                onClick={handleStartView}
+                                disabled={selectedEventsCount === 0}
+                                className="bg-green-600 hover:bg-green-700 text-white relative"
+                            >
+                                <Play />
+                                 {selectedEventsCount > 0 && (
+                                    <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
+                                        {selectedEventsCount}
+                                    </Badge>
+                                )}
+                            </Button>
+                        </>
+                    )}
+                </div>
+            </header>
+
+            <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8">
                 {renderContent()}
-            </div>
-        </main>
+            </main>
+        </div>
         
         {dialogEvent && (
             <EventSelectionDialog
@@ -2137,8 +2141,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "flex flex-col p-4 transition-all duration-300 h-[90vh]",
-                     isFullScreen ? "w-screen h-screen max-w-none rounded-none" : "sm:max-w-4xl"
+                    "flex flex-col p-4 transition-all duration-300",
+                    isFullScreen 
+                        ? "w-screen h-screen max-w-none rounded-none" 
+                        : "h-[90vh] sm:max-w-4xl"
                 )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
@@ -2266,18 +2272,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
-    
-
-    
-
-
-
-
-
-
-
-
-
-    
-
