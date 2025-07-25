@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -156,6 +157,21 @@ const channels247: Event[] = [
   }
 ];
 
+const formula1StaticEvent: Event = {
+  title: "Formula 1: MULTICAM",
+  time: "--:--",
+  status: "Desconocido",
+  options: [{ url: "https://p.alangulotv.blog/multi-f1.html", label: "MULTICAM", hd: false, language: "" }],
+  image: "https://i.ibb.co/dHPWxr8/depete.jpg",
+  sources: [],
+  buttons: [],
+  category: "Motor Sports",
+  language: "",
+  date: "",
+  source: "",
+};
+
+
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 function HomePageContent() {
@@ -201,6 +217,8 @@ function HomePageContent() {
   const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
 
   // Schedule related states
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
@@ -239,7 +257,6 @@ function HomePageContent() {
     } else if (fromDialog) {
         setIsAddEventsLoading(true);
     } else {
-        // Initial load
         setIsDataLoading(true);
     }
     
@@ -372,7 +389,7 @@ function HomePageContent() {
           };
       });
       
-      const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaEvents];
+      const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaEvents, formula1StaticEvent];
       
       setEvents(combinedInitialEvents);
 
@@ -646,16 +663,25 @@ function HomePageContent() {
             currentStatus = 'Desconocido';
         }
 
+        // Add MULTICAM button to F1 events
+        if (e.title.toLowerCase().includes('formula 1') || e.title.toLowerCase().includes('f1')) {
+          const multicamOption: StreamOption = {
+              url: 'https://p.alangulotv.blog/multi-f1.html',
+              label: 'MULTICAM',
+              hd: false,
+              language: ''
+          };
+          const hasMulticam = e.options.some(opt => opt.url === multicamOption.url);
+          if (!hasMulticam) {
+              e.options.unshift(multicamOption);
+          }
+        }
+
+
         return { ...e, status: currentStatus };
     });
     
     const liveSortLogic = (a: Event, b: Event): number => {
-      const hasCustomImageA = a.image && a.image !== placeholderImage;
-      const hasCustomImageB = b.image && b.image !== placeholderImage;
-
-      if (hasCustomImageA && !hasCustomImageB) return -1;
-      if (!hasCustomImageA && hasCustomImageB) return 1;
-
       return a.title.localeCompare(b.title);
     };
     
@@ -683,10 +709,11 @@ function HomePageContent() {
         return timeA!.getTime() - timeB!.getTime();
     };
 
-    const live = processedEvents
-        .filter(e => e.status === 'En Vivo' && e.category !== '24/7')
-        .sort(liveSortLogic);
-    
+    const allLiveEvents = processedEvents.filter(e => e.status === 'En Vivo' && e.category !== '24/7');
+    const liveCustom = allLiveEvents.filter(e => e.image && e.image !== placeholderImage).sort(liveSortLogic);
+    const liveDefault = allLiveEvents.filter(e => !e.image || e.image === placeholderImage).sort(liveSortLogic);
+    const live = [...liveCustom, ...liveDefault];
+
     const upcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
     
     const unknown = processedEvents
@@ -857,8 +884,8 @@ function HomePageContent() {
     }
     
     setIsOptionsLoading(true);
-    setDialogEvent(eventForDialog); // Set event immediately for the dialog to open
-    setDialogOpen(true); // Open dialog
+    setDialogEvent(eventForDialog);
+    setDialogOpen(true);
     
     // Fetch options if they are missing
     if (event.source === 'streamed.su' && event.options.length === 0) {
@@ -1061,7 +1088,7 @@ function HomePageContent() {
     }
   };
 
-  if (isDataLoading) {
+  if (isDataLoading && !isInitialLoadDone) {
     return <LoadingScreen />;
   }
 
@@ -1117,6 +1144,8 @@ function HomePageContent() {
             allChannels={channels}
             onFetchEvents={() => fetchEvents(true, true)}
             updateAllEvents={setEvents}
+            isFullScreen={isFullScreen}
+            setIsFullScreen={setIsFullScreen}
         />
         <ScheduleManager 
           open={scheduleManagerOpen}
@@ -1266,7 +1295,7 @@ function HomePageContent() {
             className={cn(
               "absolute z-20 flex items-center gap-2 transition-opacity duration-300",
               areControlsVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-              isChatOpen && !isMobile ? "flex-row-reverse left-0" : "right-0"
+              isChatOpen && !isMobile ? "flex-row-reverse left-0" : "left-auto"
             )}
             style={
               isChatOpen && !isMobile 
@@ -1871,8 +1900,9 @@ function HomePageContent() {
             </div>
         </header>
 
-        <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8">
-            <div className="space-y-2">
+        <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8 relative">
+            {isDataLoading && isInitialLoadDone && <LoadingScreen />}
+            <div className={cn("space-y-2", isDataLoading && "invisible")}>
                 {renderContent()}
             </div>
         </main>
@@ -1925,6 +1955,8 @@ function HomePageContent() {
             allChannels={channels}
             onFetchEvents={() => fetchEvents(true, true)}
             updateAllEvents={setEvents}
+            isFullScreen={isFullScreen}
+            setIsFullScreen={setIsFullScreen}
         />
     </div>
   );
@@ -1940,9 +1972,8 @@ export default function Page() {
 }
 
 
-export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void }) {
+export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents, isFullScreen, setIsFullScreen }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void, isFullScreen: boolean, setIsFullScreen: (isFullScreen: boolean) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [isFullScreen, setIsFullScreen] = useState(false);
     const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
     
     const [subDialogOpen, setSubDialogOpen] = useState(false);
@@ -1956,7 +1987,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             setSearchTerm('');
             setIsFullScreen(false); // Reset fullscreen state on close
         }
-    }, [open]);
+    }, [open, setIsFullScreen]);
 
     const handleForceFetch = async () => {
         setIsAddEventsLoading(true);
@@ -2056,16 +2087,9 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 
     const sortedAndFilteredEvents = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
-        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
         
-        const liveSortLogic = (a: Event, b: Event): number => {
-            const hasCustomImageA = a.image && a.image !== placeholderImage;
-            const hasCustomImageB = b.image && b.image !== placeholderImage;
-            if (hasCustomImageA && !hasCustomImageB) return -1;
-            if (!hasCustomImageA && hasCustomImageB) return 1;
-            return a.title.localeCompare(b.title);
-        };
-
+        const liveSortLogic = (a: Event, b: Event): number => a.title.localeCompare(b.title);
+        
         const upcomingSortLogic = (a: Event, b: Event): number => {
             const now = new Date();
             const parseTime = (timeStr: string) => {
@@ -2090,9 +2114,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             return timeA!.getTime() - timeB!.getTime();
         };
 
+        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
         const filtered = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
 
-        const liveCustom = filtered.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
+        const liveCustom = filtered.filter(e => e.status === 'En Vivo' && e.image && e.image !== placeholderImage).sort(liveSortLogic);
         const liveDefault = filtered.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
         const upcoming = filtered.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
         const unknown = filtered.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
@@ -2113,9 +2138,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                 hideClose={true}
                 className={cn(
                     "flex flex-col p-4 transition-all duration-300 h-[90vh]",
-                    isFullScreen 
-                        ? "w-screen h-screen max-w-none rounded-none" 
-                        : "sm:max-w-4xl"
+                     isFullScreen ? "w-screen h-screen max-w-none rounded-none" : "sm:max-w-4xl"
                 )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
