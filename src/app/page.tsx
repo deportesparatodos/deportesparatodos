@@ -290,10 +290,10 @@ function HomePageContent() {
 
       const timeZone = 'America/Argentina/Buenos_Aires';
       
-      const categoryMap = sportsData.reduce((acc, sport) => {
+      const categoryMap = sportsData.reduce<Record<string, string>>((acc, sport) => {
           acc[sport.id] = sport.name;
           return acc;
-      }, {} as Record<string, string>);
+      }, {});
 
       const initialEvents: Event[] = combinedData.map((match: StreamedMatch) => {
         const eventDate = new Date(match.date);
@@ -540,29 +540,35 @@ function HomePageContent() {
     return stopTimer;
   }, [welcomePopupOpen, tutorialDialogOpen, errorsDialogOpen, startTimer, stopTimer]);
 
-  useEffect(() => {
-    if (!isViewMode) {
+ useEffect(() => {
+    if (!isViewMode || isMobile) {
       setAreControlsVisible(true);
-      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
       return;
-    };
+    }
 
-    const handleMouseMove = () => {
+    const showAndResetTimer = () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
       setAreControlsVisible(true);
-      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
       inactivityTimerRef.current = setTimeout(() => {
         setAreControlsVisible(false);
-      }, 2500); // 2.5 seconds
+      }, 2500);
     };
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    handleMouseMove();
+
+    window.addEventListener('mousemove', showAndResetTimer);
+    showAndResetTimer(); // Initial call
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      window.removeEventListener('mousemove', showAndResetTimer);
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
     };
-  }, [isViewMode]);
+  }, [isViewMode, isMobile]);
 
   const handleOrderChange = (newOrder: number[]) => {
     const fullNewOrder = [...newOrder];
@@ -2071,7 +2077,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
             options: [{url: channel.url, label: 'Ver canal', hd: false, language: ''}],
             sources: [],
             buttons: [],
-            time: channel.name.includes('24/7') ? '24/7' : '',
+            time: 'AHORA',
             category: 'Canal',
             language: '',
             date: '',
@@ -2213,7 +2219,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                             <ScrollArea className="h-full pr-4 -mr-4">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                     {filteredChannels.map((channel, index) => {
-                                        const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: '', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                        const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                                         const selection = getEventSelection(channelAsEvent.title, channelAsEvent.time);
                                         return (
                                             <Card 
