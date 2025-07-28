@@ -602,7 +602,7 @@ function HomePageContent() {
 
     combinedEvents.forEach(event => {
         const normalized = normalizeTitle(event.title);
-        const key = event.source === 'streamed.su' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${event.time}`;
+        const key = event.source === 'streamed.su' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${normalized}|${event.time}`;
 
         const existingEvent = eventMap.get(key);
 
@@ -734,8 +734,8 @@ function HomePageContent() {
     
     const allSorted = [...live, ...upcoming, ...unknown, ...finished];
     
-    const mobileLiveCustom = processedEvents.filter(e => e.status === 'En Vivo' && e.category !== '24/7' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
-    const mobileLiveDefault = processedEvents.filter(e => e.status === 'En Vivo' && e.category !== '24/7' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
+    const mobileLiveCustom = allLiveEvents.filter(e => e.image && e.image !== placeholderImage).sort(liveSortLogic);
+    const mobileLiveDefault = allLiveEvents.filter(e => !e.image || e.image === placeholderImage).sort(liveSortLogic);
     const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
     const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
     const mobileFinished = finished;
@@ -942,7 +942,7 @@ function HomePageContent() {
   const handleChannelClick = (channel: Channel) => {
     const channelAsEvent: Event = {
       title: channel.name,
-      options: [{url: channel.url, label: 'Ver Canal', hd: false, language: ''}],
+      options: channel.urls.map(u => ({ url: u.url, label: u.label, hd: false, language: '' })),
       sources: [],
       buttons: [],
       time: 'AHORA',
@@ -1216,7 +1216,7 @@ function HomePageContent() {
                                 <ul className="list-disc pl-5 space-y-2">
                                     <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
                                     <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
-                                    <li><strong>Carruseles de Eventos:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
+                                    <li><strong>Carruseles de Eventos/Canales:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
                                     <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
                                 </ul>
 
@@ -1297,6 +1297,11 @@ function HomePageContent() {
         </Dialog>
 
         <div className="relative flex flex-col h-screen w-screen flex-grow">
+          {isDataLoading && isInitialLoadDone && (
+            <div className="absolute inset-0 z-50">
+                <LoadingScreen />
+            </div>
+          )}
           <div
             className={cn(
               "absolute z-20 flex items-center gap-2 transition-opacity duration-300",
@@ -1760,9 +1765,9 @@ function HomePageContent() {
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
           {itemsToDisplay.map((item, index) => {
-              if ('url' in item) { // It's a Channel
+              if ('urls' in item) { // It's a Channel
                   const channel = item as Channel;
-                  const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                  const channelAsEvent: Event = { title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                   const selection = getEventSelection(channelAsEvent);
                   return (
                       <Card 
@@ -1812,12 +1817,12 @@ function HomePageContent() {
   
   return (
     <div className="relative flex h-screen w-screen flex-col bg-background text-foreground">
-       {isDataLoading && isInitialLoadDone && (
+       {isDataLoading && (
             <div className="absolute inset-0 z-50">
                 <LoadingScreen />
             </div>
         )}
-        <div className={cn("flex h-full w-full flex-col", isDataLoading && isInitialLoadDone && "invisible")}>
+        <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
             <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
                 {pageTitle}
                  <div className={cn(
@@ -2074,7 +2079,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const handleChannelClick = (channel: Channel) => {
         const event: Event = {
             title: channel.name,
-            options: [{url: channel.url, label: 'Ver canal', hd: false, language: ''}],
+            options: channel.urls.map(u => ({ url: u.url, label: u.label, hd: false, language: '' })),
             sources: [],
             buttons: [],
             time: 'AHORA',
@@ -2219,7 +2224,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                             <ScrollArea className="h-full pr-4 -mr-4">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                     {filteredChannels.map((channel, index) => {
-                                        const channelAsEvent: Event = { title: channel.name, options: [{url: channel.url, label: "Ver Canal", hd: false, language: ''}], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                        const channelAsEvent: Event = { title: channel.name, options: [], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                                         const selection = getEventSelection(channelAsEvent.title, channelAsEvent.time);
                                         return (
                                             <Card 
@@ -2278,3 +2283,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
+    
