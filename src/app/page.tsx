@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1296,11 +1297,6 @@ function HomePageContent() {
         </Dialog>
 
         <div className="relative flex flex-col h-screen w-screen flex-grow">
-          {isDataLoading && isInitialLoadDone && (
-            <div className="absolute inset-0 z-50">
-                <LoadingScreen />
-            </div>
-          )}
           <div
             className={cn(
               "absolute z-20 flex items-center gap-2 transition-opacity duration-300",
@@ -1443,14 +1439,14 @@ function HomePageContent() {
   // --- HOME VIEW (DEFAULT) ---
   const pageTitle = (
     <div className={cn(
-        'flex items-center min-h-[75px] transition-all duration-300 pl-4 shrink-0',
+        'flex items-center transition-all duration-300 pl-4 shrink-0',
         isMobile && isSearchOpen && 'w-0 opacity-0'
     )}>
         {currentView === 'home' ? (
             <div className="flex items-center gap-0">
                 <Sheet open={sideMenuOpen} onOpenChange={setSideMenuOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="rounded-none">
+                        <Button variant="ghost" size="icon" className="md:rounded-none">
                             <Menu className="h-6 w-6" />
                         </Button>
                     </SheetTrigger>
@@ -1651,7 +1647,7 @@ function HomePageContent() {
                         </div>
                     </SheetContent>
                 </Sheet>
-                <Link href="/" className="shrink-0 ml-2" onClick={handleBackToHome}>
+                <Link href="/" className="shrink-0 ml-2 md:w-auto" onClick={handleBackToHome}>
                     <Image
                         src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
                         alt="Deportes Para Todos Logo"
@@ -1659,6 +1655,7 @@ function HomePageContent() {
                         height={37.5}
                         priority
                         data-ai-hint="logo"
+                        className='w-[130px] md:w-[150px] h-auto'
                     />
                 </Link>
             </div>
@@ -1816,16 +1813,16 @@ function HomePageContent() {
   
   return (
     <div className="relative flex h-screen w-screen flex-col bg-background text-foreground">
-       {isDataLoading && isInitialLoadDone && (
+       {isDataLoading && (
             <div className="absolute inset-0 z-50">
                 <LoadingScreen />
             </div>
         )}
         <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
-            <header className="sticky top-0 z-30 flex h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
+            <header className="sticky top-0 z-30 flex h-auto min-h-[60px] md:h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
                 {pageTitle}
                  <div className={cn(
-                    "flex items-center justify-end gap-2 px-4 flex-1",
+                    "flex items-center justify-end gap-1 md:gap-2 px-2 md:px-4 flex-1",
                      isMobile && isSearchOpen && 'w-full'
                  )}>
                     {isSearchOpen ? (
@@ -1863,13 +1860,13 @@ function HomePageContent() {
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-h-[90vh] flex flex-col">
-                                    <DialogHeader className="text-center">
-                                    <DialogTitle>Configuración y Eventos</DialogTitle>
-                                    <DialogDescription>
-                                        Personaliza la vista y gestiona tus eventos seleccionados.
-                                    </DialogDescription>
+                                    <DialogHeader className="text-center flex-shrink-0">
+                                      <DialogTitle>Configuración y Eventos</DialogTitle>
+                                      <DialogDescription>
+                                          Personaliza la vista y gestiona tus eventos seleccionados.
+                                      </DialogDescription>
                                     </DialogHeader>
-                                    <ScrollArea className="pr-4 -mr-4">
+                                    <ScrollArea className="flex-grow h-0 pr-4 -mr-4">
                                        <LayoutConfigurator
                                             gridGap={gridGap}
                                             onGridGapChange={setGridGap}
@@ -2282,4 +2279,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 

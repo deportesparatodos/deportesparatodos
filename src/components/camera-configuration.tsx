@@ -61,11 +61,11 @@ export function CameraConfigurationComponent({
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-          <SheetHeader className="p-6 pb-0 text-center">
+          <SheetHeader className="p-6 pb-0 text-center flex-shrink-0">
             <SheetTitle className="text-center break-words whitespace-pre-wrap">Configuración de la Vista</SheetTitle>
           </SheetHeader>
-          <Separator className="my-4" />
-          <ScrollArea className="flex-grow px-6">
+          <Separator className="my-4 flex-shrink-0" />
+          <ScrollArea className="flex-grow h-0 px-6">
               <LayoutConfigurator
                   gridGap={gridGap}
                   onGridGapChange={onGridGapChange}
@@ -85,7 +85,7 @@ export function CameraConfigurationComponent({
               />
           </ScrollArea>
           {isViewPage && (
-            <SheetFooter className="p-4 border-t border-border mt-auto">
+            <SheetFooter className="p-4 border-t border-border flex-shrink-0">
               <div className="space-y-2 w-full">
                 <Dialog>
                     <DialogTrigger asChild>
