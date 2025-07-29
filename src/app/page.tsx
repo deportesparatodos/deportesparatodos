@@ -557,9 +557,9 @@ function HomePageContent() {
         setAreControlsVisible(false);
       }, 2500);
     };
-
-    window.addEventListener('mousemove', showAndResetTimer);
+    
     showAndResetTimer();
+    window.addEventListener('mousemove', showAndResetTimer);
 
     return () => {
       window.removeEventListener('mousemove', showAndResetTimer);
@@ -1653,7 +1653,7 @@ function HomePageContent() {
                         height={37.5}
                         priority
                         data-ai-hint="logo"
-                        className='w-[130px] md:w-[150px] h-auto'
+                        className='w-[110px] md:w-[150px] h-auto'
                     />
                 </Link>
             </div>
@@ -1811,16 +1811,18 @@ function HomePageContent() {
   
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-       {isDataLoading && isInitialLoadDone && (
+       {isDataLoading && !isInitialLoadDone && (
         <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
             <LoadingScreen />
         </div>
        )}
         <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
-            <header className="sticky top-0 z-30 flex h-auto min-h-[60px] md:h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
+            <header className="sticky top-0 z-30 flex h-auto min-h-[56px] md:h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
                 {pageTitle}
                  <div className={cn(
-                    "flex items-center justify-end gap-1 md:gap-2 px-2 md:px-4 flex-1",
+                    "flex items-center justify-end gap-1 px-2 md:px-4 flex-1",
+                    "md:gap-2",
+                    isMobile && " [&_button]:h-9 [&_button]:w-9 [&_svg]:h-5 [&_svg]:w-5",
                      isMobile && isSearchOpen && 'w-full'
                  )}>
                     {isSearchOpen ? (
@@ -2280,3 +2282,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     );
 }
 
+    
