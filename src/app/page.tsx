@@ -1274,7 +1274,7 @@ function HomePageContent() {
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
                                     <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge, ya que suelen tener la mejor compatibilidad con tecnologías de video web.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge.</p>
                                     <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web.</p>
@@ -1811,13 +1811,13 @@ function HomePageContent() {
   };
   
   return (
-    <div className="relative flex h-screen w-screen flex-col bg-background text-foreground">
+    <div className="flex h-screen w-screen flex-col bg-background text-foreground">
        {isDataLoading && !isInitialLoadDone && (
             <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
                 <LoadingScreen />
             </div>
         )}
-        <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
+        <div className={cn("flex h-full w-full flex-col", isDataLoading && isInitialLoadDone ? "invisible" : "")}>
             <header className="sticky top-0 z-30 flex h-auto min-h-[60px] md:h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
                 {pageTitle}
                  <div className={cn(
@@ -1858,28 +1858,30 @@ function HomePageContent() {
                                         <Settings />
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-h-[90vh] flex flex-col">
-                                    <DialogHeader className="text-center flex-shrink-0">
+                                <DialogContent className="max-h-[90vh] flex flex-col p-0">
+                                    <DialogHeader className="p-6 pb-4 text-center flex-shrink-0">
                                       <DialogTitle>Configuración y Eventos</DialogTitle>
                                       <DialogDescription>
                                           Personaliza la vista y gestiona tus eventos seleccionados.
                                       </DialogDescription>
                                     </DialogHeader>
-                                    <ScrollArea className="flex-grow pr-4 -mr-4">
-                                       <LayoutConfigurator
-                                            gridGap={gridGap}
-                                            onGridGapChange={setGridGap}
-                                            borderColor={borderColor}
-                                            onBorderColorChange={setBorderColor}
-                                            isChatEnabled={isChatEnabled}
-                                            onIsChatEnabledChange={setIsChatEnabled}
-                                            order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                            onOrderChange={handleOrderChange}
-                                            eventDetails={selectedEvents}
-                                            onRemove={handleEventRemove} 
-                                            onModify={openDialogForModification}
-                                            isViewPage={false}
-                                        />
+                                    <ScrollArea className="flex-grow overflow-y-auto">
+                                       <div className="px-6 pb-6">
+                                           <LayoutConfigurator
+                                                gridGap={gridGap}
+                                                onGridGapChange={setGridGap}
+                                                borderColor={borderColor}
+                                                onBorderColorChange={setBorderColor}
+                                                isChatEnabled={isChatEnabled}
+                                                onIsChatEnabledChange={setIsChatEnabled}
+                                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                                onOrderChange={handleOrderChange}
+                                                eventDetails={selectedEvents}
+                                                onRemove={handleEventRemove} 
+                                                onModify={openDialogForModification}
+                                                isViewPage={false}
+                                            />
+                                       </div>
                                     </ScrollArea>
                                 </DialogContent>
                             </Dialog>
@@ -1913,11 +1915,12 @@ function HomePageContent() {
             </header>
 
             <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8">
-                {isDataLoading && !isInitialLoadDone ? (
+                {isDataLoading && isInitialLoadDone && (
                   <div className="absolute inset-0 bg-background/80 z-40 flex items-center justify-center">
                     <Loader2 className="h-10 w-10 animate-spin" />
                   </div>
-                ) : renderContent()}
+                )}
+                {renderContent()}
             </main>
         </div>
         
@@ -2282,6 +2285,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 
