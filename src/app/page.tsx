@@ -1098,7 +1098,6 @@ function HomePageContent() {
     return <LoadingScreen />;
   }
 
-
   if (isViewMode) {
      const numCameras = selectedEventsCount;
      if (numCameras === 0) {
@@ -1813,7 +1812,7 @@ function HomePageContent() {
   
   return (
     <div className="relative flex h-screen w-screen flex-col bg-background text-foreground">
-       {isDataLoading && (
+       {isDataLoading && !isInitialLoadDone && (
             <div className="absolute inset-0 z-50">
                 <LoadingScreen />
             </div>
@@ -1866,7 +1865,7 @@ function HomePageContent() {
                                           Personaliza la vista y gestiona tus eventos seleccionados.
                                       </DialogDescription>
                                     </DialogHeader>
-                                    <ScrollArea className="flex-grow h-0 pr-4 -mr-4">
+                                    <ScrollArea className="flex-grow pr-4 -mr-4">
                                        <LayoutConfigurator
                                             gridGap={gridGap}
                                             onGridGapChange={setGridGap}
@@ -1914,7 +1913,11 @@ function HomePageContent() {
             </header>
 
             <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8">
-                {renderContent()}
+                {isDataLoading && !isInitialLoadDone ? (
+                  <div className="absolute inset-0 bg-background/80 z-40 flex items-center justify-center">
+                    <Loader2 className="h-10 w-10 animate-spin" />
+                  </div>
+                ) : renderContent()}
             </main>
         </div>
         
@@ -2279,5 +2282,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
