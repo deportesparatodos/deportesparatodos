@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1812,16 +1811,16 @@ function HomePageContent() {
   
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-       {isDataLoading && !isInitialLoadDone && (
-            <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
-                <LoadingScreen />
-            </div>
-        )}
-        <div className={cn("flex h-full w-full flex-col", isDataLoading && isInitialLoadDone ? "invisible" : "")}>
+       {isDataLoading && isInitialLoadDone && (
+         <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
+             <LoadingScreen />
+         </div>
+       )}
+        <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
             <header className="sticky top-0 z-30 flex h-auto min-h-[60px] md:h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
                 {pageTitle}
                  <div className={cn(
-                    "flex items-center justify-end gap-1 md:gap-2 px-2 md:px-4 flex-1",
+                    "flex flex-wrap items-center justify-end gap-1 md:gap-2 px-2 md:px-4 flex-1",
                      isMobile && isSearchOpen && 'w-full'
                  )}>
                     {isSearchOpen ? (
@@ -2285,8 +2284,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
-
-
-
-
