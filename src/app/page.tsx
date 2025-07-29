@@ -541,10 +541,10 @@ function HomePageContent() {
 
  useEffect(() => {
     if (!isViewMode || isMobile) {
-      setAreControlsVisible(true);
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
       }
+      setAreControlsVisible(true);
       return;
     }
 
@@ -559,7 +559,7 @@ function HomePageContent() {
     };
 
     window.addEventListener('mousemove', showAndResetTimer);
-    showAndResetTimer(); // Initial call
+    showAndResetTimer();
 
     return () => {
       window.removeEventListener('mousemove', showAndResetTimer);
@@ -1093,7 +1093,7 @@ function HomePageContent() {
     }
   };
 
-  if (isDataLoading && !isInitialLoadDone) {
+  if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
 
@@ -1812,15 +1812,15 @@ function HomePageContent() {
   return (
     <div className="flex h-screen w-screen flex-col bg-background text-foreground">
        {isDataLoading && isInitialLoadDone && (
-         <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
-             <LoadingScreen />
-         </div>
+        <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
+            <LoadingScreen />
+        </div>
        )}
         <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
             <header className="sticky top-0 z-30 flex h-auto min-h-[60px] md:h-[75px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
                 {pageTitle}
                  <div className={cn(
-                    "flex flex-wrap items-center justify-end gap-1 md:gap-2 px-2 md:px-4 flex-1",
+                    "flex items-center justify-end gap-1 md:gap-2 px-2 md:px-4 flex-1",
                      isMobile && isSearchOpen && 'w-full'
                  )}>
                     {isSearchOpen ? (
@@ -1914,11 +1914,6 @@ function HomePageContent() {
             </header>
 
             <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8">
-                {isDataLoading && isInitialLoadDone && (
-                  <div className="absolute inset-0 bg-background/80 z-40 flex items-center justify-center">
-                    <Loader2 className="h-10 w-10 animate-spin" />
-                  </div>
-                )}
                 {renderContent()}
             </main>
         </div>
@@ -2284,3 +2279,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
