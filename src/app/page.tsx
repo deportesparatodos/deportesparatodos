@@ -1813,7 +1813,7 @@ function HomePageContent() {
   return (
     <div className="relative flex h-screen w-screen flex-col bg-background text-foreground">
        {isDataLoading && !isInitialLoadDone && (
-            <div className="absolute inset-0 z-50">
+            <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
                 <LoadingScreen />
             </div>
         )}
@@ -2282,6 +2282,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 
