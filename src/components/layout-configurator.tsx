@@ -144,7 +144,7 @@ export function EventListManagement({
 }
 
 
-interface LayoutConfiguratorProps extends Omit<EventListManagementProps, 'onReload'> {
+interface LayoutConfiguratorProps extends EventListManagementProps {
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
@@ -170,7 +170,7 @@ export function LayoutConfigurator({
 
   return (
     <div className="flex flex-col h-full">
-        <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
+        <Accordion type="single" collapsible className="w-full space-y-4">
           <AccordionItem value="item-1" className="border rounded-lg px-4">
             <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
             <AccordionContent className="pt-2">
@@ -253,5 +253,4 @@ export function LayoutConfigurator({
     </div>
   );
 }
-
 

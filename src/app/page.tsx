@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -942,7 +941,7 @@ function HomePageContent() {
   const handleChannelClick = (channel: Channel) => {
     const channelAsEvent: Event = {
       title: channel.name,
-      options: channel.urls.map(u => ({ url: u.url, label: u.label, hd: false, language: '' })),
+      options: channel.urls,
       sources: [],
       buttons: [],
       time: 'AHORA',
@@ -1767,7 +1766,7 @@ function HomePageContent() {
           {itemsToDisplay.map((item, index) => {
               if ('urls' in item) { // It's a Channel
                   const channel = item as Channel;
-                  const channelAsEvent: Event = { title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                  const channelAsEvent: Event = { title: channel.name, options: channel.urls, sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                   const selection = getEventSelection(channelAsEvent);
                   return (
                       <Card 
@@ -1817,7 +1816,7 @@ function HomePageContent() {
   
   return (
     <div className="relative flex h-screen w-screen flex-col bg-background text-foreground">
-       {isDataLoading && (
+       {isDataLoading && isInitialLoadDone && (
             <div className="absolute inset-0 z-50">
                 <LoadingScreen />
             </div>
@@ -2079,7 +2078,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const handleChannelClick = (channel: Channel) => {
         const event: Event = {
             title: channel.name,
-            options: channel.urls.map(u => ({ url: u.url, label: u.label, hd: false, language: '' })),
+            options: channel.urls,
             sources: [],
             buttons: [],
             time: 'AHORA',
@@ -2284,4 +2283,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     );
 }
 
-    
