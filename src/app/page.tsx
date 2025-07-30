@@ -95,7 +95,6 @@ export interface Subscription {
   type: 'event' | 'category';
   title: string; // Event title or category name
   notifyAt: number; // Minutes before event to notify
-  // Pushover email will be stored globally, not per-subscription
 }
 
 
@@ -243,23 +242,57 @@ function HomePageContent() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [pushoverEmail, setPushoverEmail] = useState('');
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedSubs = localStorage.getItem('dpt_subscriptions');
-        if (storedSubs) {
-          setSubscriptions(JSON.parse(storedSubs));
-        }
+  // Fetch subscriptions from backend on initial load
+   useEffect(() => {
+    const fetchUserSubscriptions = async () => {
         const storedEmail = localStorage.getItem('dpt_pushover_email');
         if (storedEmail) {
             setPushoverEmail(storedEmail);
+            try {
+                const response = await fetch(`/api/subscriptions?email=${encodeURIComponent(storedEmail)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setSubscriptions(data.subscriptions || []);
+                } else {
+                    console.error("Failed to fetch subscriptions");
+                }
+            } catch (error) {
+                console.error("Error fetching subscriptions:", error);
+            }
         }
-      } catch (error) {
-        console.error("Failed to load from localStorage", error);
-      }
-    }
+    };
+    fetchUserSubscriptions();
   }, []);
 
+  // Update subscriptions on the backend whenever they change locally
+  const handleSubscriptionUpdate = async (newSubscriptions: Subscription[], newPushoverEmail: string) => {
+    setSubscriptions(newSubscriptions);
+    setPushoverEmail(newPushoverEmail);
+    
+    // Persist email in localStorage
+    if (newPushoverEmail) {
+        localStorage.setItem('dpt_pushover_email', newPushoverEmail);
+    } else {
+        localStorage.removeItem('dpt_pushover_email');
+    }
+
+    // Save to backend
+    if (newPushoverEmail) {
+      try {
+        await fetch('/api/subscriptions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pushoverEmail: newPushoverEmail, subscriptions: newSubscriptions }),
+        });
+        toast({ title: "¡Suscripciones guardadas!", description: "Tus preferencias de notificación han sido actualizadas." });
+      } catch (error) {
+        console.error("Failed to save subscriptions:", error);
+        toast({ variant: 'destructive', title: "Error", description: "No se pudieron guardar las preferencias." });
+      }
+    }
+    setNotificationDialogOpen(false);
+  };
+  
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
         return `grid-cols-1 grid-rows-${count > 0 ? count : 1}`;
@@ -543,10 +576,8 @@ function HomePageContent() {
         localStorage.setItem('borderColor', borderColor);
         localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
         localStorage.setItem('schedules', JSON.stringify(schedules));
-        localStorage.setItem('dpt_subscriptions', JSON.stringify(subscriptions));
-        localStorage.setItem('dpt_pushover_email', pushoverEmail);
     }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, subscriptions, pushoverEmail, isInitialLoadDone]); 
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -1027,18 +1058,7 @@ function HomePageContent() {
         setNotificationDialogOpen(true);
     };
 
-    const handleSubscriptionUpdate = (newSubscriptions: Subscription[], newPushoverEmail: string) => {
-        setSubscriptions(newSubscriptions);
-        setPushoverEmail(newPushoverEmail);
-        setNotificationDialogOpen(false); // Close dialog after action
-        
-        if (newPushoverEmail) {
-           toast({ title: "¡Suscripción guardada!", description: "Tus preferencias de notificación han sido actualizadas." });
-        }
-    };
-
-
-  const handleViewChange = (view: string) => {
+    const handleViewChange = (view: string) => {
     setSearchTerm('');
     setCurrentView(view);
   };
@@ -1998,11 +2018,7 @@ function HomePageContent() {
             onOpenChange={setNotificationManagerOpen}
             subscriptions={subscriptions}
             pushoverEmail={pushoverEmail}
-            onSubscriptionUpdate={(newSubs, newEmail) => {
-                setSubscriptions(newSubs);
-                setPushoverEmail(newEmail);
-                 toast({ title: "¡Preferencias guardadas!", description: "Tus notificaciones han sido actualizadas." });
-            }}
+            onSubscriptionUpdate={handleSubscriptionUpdate}
         />
         
         {dialogEvent && (

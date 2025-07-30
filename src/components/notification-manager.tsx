@@ -19,6 +19,8 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Trash2, Pencil } from 'lucide-react';
 import { Separator } from './ui/separator';
+import { useToast } from "@/hooks/use-toast";
+
 
 interface NotificationManagerProps {
   open: boolean;
@@ -38,6 +40,7 @@ export function NotificationManager({
   const [localPushoverEmail, setLocalPushoverEmail] = useState(pushoverEmail);
   const [localSubscriptions, setLocalSubscriptions] = useState<Subscription[]>(subscriptions);
   const [editingSubId, setEditingSubId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (open) {

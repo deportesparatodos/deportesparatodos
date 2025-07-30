@@ -4,15 +4,38 @@
     "src/app/api/streams/route.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "src/app/api/cron/route.ts": {
+      "maxDuration": 300,
+      "memory": 1024
     }
   },
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/api/streams",
       "destination": "/api/streams"
+    },
+    {
+      "source": "/api/subscriptions",
+      "destination": "/api/subscriptions"
+    },
+    {
+      "source": "/api/cron",
+      "destination": "/api/cron"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron?process=true",
+      "schedule": "*/15 * * * *"
     }
   ],
   "env": {
-    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+    "RESEND_API_KEY": "re_K8qNK2bo_6MNsqN3M9NBaBkFBfnU4iKp4"
   }
 }
