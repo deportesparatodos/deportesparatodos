@@ -1658,7 +1658,7 @@ function HomePageContent() {
                 </Link>
             </div>
         ) : (
-          <div className="flex items-center gap-4 pl-4">
+          <div className="flex items-center gap-4 pl-4 min-h-[40px]">
             <Button variant="ghost" size="icon" onClick={handleBackToHome}>
                 <ArrowLeft />
             </Button>
