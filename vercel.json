@@ -31,7 +31,7 @@
     },
     {
       "path": "/api/cron?process=true",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 * * * *"
     }
   ],
   "env": {
@@ -39,3 +39,4 @@
     "RESEND_API_KEY": "re_K8qNK2bo_6MNsqN3M9NBaBkFBfnU4iKp4"
   }
 }
+

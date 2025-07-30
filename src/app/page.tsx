@@ -2096,7 +2096,7 @@ function NotificationDialog({
     const getCategoryId = (e: Event) => `category-${e.category}`.replace(/\s+/g, '-');
 
     const [localPushoverEmail, setLocalPushoverEmail] = useState(pushoverEmail);
-    const [notifyAt, setNotifyAt] = useState("0"); // Default: "Al comenzar"
+    const [notifyAt, setNotifyAt] = useState("30"); // Default: 30 minutes
     const [tutorialOpen, setTutorialOpen] = useState(false);
 
     const eventSub = useMemo(() => subscriptions.find(s => s.id === getEventId(event)), [subscriptions, event]);
@@ -2109,7 +2109,7 @@ function NotificationDialog({
             if (eventSub) {
                 setNotifyAt(String(eventSub.notifyAt));
             } else {
-                setNotifyAt("0"); // Reset to default if no specific sub
+                setNotifyAt("30"); // Reset to default if no specific sub
             }
         }
     }, [isOpen, pushoverEmail, eventSub]);
@@ -2183,10 +2183,9 @@ function NotificationDialog({
                              </SelectTrigger>
                              <SelectContent>
                                  <SelectItem value="0">Al comenzar</SelectItem>
-                                 <SelectItem value="5">5 minutos antes</SelectItem>
-                                 <SelectItem value="15">15 minutos antes</SelectItem>
                                  <SelectItem value="30">30 minutos antes</SelectItem>
                                  <SelectItem value="60">1 hora antes</SelectItem>
+                                 <SelectItem value="120">2 horas antes</SelectItem>
                              </SelectContent>
                          </Select>
                     </div>
@@ -2542,3 +2541,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+

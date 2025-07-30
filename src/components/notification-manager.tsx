@@ -112,10 +112,9 @@ export function NotificationManager({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="0">Al comenzar</SelectItem>
-                                        <SelectItem value="5">5 mins antes</SelectItem>
-                                        <SelectItem value="15">15 mins antes</SelectItem>
                                         <SelectItem value="30">30 mins antes</SelectItem>
                                         <SelectItem value="60">1 hora antes</SelectItem>
+                                        <SelectItem value="120">2 horas antes</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive" onClick={() => handleRemoveSubscription(sub.id)}>
@@ -146,10 +145,9 @@ export function NotificationManager({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="0">Al comenzar</SelectItem>
-                                        <SelectItem value="5">5 mins antes</SelectItem>
-                                        <SelectItem value="15">15 mins antes</SelectItem>
                                         <SelectItem value="30">30 mins antes</SelectItem>
                                         <SelectItem value="60">1 hora antes</SelectItem>
+                                        <SelectItem value="120">2 horas antes</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive" onClick={() => handleRemoveSubscription(sub.id)}>
@@ -176,3 +174,4 @@ export function NotificationManager({
     </Dialog>
   );
 }
+
