@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, Bell, BellRing } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -53,6 +53,7 @@ import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { NotificationManager } from '@/components/notification-manager';
 
 
 interface StreamedMatch {
@@ -238,6 +239,7 @@ function HomePageContent() {
   const { toast } = useToast();
   const [notificationEvent, setNotificationEvent] = useState<Event | null>(null);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [pushoverEmail, setPushoverEmail] = useState('');
 
@@ -1378,6 +1380,7 @@ function HomePageContent() {
                   setAddEventsDialogOpen(true);
                 }}
                 onSchedule={() => setScheduleManagerOpen(true)}
+                onNotificationManager={() => setNotificationManagerOpen(true)}
             />
 
             {isChatEnabled && (
@@ -1512,6 +1515,10 @@ function HomePageContent() {
                             />
                         </SheetHeader>
                         <div className="p-4 space-y-2">
+                             <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { setNotificationManagerOpen(true); setSideMenuOpen(false); }}>
+                                <BellRing />
+                                Notificaciones
+                            </Button>
                             <Dialog>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" className="w-full justify-start gap-2">
@@ -1935,6 +1942,7 @@ function HomePageContent() {
                                                 onRemove={handleEventRemove} 
                                                 onModify={openDialogForModification}
                                                 isViewPage={false}
+                                                onNotificationManager={() => setNotificationManagerOpen(true)}
                                             />
                                        </div>
                                     </ScrollArea>
@@ -1984,6 +1992,18 @@ function HomePageContent() {
                 onSubscriptionUpdate={handleSubscriptionUpdate}
             />
         )}
+
+        <NotificationManager
+            open={notificationManagerOpen}
+            onOpenChange={setNotificationManagerOpen}
+            subscriptions={subscriptions}
+            pushoverEmail={pushoverEmail}
+            onSubscriptionUpdate={(newSubs, newEmail) => {
+                setSubscriptions(newSubs);
+                setPushoverEmail(newEmail);
+                 toast({ title: "¡Preferencias guardadas!", description: "Tus notificaciones han sido actualizadas." });
+            }}
+        />
         
         {dialogEvent && (
             <EventSelectionDialog

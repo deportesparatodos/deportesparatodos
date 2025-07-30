@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play } from 'lucide-react';
+import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, BellRing } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
@@ -31,6 +31,7 @@ interface CameraConfigurationProps {
   isViewPage: boolean;
   onAddEvent: () => void;
   onSchedule: () => void;
+  onNotificationManager: () => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -49,6 +50,7 @@ export function CameraConfigurationComponent({
   isViewPage,
   onAddEvent,
   onSchedule,
+  onNotificationManager,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -82,6 +84,7 @@ export function CameraConfigurationComponent({
                   isViewPage={isViewPage}
                   onAddEvent={onAddEvent}
                   onSchedule={onSchedule}
+                  onNotificationManager={onNotificationManager}
               />
           </ScrollArea>
           {isViewPage && (
