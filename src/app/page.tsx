@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -51,6 +51,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface StreamedMatch {
@@ -85,6 +86,13 @@ interface AgendaEvent {
   source: string;
   image: string;
   status: string;
+}
+
+interface Subscription {
+  id: string; // e.g., "event-unique-title-and-time"
+  type: 'event' | 'category';
+  email: string;
+  title: string; 
 }
 
 
@@ -223,6 +231,25 @@ function HomePageContent() {
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
+  
+  // Notification states
+  const { toast } = useToast();
+  const [notificationEvent, setNotificationEvent] = useState<Event | null>(null);
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedSubs = localStorage.getItem('dpt_subscriptions');
+        if (storedSubs) {
+          setSubscriptions(JSON.parse(storedSubs));
+        }
+      } catch (error) {
+        console.error("Failed to load subscriptions from localStorage", error);
+      }
+    }
+  }, []);
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -507,8 +534,9 @@ function HomePageContent() {
         localStorage.setItem('borderColor', borderColor);
         localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
         localStorage.setItem('schedules', JSON.stringify(schedules));
+        localStorage.setItem('dpt_subscriptions', JSON.stringify(subscriptions));
     }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, subscriptions, isInitialLoadDone]); 
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -983,6 +1011,33 @@ function HomePageContent() {
     setModifyEvent({ event: eventForModification, index });
     setModifyEventDialogOpen(true); // Open the specific modification dialog
   };
+  
+    const handleNotificationClick = (event: Event) => {
+        setNotificationEvent(event);
+        setNotificationDialogOpen(true);
+    };
+
+    const handleSubscription = (event: Event | null, email: string) => {
+        if (!event || !email) return;
+
+        const getEventId = (e: Event) => `event-${e.title}-${e.date}-${e.time}`.replace(/\s+/g, '-');
+        const subId = getEventId(event);
+        
+        let newSubscriptions = [...subscriptions];
+        
+        if (newSubscriptions.some(sub => sub.id === subId)) {
+            // Unsubscribe
+            newSubscriptions = newSubscriptions.filter(sub => sub.id !== subId);
+            toast({ title: "Suscripción eliminada", description: "Ya no recibirás notificaciones para este evento." });
+        } else {
+            // Subscribe
+            newSubscriptions.push({ id: subId, type: 'event', email, title: event.title });
+            toast({ title: "¡Suscripción exitosa!", description: `Te enviaremos un recordatorio por correo para "${event.title}".` });
+        }
+        
+        setSubscriptions(newSubscriptions);
+        setNotificationDialogOpen(false);
+    };
 
   const handleViewChange = (view: string) => {
     setSearchTerm('');
@@ -1720,6 +1775,7 @@ function HomePageContent() {
                             event={event}
                             selection={getEventSelection(event)}
                             onClick={() => openDialogForEvent(event)}
+                            onNotificationClick={() => handleNotificationClick(event)}
                             displayMode='checkmark'
                         />
                     ))}
@@ -1730,19 +1786,19 @@ function HomePageContent() {
                         <EventCarousel title="Canales" channels={channels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                      <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                 </>
             )}
@@ -1800,6 +1856,7 @@ function HomePageContent() {
                         event={item as Event}
                         selection={getEventSelection(item as Event)}
                         onClick={() => openDialogForEvent(item as Event)}
+                        onNotificationClick={() => handleNotificationClick(item as Event)}
                         displayMode='checkmark'
                       />
                   );
@@ -1920,6 +1977,16 @@ function HomePageContent() {
             </main>
         </div>
         
+        {notificationEvent && (
+            <NotificationDialog
+                isOpen={notificationDialogOpen}
+                onOpenChange={setNotificationDialogOpen}
+                event={notificationEvent}
+                onSubscribe={handleSubscription}
+                isSubscribed={subscriptions.some(sub => sub.id === `event-${notificationEvent.title}-${notificationEvent.date}-${notificationEvent.time}`.replace(/\s+/g, '-'))}
+            />
+        )}
+        
         {dialogEvent && (
             <EventSelectionDialog
                 isOpen={dialogOpen}
@@ -1973,6 +2040,75 @@ function HomePageContent() {
         />
     </div>
   );
+}
+
+
+function NotificationDialog({ isOpen, onOpenChange, event, onSubscribe, isSubscribed }: { isOpen: boolean, onOpenChange: (open: boolean) => void, event: Event, onSubscribe: (event: Event, email: string) => void, isSubscribed: boolean }) {
+    const [email, setEmail] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            const storedEmail = localStorage.getItem('dpt_notification_email');
+            if (storedEmail) {
+                setEmail(storedEmail);
+            }
+        }
+    }, [isOpen]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (email) {
+            localStorage.setItem('dpt_notification_email', email);
+            onSubscribe(event, email);
+        }
+    };
+    
+    const handleUnsubscribe = () => {
+       onSubscribe(event, 'unsubscribe'); // Pass a special value to indicate unsubscription
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Recibir Notificación</DialogTitle>
+                    <DialogDescription>
+                        {isSubscribed 
+                            ? `Ya estás suscrito a las notificaciones para "${event.title}".`
+                            : `Ingresa tu correo para recibir un recordatorio cuando "${event.title}" esté por comenzar.`
+                        }
+                    </DialogDescription>
+                </DialogHeader>
+                {!isSubscribed ? (
+                    <form onSubmit={handleSubmit}>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <label htmlFor="email" className="text-right">
+                                    Correo
+                                </label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="col-span-3"
+                                    placeholder="tu@correo.com"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit">Suscribirme</Button>
+                        </DialogFooter>
+                    </form>
+                ) : (
+                    <DialogFooter>
+                       <Button variant="destructive" onClick={handleUnsubscribe}>Eliminar Suscripción</Button>
+                    </DialogFooter>
+                )}
+            </DialogContent>
+        </Dialog>
+    );
 }
 
 // Wrapper to handle Suspense for client components
@@ -2211,6 +2347,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                             event={event}
                                             selection={getEventSelection(event.title, event.time)}
                                             onClick={() => openSubDialogForEvent(event)}
+                                            onNotificationClick={() => {}}
                                             displayMode="checkmark"
                                         />
                                     ))}

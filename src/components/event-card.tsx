@@ -6,23 +6,31 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Event } from './event-carousel';
+import { Button } from './ui/button';
+import { BellRing } from 'lucide-react';
 
 interface EventCardProps {
   event: Event;
   selection: { isSelected: boolean; window: number | null };
   onClick: () => void;
+  onNotificationClick: () => void;
   displayMode?: 'number' | 'checkmark';
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
-export const EventCard: FC<EventCardProps> = ({ event, selection, onClick, displayMode = 'checkmark' }) => {
+export const EventCard: FC<EventCardProps> = ({ event, selection, onClick, onNotificationClick, displayMode = 'checkmark' }) => {
   const timeDisplay =
     event.status.toLowerCase() === 'en vivo'
       ? 'AHORA'
       : isValidTimeFormat(event.time)
       ? event.time
       : '--:--';
+
+  const handleNotification = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the main card click event
+    onNotificationClick();
+  };
 
   return (
     <div 
@@ -51,6 +59,14 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick, displ
                 <span className="text-5xl font-extrabold text-white drop-shadow-lg">{selection.window}</span>
             </div>
         )}
+         <Button
+            size="icon"
+            variant="ghost"
+            className="absolute top-1 right-1 h-8 w-8 bg-black/40 hover:bg-black/70 text-white rounded-full transition-opacity opacity-0 group-hover:opacity-100"
+            onClick={handleNotification}
+        >
+            <BellRing className="h-4 w-4" />
+        </Button>
       </div>
       <div className="p-3 flex flex-col flex-grow">
         <h3 className="font-bold text-sm flex-grow min-h-[40px]">{event.title}</h3>

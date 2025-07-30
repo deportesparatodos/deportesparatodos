@@ -44,11 +44,12 @@ interface EventCarouselProps {
   events?: Event[];
   channels?: Channel[];
   onCardClick?: (event: Event) => void;
+  onNotificationClick?: (event: Event) => void;
   onChannelClick?: (channel: Channel) => void;
   getEventSelection?: (event: Event) => { isSelected: boolean; window: number | null };
 }
 
-export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection }) => {
+export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection, onNotificationClick }) => {
   const hasContent = (events && events.length > 0) || (channels && channels.length > 0);
 
   if (!hasContent) {
@@ -76,6 +77,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
           {events &&
             onCardClick &&
             getEventSelection &&
+            onNotificationClick &&
             events.map((event, index) => (
               <CarouselItem
                 key={`event-${event.title}-${index}`}
@@ -85,6 +87,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                   event={event}
                   selection={getEventSelection(event)}
                   onClick={() => onCardClick(event)}
+                  onNotificationClick={() => onNotificationClick(event)}
                 />
               </CarouselItem>
             ))}
@@ -133,5 +136,3 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
-
-    
