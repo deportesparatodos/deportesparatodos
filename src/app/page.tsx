@@ -52,6 +52,7 @@ import { Alert, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 interface StreamedMatch {
@@ -88,11 +89,12 @@ interface AgendaEvent {
   status: string;
 }
 
-interface Subscription {
-  id: string; // e.g., "event-unique-title-and-time"
+export interface Subscription {
+  id: string; // `event-{title}-{date}-{time}` or `category-{name}`
   type: 'event' | 'category';
-  email: string;
-  title: string; 
+  title: string; // Event title or category name
+  notifyAt: number; // Minutes before event to notify
+  // Pushover email will be stored globally, not per-subscription
 }
 
 
@@ -237,6 +239,7 @@ function HomePageContent() {
   const [notificationEvent, setNotificationEvent] = useState<Event | null>(null);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [pushoverEmail, setPushoverEmail] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -245,8 +248,12 @@ function HomePageContent() {
         if (storedSubs) {
           setSubscriptions(JSON.parse(storedSubs));
         }
+        const storedEmail = localStorage.getItem('dpt_pushover_email');
+        if (storedEmail) {
+            setPushoverEmail(storedEmail);
+        }
       } catch (error) {
-        console.error("Failed to load subscriptions from localStorage", error);
+        console.error("Failed to load from localStorage", error);
       }
     }
   }, []);
@@ -535,8 +542,9 @@ function HomePageContent() {
         localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
         localStorage.setItem('schedules', JSON.stringify(schedules));
         localStorage.setItem('dpt_subscriptions', JSON.stringify(subscriptions));
+        localStorage.setItem('dpt_pushover_email', pushoverEmail);
     }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, subscriptions, isInitialLoadDone]); 
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, subscriptions, pushoverEmail, isInitialLoadDone]); 
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -1017,27 +1025,16 @@ function HomePageContent() {
         setNotificationDialogOpen(true);
     };
 
-    const handleSubscription = (event: Event | null, email: string) => {
-        if (!event || !email) return;
-
-        const getEventId = (e: Event) => `event-${e.title}-${e.date}-${e.time}`.replace(/\s+/g, '-');
-        const subId = getEventId(event);
-        
-        let newSubscriptions = [...subscriptions];
-        
-        if (newSubscriptions.some(sub => sub.id === subId)) {
-            // Unsubscribe
-            newSubscriptions = newSubscriptions.filter(sub => sub.id !== subId);
-            toast({ title: "Suscripción eliminada", description: "Ya no recibirás notificaciones para este evento." });
-        } else {
-            // Subscribe
-            newSubscriptions.push({ id: subId, type: 'event', email, title: event.title });
-            toast({ title: "¡Suscripción exitosa!", description: `Te enviaremos un recordatorio por correo para "${event.title}".` });
-        }
-        
+    const handleSubscriptionUpdate = (newSubscriptions: Subscription[], newPushoverEmail: string) => {
         setSubscriptions(newSubscriptions);
-        setNotificationDialogOpen(false);
+        setPushoverEmail(newPushoverEmail);
+        setNotificationDialogOpen(false); // Close dialog after action
+        
+        if (newPushoverEmail) {
+           toast({ title: "¡Suscripción guardada!", description: "Tus preferencias de notificación han sido actualizadas." });
+        }
     };
+
 
   const handleViewChange = (view: string) => {
     setSearchTerm('');
@@ -1321,7 +1318,7 @@ function HomePageContent() {
                               <div className="text-sm text-muted-foreground space-y-4">
                                     <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
                                     <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
-                                    <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
                                     <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
@@ -1982,8 +1979,9 @@ function HomePageContent() {
                 isOpen={notificationDialogOpen}
                 onOpenChange={setNotificationDialogOpen}
                 event={notificationEvent}
-                onSubscribe={handleSubscription}
-                isSubscribed={subscriptions.some(sub => sub.id === `event-${notificationEvent.title}-${notificationEvent.date}-${notificationEvent.time}`.replace(/\s+/g, '-'))}
+                subscriptions={subscriptions}
+                pushoverEmail={pushoverEmail}
+                onSubscriptionUpdate={handleSubscriptionUpdate}
             />
         )}
         
@@ -2043,69 +2041,159 @@ function HomePageContent() {
 }
 
 
-function NotificationDialog({ isOpen, onOpenChange, event, onSubscribe, isSubscribed }: { isOpen: boolean, onOpenChange: (open: boolean) => void, event: Event, onSubscribe: (event: Event, email: string) => void, isSubscribed: boolean }) {
-    const [email, setEmail] = useState('');
+function NotificationDialog({ 
+    isOpen, 
+    onOpenChange, 
+    event, 
+    subscriptions,
+    pushoverEmail,
+    onSubscriptionUpdate,
+}: { 
+    isOpen: boolean, 
+    onOpenChange: (open: boolean) => void, 
+    event: Event, 
+    subscriptions: Subscription[],
+    pushoverEmail: string,
+    onSubscriptionUpdate: (subscriptions: Subscription[], pushoverEmail: string) => void,
+}) {
+    const getEventId = (e: Event) => `event-${e.title}-${e.date}-${e.time}`.replace(/\s+/g, '-');
+    const getCategoryId = (e: Event) => `category-${e.category}`.replace(/\s+/g, '-');
+
+    const [localPushoverEmail, setLocalPushoverEmail] = useState(pushoverEmail);
+    const [notifyAt, setNotifyAt] = useState("0"); // Default: "Al comenzar"
+    const [tutorialOpen, setTutorialOpen] = useState(false);
+
+    const eventSub = useMemo(() => subscriptions.find(s => s.id === getEventId(event)), [subscriptions, event]);
+    const categorySub = useMemo(() => subscriptions.find(s => s.id === getCategoryId(event)), [subscriptions, event]);
 
     useEffect(() => {
         if (isOpen) {
-            const storedEmail = localStorage.getItem('dpt_notification_email');
-            if (storedEmail) {
-                setEmail(storedEmail);
+            setLocalPushoverEmail(pushoverEmail);
+            // If there's a subscription for this event, pre-fill the notification time
+            if (eventSub) {
+                setNotifyAt(String(eventSub.notifyAt));
+            } else {
+                setNotifyAt("0"); // Reset to default if no specific sub
             }
         }
-    }, [isOpen]);
+    }, [isOpen, pushoverEmail, eventSub]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (email) {
-            localStorage.setItem('dpt_notification_email', email);
-            onSubscribe(event, email);
+    const handleSubscription = (type: 'event' | 'category') => {
+        if (!localPushoverEmail) {
+            alert("Por favor, ingresa tu dirección de correo de Pushover.");
+            return;
         }
+
+        const id = type === 'event' ? getEventId(event) : getCategoryId(event);
+        let newSubscriptions = [...subscriptions];
+
+        if (newSubscriptions.some(sub => sub.id === id)) {
+            // Unsubscribe
+            newSubscriptions = newSubscriptions.filter(sub => sub.id !== id);
+        } else {
+            // Subscribe or Update
+            const newSub: Subscription = {
+                id,
+                type,
+                title: type === 'event' ? event.title : event.category,
+                notifyAt: parseInt(notifyAt, 10),
+            };
+            const existingIndex = newSubscriptions.findIndex(s => s.id === id);
+            if (existingIndex > -1) {
+                newSubscriptions[existingIndex] = newSub; // Update existing
+            } else {
+                newSubscriptions.push(newSub); // Add new
+            }
+        }
+        onSubscriptionUpdate(newSubscriptions, localPushoverEmail);
     };
-    
-    const handleUnsubscribe = () => {
-       onSubscribe(event, 'unsubscribe'); // Pass a special value to indicate unsubscription
-    }
+
+    const handleEventToggle = () => handleSubscription('event');
+    const handleCategoryToggle = () => handleSubscription('category');
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
+             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Recibir Notificación</DialogTitle>
+                    <DialogTitle>Configurar Notificaciones</DialogTitle>
                     <DialogDescription>
-                        {isSubscribed 
-                            ? `Ya estás suscrito a las notificaciones para "${event.title}".`
-                            : `Ingresa tu correo para recibir un recordatorio cuando "${event.title}" esté por comenzar.`
-                        }
+                        Recibe alertas push para no perderte nada. Funciona con <Button variant="link" className="p-0 h-auto" onClick={() => setTutorialOpen(true)}>Pushover</Button>.
                     </DialogDescription>
                 </DialogHeader>
-                {!isSubscribed ? (
-                    <form onSubmit={handleSubmit}>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <label htmlFor="email" className="text-right">
-                                    Correo
-                                </label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="col-span-3"
-                                    placeholder="tu@correo.com"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button type="submit">Suscribirme</Button>
-                        </DialogFooter>
-                    </form>
-                ) : (
-                    <DialogFooter>
-                       <Button variant="destructive" onClick={handleUnsubscribe}>Eliminar Suscripción</Button>
-                    </DialogFooter>
-                )}
+                
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="pushover-email" className="text-right col-span-1">
+                            Pushover
+                        </Label>
+                        <Input
+                            id="pushover-email"
+                            type="email"
+                            value={localPushoverEmail}
+                            onChange={(e) => setLocalPushoverEmail(e.target.value)}
+                            className="col-span-3"
+                            placeholder="tu.usuario+XXXX@api.pushover.net"
+                            required
+                        />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="notify-at" className="text-right col-span-1">
+                           Notificar
+                        </Label>
+                         <Select onValueChange={setNotifyAt} defaultValue={notifyAt} value={notifyAt}>
+                             <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Seleccionar hora..." />
+                             </SelectTrigger>
+                             <SelectContent>
+                                 <SelectItem value="0">Al comenzar</SelectItem>
+                                 <SelectItem value="5">5 minutos antes</SelectItem>
+                                 <SelectItem value="15">15 minutos antes</SelectItem>
+                                 <SelectItem value="30">30 minutos antes</SelectItem>
+                                 <SelectItem value="60">1 hora antes</SelectItem>
+                             </SelectContent>
+                         </Select>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                     <Button
+                        onClick={handleEventToggle}
+                        variant={eventSub ? 'destructive' : 'default'}
+                        className="w-full"
+                        disabled={!localPushoverEmail}
+                    >
+                        {eventSub ? `Anular suscripción a "${event.title}"` : `Suscribirme a "${event.title}"`}
+                    </Button>
+                    <Button
+                        onClick={handleCategoryToggle}
+                        variant={categorySub ? 'destructive' : 'secondary'}
+                        className="w-full"
+                        disabled={!localPushoverEmail}
+                    >
+                        {categorySub ? `Anular suscripción a "${event.category}"` : `Suscribirme a todo "${event.category}"`}
+                    </Button>
+                </div>
+                 
+                 <Dialog open={tutorialOpen} onOpenChange={setTutorialOpen}>
+                     <DialogContent>
+                         <DialogHeader>
+                            <DialogTitle>¿Cómo usar las notificaciones con Pushover?</DialogTitle>
+                         </DialogHeader>
+                         <div className="text-sm text-muted-foreground space-y-4 py-4">
+                             <p>Para recibir notificaciones push en tu teléfono, usamos un servicio gratuito y confiable llamado <a href="https://pushover.net" target="_blank" rel="noopener noreferrer" className="text-primary underline">Pushover</a>. Solo necesitas seguir estos 3 simples pasos:</p>
+                             <ol className="list-decimal list-inside space-y-2">
+                                 <li><strong>Descarga la App:</strong> Instala la aplicación "Pushover Notifications" desde la <a href="https://apps.apple.com/us/app/pushover-notifications/id506088175" target="_blank" rel="noopener noreferrer" className="text-primary underline">App Store</a> (para iPhone) o <a href="https://play.google.com/store/apps/details?id=net.superblock.pushover" target="_blank" rel="noopener noreferrer" className="text-primary underline">Google Play</a> (para Android) y crea una cuenta.</li>
+                                 <li><strong>Encuentra tu Email de Pushover:</strong> Una vez registrado, la aplicación te asignará una dirección de correo electrónico especial. La encontrarás en la pantalla principal de la app o en tu perfil en el sitio web de Pushover. Tiene un formato como `tu.usuario+XXXX@api.pushover.net`.</li>
+                                 <li><strong>Pega tu Email aquí:</strong> Copia esa dirección de email completa y pégala en el campo "Pushover" en esta pantalla.</li>
+                             </ol>
+                             <p className="font-bold text-foreground">¡Y listo! Cada vez que te suscribas a un evento, nosotros le enviaremos un correo a esa dirección y Pushover lo convertirá en una notificación push instantánea en tu teléfono.</p>
+                         </div>
+                         <DialogFooter>
+                            <Button onClick={() => setTutorialOpen(false)}>Entendido</Button>
+                         </DialogFooter>
+                     </DialogContent>
+                 </Dialog>
             </DialogContent>
         </Dialog>
     );
