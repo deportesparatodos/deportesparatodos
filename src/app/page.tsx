@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1817,7 +1816,7 @@ function HomePageContent() {
         </div>
        )}
         <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
-            <header className="sticky top-0 z-30 flex h-[60px] w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
+            <header className="sticky top-0 z-30 flex w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm h-[60px]">
                 {pageTitle}
                  <div className={cn(
                     "flex items-center justify-end gap-1 px-2 md:px-4 flex-1",
@@ -2281,5 +2280,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
-    
