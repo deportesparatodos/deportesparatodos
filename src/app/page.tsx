@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, Bell } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -51,6 +51,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NotificationManager, type Subscription } from '@/components/notification-manager';
 
 
 interface StreamedMatch {
@@ -215,6 +216,7 @@ function HomePageContent() {
   const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
   const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
+  const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -1169,6 +1171,11 @@ function HomePageContent() {
           initialSelection={selectedEvents}
           initialOrder={viewOrder}
         />
+        <NotificationManager
+          open={notificationManagerOpen}
+          onOpenChange={setNotificationManagerOpen}
+          allCategories={categories}
+        />
         <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
            <DialogContent className="sm:max-w-md p-0" hideClose={true}>
               <DialogHeader className="sr-only">
@@ -1326,6 +1333,7 @@ function HomePageContent() {
                   setAddEventsDialogOpen(true);
                 }}
                 onSchedule={() => setScheduleManagerOpen(true)}
+                onNotification={() => setNotificationManagerOpen(true)}
             />
 
             {isChatEnabled && (
@@ -1460,6 +1468,10 @@ function HomePageContent() {
                             />
                         </SheetHeader>
                         <div className="p-4 space-y-2">
+                            <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { setNotificationManagerOpen(true); setSideMenuOpen(false); }}>
+                                <Bell />
+                                Notificaciones
+                            </Button>
                             <Dialog>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" className="w-full justify-start gap-2">
@@ -1970,6 +1982,11 @@ function HomePageContent() {
             updateAllEvents={setEvents}
             isFullScreen={isFullScreen}
             setIsFullScreen={setIsFullScreen}
+        />
+        <NotificationManager
+          open={notificationManagerOpen}
+          onOpenChange={setNotificationManagerOpen}
+          allCategories={categories}
         />
     </div>
   );

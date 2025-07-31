@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play } from 'lucide-react';
+import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
@@ -31,6 +31,7 @@ interface CameraConfigurationProps {
   isViewPage: boolean;
   onAddEvent: () => void;
   onSchedule: () => void;
+  onNotification: () => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -49,6 +50,7 @@ export function CameraConfigurationComponent({
   isViewPage,
   onAddEvent,
   onSchedule,
+  onNotification,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -87,6 +89,10 @@ export function CameraConfigurationComponent({
           {isViewPage && (
             <SheetFooter className="p-4 border-t border-border flex-shrink-0">
               <div className="space-y-2 w-full">
+                <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { onNotification(); setSheetOpen(false); }}>
+                    <Bell />
+                    Notificaciones
+                </Button>
                 <Dialog>
                     <DialogTrigger asChild>
                         <Button variant="outline" className="w-full justify-start gap-2">

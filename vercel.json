@@ -4,15 +4,26 @@
     "src/app/api/streams/route.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "src/app/api/cron/route.ts": {
+      "maxDuration": 300,
+      "memory": 1024
     }
   },
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/api/streams/:path*",
       "destination": "/api/streams"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "env": {
-    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+    "RESEND_API_KEY": "re_K8qNK2bo_6MNsqN3M9NBaBkFBfnU4iKp4"
   }
 }
