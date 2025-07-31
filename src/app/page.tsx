@@ -247,6 +247,8 @@ function HomePageContent() {
 
   // Notification states
   const { toast } = useToast();
+  
+  const ablyClientRef = useRef<Ably.Realtime | null>(null);
 
   const cowEvent: Event = {
     title: "24/7 COWS",
@@ -259,63 +261,78 @@ function HomePageContent() {
   };
 
   const cleanupAbly = useCallback(() => {
-    if (ablyClient) {
-        ablyClient.close();
-        setAblyClient(null);
-        setAblyChannel(null);
-        setRemoteSessionId(null);
+    if (ablyClientRef.current) {
+        ablyClientRef.current.close();
+        ablyClientRef.current = null;
     }
-  }, [ablyClient]);
-
-  const handleStopRemoteControl = useCallback(() => {
-    if (remoteControlMode === 'controlling' && ablyChannel) {
-        ablyChannel.publish('control-update', { action: 'disconnect' });
-    }
-    cleanupAbly();
+    setAblyClient(null);
+    setAblyChannel(null);
+    setRemoteSessionId(null);
     setRemoteControlMode('inactive');
-    setIsViewMode(false);
-  }, [remoteControlMode, ablyChannel, cleanupAbly]);
+  }, []);
 
-
-  // Initialize Ably connection when mode is set to 'controlled'
+  // --- Ably Effects ---
   useEffect(() => {
-    if (remoteControlMode === 'controlled' && remoteSessionId && !ablyClient) {
-        const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=${remoteSessionId}` });
+    if (remoteControlMode === 'inactive' || !process.env.NEXT_PUBLIC_ABLY_API_KEY) return;
+    
+    if (!ablyClientRef.current && remoteSessionId) {
+      const client = new Ably.Realtime({ key: process.env.NEXT_PUBLIC_ABLY_API_KEY, clientId: `client-${Date.now()}`});
+      ablyClientRef.current = client;
+
+      client.connection.on('connected', () => {
+        const channel = client.channels.get(`remote-control:${remoteSessionId}`);
         setAblyClient(client);
+        setAblyChannel(channel);
 
-        client.connection.on('connected', () => {
-            const channel = client.channels.get(`remote-control:${remoteSessionId}`);
-            setAblyChannel(channel);
-
-            channel.subscribe('control-update', (message) => {
-                const { action, payload } = message.data;
-                if (action === 'updateState') {
-                    setSelectedEvents(payload.selectedEvents);
-                    setViewOrder(payload.viewOrder);
-                } else if (action === 'disconnect') {
-                    handleStopRemoteControl();
-                }
-            });
-            
-            const hasInitialEvents = selectedEvents.some(e => e !== null);
-            if (!hasInitialEvents) {
-                setSelectedEvents([cowEvent, ...Array(8).fill(null)]);
+        if (remoteControlMode === 'controlled') {
+          channel.subscribe('control-update', (message) => {
+            const { action, payload } = message.data;
+            if (action === 'updateState') {
+              setSelectedEvents(payload.selectedEvents || []);
+              setViewOrder(payload.viewOrder || []);
+            } else if (action === 'disconnect') {
+              cleanupAbly();
             }
-            setIsViewMode(true);
-        });
-
-        client.connection.on('failed', (error) => {
-            toast({ variant: "destructive", title: "Error de Conexión", description: `No se pudo conectar al servicio de control remoto: ${error.reason}` });
-            handleStopRemoteControl();
-        });
-    }
-
-    return () => {
-        if (remoteControlMode !== 'controlled') {
-            cleanupAbly();
+          });
+          const hasInitialEvents = selectedEvents.some(e => e !== null);
+          if (!hasInitialEvents) {
+              setSelectedEvents([cowEvent, ...Array(8).fill(null)]);
+          }
+          setIsViewMode(true);
+        } else if (remoteControlMode === 'controlling') {
+            const initialPayload = {
+              action: 'updateState',
+              payload: { selectedEvents, viewOrder },
+            };
+            channel.publish(initialPayload.action, initialPayload);
         }
+      });
+
+      client.connection.on('failed', (error) => {
+        toast({ variant: "destructive", title: "Error de Conexión", description: `No se pudo conectar al servicio de control remoto: ${error.reason}` });
+        cleanupAbly();
+      });
+    }
+    
+    return () => {
+       if (remoteControlMode === 'inactive' && ablyClientRef.current) {
+           cleanupAbly();
+       }
     };
-  }, [remoteControlMode, remoteSessionId, ablyClient, handleStopRemoteControl, toast, selectedEvents, cowEvent]);
+  }, [remoteControlMode, remoteSessionId, cleanupAbly, toast, cowEvent, selectedEvents, viewOrder]);
+
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (ablyClientRef.current && ablyChannel) {
+          ablyChannel.publish('control-update', { action: 'disconnect' });
+          cleanupAbly();
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ablyChannel]);
+
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -1189,18 +1206,19 @@ function HomePageContent() {
   if (remoteControlMode === 'controlling') {
     return (
       <RemoteControlView 
-        ablyClient={ablyClient}
         ablyChannel={ablyChannel}
-        onStop={handleStopRemoteControl}
+        onStop={cleanupAbly}
         allEvents={events}
         allChannels={channels}
         updateAllEvents={setEvents}
+        initialEvents={selectedEvents}
+        initialOrder={viewOrder}
       />
     )
   }
 
   if (remoteControlMode === 'controlled') {
-     return <ControlledDeviceView onStop={handleStopRemoteControl} sessionId={remoteSessionId} />;
+     return <ControlledDeviceView onStop={cleanupAbly} sessionId={remoteSessionId} />;
   }
 
 

@@ -19,7 +19,7 @@ import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
 import { LayoutConfigurator } from './layout-configurator';
 import { AddEventsDialog } from '@/app/page';
-import Ably from 'ably';
+import type Ably from 'ably';
 
 // --- Main Dialog to start a remote session ---
 export function RemoteControlDialog({
@@ -30,15 +30,14 @@ export function RemoteControlDialog({
   setRemoteSessionId: (id: string | null) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [view, setView] = useState<'main' | 'connect' | 'control'>('main');
+  const [view, setView] = useState<'main' | 'controlled' | 'controlling'>('main');
   const [isLoading, setIsLoading] = useState(false);
   const [code, setCode] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const { toast } = useToast();
 
-  const handleCreateSession = useCallback(async () => {
+  const handleCreateSession = useCallback(() => {
     setIsLoading(true);
-    // Generate a simple 4-digit code on the client
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedCode(newCode);
     setRemoteSessionId(newCode);
@@ -74,7 +73,7 @@ export function RemoteControlDialog({
   }, [isOpen]);
   
   useEffect(() => {
-    if (view === 'connect' && isOpen && !generatedCode) {
+    if (view === 'controlled' && isOpen && !generatedCode) {
       handleCreateSession();
     }
   }, [view, isOpen, generatedCode, handleCreateSession]);
@@ -90,22 +89,22 @@ export function RemoteControlDialog({
         <DialogHeader>
           <DialogTitle>Control Remoto</DialogTitle>
           <DialogDescription>
-            Controla la aplicación desde otro dispositivo o permite que otro dispositivo te controle.
+            Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.
           </DialogDescription>
         </DialogHeader>
 
         {view === 'main' && (
           <div className="grid gap-4 py-4">
-            <Button onClick={() => setView('control')} size="lg">
+            <Button onClick={() => setView('controlling')} size="lg">
               Controlar Otro Dispositivo
             </Button>
-            <Button onClick={() => setView('connect')} variant="outline" size="lg">
-              Conectar Control Remoto
+            <Button onClick={() => setView('controlled')} variant="outline" size="lg">
+              Conectar control remoto
             </Button>
           </div>
         )}
         
-        {view === 'connect' && (
+        {view === 'controlled' && (
           <div className="grid gap-4 py-4 text-center">
              <DialogDescription>
                 Introduce este código en el dispositivo que quieres usar como control:
@@ -115,10 +114,13 @@ export function RemoteControlDialog({
                     {isLoading ? <Loader2 className="h-10 w-10 animate-spin mx-auto" /> : generatedCode}
                 </p>
             </div>
+             <p className="text-xs text-muted-foreground pt-2">
+                Esta ventana se cerrará una vez que el control remoto se conecte.
+            </p>
           </div>
         )}
 
-        {view === 'control' && (
+        {view === 'controlling' && (
           <div className="grid gap-4 py-4">
             <Input
               placeholder="Introduce el código de 4 dígitos"
@@ -148,22 +150,24 @@ export function RemoteControlDialog({
 
 // --- View for the "Controlling" device (e.g., phone) ---
 export function RemoteControlView({
-  ablyClient,
   ablyChannel,
   onStop,
   allEvents,
   allChannels,
   updateAllEvents,
+  initialEvents,
+  initialOrder,
 }: {
-  ablyClient: Ably.Realtime | null;
   ablyChannel: Ably.Types.RealtimeChannelPromise | null;
   onStop: () => void;
   allEvents: Event[];
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
+  initialEvents: (Event|null)[],
+  initialOrder: number[],
 }) {
-    const [remoteEvents, setRemoteEvents] = useState<(Event | null)[]>(Array(9).fill(null));
-    const [remoteOrder, setRemoteOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
+    const [remoteEvents, setRemoteEvents] = useState<(Event | null)[]>(initialEvents);
+    const [remoteOrder, setRemoteOrder] = useState<number[]>(initialOrder);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const { toast } = useToast();
@@ -179,18 +183,34 @@ export function RemoteControlView({
             });
         }
     }, [ablyChannel]);
+    
+    const handleEventsChange = (newEvents: (Event|null)[]) => {
+      setRemoteEvents(newEvents);
+      const newActiveIndexes = newEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
+      const oldActiveIndexes = remoteOrder.filter(i => newActiveIndexes.includes(i));
+      const fullOrder = Array.from({ length: 9 }, (_, i) => i);
+      const finalNewOrder = [...oldActiveIndexes, ...fullOrder.filter(i => !oldActiveIndexes.includes(i))];
+
+      setRemoteOrder(finalNewOrder);
+      updateRemoteState(newEvents, finalNewOrder);
+    }
 
     const handleRemove = (index: number) => {
         const newEvents = [...remoteEvents];
         newEvents[index] = null;
-        setRemoteEvents(newEvents);
-        const newOrder = remoteOrder.filter(i => newEvents[i] !== null);
-        updateRemoteState(newEvents, newOrder);
+        handleEventsChange(newEvents);
     };
 
     const handleOrderChange = (newOrder: number[]) => {
-        setRemoteOrder(newOrder);
-        updateRemoteState(remoteEvents, newOrder);
+      const fullNewOrder = [...newOrder];
+      const presentIndexes = new Set(newOrder);
+      for(let i=0; i<9; i++) {
+        if(!presentIndexes.has(i)) {
+            fullNewOrder.push(i);
+        }
+      }
+      setRemoteOrder(fullNewOrder);
+      updateRemoteState(remoteEvents, fullNewOrder);
     };
 
     const handleAddEvent = (event: Event, option: string) => {
@@ -199,15 +219,14 @@ export function RemoteControlView({
         const emptyIndex = newEvents.findIndex(e => e === null);
         if (emptyIndex !== -1) {
             newEvents[emptyIndex] = eventWithSelection;
-            setRemoteEvents(newEvents);
-            updateRemoteState(newEvents, remoteOrder);
+            handleEventsChange(newEvents);
         } else {
             toast({ title: 'Info', description: 'All 9 slots are full.' });
         }
         setAddEventsOpen(false);
     };
 
-    if (!ablyClient || !ablyChannel) {
+    if (!ablyChannel) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin" />
@@ -250,7 +269,7 @@ export function RemoteControlView({
               description: 'La programación no está disponible en modo control remoto.',
             })
           }
-          onNotificationManager={() =>
+          onNotification={() =>
             toast({
               title: 'Info',
               description: 'Las notificaciones no están disponibles en modo control remoto.',
@@ -300,3 +319,4 @@ export function ControlledDeviceView({ onStop, sessionId }: { onStop: () => void
     </div>
   );
 }
+
