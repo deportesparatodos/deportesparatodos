@@ -117,7 +117,7 @@ export async function GET() {
     const subscriptions: (Subscription | null)[] = await kv.mget(...subscriptionKeys);
     const validSubscriptions = subscriptions.filter((s): s is Subscription => s !== null);
 
-    const emailsToSend: { to: string; html: string, subject: string }[] = [];
+    const emailsToSend: { to: string[]; html: string; subject: string; from: string }[] = [];
 
     for (const sub of validSubscriptions) {
         const userEvents = sub.subscribedCategories.includes('all')
@@ -135,7 +135,8 @@ export async function GET() {
 
             const emailHtml = generateEmailHtml(eventsByCategory);
             emailsToSend.push({
-                to: sub.email,
+                from: 'Deportes para Todos <onboarding@resend.dev>',
+                to: [sub.email],
                 subject: `📅 Tus eventos para hoy en Deportes para Todos`,
                 html: emailHtml,
             });
@@ -143,10 +144,7 @@ export async function GET() {
     }
 
     if (emailsToSend.length > 0) {
-        await Promise.all(emailsToSend.map(email => resend.emails.send({
-            from: 'onboarding@resend.dev',
-            ...email
-        })));
+      await resend.batch.send(emailsToSend);
     }
 
     return NextResponse.json({ message: `Processed ${validSubscriptions.length} subscriptions and sent ${emailsToSend.length} emails.` });

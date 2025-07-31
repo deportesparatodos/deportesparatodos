@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     const emailHtml = generateEmailHtml(eventsByCategory);
 
     await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'Deportes para Todos <onboarding@resend.dev>',
       to: email,
       subject: `🔔 Notificación de Prueba de Deportes para Todos`,
       html: emailHtml,
