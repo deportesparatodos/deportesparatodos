@@ -134,17 +134,23 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
       return;
     }
     setIsSendingTest(true);
+
+    const testSubscription = {
+      email,
+      subscribedCategories: subscriptionType === 'all' ? ['all'] : selectedCategories,
+    };
+
     try {
       const response = await fetch('/api/notifications/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(testSubscription),
       });
 
       if (response.ok) {
         toast({
           title: '¡Prueba Enviada!',
-          description: 'Revisa tu dispositivo para confirmar la recepción de la notificación.',
+          description: 'Revisa tu bandeja de entrada para confirmar la recepción de la notificación.',
         });
       } else {
          const errorData = await response.json();
