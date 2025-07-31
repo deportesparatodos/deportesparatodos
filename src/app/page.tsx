@@ -274,13 +274,14 @@ function HomePageContent() {
     setRemoteControlMode('inactive');
   }, [ablyChannel]);
 
-  useEffect(() => {
+useEffect(() => {
     if (remoteControlMode !== 'inactive' && !ablyClientRef.current) {
-        const client = new Ably.Realtime({ authUrl: '/api/ably', clientId: `client-${Date.now()}` });
+        const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
         ablyClientRef.current = client;
         setAblyClient(client);
 
         client.connection.on('failed', (error) => {
+            console.error("Ably connection failed:", error);
             toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
             cleanupAbly();
         });
@@ -291,30 +292,34 @@ function HomePageContent() {
     }
 }, [remoteControlMode, cleanupAbly, toast]);
 
+
 useEffect(() => {
     if (ablyClient && remoteSessionId && remoteControlMode === 'controlled') {
         const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
         setAblyChannel(channel);
 
-        channel.subscribe('control-update', (message) => {
+        const messageListener = (message: any) => {
             const { action, payload } = message.data;
             if (action === 'updateState') {
                 setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
                 setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
+            } else if (action === 'connect') {
+                 // The controller has connected, now we can enter view mode
+                 setIsViewMode(true);
             } else if (action === 'disconnect') {
                 cleanupAbly();
                 setIsViewMode(false); // Exit view mode on disconnect
             }
-        });
+        };
 
-        setIsViewMode(true);
-
+        channel.subscribe(messageListener);
+        
         return () => {
-            channel.unsubscribe();
+            channel.unsubscribe(messageListener);
         };
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyClient, remoteSessionId, remoteControlMode, cleanupAbly]);
+}, [ablyClient, remoteSessionId, remoteControlMode]);
 
 
 useEffect(() => {
@@ -322,13 +327,23 @@ useEffect(() => {
         const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
         setAblyChannel(channel);
         
-        // Initial state sync
-        const eventsToSend = selectedEvents.some(e => e !== null) ? selectedEvents : [cowEvent, ...Array(8).fill(null)];
-        
-        channel.publish('control-update', {
-            action: 'updateState',
-            payload: { selectedEvents: eventsToSend, viewOrder },
-        });
+        const initialSync = async () => {
+            try {
+                // Announce connection to the controlled device
+                await channel.publish('control-update', { action: 'connect' });
+
+                // Send initial state
+                const eventsToSend = selectedEvents.some(e => e !== null) ? selectedEvents : [cowEvent, ...Array(8).fill(null)];
+                await channel.publish('control-update', {
+                    action: 'updateState',
+                    payload: { selectedEvents: eventsToSend, viewOrder },
+                });
+            } catch (err) {
+                console.error("Failed to publish initial state:", err);
+                toast({ variant: 'destructive', title: 'Error de Sincronización', description: 'No se pudo enviar el estado inicial al dispositivo controlado.' });
+            }
+        };
+        initialSync();
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [ablyClient, remoteSessionId, remoteControlMode]);
@@ -986,11 +1001,15 @@ useEffect(() => {
   };
 
   const handleStartView = () => {
+    if (remoteControlMode === 'controlled') return; // Don't allow manual start if controlled
     setIsViewMode(true);
   };
   
   const handleStopView = () => {
     setIsViewMode(false);
+    if (remoteControlMode === 'controlled') {
+        cleanupAbly(); // Also clean up if we manually stop while controlled
+    }
     fetchEvents(false); // Check timestamp before fetching
   };
 
@@ -1228,12 +1247,6 @@ useEffect(() => {
       />
     )
   }
-
-  if (remoteControlMode === 'controlled') {
-     // The controlled view is now the standard view mode, driven by state from Ably
-     // No special component needed, just let the main `isViewMode` render logic take over
-  }
-
 
   if (!isInitialLoadDone) {
     return <LoadingScreen />;

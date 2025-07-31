@@ -43,7 +43,7 @@ export function RemoteControlDialog({
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedCode(newCode);
     setRemoteSessionId(newCode);
-    setRemoteControlMode('controlled');
+    setRemoteControlMode('controlled'); // Set the mode, but don't enter view mode yet
     setIsLoading(false);
   }, [setRemoteControlMode, setRemoteSessionId]);
 
@@ -76,6 +76,7 @@ export function RemoteControlDialog({
   }, [isOpen]);
   
   useEffect(() => {
+    // Automatically generate code when entering the 'controlled' view
     if (view === 'controlled' && isOpen && !generatedCode) {
       handleStartControlledSession();
     }
@@ -118,7 +119,7 @@ export function RemoteControlDialog({
                 </p>
             </div>
              <p className="text-xs text-muted-foreground pt-2">
-                Esta ventana se cerrará una vez que el control remoto se conecte.
+                Esperando conexión del control remoto...
             </p>
           </div>
         )}
