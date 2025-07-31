@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Youtube, Airplay } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -240,10 +240,10 @@ function HomePageContent() {
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
 
   // --- Remote Control States ---
-  const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null);
   const [ablyChannel, setAblyChannel] = useState<Ably.Types.RealtimeChannelPromise | null>(null);
   const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
+  const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
 
   // Notification states
   const { toast } = useToast();
@@ -260,7 +260,10 @@ function HomePageContent() {
     selectedOption: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c"
   };
 
-  const cleanupAbly = useCallback(() => {
+   const cleanupAbly = useCallback(() => {
+    if (ablyChannel) {
+        ablyChannel.detach();
+    }
     if (ablyClientRef.current) {
         ablyClientRef.current.close();
         ablyClientRef.current = null;
@@ -269,57 +272,64 @@ function HomePageContent() {
     setAblyChannel(null);
     setRemoteSessionId(null);
     setRemoteControlMode('inactive');
-  }, []);
+  }, [ablyChannel]);
 
-  // --- Ably Effects ---
   useEffect(() => {
-    if (remoteControlMode === 'inactive' || !process.env.NEXT_PUBLIC_ABLY_API_KEY) return;
-    
-    if (!ablyClientRef.current && remoteSessionId) {
-      const client = new Ably.Realtime({ key: process.env.NEXT_PUBLIC_ABLY_API_KEY, clientId: `client-${Date.now()}`});
-      ablyClientRef.current = client;
-
-      client.connection.on('connected', () => {
-        const channel = client.channels.get(`remote-control:${remoteSessionId}`);
+    if (remoteControlMode !== 'inactive' && !ablyClientRef.current) {
+        const client = new Ably.Realtime({ authUrl: '/api/ably', clientId: `client-${Date.now()}` });
+        ablyClientRef.current = client;
         setAblyClient(client);
+
+        client.connection.on('failed', (error) => {
+            toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
+            cleanupAbly();
+        });
+    }
+
+    if (remoteControlMode === 'inactive' && ablyClientRef.current) {
+        cleanupAbly();
+    }
+}, [remoteControlMode, cleanupAbly, toast]);
+
+useEffect(() => {
+    if (ablyClient && remoteSessionId && remoteControlMode === 'controlled') {
+        const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
         setAblyChannel(channel);
 
-        if (remoteControlMode === 'controlled') {
-          channel.subscribe('control-update', (message) => {
+        channel.subscribe('control-update', (message) => {
             const { action, payload } = message.data;
             if (action === 'updateState') {
-              setSelectedEvents(payload.selectedEvents || []);
-              setViewOrder(payload.viewOrder || []);
+                setSelectedEvents(payload.selectedEvents || []);
+                setViewOrder(payload.viewOrder || []);
             } else if (action === 'disconnect') {
-              cleanupAbly();
+                cleanupAbly();
             }
-          });
-          const hasInitialEvents = selectedEvents.some(e => e !== null);
-          if (!hasInitialEvents) {
-              setSelectedEvents([cowEvent, ...Array(8).fill(null)]);
-          }
-          setIsViewMode(true);
-        } else if (remoteControlMode === 'controlling') {
-            const initialPayload = {
-              action: 'updateState',
-              payload: { selectedEvents, viewOrder },
-            };
-            channel.publish(initialPayload.action, initialPayload);
-        }
-      });
+        });
 
-      client.connection.on('failed', (error) => {
-        toast({ variant: "destructive", title: "Error de Conexión", description: `No se pudo conectar al servicio de control remoto: ${error.reason}` });
-        cleanupAbly();
-      });
+        const hasInitialEvents = selectedEvents.some(e => e !== null);
+        if (!hasInitialEvents) {
+            setSelectedEvents([cowEvent, ...Array(8).fill(null)]);
+        }
+        setIsViewMode(true);
+
+        return () => {
+            channel.unsubscribe();
+        };
     }
-    
-    return () => {
-       if (remoteControlMode === 'inactive' && ablyClientRef.current) {
-           cleanupAbly();
-       }
-    };
-  }, [remoteControlMode, remoteSessionId, cleanupAbly, toast, cowEvent, selectedEvents, viewOrder]);
+}, [ablyClient, remoteSessionId, remoteControlMode, cleanupAbly, cowEvent, selectedEvents, viewOrder]);
+
+useEffect(() => {
+    if (ablyClient && remoteSessionId && remoteControlMode === 'controlling') {
+        const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
+        setAblyChannel(channel);
+        
+        // Initial state sync
+        channel.publish('control-update', {
+            action: 'updateState',
+            payload: { selectedEvents, viewOrder },
+        });
+    }
+}, [ablyClient, remoteSessionId, remoteControlMode, selectedEvents, viewOrder]);
 
 
   // Cleanup effect
@@ -1995,6 +2005,7 @@ function HomePageContent() {
                             <RemoteControlDialog 
                               setRemoteControlMode={setRemoteControlMode}
                               setRemoteSessionId={setRemoteSessionId}
+                              ablyClient={ablyClient}
                             />
 
                             <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>

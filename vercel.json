@@ -12,6 +12,9 @@
     "src/app/api/notifications/test/route.ts": {
       "maxDuration": 60,
       "memory": 512
+    },
+     "src/app/api/ably/route.ts": {
+      "maxDuration": 10
     }
   },
   "rewrites": [

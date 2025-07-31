@@ -23,9 +23,11 @@ import type Ably from 'ably';
 
 // --- Main Dialog to start a remote session ---
 export function RemoteControlDialog({
+  ablyClient,
   setRemoteControlMode,
   setRemoteSessionId,
 }: {
+  ablyClient: Ably.Realtime | null;
   setRemoteControlMode: (mode: 'inactive' | 'controlling' | 'controlled') => void;
   setRemoteSessionId: (id: string | null) => void;
 }) {
@@ -36,21 +38,30 @@ export function RemoteControlDialog({
   const [generatedCode, setGeneratedCode] = useState('');
   const { toast } = useToast();
 
-  const handleCreateSession = useCallback(() => {
+  const handleStartControlledSession = useCallback(() => {
+    if (!ablyClient) return;
     setIsLoading(true);
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedCode(newCode);
     setRemoteSessionId(newCode);
     setRemoteControlMode('controlled');
     setIsLoading(false);
-  }, [setRemoteControlMode, setRemoteSessionId]);
+  }, [ablyClient, setRemoteControlMode, setRemoteSessionId]);
 
-  const handleConnectToSession = () => {
+  const handleStartControllingSession = () => {
     if (!code || code.length !== 4) {
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Por favor, introduce un código de 4 dígitos válido.',
+      });
+      return;
+    }
+    if (!ablyClient) {
+      toast({
+        variant: 'destructive',
+        title: 'Error de Conexión',
+        description: 'No se pudo inicializar el servicio de control remoto.',
       });
       return;
     }
@@ -60,7 +71,7 @@ export function RemoteControlDialog({
     setIsOpen(false);
     setIsLoading(false);
   };
-
+  
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
@@ -74,9 +85,9 @@ export function RemoteControlDialog({
   
   useEffect(() => {
     if (view === 'controlled' && isOpen && !generatedCode) {
-      handleCreateSession();
+      handleStartControlledSession();
     }
-  }, [view, isOpen, generatedCode, handleCreateSession]);
+  }, [view, isOpen, generatedCode, handleStartControlledSession]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -129,7 +140,7 @@ export function RemoteControlDialog({
               maxLength={4}
               className="text-center text-2xl h-14 tracking-widest font-mono"
             />
-            <Button onClick={handleConnectToSession} disabled={isLoading} size="lg">
+            <Button onClick={handleStartControllingSession} disabled={isLoading} size="lg">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Conectar
             </Button>
