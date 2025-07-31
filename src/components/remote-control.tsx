@@ -5,15 +5,15 @@ import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import {
   Dialog,
+  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, Youtube, X } from 'lucide-react';
+import { Loader2, Youtube, X, Airplay } from 'lucide-react';
 import type { RemoteSession } from '@/app/api/remote/route';
 import { useToast } from '@/hooks/use-toast';
 import { LayoutConfigurator } from './layout-configurator';
@@ -49,7 +49,7 @@ export function RemoteControlDialog({ setRemoteControlMode, setRemoteSession }: 
     }
     setIsLoading(false);
   };
-
+  
   const handleConnectToSession = async () => {
     if (!code || code.length !== 4) {
         toast({ variant: 'destructive', title: 'Error', description: 'Please enter a valid 4-digit code.' });
@@ -80,11 +80,17 @@ export function RemoteControlDialog({ setRemoteControlMode, setRemoteSession }: 
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (view === 'connect') {
+      handleCreateSession();
+    }
+  }, [view]);
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
-          <Youtube />
+          <Airplay />
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -96,16 +102,11 @@ export function RemoteControlDialog({ setRemoteControlMode, setRemoteSession }: 
         </DialogHeader>
         {view === 'main' && (
           <div className="grid gap-4 py-4">
-            <Button onClick={() => setView('connect')} size="lg">Conectar Control Remoto</Button>
-            <Button onClick={() => setView('control')} variant="outline" size="lg">Controlar este Dispositivo</Button>
-          </div>
-        )}
-        {view === 'connect' && (
-          <div className="py-4">
-             <Button onClick={handleCreateSession} disabled={isLoading} className="w-full" size="lg">
+            <Button onClick={() => setView('connect')} size="lg" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Generar Código de Control
+                Conectar Control Remoto
             </Button>
+            <Button onClick={() => setView('control')} variant="outline" size="lg">Controlar Otro Dispositivo</Button>
           </div>
         )}
         {view === 'control' && (
