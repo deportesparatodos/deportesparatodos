@@ -39,14 +39,13 @@ export function RemoteControlDialog({
   const { toast } = useToast();
 
   const handleStartControlledSession = useCallback(() => {
-    if (!ablyClient) return;
     setIsLoading(true);
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedCode(newCode);
     setRemoteSessionId(newCode);
     setRemoteControlMode('controlled');
     setIsLoading(false);
-  }, [ablyClient, setRemoteControlMode, setRemoteSessionId]);
+  }, [setRemoteControlMode, setRemoteSessionId]);
 
   const handleStartControllingSession = () => {
     if (!code || code.length !== 4) {
@@ -57,14 +56,7 @@ export function RemoteControlDialog({
       });
       return;
     }
-    if (!ablyClient) {
-      toast({
-        variant: 'destructive',
-        title: 'Error de Conexión',
-        description: 'No se pudo inicializar el servicio de control remoto.',
-      });
-      return;
-    }
+    
     setIsLoading(true);
     setRemoteSessionId(code);
     setRemoteControlMode('controlling');
@@ -280,7 +272,7 @@ export function RemoteControlView({
               description: 'La programación no está disponible en modo control remoto.',
             })
           }
-          onNotification={() =>
+          onNotificationManager={() =>
             toast({
               title: 'Info',
               description: 'Las notificaciones no están disponibles en modo control remoto.',
@@ -331,3 +323,4 @@ export function ControlledDeviceView({ onStop, sessionId }: { onStop: () => void
   );
 }
 
+    
