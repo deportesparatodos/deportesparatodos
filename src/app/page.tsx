@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, Bell } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -39,6 +39,7 @@ import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +52,10 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NotificationManager, type Subscription } from '@/components/notification-manager';
+import { NotificationManager } from '@/components/notification-manager';
+import type { Subscription } from '@/components/notification-manager';
+import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 interface StreamedMatch {
@@ -87,14 +91,6 @@ interface AgendaEvent {
   image: string;
   status: string;
 }
-
-export interface Subscription {
-  id: string; // `event-{title}-{date}-{time}` or `category-{name}`
-  type: 'event' | 'category';
-  title: string; // Event title or category name
-  notifyAt: number; // Minutes before event to notify
-}
-
 
 const channels247: Event[] = [
   {
@@ -237,61 +233,7 @@ function HomePageContent() {
   const { toast } = useToast();
   const [notificationEvent, setNotificationEvent] = useState<Event | null>(null);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
-  const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [pushoverEmail, setPushoverEmail] = useState('');
 
-  // Fetch subscriptions from backend on initial load
-   useEffect(() => {
-    const fetchUserSubscriptions = async () => {
-        const storedEmail = localStorage.getItem('dpt_pushover_email');
-        if (storedEmail) {
-            setPushoverEmail(storedEmail);
-            try {
-                const response = await fetch(`/api/subscriptions?email=${encodeURIComponent(storedEmail)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setSubscriptions(data.subscriptions || []);
-                } else {
-                    console.error("Failed to fetch subscriptions");
-                }
-            } catch (error) {
-                console.error("Error fetching subscriptions:", error);
-            }
-        }
-    };
-    fetchUserSubscriptions();
-  }, []);
-
-  // Update subscriptions on the backend whenever they change locally
-  const handleSubscriptionUpdate = async (newSubscriptions: Subscription[], newPushoverEmail: string) => {
-    setSubscriptions(newSubscriptions);
-    setPushoverEmail(newPushoverEmail);
-    
-    // Persist email in localStorage
-    if (newPushoverEmail) {
-        localStorage.setItem('dpt_pushover_email', newPushoverEmail);
-    } else {
-        localStorage.removeItem('dpt_pushover_email');
-    }
-
-    // Save to backend
-    if (newPushoverEmail) {
-      try {
-        await fetch('/api/subscriptions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pushoverEmail: newPushoverEmail, subscriptions: newSubscriptions }),
-        });
-        toast({ title: "¡Suscripciones guardadas!", description: "Tus preferencias de notificación han sido actualizadas." });
-      } catch (error) {
-        console.error("Failed to save subscriptions:", error);
-        toast({ variant: 'destructive', title: "Error", description: "No se pudieron guardar las preferencias." });
-      }
-    }
-    setNotificationDialogOpen(false);
-  };
-  
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
         return `grid-cols-1 grid-rows-${count > 0 ? count : 1}`;
@@ -1540,7 +1482,7 @@ function HomePageContent() {
                         </SheetHeader>
                         <div className="p-4 space-y-2">
                             <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { setNotificationManagerOpen(true); setSideMenuOpen(false); }}>
-                                <Bell />
+                                <BellRing />
                                 Notificaciones
                             </Button>
                             <Dialog>
@@ -2011,18 +1953,13 @@ function HomePageContent() {
                 isOpen={notificationDialogOpen}
                 onOpenChange={setNotificationDialogOpen}
                 event={notificationEvent}
-                subscriptions={subscriptions}
-                pushoverEmail={pushoverEmail}
-                onSubscriptionUpdate={handleSubscriptionUpdate}
             />
         )}
 
         <NotificationManager
             open={notificationManagerOpen}
             onOpenChange={setNotificationManagerOpen}
-            subscriptions={subscriptions}
-            pushoverEmail={pushoverEmail}
-            onSubscriptionUpdate={handleSubscriptionUpdate}
+            allCategories={categories}
         />
         
         {dialogEvent && (
@@ -2089,136 +2026,24 @@ function HomePageContent() {
 function NotificationDialog({ 
     isOpen, 
     onOpenChange, 
-    event, 
-    subscriptions,
-    pushoverEmail,
-    onSubscriptionUpdate,
+    event
 }: { 
     isOpen: boolean, 
     onOpenChange: (open: boolean) => void, 
-    event: Event, 
-    subscriptions: Subscription[],
-    pushoverEmail: string,
-    onSubscriptionUpdate: (subscriptions: Subscription[], pushoverEmail: string) => void,
+    event: Event
 }) {
-    const getEventId = (e: Event) => `event-${e.title}-${e.date}-${e.time}`.replace(/\s+/g, '-');
-    const getCategoryId = (e: Event) => `category-${e.category}`.replace(/\s+/g, '-');
-
-    const [localPushoverEmail, setLocalPushoverEmail] = useState(pushoverEmail);
-    const [notifyAt, setNotifyAt] = useState("30"); // Default: 30 minutes
     const [tutorialOpen, setTutorialOpen] = useState(false);
-
-    const eventSub = useMemo(() => subscriptions.find(s => s.id === getEventId(event)), [subscriptions, event]);
-    const categorySub = useMemo(() => subscriptions.find(s => s.id === getCategoryId(event)), [subscriptions, event]);
-
-    useEffect(() => {
-        if (isOpen) {
-            setLocalPushoverEmail(pushoverEmail);
-            // If there's a subscription for this event, pre-fill the notification time
-            if (eventSub) {
-                setNotifyAt(String(eventSub.notifyAt));
-            } else {
-                setNotifyAt("30"); // Reset to default if no specific sub
-            }
-        }
-    }, [isOpen, pushoverEmail, eventSub]);
-
-    const handleSubscription = (type: 'event' | 'category') => {
-        if (!localPushoverEmail) {
-            alert("Por favor, ingresa tu dirección de correo de Pushover.");
-            return;
-        }
-
-        const id = type === 'event' ? getEventId(event) : getCategoryId(event);
-        let newSubscriptions = [...subscriptions];
-
-        if (newSubscriptions.some(sub => sub.id === id)) {
-            // Unsubscribe
-            newSubscriptions = newSubscriptions.filter(sub => sub.id !== id);
-        } else {
-            // Subscribe or Update
-            const newSub: Subscription = {
-                id,
-                type,
-                title: type === 'event' ? event.title : event.category,
-                notifyAt: parseInt(notifyAt, 10),
-            };
-            const existingIndex = newSubscriptions.findIndex(s => s.id === id);
-            if (existingIndex > -1) {
-                newSubscriptions[existingIndex] = newSub; // Update existing
-            } else {
-                newSubscriptions.push(newSub); // Add new
-            }
-        }
-        onSubscriptionUpdate(newSubscriptions, localPushoverEmail);
-    };
-
-    const handleEventToggle = () => handleSubscription('event');
-    const handleCategoryToggle = () => handleSubscription('category');
-
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Configurar Notificaciones</DialogTitle>
+                    <DialogTitle>Funcionalidad en Desarrollo</DialogTitle>
                     <DialogDescription>
-                        Recibe alertas push para no perderte nada. Funciona con <Button variant="link" className="p-0 h-auto" onClick={() => setTutorialOpen(true)}>Pushover</Button>.
+                        Estamos trabajando para que pronto puedas recibir notificaciones.
                     </DialogDescription>
                 </DialogHeader>
                 
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="pushover-email" className="text-right col-span-1">
-                            Pushover
-                        </Label>
-                        <Input
-                            id="pushover-email"
-                            type="email"
-                            value={localPushoverEmail}
-                            onChange={(e) => setLocalPushoverEmail(e.target.value)}
-                            className="col-span-3"
-                            placeholder="tu.usuario+XXXX@api.pushover.net"
-                            required
-                        />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="notify-at" className="text-right col-span-1">
-                           Notificar
-                        </Label>
-                         <Select onValueChange={setNotifyAt} defaultValue={notifyAt} value={notifyAt}>
-                             <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Seleccionar hora..." />
-                             </SelectTrigger>
-                             <SelectContent>
-                                 <SelectItem value="0">Al comenzar</SelectItem>
-                                 <SelectItem value="30">30 minutos antes</SelectItem>
-                                 <SelectItem value="60">1 hora antes</SelectItem>
-                                 <SelectItem value="120">2 horas antes</SelectItem>
-                             </SelectContent>
-                         </Select>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                     <Button
-                        onClick={handleEventToggle}
-                        variant={eventSub ? 'destructive' : 'default'}
-                        className="w-full"
-                        disabled={!localPushoverEmail}
-                    >
-                        {eventSub ? `Anular suscripción a "${event.title}"` : `Suscribirme a "${event.title}"`}
-                    </Button>
-                    <Button
-                        onClick={handleCategoryToggle}
-                        variant={categorySub ? 'destructive' : 'secondary'}
-                        className="w-full"
-                        disabled={!localPushoverEmail}
-                    >
-                        {categorySub ? `Anular suscripción a "${event.category}"` : `Suscribirme a todo "${event.category}"`}
-                    </Button>
-                </div>
-                 
                  <Dialog open={tutorialOpen} onOpenChange={setTutorialOpen}>
                      <DialogContent>
                          <DialogHeader>
