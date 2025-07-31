@@ -41,8 +41,10 @@ export function RemoteControlDialog({
     // Generate a simple 4-digit code on the client
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedCode(newCode);
+    setRemoteSessionId(newCode);
+    setRemoteControlMode('controlled');
     setIsLoading(false);
-  }, []);
+  }, [setRemoteControlMode, setRemoteSessionId]);
 
   const handleConnectToSession = () => {
     if (!code || code.length !== 4) {
@@ -55,7 +57,7 @@ export function RemoteControlDialog({
     }
     setIsLoading(true);
     setRemoteSessionId(code);
-    setRemoteControlMode('controlled');
+    setRemoteControlMode('controlling');
     setIsOpen(false);
     setIsLoading(false);
   };
@@ -77,12 +79,6 @@ export function RemoteControlDialog({
     }
   }, [view, isOpen, generatedCode, handleCreateSession]);
 
-  const startControlling = () => {
-    setRemoteControlMode('controlling');
-    setRemoteSessionId(generatedCode);
-    setIsOpen(false);
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -100,11 +96,11 @@ export function RemoteControlDialog({
 
         {view === 'main' && (
           <div className="grid gap-4 py-4">
-            <Button onClick={() => setView('connect')} size="lg">
-              Conectar Control Remoto
-            </Button>
-            <Button onClick={() => setView('control')} variant="outline" size="lg">
+            <Button onClick={() => setView('control')} size="lg">
               Controlar Otro Dispositivo
+            </Button>
+            <Button onClick={() => setView('connect')} variant="outline" size="lg">
+              Conectar Control Remoto
             </Button>
           </div>
         )}
@@ -112,16 +108,13 @@ export function RemoteControlDialog({
         {view === 'connect' && (
           <div className="grid gap-4 py-4 text-center">
              <DialogDescription>
-                Introduce este código en el dispositivo que quieres controlar:
+                Introduce este código en el dispositivo que quieres usar como control:
             </DialogDescription>
             <div className="p-4 bg-muted rounded-lg">
                 <p className="text-4xl font-bold tracking-widest text-primary">
                     {isLoading ? <Loader2 className="h-10 w-10 animate-spin mx-auto" /> : generatedCode}
                 </p>
             </div>
-            <Button onClick={startControlling} size="lg">
-                Empezar a Controlar
-            </Button>
           </div>
         )}
 
@@ -155,40 +148,25 @@ export function RemoteControlDialog({
 
 // --- View for the "Controlling" device (e.g., phone) ---
 export function RemoteControlView({
+  ablyClient,
+  ablyChannel,
   onStop,
   allEvents,
   allChannels,
   updateAllEvents,
 }: {
+  ablyClient: Ably.Realtime | null;
+  ablyChannel: Ably.Types.RealtimeChannelPromise | null;
   onStop: () => void;
   allEvents: Event[];
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
 }) {
-    const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null);
-    const [ablyChannel, setAblyChannel] = useState<Ably.Types.RealtimeChannelPromise | null>(null);
-    const [sessionId, setSessionId] = useState<string | null>(null)
     const [remoteEvents, setRemoteEvents] = useState<(Event | null)[]>(Array(9).fill(null));
     const [remoteOrder, setRemoteOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const { toast } = useToast();
-
-    // Initialize Ably client and channel for the controlling device
-    useEffect(() => {
-        const clientId = `controller-${Math.random().toString(36).substr(2, 9)}`;
-        const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=${clientId}` });
-        setAblyClient(client);
-
-        client.connection.on('connected', () => {
-            const code = Math.floor(1000 + Math.random() * 9000).toString();
-            setSessionId(code);
-            const channel = client.channels.get(`remote-control:${code}`);
-            setAblyChannel(channel);
-        });
-        
-        return () => { client.close(); };
-    }, []);
 
     const updateRemoteState = useCallback((newEvents: (Event | null)[], newOrder: number[]) => {
         if (ablyChannel) {
@@ -229,11 +207,11 @@ export function RemoteControlView({
         setAddEventsOpen(false);
     };
 
-    if (!sessionId) {
+    if (!ablyClient || !ablyChannel) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin" />
-                <p className="mt-4 text-muted-foreground">Generando código de sesión...</p>
+                <p className="mt-4 text-muted-foreground">Conectando al servicio de control remoto...</p>
             </div>
         )
     }
@@ -244,8 +222,7 @@ export function RemoteControlView({
         <div className="text-center">
           <h1 className="text-lg font-bold">Control Remoto</h1>
           <p className="text-sm text-muted-foreground">
-            Código de Sesión:{' '}
-            <span className="font-mono text-primary">{sessionId}</span>
+            Sesión Conectada
           </p>
         </div>
         <Button variant="destructive" onClick={onStop}>

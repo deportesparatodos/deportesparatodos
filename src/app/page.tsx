@@ -315,7 +315,7 @@ function HomePageContent() {
             cleanupAbly();
         }
     };
-  }, [remoteControlMode, remoteSessionId, ablyClient, handleStopRemoteControl, toast]);
+  }, [remoteControlMode, remoteSessionId, ablyClient, handleStopRemoteControl, toast, selectedEvents, cowEvent]);
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -1189,6 +1189,8 @@ function HomePageContent() {
   if (remoteControlMode === 'controlling') {
     return (
       <RemoteControlView 
+        ablyClient={ablyClient}
+        ablyChannel={ablyChannel}
         onStop={handleStopRemoteControl}
         allEvents={events}
         allChannels={channels}
@@ -1971,6 +1973,7 @@ function HomePageContent() {
                             <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
                                 <Search />
                             </Button>
+                            
                             <RemoteControlDialog 
                               setRemoteControlMode={setRemoteControlMode}
                               setRemoteSessionId={setRemoteSessionId}
