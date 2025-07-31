@@ -7,8 +7,6 @@ import type { Event } from '@/components/event-carousel';
 
 export const dynamic = 'force-dynamic'; 
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 interface StreamedMatch {
   id: string;
   title: string;
@@ -97,6 +95,7 @@ const generateEmailHtml = (eventsByCategory: Record<string, Event[]>) => {
 };
 
 export async function GET() {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const allEvents = await fetchAllEvents();
     if (allEvents.length === 0) {

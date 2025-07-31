@@ -3,8 +3,6 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { Resend } from 'resend';
 import type { Event } from '@/components/event-carousel';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 interface StreamedMatch {
   id: string;
   title: string;
@@ -100,6 +98,7 @@ const generateEmailHtml = (eventsByCategory: Record<string, Event[]>) => {
 
 
 export async function POST(request: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const body = await request.json();
     const { email, subscribedCategories } = body;
