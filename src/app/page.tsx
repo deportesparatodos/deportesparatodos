@@ -303,6 +303,9 @@ useEffect(() => {
             if (action === 'updateState') {
                 setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
                 setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
+                setGridGap(payload.gridGap ?? 0);
+                setBorderColor(payload.borderColor ?? '#000000');
+                setIsChatEnabled(payload.isChatEnabled ?? true);
             } else if (action === 'connect') {
                  // The controller has connected, now we can enter view mode
                  setIsViewMode(true);
@@ -336,7 +339,13 @@ useEffect(() => {
                 const eventsToSend = selectedEvents.some(e => e !== null) ? selectedEvents : [cowEvent, ...Array(8).fill(null)];
                 await channel.publish('control-update', {
                     action: 'updateState',
-                    payload: { selectedEvents: eventsToSend, viewOrder },
+                    payload: { 
+                        selectedEvents: eventsToSend, 
+                        viewOrder,
+                        gridGap,
+                        borderColor,
+                        isChatEnabled,
+                    },
                 });
             } catch (err) {
                 console.error("Failed to publish initial state:", err);
@@ -358,7 +367,7 @@ useEffect(() => {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ablyChannel]);
+  }, [ablyChannel, remoteControlMode]);
 
 
   const getGridClasses = useCallback((count: number) => {
@@ -1244,6 +1253,9 @@ useEffect(() => {
         updateAllEvents={setEvents}
         initialEvents={selectedEvents}
         initialOrder={viewOrder}
+        initialGridGap={gridGap}
+        initialBorderColor={borderColor}
+        initialIsChatEnabled={isChatEnabled}
       />
     )
   }
@@ -2479,4 +2491,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-

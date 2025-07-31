@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -165,6 +165,7 @@ interface LayoutConfiguratorProps extends EventListManagementProps {
   onBorderColorChange: (value: string) => void;
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
+  onOpenChat?: () => void;
 }
 
 export function LayoutConfigurator({
@@ -174,6 +175,7 @@ export function LayoutConfigurator({
   onBorderColorChange,
   isChatEnabled,
   onIsChatEnabledChange,
+  onOpenChat,
   ...eventProps
 }: LayoutConfiguratorProps) {
   
@@ -241,18 +243,26 @@ export function LayoutConfigurator({
       <AccordionItem value="item-2" className="border rounded-lg px-4">
         <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
         <AccordionContent className="pt-2">
-            <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-            <div className="space-y-1.5 pr-4">
-              <Label>Activar Chat</Label>
-                <p className="text-xs text-muted-foreground">
-                Muestra u oculta el botón para abrir el chat en la vista de visualización.
-              </p>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-1.5 pr-4">
+                        <Label>Activar Chat</Label>
+                        <p className="text-xs text-muted-foreground">
+                            Muestra u oculta el botón para abrir el chat en la vista de visualización.
+                        </p>
+                    </div>
+                    <Switch
+                        checked={isChatEnabled}
+                        onCheckedChange={onIsChatEnabledChange}
+                    />
+                </div>
+                {onOpenChat && (
+                    <Button variant="outline" className="w-full" onClick={onOpenChat}>
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Abrir Chat
+                    </Button>
+                )}
             </div>
-            <Switch
-              checked={isChatEnabled}
-              onCheckedChange={onIsChatEnabledChange}
-            />
-          </div>
         </AccordionContent>
       </AccordionItem>
       
@@ -265,7 +275,3 @@ export function LayoutConfigurator({
     </Accordion>
   );
 }
-
-
-
-
