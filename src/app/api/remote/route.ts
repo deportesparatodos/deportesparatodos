@@ -1,5 +1,5 @@
 
-import { kv } from '@vercel/kv';
+import { createClient } from '@vercel/kv';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Event } from '@/components/event-carousel';
 
@@ -13,7 +13,7 @@ export interface RemoteSession {
 export const dynamic = 'force-dynamic';
 
 // Generate a random 4-digit code
-const generateCode = async (): Promise<string> => {
+const generateCode = async (kv: ReturnType<typeof createClient>): Promise<string> => {
     let code: string;
     let existingSession: RemoteSession | null;
     do {
@@ -25,8 +25,12 @@ const generateCode = async (): Promise<string> => {
 
 // POST - Create a new remote session
 export async function POST() {
+  const kv = createClient({
+      url: process.env.KV_REST_API_URL!,
+      token: process.env.KV_REST_API_TOKEN!,
+  });
   try {
-    const code = await generateCode();
+    const code = await generateCode(kv);
     const newSession: RemoteSession = {
       id: code,
       selectedEvents: Array(9).fill(null),
@@ -43,6 +47,10 @@ export async function POST() {
 
 // GET - Retrieve session state
 export async function GET(request: NextRequest) {
+    const kv = createClient({
+        url: process.env.KV_REST_API_URL!,
+        token: process.env.KV_REST_API_TOKEN!,
+    });
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -65,6 +73,10 @@ export async function GET(request: NextRequest) {
 
 // PUT - Update session state
 export async function PUT(request: NextRequest) {
+    const kv = createClient({
+        url: process.env.KV_REST_API_URL!,
+        token: process.env.KV_REST_API_TOKEN!,
+    });
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -99,6 +111,10 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - End a remote session
 export async function DELETE(request: NextRequest) {
+    const kv = createClient({
+        url: process.env.KV_REST_API_URL!,
+        token: process.env.KV_REST_API_TOKEN!,
+    });
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
