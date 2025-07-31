@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogTrigger,
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { Loader2, Youtube, X } from 'lucide-react';
