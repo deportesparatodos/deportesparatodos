@@ -177,6 +177,14 @@ const formula1StaticEvent: Event = {
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
+const normalizeCategory = (category: string): string => {
+    const lowerCategory = category.toLowerCase();
+    if (lowerCategory === 'football' || lowerCategory === 'fútbol' || lowerCategory === 'fútbol_cup') {
+        return 'Fútbol';
+    }
+    return category;
+};
+
 function HomePageContent() {
   const isMobile = useIsMobile();
   const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
@@ -324,7 +332,7 @@ function HomePageContent() {
           options: [], // Options will be fetched on demand
           sources: match.sources, 
           buttons: [],
-          category: categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1),
+          category: normalizeCategory(categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1)),
           language: '',
           date: format(zonedEventTime, 'yyyy-MM-dd'),
           source: 'streamed.su',
@@ -364,7 +372,7 @@ function HomePageContent() {
               options: [{ url: event.link, label: optionLabel.toUpperCase(), hd: false, language: '' }],
               sources: [],
               buttons: [],
-              category: event.category === 'Other' ? 'Otros' : event.category,
+              category: normalizeCategory(event.category === 'Other' ? 'Otros' : event.category),
               language: '',
               date: format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd'),
               source: 'streamtpglobal',
@@ -387,7 +395,7 @@ function HomePageContent() {
             options: streamOptions,
             sources: [],
             buttons: event.buttons,
-            category: 'Motor Sports',
+            category: normalizeCategory('Motor Sports'),
             language: event.language,
             date: event.date,
             source: event.source,

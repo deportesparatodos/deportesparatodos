@@ -12,6 +12,14 @@ interface StreamedMatch {
   date: number;
 }
 
+const normalizeCategory = (category: string): string => {
+    const lowerCategory = category.toLowerCase();
+    if (lowerCategory === 'football' || lowerCategory === 'fútbol' || lowerCategory === 'fútbol_cup') {
+        return 'Fútbol';
+    }
+    return category;
+};
+
 const fetchAllEvents = async (): Promise<Event[]> => {
     try {
         const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
@@ -36,7 +44,7 @@ const fetchAllEvents = async (): Promise<Event[]> => {
         return Array.from(allMatchesMap.values()).map(match => ({
             title: match.title,
             time: new Date(match.date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }),
-            category: categoryMap[match.category] || match.category,
+            category: normalizeCategory(categoryMap[match.category] || match.category),
             status: liveData.some(liveMatch => liveMatch.id === match.id) ? 'En Vivo' : 'Próximo',
             options: [],
             sources: [],
