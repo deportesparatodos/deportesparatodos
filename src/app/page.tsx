@@ -56,8 +56,8 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { RemoteSession } from './api/remote/route';
 import { RemoteControlDialog, RemoteControlView, ControlledDeviceView } from '@/components/remote-control';
+import Ably from 'ably';
 
 
 interface StreamedMatch {
@@ -239,62 +239,15 @@ function HomePageContent() {
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
 
-  // Remote Control States
+  // --- Remote Control States ---
   const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
-  const [remoteSession, setRemoteSession] = useState<RemoteSession | null>(null);
-  const remotePollingRef = useRef<NodeJS.Timeout | null>(null);
-  
+  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null);
+  const [ablyChannel, setAblyChannel] = useState<Ably.Types.RealtimeChannelPromise | null>(null);
+  const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
+
   // Notification states
   const { toast } = useToast();
 
-  // --- REMOTE CONTROL LOGIC ---
-  useEffect(() => {
-    const startPolling = (id: string) => {
-        if (remotePollingRef.current) clearInterval(remotePollingRef.current);
-        remotePollingRef.current = setInterval(async () => {
-            try {
-                const response = await fetch(`/api/remote?id=${id}`);
-                if (response.ok) {
-                    const session: RemoteSession = await response.json();
-                    setRemoteSession(session);
-                     if (remoteControlMode === 'controlled') {
-                        setSelectedEvents(session.selectedEvents);
-                        setViewOrder(session.viewOrder);
-                    }
-                } else {
-                    console.error("Session ended or not found");
-                    handleStopRemoteControl();
-                }
-            } catch (error) {
-                console.error("Error polling remote session:", error);
-                handleStopRemoteControl();
-            }
-        }, 2000); // Poll every 2 seconds
-    };
-
-    if (remoteSession?.id && (remoteControlMode === 'controlling' || remoteControlMode === 'controlled')) {
-        startPolling(remoteSession.id);
-    }
-
-    return () => {
-        if (remotePollingRef.current) {
-            clearInterval(remotePollingRef.current);
-        }
-    };
-  }, [remoteSession?.id, remoteControlMode]);
-
-  const handleStopRemoteControl = useCallback(async () => {
-    if (remotePollingRef.current) {
-        clearInterval(remotePollingRef.current);
-    }
-    if (remoteControlMode === 'controlling' && remoteSession?.id) {
-        await fetch(`/api/remote?id=${remoteSession.id}`, { method: 'DELETE' });
-    }
-    setRemoteControlMode('inactive');
-    setRemoteSession(null);
-    setIsViewMode(false); // Exit view mode on controlled device
-  }, [remoteControlMode, remoteSession?.id]);
-  
   const cowEvent: Event = {
     title: "24/7 COWS",
     time: "AHORA",
@@ -305,22 +258,64 @@ function HomePageContent() {
     selectedOption: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c"
   };
 
-  useEffect(() => {
-    if (remoteControlMode === 'controlled' && remoteSession) {
-        const hasEvents = remoteSession.selectedEvents.some(e => e !== null);
-        if (!hasEvents && !isViewMode) {
-            setSelectedEvents([cowEvent, ...Array(8).fill(null)]);
-            setIsViewMode(true);
-        } else if (hasEvents && !isViewMode) {
-             setIsViewMode(true);
-        } else if (!hasEvents && isViewMode) {
-            // This case might be when remote clears all events
-            // We can decide to show cows or exit view mode
-            setIsViewMode(false);
-        }
+  const cleanupAbly = useCallback(() => {
+    if (ablyClient) {
+        ablyClient.close();
+        setAblyClient(null);
+        setAblyChannel(null);
+        setRemoteSessionId(null);
     }
-  }, [remoteControlMode, remoteSession, isViewMode]);
+  }, [ablyClient]);
 
+  const handleStopRemoteControl = useCallback(() => {
+    if (remoteControlMode === 'controlling' && ablyChannel) {
+        ablyChannel.publish('control-update', { action: 'disconnect' });
+    }
+    cleanupAbly();
+    setRemoteControlMode('inactive');
+    setIsViewMode(false);
+  }, [remoteControlMode, ablyChannel, cleanupAbly]);
+
+
+  // Initialize Ably connection when mode is set to 'controlled'
+  useEffect(() => {
+    if (remoteControlMode === 'controlled' && remoteSessionId && !ablyClient) {
+        const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=${remoteSessionId}` });
+        setAblyClient(client);
+
+        client.connection.on('connected', () => {
+            const channel = client.channels.get(`remote-control:${remoteSessionId}`);
+            setAblyChannel(channel);
+
+            channel.subscribe('control-update', (message) => {
+                const { action, payload } = message.data;
+                if (action === 'updateState') {
+                    setSelectedEvents(payload.selectedEvents);
+                    setViewOrder(payload.viewOrder);
+                } else if (action === 'disconnect') {
+                    handleStopRemoteControl();
+                }
+            });
+            
+            const hasInitialEvents = selectedEvents.some(e => e !== null);
+            if (!hasInitialEvents) {
+                setSelectedEvents([cowEvent, ...Array(8).fill(null)]);
+            }
+            setIsViewMode(true);
+        });
+
+        client.connection.on('failed', (error) => {
+            toast({ variant: "destructive", title: "Error de Conexión", description: `No se pudo conectar al servicio de control remoto: ${error.reason}` });
+            handleStopRemoteControl();
+        });
+    }
+
+    return () => {
+        if (remoteControlMode !== 'controlled') {
+            cleanupAbly();
+        }
+    };
+  }, [remoteControlMode, remoteSessionId, ablyClient, handleStopRemoteControl, toast]);
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -1194,7 +1189,6 @@ function HomePageContent() {
   if (remoteControlMode === 'controlling') {
     return (
       <RemoteControlView 
-        session={remoteSession}
         onStop={handleStopRemoteControl}
         allEvents={events}
         allChannels={channels}
@@ -1204,7 +1198,7 @@ function HomePageContent() {
   }
 
   if (remoteControlMode === 'controlled') {
-     return <ControlledDeviceView onStop={handleStopRemoteControl} session={remoteSession} />;
+     return <ControlledDeviceView onStop={handleStopRemoteControl} sessionId={remoteSessionId} />;
   }
 
 
@@ -1979,7 +1973,7 @@ function HomePageContent() {
                             </Button>
                             <RemoteControlDialog 
                               setRemoteControlMode={setRemoteControlMode}
-                              setRemoteSession={setRemoteSession}
+                              setRemoteSessionId={setRemoteSessionId}
                             />
 
                             <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
