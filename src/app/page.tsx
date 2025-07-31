@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Youtube } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -56,6 +56,8 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { RemoteSession } from './api/remote/route';
+import { RemoteControlDialog, RemoteControlView, ControlledDeviceView } from '@/components/remote-control';
 
 
 interface StreamedMatch {
@@ -236,9 +238,89 @@ function HomePageContent() {
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
+
+  // Remote Control States
+  const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
+  const [remoteSession, setRemoteSession] = useState<RemoteSession | null>(null);
+  const remotePollingRef = useRef<NodeJS.Timeout | null>(null);
   
   // Notification states
   const { toast } = useToast();
+
+  // --- REMOTE CONTROL LOGIC ---
+  useEffect(() => {
+    const startPolling = (id: string) => {
+        if (remotePollingRef.current) clearInterval(remotePollingRef.current);
+        remotePollingRef.current = setInterval(async () => {
+            try {
+                const response = await fetch(`/api/remote?id=${id}`);
+                if (response.ok) {
+                    const session: RemoteSession = await response.json();
+                    setRemoteSession(session);
+                     if (remoteControlMode === 'controlled') {
+                        setSelectedEvents(session.selectedEvents);
+                        setViewOrder(session.viewOrder);
+                    }
+                } else {
+                    console.error("Session ended or not found");
+                    handleStopRemoteControl();
+                }
+            } catch (error) {
+                console.error("Error polling remote session:", error);
+                handleStopRemoteControl();
+            }
+        }, 2000); // Poll every 2 seconds
+    };
+
+    if (remoteSession?.id && (remoteControlMode === 'controlling' || remoteControlMode === 'controlled')) {
+        startPolling(remoteSession.id);
+    }
+
+    return () => {
+        if (remotePollingRef.current) {
+            clearInterval(remotePollingRef.current);
+        }
+    };
+  }, [remoteSession?.id, remoteControlMode]);
+
+  const handleStopRemoteControl = useCallback(async () => {
+    if (remotePollingRef.current) {
+        clearInterval(remotePollingRef.current);
+    }
+    if (remoteControlMode === 'controlling' && remoteSession?.id) {
+        await fetch(`/api/remote?id=${remoteSession.id}`, { method: 'DELETE' });
+    }
+    setRemoteControlMode('inactive');
+    setRemoteSession(null);
+    setIsViewMode(false); // Exit view mode on controlled device
+  }, [remoteControlMode, remoteSession?.id]);
+  
+  const cowEvent: Event = {
+    title: "24/7 COWS",
+    time: "AHORA",
+    status: "En Vivo",
+    options: [{ url: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c", label: "UNICA OPCION", hd: false, language: '' }],
+    image: "https://extension.usu.edu/drought/images/drought-mitigation-cows-thumbnail.png",
+    sources: [], buttons: [], category: "24/7", language: "", date: "", source: "",
+    selectedOption: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c"
+  };
+
+  useEffect(() => {
+    if (remoteControlMode === 'controlled' && remoteSession) {
+        const hasEvents = remoteSession.selectedEvents.some(e => e !== null);
+        if (!hasEvents && !isViewMode) {
+            setSelectedEvents([cowEvent, ...Array(8).fill(null)]);
+            setIsViewMode(true);
+        } else if (hasEvents && !isViewMode) {
+             setIsViewMode(true);
+        } else if (!hasEvents && isViewMode) {
+            // This case might be when remote clears all events
+            // We can decide to show cows or exit view mode
+            setIsViewMode(false);
+        }
+    }
+  }, [remoteControlMode, remoteSession, isViewMode]);
+
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -1109,6 +1191,23 @@ function HomePageContent() {
     }
   };
 
+  if (remoteControlMode === 'controlling') {
+    return (
+      <RemoteControlView 
+        session={remoteSession}
+        onStop={handleStopRemoteControl}
+        allEvents={events}
+        allChannels={channels}
+        updateAllEvents={setEvents}
+      />
+    )
+  }
+
+  if (remoteControlMode === 'controlled') {
+     return <ControlledDeviceView onStop={handleStopRemoteControl} session={remoteSession} />;
+  }
+
+
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
@@ -1875,6 +1974,10 @@ function HomePageContent() {
                         </div>
                     ) : (
                         <>
+                            <RemoteControlDialog 
+                              setRemoteControlMode={setRemoteControlMode}
+                              setRemoteSession={setRemoteSession}
+                            />
                             <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
                                 <Search />
                             </Button>
@@ -2314,3 +2417,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
