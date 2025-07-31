@@ -231,8 +231,6 @@ function HomePageContent() {
   
   // Notification states
   const { toast } = useToast();
-  const [notificationEvent, setNotificationEvent] = useState<Event | null>(null);
-  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -993,13 +991,8 @@ function HomePageContent() {
     setModifyEvent({ event: eventForModification, index });
     setModifyEventDialogOpen(true); // Open the specific modification dialog
   };
-  
-    const handleNotificationClick = (event: Event) => {
-        setNotificationEvent(event);
-        setNotificationDialogOpen(true);
-    };
 
-    const handleViewChange = (view: string) => {
+  const handleViewChange = (view: string) => {
     setSearchTerm('');
     setCurrentView(view);
   };
@@ -1745,7 +1738,6 @@ function HomePageContent() {
                             event={event}
                             selection={getEventSelection(event)}
                             onClick={() => openDialogForEvent(event)}
-                            onNotificationClick={() => handleNotificationClick(event)}
                             displayMode='checkmark'
                         />
                     ))}
@@ -1756,19 +1748,19 @@ function HomePageContent() {
                         <EventCarousel title="Canales" channels={channels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                      <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
                     </div>
                 </>
             )}
@@ -1826,7 +1818,6 @@ function HomePageContent() {
                         event={item as Event}
                         selection={getEventSelection(item as Event)}
                         onClick={() => openDialogForEvent(item as Event)}
-                        onNotificationClick={() => handleNotificationClick(item as Event)}
                         displayMode='checkmark'
                       />
                   );
@@ -1948,14 +1939,6 @@ function HomePageContent() {
             </main>
         </div>
         
-        {notificationEvent && (
-            <NotificationDialog
-                isOpen={notificationDialogOpen}
-                onOpenChange={setNotificationDialogOpen}
-                event={notificationEvent}
-            />
-        )}
-
         <NotificationManager
             open={notificationManagerOpen}
             onOpenChange={setNotificationManagerOpen}
@@ -2013,59 +1996,8 @@ function HomePageContent() {
             isFullScreen={isFullScreen}
             setIsFullScreen={setIsFullScreen}
         />
-        <NotificationManager
-          open={notificationManagerOpen}
-          onOpenChange={setNotificationManagerOpen}
-          allCategories={categories}
-        />
     </div>
   );
-}
-
-
-function NotificationDialog({ 
-    isOpen, 
-    onOpenChange, 
-    event
-}: { 
-    isOpen: boolean, 
-    onOpenChange: (open: boolean) => void, 
-    event: Event
-}) {
-    const [tutorialOpen, setTutorialOpen] = useState(false);
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
-             <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Funcionalidad en Desarrollo</DialogTitle>
-                    <DialogDescription>
-                        Estamos trabajando para que pronto puedas recibir notificaciones.
-                    </DialogDescription>
-                </DialogHeader>
-                
-                 <Dialog open={tutorialOpen} onOpenChange={setTutorialOpen}>
-                     <DialogContent>
-                         <DialogHeader>
-                            <DialogTitle>¿Cómo usar las notificaciones con Pushover?</DialogTitle>
-                         </DialogHeader>
-                         <div className="text-sm text-muted-foreground space-y-4 py-4">
-                             <p>Para recibir notificaciones push en tu teléfono, usamos un servicio gratuito y confiable llamado <a href="https://pushover.net" target="_blank" rel="noopener noreferrer" className="text-primary underline">Pushover</a>. Solo necesitas seguir estos 3 simples pasos:</p>
-                             <ol className="list-decimal list-inside space-y-2">
-                                 <li><strong>Descarga la App:</strong> Instala la aplicación "Pushover Notifications" desde la <a href="https://apps.apple.com/us/app/pushover-notifications/id506088175" target="_blank" rel="noopener noreferrer" className="text-primary underline">App Store</a> (para iPhone) o <a href="https://play.google.com/store/apps/details?id=net.superblock.pushover" target="_blank" rel="noopener noreferrer" className="text-primary underline">Google Play</a> (para Android) y crea una cuenta.</li>
-                                 <li><strong>Encuentra tu Email de Pushover:</strong> Una vez registrado, la aplicación te asignará una dirección de correo electrónico especial. La encontrarás en la pantalla principal de la app o en tu perfil en el sitio web de Pushover. Tiene un formato como `tu.usuario+XXXX@api.pushover.net`.</li>
-                                 <li><strong>Pega tu Email aquí:</strong> Copia esa dirección de email completa y pégala en el campo "Pushover" en esta pantalla.</li>
-                             </ol>
-                             <p className="font-bold text-foreground">¡Y listo! Cada vez que te suscribas a un evento, nosotros le enviaremos un correo a esa dirección y Pushover lo convertirá en una notificación push instantánea en tu teléfono.</p>
-                         </div>
-                         <DialogFooter>
-                            <Button onClick={() => setTutorialOpen(false)}>Entendido</Button>
-                         </DialogFooter>
-                     </DialogContent>
-                 </Dialog>
-            </DialogContent>
-        </Dialog>
-    );
 }
 
 // Wrapper to handle Suspense for client components
@@ -2304,7 +2236,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                             event={event}
                                             selection={getEventSelection(event.title, event.time)}
                                             onClick={() => openSubDialogForEvent(event)}
-                                            onNotificationClick={() => {}}
                                             displayMode="checkmark"
                                         />
                                     ))}
