@@ -84,6 +84,7 @@ export function CameraConfigurationComponent({
                   isViewPage={isViewPage}
                   onAddEvent={onAddEvent}
                   onSchedule={onSchedule}
+                  onNotificationManager={onNotificationManager}
               />
           </ScrollArea>
           {isViewPage && (

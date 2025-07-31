@@ -52,6 +52,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.googleusercontent.com' },
       { protocol: 'https', hostname: '**.githubusercontent.com' },
       { protocol: 'https', hostname: '**.vercel.app' },
+      { protocol: 'https', hostname: 'resend.dev' },
     ],
   },
   typescript: {
@@ -63,4 +64,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-

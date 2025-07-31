@@ -88,6 +88,13 @@ interface AgendaEvent {
   status: string;
 }
 
+export interface Subscription {
+  id: string; // `event-{title}-{date}-{time}` or `category-{name}`
+  type: 'event' | 'category';
+  title: string; // Event title or category name
+  notifyAt: number; // Minutes before event to notify
+}
+
 
 const channels247: Event[] = [
   {
@@ -225,7 +232,66 @@ function HomePageContent() {
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
+  
+  // Notification states
+  const { toast } = useToast();
+  const [notificationEvent, setNotificationEvent] = useState<Event | null>(null);
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [pushoverEmail, setPushoverEmail] = useState('');
 
+  // Fetch subscriptions from backend on initial load
+   useEffect(() => {
+    const fetchUserSubscriptions = async () => {
+        const storedEmail = localStorage.getItem('dpt_pushover_email');
+        if (storedEmail) {
+            setPushoverEmail(storedEmail);
+            try {
+                const response = await fetch(`/api/subscriptions?email=${encodeURIComponent(storedEmail)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setSubscriptions(data.subscriptions || []);
+                } else {
+                    console.error("Failed to fetch subscriptions");
+                }
+            } catch (error) {
+                console.error("Error fetching subscriptions:", error);
+            }
+        }
+    };
+    fetchUserSubscriptions();
+  }, []);
+
+  // Update subscriptions on the backend whenever they change locally
+  const handleSubscriptionUpdate = async (newSubscriptions: Subscription[], newPushoverEmail: string) => {
+    setSubscriptions(newSubscriptions);
+    setPushoverEmail(newPushoverEmail);
+    
+    // Persist email in localStorage
+    if (newPushoverEmail) {
+        localStorage.setItem('dpt_pushover_email', newPushoverEmail);
+    } else {
+        localStorage.removeItem('dpt_pushover_email');
+    }
+
+    // Save to backend
+    if (newPushoverEmail) {
+      try {
+        await fetch('/api/subscriptions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pushoverEmail: newPushoverEmail, subscriptions: newSubscriptions }),
+        });
+        toast({ title: "¡Suscripciones guardadas!", description: "Tus preferencias de notificación han sido actualizadas." });
+      } catch (error) {
+        console.error("Failed to save subscriptions:", error);
+        toast({ variant: 'destructive', title: "Error", description: "No se pudieron guardar las preferencias." });
+      }
+    }
+    setNotificationDialogOpen(false);
+  };
+  
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
         return `grid-cols-1 grid-rows-${count > 0 ? count : 1}`;
@@ -985,8 +1051,13 @@ function HomePageContent() {
     setModifyEvent({ event: eventForModification, index });
     setModifyEventDialogOpen(true); // Open the specific modification dialog
   };
+  
+    const handleNotificationClick = (event: Event) => {
+        setNotificationEvent(event);
+        setNotificationDialogOpen(true);
+    };
 
-  const handleViewChange = (view: string) => {
+    const handleViewChange = (view: string) => {
     setSearchTerm('');
     setCurrentView(view);
   };
@@ -1273,7 +1344,7 @@ function HomePageContent() {
                               <div className="text-sm text-muted-foreground space-y-4">
                                     <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
                                     <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
-                                    <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
+                                    <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
                                     <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
@@ -1556,7 +1627,7 @@ function HomePageContent() {
                                         <div className="text-sm text-muted-foreground space-y-4">
                                             <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
                                             <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
-                                            <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla negra o un error de conexión.</p>
+                                            <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
                                             <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
                                             <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                                             <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
@@ -1732,6 +1803,7 @@ function HomePageContent() {
                             event={event}
                             selection={getEventSelection(event)}
                             onClick={() => openDialogForEvent(event)}
+                            onNotificationClick={() => handleNotificationClick(event)}
                             displayMode='checkmark'
                         />
                     ))}
@@ -1742,19 +1814,19 @@ function HomePageContent() {
                         <EventCarousel title="Canales" channels={channels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                      <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} onNotificationClick={handleNotificationClick} getEventSelection={getEventSelection} />
                     </div>
                 </>
             )}
@@ -1812,6 +1884,7 @@ function HomePageContent() {
                         event={item as Event}
                         selection={getEventSelection(item as Event)}
                         onClick={() => openDialogForEvent(item as Event)}
+                        onNotificationClick={() => handleNotificationClick(item as Event)}
                         displayMode='checkmark'
                       />
                   );
@@ -1893,6 +1966,7 @@ function HomePageContent() {
                                                 onRemove={handleEventRemove} 
                                                 onModify={openDialogForModification}
                                                 isViewPage={false}
+                                                onNotificationManager={() => setNotificationManagerOpen(true)}
                                             />
                                        </div>
                                     </ScrollArea>
@@ -1931,6 +2005,25 @@ function HomePageContent() {
                 {renderContent()}
             </main>
         </div>
+        
+        {notificationEvent && (
+            <NotificationDialog
+                isOpen={notificationDialogOpen}
+                onOpenChange={setNotificationDialogOpen}
+                event={notificationEvent}
+                subscriptions={subscriptions}
+                pushoverEmail={pushoverEmail}
+                onSubscriptionUpdate={handleSubscriptionUpdate}
+            />
+        )}
+
+        <NotificationManager
+            open={notificationManagerOpen}
+            onOpenChange={setNotificationManagerOpen}
+            subscriptions={subscriptions}
+            pushoverEmail={pushoverEmail}
+            onSubscriptionUpdate={handleSubscriptionUpdate}
+        />
         
         {dialogEvent && (
             <EventSelectionDialog
@@ -1990,6 +2083,164 @@ function HomePageContent() {
         />
     </div>
   );
+}
+
+
+function NotificationDialog({ 
+    isOpen, 
+    onOpenChange, 
+    event, 
+    subscriptions,
+    pushoverEmail,
+    onSubscriptionUpdate,
+}: { 
+    isOpen: boolean, 
+    onOpenChange: (open: boolean) => void, 
+    event: Event, 
+    subscriptions: Subscription[],
+    pushoverEmail: string,
+    onSubscriptionUpdate: (subscriptions: Subscription[], pushoverEmail: string) => void,
+}) {
+    const getEventId = (e: Event) => `event-${e.title}-${e.date}-${e.time}`.replace(/\s+/g, '-');
+    const getCategoryId = (e: Event) => `category-${e.category}`.replace(/\s+/g, '-');
+
+    const [localPushoverEmail, setLocalPushoverEmail] = useState(pushoverEmail);
+    const [notifyAt, setNotifyAt] = useState("30"); // Default: 30 minutes
+    const [tutorialOpen, setTutorialOpen] = useState(false);
+
+    const eventSub = useMemo(() => subscriptions.find(s => s.id === getEventId(event)), [subscriptions, event]);
+    const categorySub = useMemo(() => subscriptions.find(s => s.id === getCategoryId(event)), [subscriptions, event]);
+
+    useEffect(() => {
+        if (isOpen) {
+            setLocalPushoverEmail(pushoverEmail);
+            // If there's a subscription for this event, pre-fill the notification time
+            if (eventSub) {
+                setNotifyAt(String(eventSub.notifyAt));
+            } else {
+                setNotifyAt("30"); // Reset to default if no specific sub
+            }
+        }
+    }, [isOpen, pushoverEmail, eventSub]);
+
+    const handleSubscription = (type: 'event' | 'category') => {
+        if (!localPushoverEmail) {
+            alert("Por favor, ingresa tu dirección de correo de Pushover.");
+            return;
+        }
+
+        const id = type === 'event' ? getEventId(event) : getCategoryId(event);
+        let newSubscriptions = [...subscriptions];
+
+        if (newSubscriptions.some(sub => sub.id === id)) {
+            // Unsubscribe
+            newSubscriptions = newSubscriptions.filter(sub => sub.id !== id);
+        } else {
+            // Subscribe or Update
+            const newSub: Subscription = {
+                id,
+                type,
+                title: type === 'event' ? event.title : event.category,
+                notifyAt: parseInt(notifyAt, 10),
+            };
+            const existingIndex = newSubscriptions.findIndex(s => s.id === id);
+            if (existingIndex > -1) {
+                newSubscriptions[existingIndex] = newSub; // Update existing
+            } else {
+                newSubscriptions.push(newSub); // Add new
+            }
+        }
+        onSubscriptionUpdate(newSubscriptions, localPushoverEmail);
+    };
+
+    const handleEventToggle = () => handleSubscription('event');
+    const handleCategoryToggle = () => handleSubscription('category');
+
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+             <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Configurar Notificaciones</DialogTitle>
+                    <DialogDescription>
+                        Recibe alertas push para no perderte nada. Funciona con <Button variant="link" className="p-0 h-auto" onClick={() => setTutorialOpen(true)}>Pushover</Button>.
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="pushover-email" className="text-right col-span-1">
+                            Pushover
+                        </Label>
+                        <Input
+                            id="pushover-email"
+                            type="email"
+                            value={localPushoverEmail}
+                            onChange={(e) => setLocalPushoverEmail(e.target.value)}
+                            className="col-span-3"
+                            placeholder="tu.usuario+XXXX@api.pushover.net"
+                            required
+                        />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="notify-at" className="text-right col-span-1">
+                           Notificar
+                        </Label>
+                         <Select onValueChange={setNotifyAt} defaultValue={notifyAt} value={notifyAt}>
+                             <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Seleccionar hora..." />
+                             </SelectTrigger>
+                             <SelectContent>
+                                 <SelectItem value="0">Al comenzar</SelectItem>
+                                 <SelectItem value="30">30 minutos antes</SelectItem>
+                                 <SelectItem value="60">1 hora antes</SelectItem>
+                                 <SelectItem value="120">2 horas antes</SelectItem>
+                             </SelectContent>
+                         </Select>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                     <Button
+                        onClick={handleEventToggle}
+                        variant={eventSub ? 'destructive' : 'default'}
+                        className="w-full"
+                        disabled={!localPushoverEmail}
+                    >
+                        {eventSub ? `Anular suscripción a "${event.title}"` : `Suscribirme a "${event.title}"`}
+                    </Button>
+                    <Button
+                        onClick={handleCategoryToggle}
+                        variant={categorySub ? 'destructive' : 'secondary'}
+                        className="w-full"
+                        disabled={!localPushoverEmail}
+                    >
+                        {categorySub ? `Anular suscripción a "${event.category}"` : `Suscribirme a todo "${event.category}"`}
+                    </Button>
+                </div>
+                 
+                 <Dialog open={tutorialOpen} onOpenChange={setTutorialOpen}>
+                     <DialogContent>
+                         <DialogHeader>
+                            <DialogTitle>¿Cómo usar las notificaciones con Pushover?</DialogTitle>
+                         </DialogHeader>
+                         <div className="text-sm text-muted-foreground space-y-4 py-4">
+                             <p>Para recibir notificaciones push en tu teléfono, usamos un servicio gratuito y confiable llamado <a href="https://pushover.net" target="_blank" rel="noopener noreferrer" className="text-primary underline">Pushover</a>. Solo necesitas seguir estos 3 simples pasos:</p>
+                             <ol className="list-decimal list-inside space-y-2">
+                                 <li><strong>Descarga la App:</strong> Instala la aplicación "Pushover Notifications" desde la <a href="https://apps.apple.com/us/app/pushover-notifications/id506088175" target="_blank" rel="noopener noreferrer" className="text-primary underline">App Store</a> (para iPhone) o <a href="https://play.google.com/store/apps/details?id=net.superblock.pushover" target="_blank" rel="noopener noreferrer" className="text-primary underline">Google Play</a> (para Android) y crea una cuenta.</li>
+                                 <li><strong>Encuentra tu Email de Pushover:</strong> Una vez registrado, la aplicación te asignará una dirección de correo electrónico especial. La encontrarás en la pantalla principal de la app o en tu perfil en el sitio web de Pushover. Tiene un formato como `tu.usuario+XXXX@api.pushover.net`.</li>
+                                 <li><strong>Pega tu Email aquí:</strong> Copia esa dirección de email completa y pégala en el campo "Pushover" en esta pantalla.</li>
+                             </ol>
+                             <p className="font-bold text-foreground">¡Y listo! Cada vez que te suscribas a un evento, nosotros le enviaremos un correo a esa dirección y Pushover lo convertirá en una notificación push instantánea en tu teléfono.</p>
+                         </div>
+                         <DialogFooter>
+                            <Button onClick={() => setTutorialOpen(false)}>Entendido</Button>
+                         </DialogFooter>
+                     </DialogContent>
+                 </Dialog>
+            </DialogContent>
+        </Dialog>
+    );
 }
 
 // Wrapper to handle Suspense for client components
@@ -2228,6 +2479,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                             event={event}
                                             selection={getEventSelection(event.title, event.time)}
                                             onClick={() => openSubDialogForEvent(event)}
+                                            onNotificationClick={() => {}}
                                             displayMode="checkmark"
                                         />
                                     ))}

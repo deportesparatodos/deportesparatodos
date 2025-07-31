@@ -8,6 +8,10 @@
     "src/app/api/cron/route.ts": {
       "maxDuration": 300,
       "memory": 1024
+    },
+    "src/app/api/cron/route.ts": {
+      "maxDuration": 300,
+      "memory": 1024
     }
   },
   "rewrites": [
@@ -25,5 +29,8 @@
   "env": {
     "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
     "RESEND_API_KEY": "re_K8qNK2bo_6MNsqN3M9NBaBkFBfnU4iKp4"
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+    "RESEND_API_KEY": "re_K8qNK2bo_6MNsqN3M9NBaBkFBfnU4iKp4"
   }
 }
+

@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -27,6 +27,7 @@ interface EventListManagementProps {
   isViewPage: boolean;
   onAddEvent?: () => void;
   onSchedule?: () => void;
+  onNotificationManager?: () => void;
 }
 
 export function EventListManagement({
@@ -39,6 +40,7 @@ export function EventListManagement({
   isViewPage,
   onAddEvent,
   onSchedule,
+  onNotificationManager,
 }: EventListManagementProps) {
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];
@@ -55,6 +57,12 @@ export function EventListManagement({
 
   return (
     <div className="space-y-4">
+       {onNotificationManager && !isViewPage && (
+          <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onNotificationManager}>
+              <BellRing className="mr-2 h-4 w-4" />
+              Gestionar Notificaciones
+          </Button>
+      )}
       {order.map((originalIndex, currentIndex) => {
         const event = eventDetails[originalIndex];
         if (!event) return null;
@@ -137,6 +145,12 @@ export function EventListManagement({
           <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onSchedule}>
               <CalendarClock className="mr-2 h-4 w-4" />
               Programar Selección
+          </Button>
+      )}
+       {isViewPage && onNotificationManager && (
+          <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onNotificationManager}>
+              <BellRing className="mr-2 h-4 w-4" />
+              Gestionar Notificaciones
           </Button>
       )}
     </div>
@@ -251,6 +265,7 @@ export function LayoutConfigurator({
     </Accordion>
   );
 }
+
 
 
 
