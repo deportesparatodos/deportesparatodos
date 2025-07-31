@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/kv';
+import { kv } from '@vercel/kv';
 import { Resend } from 'resend';
 import type { Subscription } from '@/components/notification-manager';
 import type { Event } from '@/components/event-carousel';
@@ -95,10 +95,6 @@ const generateEmailHtml = (eventsByCategory: Record<string, Event[]>) => {
 };
 
 export async function GET() {
-  const kv = createClient({
-      url: process.env.KV_REST_API_URL!,
-      token: process.env.KV_REST_API_TOKEN!,
-  });
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const allEvents = await fetchAllEvents();

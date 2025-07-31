@@ -1,5 +1,5 @@
 
-import { createClient } from '@vercel/kv';
+import { kv } from '@vercel/kv';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Unique key for storing all subscriptions in one KV entry
@@ -14,10 +14,6 @@ export const dynamic = 'force-dynamic';
 
 // GET all subscriptions for a given Pushover email
 export async function GET(request: NextRequest) {
-  const kv = createClient({
-      url: process.env.KV_REST_API_URL!,
-      token: process.env.KV_REST_API_TOKEN!,
-  });
   const { searchParams } = new URL(request.url);
   const pushoverEmail = searchParams.get('email');
 
@@ -42,10 +38,6 @@ export async function GET(request: NextRequest) {
 
 // POST to add or update subscriptions for a Pushover email
 export async function POST(request: NextRequest) {
-  const kv = createClient({
-      url: process.env.KV_REST_API_URL!,
-      token: process.env.KV_REST_API_TOKEN!,
-  });
   try {
     const body: SubscriptionData = await request.json();
     const { pushoverEmail, subscriptions } = body;
