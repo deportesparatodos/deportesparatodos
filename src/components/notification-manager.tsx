@@ -40,6 +40,7 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
   const [subscriptionType, setSubscriptionType] = useState<'all' | 'specific'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -122,6 +123,45 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
       setIsSaving(false);
     }
   };
+
+  const handleSendTest = async () => {
+     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Por favor, introduce una dirección de correo válida para enviar la prueba.',
+      });
+      return;
+    }
+    setIsSendingTest(true);
+    try {
+      const response = await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: '¡Prueba Enviada!',
+          description: 'Revisa tu dispositivo para confirmar la recepción de la notificación.',
+        });
+      } else {
+         const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send test notification');
+      }
+
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error de Envío',
+        description: 'No se pudo enviar la notificación de prueba. Verifica la consola para más detalles.',
+      });
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
   
   const handleCategoryChange = (category: string) => {
     setSelectedCategories(prev =>
@@ -148,34 +188,14 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
         ) : (
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="pushover-email">Tu Email de Pushover</Label>
+              <Label htmlFor="pushover-email">Tu Email</Label>
               <Input
                 id="pushover-email"
-                placeholder="tu_usuario@pushover.net"
+                placeholder="tu.email@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => { if(email) fetchSubscription(email); }}
               />
-              <Dialog>
-                <DialogTrigger asChild>
-                   <Button variant="link" className="p-0 h-auto text-xs">¿Cómo funciona esto?</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Tutorial de Notificaciones con Pushover</DialogTitle>
-                    </DialogHeader>
-                    <div className="text-sm space-y-3 text-muted-foreground">
-                        <p>Para recibir notificaciones directamente en tu teléfono, usamos un servicio gratuito y confiable llamado <strong>Pushover</strong>.</p>
-                        <ol className="list-decimal list-inside space-y-2">
-                            <li><strong>Descarga la App:</strong> Busca e instala "Pushover Notifications" en la App Store (iOS) o Google Play (Android).</li>
-                            <li><strong>Crea una Cuenta:</strong> Regístrate gratis en la app.</li>
-                            <li><strong>Encuentra tu Email de Pushover:</strong> Una vez dentro de la app, verás tu dirección de correo especial de Pushover. Generalmente es `(tu_user_key)@pushover.net`.</li>
-                            <li><strong>Ingrésalo Aquí:</strong> Copia esa dirección de correo y pégala en el campo de la pantalla anterior.</li>
-                        </ol>
-                        <p>¡Listo! Cada mañana te enviaremos un correo a esa dirección, y la app de Pushover te lo mostrará como una notificación push en tu teléfono.</p>
-                    </div>
-                </DialogContent>
-              </Dialog>
             </div>
             
             <RadioGroup value={subscriptionType} onValueChange={(value) => setSubscriptionType(value as 'all' | 'specific')}>
@@ -212,22 +232,28 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Importante</AlertTitle>
               <AlertDescription>
-                Asegúrate de haber verificado tu email en Pushover para que las notificaciones funcionen correctamente.
+                Asegúrate de que tu proveedor de correo no marque nuestros emails como spam.
               </AlertDescription>
             </Alert>
           </div>
         )}
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="secondary" disabled={isSaving}>
-              Cancelar
-            </Button>
-          </DialogClose>
-          <Button type="submit" onClick={handleSave} disabled={isLoading || isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Guardar Cambios
+        <DialogFooter className="sm:justify-between gap-2">
+          <Button type="button" variant="outline" onClick={handleSendTest} disabled={isLoading || isSendingTest || !email}>
+             {isSendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Enviar Prueba
           </Button>
+          <div className="flex gap-2">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" disabled={isSaving}>
+                Cancelar
+              </Button>
+            </DialogClose>
+            <Button type="submit" onClick={handleSave} disabled={isLoading || isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Guardar Cambios
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

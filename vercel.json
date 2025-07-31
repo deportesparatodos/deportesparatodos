@@ -7,11 +7,11 @@
     },
     "src/app/api/cron/route.ts": {
       "maxDuration": 300,
-      "memory": 1024
+      "memory": 512
     },
-    "src/app/api/cron/route.ts": {
-      "maxDuration": 300,
-      "memory": 1024
+    "src/app/api/notifications/test/route.ts": {
+      "maxDuration": 60,
+      "memory": 512
     }
   },
   "rewrites": [
@@ -23,14 +23,11 @@
   "crons": [
     {
       "path": "/api/cron",
-      "schedule": "0 8 * * *"
+      "schedule": "0 11 * * *"
     }
   ],
   "env": {
     "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
     "RESEND_API_KEY": "re_K8qNK2bo_6MNsqN3M9NBaBkFBfnU4iKp4"
-    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
-    "RESEND_API_KEY": "re_K8qNK2bo_6MNsqN3M9NBaBkFBfnU4iKp4"
   }
 }
-
