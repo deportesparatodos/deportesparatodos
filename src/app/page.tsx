@@ -56,7 +56,7 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RemoteControlDialog, RemoteControlView, ControlledDeviceView } from '@/components/remote-control';
+import { RemoteControlDialog, RemoteControlView } from '@/components/remote-control';
 import Ably from 'ably';
 
 
@@ -299,24 +299,23 @@ useEffect(() => {
         channel.subscribe('control-update', (message) => {
             const { action, payload } = message.data;
             if (action === 'updateState') {
-                setSelectedEvents(payload.selectedEvents || []);
-                setViewOrder(payload.viewOrder || []);
+                setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
+                setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
             } else if (action === 'disconnect') {
                 cleanupAbly();
+                setIsViewMode(false); // Exit view mode on disconnect
             }
         });
 
-        const hasInitialEvents = selectedEvents.some(e => e !== null);
-        if (!hasInitialEvents) {
-            setSelectedEvents([cowEvent, ...Array(8).fill(null)]);
-        }
         setIsViewMode(true);
 
         return () => {
             channel.unsubscribe();
         };
     }
-}, [ablyClient, remoteSessionId, remoteControlMode, cleanupAbly, cowEvent, selectedEvents, viewOrder]);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [ablyClient, remoteSessionId, remoteControlMode, cleanupAbly]);
+
 
 useEffect(() => {
     if (ablyClient && remoteSessionId && remoteControlMode === 'controlling') {
@@ -324,18 +323,21 @@ useEffect(() => {
         setAblyChannel(channel);
         
         // Initial state sync
+        const eventsToSend = selectedEvents.some(e => e !== null) ? selectedEvents : [cowEvent, ...Array(8).fill(null)];
+        
         channel.publish('control-update', {
             action: 'updateState',
-            payload: { selectedEvents, viewOrder },
+            payload: { selectedEvents: eventsToSend, viewOrder },
         });
     }
-}, [ablyClient, remoteSessionId, remoteControlMode, selectedEvents, viewOrder]);
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [ablyClient, remoteSessionId, remoteControlMode]);
 
 
   // Cleanup effect
   useEffect(() => {
     return () => {
-      if (ablyClientRef.current && ablyChannel) {
+      if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
           ablyChannel.publish('control-update', { action: 'disconnect' });
           cleanupAbly();
       }
@@ -1228,7 +1230,8 @@ useEffect(() => {
   }
 
   if (remoteControlMode === 'controlled') {
-     return <ControlledDeviceView onStop={cleanupAbly} sessionId={remoteSessionId} />;
+     // The controlled view is now the standard view mode, driven by state from Ably
+     // No special component needed, just let the main `isViewMode` render logic take over
   }
 
 
@@ -1241,10 +1244,30 @@ useEffect(() => {
      if (numCameras === 0) {
       return (
         <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
-          <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
-          <Button onClick={handleStopView}>
-            <X className="mr-2 h-4 w-4" /> Volver Atrás
-          </Button>
+            {remoteControlMode === 'controlled' ? (
+                <div className="text-center space-y-4">
+                    <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+                    <h1 className="text-2xl font-bold">Dispositivo bajo Control Remoto</h1>
+                    <p className="text-muted-foreground">
+                        Esperando comandos desde el dispositivo de control... <br/>
+                        Código de sesión: <span className="font-mono text-primary">{remoteSessionId}</span>
+                    </p>
+                    <Button variant="outline" onClick={() => {
+                        if (ablyChannel) ablyChannel.publish('control-update', { action: 'disconnect' });
+                        cleanupAbly();
+                        setIsViewMode(false);
+                    }}>
+                        <X className="mr-2 h-4 w-4" /> Detener Control
+                    </Button>
+                </div>
+            ) : (
+                <>
+                  <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
+                  <Button onClick={handleStopView}>
+                    <X className="mr-2 h-4 w-4" /> Volver Atrás
+                  </Button>
+                </>
+            )}
         </div>
       );
     }

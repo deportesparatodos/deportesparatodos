@@ -302,25 +302,3 @@ export function RemoteControlView({
     </div>
   );
 }
-
-
-// --- View for the "Controlled" device (e.g., computer) ---
-export function ControlledDeviceView({ onStop, sessionId }: { onStop: () => void; sessionId: string | null }) {
-  return (
-    <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-6 p-8 text-center">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        <div className='space-y-2'>
-            <h1 className="text-2xl font-bold">Dispositivo bajo Control Remoto</h1>
-            <p className="text-muted-foreground">
-                Esta ventana ahora está siendo controlada por otro dispositivo. <br/>
-                Código de sesión: <span className="font-mono text-primary">{sessionId}</span>
-            </p>
-        </div>
-        <Button variant="outline" onClick={onStop}>
-            <X className="mr-2 h-4 w-4" /> Detener Control
-        </Button>
-    </div>
-  );
-}
-
-    
