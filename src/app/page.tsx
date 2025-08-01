@@ -2124,9 +2124,9 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                             </Button>
                             
                             <RemoteControlDialog 
+                              remoteSessionId={remoteSessionId}
                               setRemoteControlMode={setRemoteControlMode}
                               setRemoteSessionId={setRemoteSessionId}
-                              ablyClient={ablyClient}
                               onStartControlled={handleStartControlledSession}
                             />
 
@@ -2565,4 +2565,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-

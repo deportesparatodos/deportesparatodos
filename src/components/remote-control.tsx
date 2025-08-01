@@ -25,12 +25,12 @@ import { cn } from '@/lib/utils';
 
 // --- Main Dialog to start a remote session ---
 export function RemoteControlDialog({
-  ablyClient,
+  remoteSessionId,
   setRemoteControlMode,
   setRemoteSessionId,
   onStartControlled,
 }: {
-  ablyClient: Ably.Realtime | null;
+  remoteSessionId: string | null;
   setRemoteControlMode: (mode: 'inactive' | 'controlling' | 'controlled') => void;
   setRemoteSessionId: (id: string | null) => void;
   onStartControlled: () => void;
@@ -39,7 +39,6 @@ export function RemoteControlDialog({
   const [view, setView] = useState<'main' | 'controlled' | 'controlling'>('main');
   const [isLoading, setIsLoading] = useState(false);
   const [code, setCode] = useState('');
-  const [generatedCode, setGeneratedCode] = useState('');
   const { toast } = useToast();
 
   const handleStartControllingSession = () => {
@@ -69,24 +68,11 @@ export function RemoteControlDialog({
       setTimeout(() => {
         setView('main');
         setCode('');
-        setGeneratedCode('');
         setIsLoading(false);
       }, 200);
     }
   }, [isOpen]);
   
-  useEffect(() => {
-    // This effect is to receive the generated code when the parent component sets it
-    if (view === 'controlled' && ablyClient?.connection.state === 'connected') {
-       const clientId = ablyClient.auth.clientId;
-       if(clientId && clientId.length === 4) {
-         setGeneratedCode(clientId);
-         setIsLoading(false);
-       }
-    }
-  // This might be tricky, let's stick to the user's request of passing the function
-  // The logic is in the parent. Let's simplify this component.
-  }, [view, ablyClient]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -121,7 +107,7 @@ export function RemoteControlDialog({
             </DialogDescription>
             <div className="p-4 bg-muted rounded-lg">
                 <p className="text-4xl font-bold tracking-widest text-primary">
-                    {isLoading ? <Loader2 className="h-10 w-10 animate-spin mx-auto" /> : generatedCode}
+                    {remoteSessionId ? remoteSessionId : <Loader2 className="h-10 w-10 animate-spin mx-auto" />}
                 </p>
             </div>
              <p className="text-xs text-muted-foreground pt-2">
