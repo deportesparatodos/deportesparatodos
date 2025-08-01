@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import type { Event } from '@/components/event-carousel';
+import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic'; 
 
