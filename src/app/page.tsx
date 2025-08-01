@@ -1646,7 +1646,7 @@ useEffect(() => {
                             />
                         </SheetHeader>
                         <div className="p-4 space-y-2">
-                             <a href="/api/calendar" download="dpt-events.ics" className={cn(buttonVariants({ variant: 'outline' }), "w-full justify-start gap-2")}>
+                             <a href="/api/calendar" className={cn(buttonVariants({ variant: 'outline' }), "w-full justify-start gap-2")}>
                                 <CalendarDays />
                                 Añadir a Calendario
                             </a>
