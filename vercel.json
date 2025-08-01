@@ -18,6 +18,10 @@
     "src/app/api/notifications/test/route.ts": {
       "maxDuration": 60,
       "memory": 512
+    },
+    "src/app/api/calendar/route.ts": {
+      "maxDuration": 60,
+      "memory": 512
     }
   },
   "rewrites": [
@@ -40,5 +44,3 @@
     "MAILCHIMP_SERVER_PREFIX": "us6"
   }
 }
-
-    
