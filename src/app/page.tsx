@@ -1512,6 +1512,8 @@ useEffect(() => {
                 }}
                 onSchedule={() => setScheduleManagerOpen(true)}
                 onNotification={() => setNotificationManagerOpen(true)}
+                remoteSessionId={remoteSessionId}
+                remoteControlMode={remoteControlMode}
             />
 
             {isChatEnabled && (

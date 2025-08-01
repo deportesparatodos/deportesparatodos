@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell } from 'lucide-react';
+import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell, Airplay } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
@@ -13,6 +13,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { ScheduleManager, type Schedule } from './schedule-manager';
 import type { Channel } from './channel-list';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 
 interface CameraConfigurationProps {
@@ -32,6 +33,8 @@ interface CameraConfigurationProps {
   onAddEvent: () => void;
   onSchedule: () => void;
   onNotification: () => void;
+  remoteSessionId: string | null;
+  remoteControlMode: 'inactive' | 'controlling' | 'controlled';
 }
 
 export function CameraConfigurationComponent({ 
@@ -51,6 +54,8 @@ export function CameraConfigurationComponent({
   onAddEvent,
   onSchedule,
   onNotification,
+  remoteSessionId,
+  remoteControlMode,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -86,6 +91,27 @@ export function CameraConfigurationComponent({
                   onSchedule={onSchedule}
                   onNotificationManager={onNotification}
               />
+              {isViewPage && remoteControlMode === 'controlled' && remoteSessionId && (
+                <Accordion type="single" collapsible className="w-full space-y-4 py-1">
+                    <AccordionItem value="remote-control" className="border rounded-lg px-4">
+                        <AccordionTrigger>
+                            <div className='flex items-center gap-2'>
+                                <Airplay className="h-4 w-4" /> Control Remoto
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-2 text-center">
+                            <p className="text-sm text-muted-foreground mb-2">
+                                Introduce este código en el dispositivo de control:
+                            </p>
+                            <div className="p-3 bg-muted rounded-lg">
+                                <p className="text-3xl font-bold tracking-widest text-primary">
+                                    {remoteSessionId}
+                                </p>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+              )}
           </ScrollArea>
           {isViewPage && (
             <SheetFooter className="p-4 border-t border-border flex-shrink-0">
