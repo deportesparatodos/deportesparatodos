@@ -191,7 +191,7 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
             Suscríbete para recibir notificaciones de eventos por correo.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-grow pr-6 -mr-6">
+        <div className="flex-grow overflow-y-auto -mr-6 pr-6">
             <div className="space-y-6 py-4">
             <div className="space-y-2">
                 <Label htmlFor="pushover-email">Tu Email</Label>
@@ -241,10 +241,10 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
                 </AlertDescription>
             </Alert>
             </div>
-        </ScrollArea>
+        </div>
 
-        <DialogFooter className="flex-col-reverse gap-2 pt-4 flex-shrink-0">
-             <div className="grid grid-cols-2 gap-2">
+        <DialogFooter className="flex-col sm:flex-col pt-4 flex-shrink-0 gap-2">
+           <div className="grid grid-cols-2 gap-2">
                 <DialogClose asChild>
                     <Button type="button" variant="secondary" disabled={isSaving} className="w-full">
                     Cancelar
@@ -252,12 +252,12 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
                 </DialogClose>
                 <Button type="submit" onClick={handleSave} disabled={isSaving} className="w-full">
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Guardar Cambios
+                    Guardar
                 </Button>
            </div>
            <Button type="button" variant="outline" onClick={handleSendTestEmail} disabled={isSendingTest || isSaving} className="w-full">
                 {isSendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enviar Prueba
+                Enviar Correo de Prueba
             </Button>
         </DialogFooter>
       </DialogContent>
