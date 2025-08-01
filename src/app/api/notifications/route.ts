@@ -5,6 +5,8 @@ import type { Subscription } from '@/components/notification-manager';
 
 export const dynamic = 'force-dynamic';
 
+const getSubscriptionKey = (email: string) => `subscription:${email}`;
+
 // GET subscription by email
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -15,14 +17,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const subscription: Subscription | null = await kv.get(`subscription:${email}`);
+    const subscription: Subscription | null = await kv.get(getSubscriptionKey(email));
     if (!subscription) {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
     }
     return NextResponse.json(subscription);
   } catch (error) {
     console.error('KV GET Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    const errorMessage = (error instanceof Error && error.message.includes("Missing required environment variables"))
+      ? "El servicio de base de datos no está configurado."
+      : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -37,12 +42,17 @@ export async function POST(request: NextRequest) {
     }
 
     const subscription: Subscription = { email, subscribedCategories };
-    await kv.set(`subscription:${email}`, subscription);
+    
+    // The key now includes the email to be unique
+    await kv.set(getSubscriptionKey(email), subscription);
     
     return NextResponse.json({ message: 'Subscription saved successfully' }, { status: 200 });
 
   } catch (error) {
     console.error('KV SET Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    const errorMessage = (error instanceof Error && error.message.includes("Missing required environment variables"))
+      ? "El servicio de base de datos no está configurado. No se pudieron guardar las preferencias."
+      : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

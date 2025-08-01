@@ -11,7 +11,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,34 +33,30 @@ interface NotificationManagerProps {
 }
 
 export function NotificationManager({ open, onOpenChange, allCategories }: NotificationManagerProps) {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [email, setEmail] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [subscriptionType, setSubscriptionType] = useState<'all' | 'specific'>('all');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
-      const storedEmail = localStorage.getItem('pushover-email');
-      if (storedEmail) {
-        setEmail(storedEmail);
-        fetchSubscription(storedEmail);
-      } else {
-        setIsLoading(false);
-      }
+      loadSubscription();
     }
   }, [open]);
 
-  const fetchSubscription = async (userEmail: string) => {
+  const loadSubscription = () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/notifications?email=${encodeURIComponent(userEmail)}`);
-      if (response.ok) {
-        const data: Subscription = await response.json();
-        setSubscription(data);
+      const storedEmail = localStorage.getItem('notification-email');
+      const storedSub = localStorage.getItem('notification-subscription');
+      if (storedEmail) {
+        setEmail(storedEmail);
+      }
+      if (storedSub) {
+        const data: Subscription = JSON.parse(storedSub);
         if (data.subscribedCategories.includes('all')) {
           setSubscriptionType('all');
           setSelectedCategories([]);
@@ -71,7 +66,12 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
         }
       }
     } catch (error) {
-      console.error('Error fetching subscription:', error);
+      console.error('Error loading subscription from localStorage:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo cargar la configuración de notificaciones.',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -95,6 +95,10 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
     };
 
     try {
+      // We now save to localStorage and an API endpoint that uses it.
+      localStorage.setItem('notification-email', email);
+      localStorage.setItem('notification-subscription', JSON.stringify(newSubscription));
+      
       const response = await fetch('/api/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,22 +106,21 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
       });
 
       if (response.ok) {
-        localStorage.setItem('pushover-email', email);
-        setSubscription(newSubscription);
         toast({
           title: 'Guardado',
           description: 'Tus preferencias de notificación han sido guardadas.',
         });
         onOpenChange(false);
       } else {
-        throw new Error('Failed to save subscription');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save subscription');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving subscription:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'No se pudieron guardar tus preferencias. Inténtalo de nuevo.',
+        description: error.message || 'No se pudieron guardar tus preferencias. Inténtalo de nuevo.',
       });
     } finally {
       setIsSaving(false);
@@ -157,12 +160,12 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
         throw new Error(errorData.error || 'Failed to send test notification');
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending test notification:', error);
       toast({
         variant: 'destructive',
         title: 'Error de Envío',
-        description: 'No se pudo enviar la notificación de prueba. Verifica la consola para más detalles.',
+        description: error.message || 'No se pudo enviar la notificación de prueba. Verifica la consola para más detalles.',
       });
     } finally {
       setIsSendingTest(false);
@@ -200,7 +203,6 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
                 placeholder="tu.email@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onBlur={() => { if(email) fetchSubscription(email); }}
               />
             </div>
             
