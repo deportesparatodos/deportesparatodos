@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
   }
 
   // Handle specific stream requests (e.g., /api/streams?type=stream&source=xxx&id=yyy)
-  // These should be cached for a short period to avoid expired URLs while reducing load.
   if (type === 'stream') {
     const source = searchParams.get('source');
     const id = searchParams.get('id');
@@ -34,7 +33,7 @@ export async function GET(request: NextRequest) {
     try {
       const response = await fetch(apiUrl, {
         headers: { 'Accept': 'application/json' },
-        next: { revalidate: 300 }, // Cache for 5 minutes (300 seconds)
+        next: { revalidate: 300 }, // Cache for 5 minutes
       });
 
       if (!response.ok) {
@@ -51,8 +50,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Handle other list-based requests (live, all-today, sports, streamtp)
-  // These are good candidates for caching to reduce CPU load.
+  // Handle other list-based requests
   const apiUrl = API_ENDPOINTS[type];
 
   if (!apiUrl) {
@@ -60,18 +58,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const headers: HeadersInit = { 'Accept': 'application/json' };
-    
     const response = await fetch(apiUrl, {
-      headers,
-      next: { revalidate: 1800 }, // Cache for 30 minutes (1800 seconds)
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 1800 }, // Cache for 30 minutes
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, errorBody);
-       // Return an empty array to prevent frontend errors
-      return NextResponse.json([], { status: 200 });
+        const errorBody = await response.text();
+        console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, {errorBody});
+        // Return an empty array to prevent frontend errors if the external API fails
+        return NextResponse.json([], { status: 200 });
     }
     
     const data = await response.json();
@@ -86,7 +82,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
-     // Return an empty array to prevent frontend errors
+    // Return an empty array to prevent frontend errors on network issues or timeouts
     return NextResponse.json([], { status: 200 });
   }
 }
