@@ -1,7 +1,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import mailchimp from '@mailchimp/mailchimp_marketing';
-import { format, toZonedTime } from 'date-fns-tz';
+import { format, toZonedTime, parse, isValid } from 'date-fns-tz';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,8 +92,20 @@ async function getEventsForNotification(categories: string[]): Promise<Event[]> 
     }
 }
 
+const sortLogic = (a: Event, b: Event): number => {
+    const timeAIsUnknown = a.time === '--:--' || a.status === 'Desconocido' || !isValid(parse(a.time, 'HH:mm', new Date()));
+    const timeBIsUnknown = b.time === '--:--' || b.status === 'Desconocido' || !isValid(parse(b.time, 'HH:mm', new Date()));
 
-function generateEmailHtml(events: Event[]): string {
+    if (timeAIsUnknown && !timeBIsUnknown) return 1;
+    if (!timeAIsUnknown && timeBIsUnknown) return -1;
+    if (timeAIsUnknown && timeBIsUnknown) return a.title.localeCompare(b.title);
+
+    // Sort chronologically from 00:00 to 23:59
+    return a.time.localeCompare(b.time);
+};
+
+
+function generateEmailHtml(events: Event[], isAllCategories: boolean): string {
     if (events.length === 0) {
         return `
             <h1>Eventos de Hoy</h1>
@@ -102,57 +114,65 @@ function generateEmailHtml(events: Event[]): string {
         `;
     }
     
-    // Custom sort function
-    const sortLogic = (a: Event, b: Event): number => {
-        const aIsUnknown = a.time === '--:--' || a.status === 'Desconocido';
-        const bIsUnknown = b.time === '--:--' || b.status === 'Desconocido';
+    let eventListHtml = '';
 
-        if (aIsUnknown && !bIsUnknown) return 1;
-        if (!aIsUnknown && bIsUnknown) return -1;
-        
-        return a.time.localeCompare(b.time); // Chronological for known times
-    };
+    if (isAllCategories) {
+        // Single list for all events
+        const sortedEvents = [...events].sort(sortLogic);
+        eventListHtml = sortedEvents.map(event => `
+            <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                <p style="margin: 0; font-size: 16px;">
+                    <strong>${event.title}</strong>
+                    <span style="color: #718096; font-weight: bold; margin-left: 10px;">
+                        ${event.time}
+                    </span>
+                </p>
+                <p style="margin: 5px 0 0; font-size: 14px; color: #555;">${event.category}</p>
+            </div>
+        `).join('');
 
+    } else {
+        // Group events by category in collapsible sections
+        const groupedEvents = events.reduce<Record<string, Event[]>>((acc, event) => {
+            const category = event.category || 'Otros';
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(event);
+            return acc;
+        }, {});
 
-    // 1. Group events by category
-    const groupedEvents = events.reduce<Record<string, Event[]>>((acc, event) => {
-        const category = event.category || 'Otros';
-        if (!acc[category]) {
-            acc[category] = [];
-        }
-        acc[category].push(event);
-        return acc;
-    }, {});
+        eventListHtml = Object.entries(groupedEvents)
+            .map(([category, categoryEvents]) => {
+                
+                const sortedEvents = [...categoryEvents].sort(sortLogic);
 
-    // 2. Sort events within each category and generate HTML
-    const eventListHtml = Object.entries(groupedEvents)
-        .map(([category, categoryEvents]) => {
-            
-            const sortedEvents = [...categoryEvents].sort(sortLogic);
+                const eventsHtml = sortedEvents
+                    .map(event => `
+                        <div style="border-bottom: 1px solid #eee; padding: 10px 0; margin-left: 20px;">
+                            <p style="margin: 0; font-size: 16px;">
+                                <strong>${event.title}</strong>
+                                <span style="color: #718096; font-weight: bold; margin-left: 10px;">
+                                    ${event.time}
+                                </span>
+                            </p>
+                        </div>
+                    `)
+                    .join('');
 
-            const eventsHtml = sortedEvents
-                .map(event => `
-                    <div style="border-bottom: 1px solid #eee; padding: 10px 0; margin-left: 20px;">
-                        <p style="margin: 0; font-size: 16px;">
-                            <strong>${event.title}</strong>
-                            <span style="color: #718096; font-weight: bold; margin-left: 10px;">
-                                ${event.time}
-                            </span>
-                        </p>
+                return `
+                    <div style="margin-top: 20px;">
+                        <details>
+                            <summary style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
+                               <h1 style="margin: 0; font-size: 18px; font-weight: bold; display: inline;">${category} (${sortedEvents.length})</h1>
+                            </summary>
+                            ${eventsHtml}
+                        </details>
                     </div>
-                `)
-                .join('');
-
-            return `
-                <details style="margin-top: 20px;">
-                    <summary style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 10px;">
-                       ${category} (${sortedEvents.length})
-                    </summary>
-                    ${eventsHtml}
-                </details>
-            `;
-        })
-        .join('');
+                `;
+            })
+            .join('');
+    }
 
 
     return `
@@ -186,7 +206,9 @@ export async function POST(request: NextRequest) {
 
     try {
         const events = await getEventsForNotification(categories);
-        const emailHtml = generateEmailHtml(events);
+        const isAllCategories = categories.includes('all');
+        const emailHtml = generateEmailHtml(events, isAllCategories);
+
         const subject = events.length > 0
             ? `¡Hay ${events.length} eventos para ti hoy!`
             : 'Resumen de eventos de hoy';
