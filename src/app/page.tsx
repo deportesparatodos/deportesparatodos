@@ -1452,7 +1452,7 @@ useEffect(() => {
                                     <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
                                     <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad.</p>
                                     <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
@@ -1646,10 +1646,34 @@ useEffect(() => {
                             />
                         </SheetHeader>
                         <div className="p-4 space-y-2">
-                             <a href="/api/calendar" className={cn(buttonVariants({ variant: 'outline' }), "w-full justify-start gap-2")}>
-                                <CalendarDays />
-                                Añadir a Calendario
-                            </a>
+                             <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
+                                        <CalendarDays />
+                                        Añadir a Calendario
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Suscripción a Calendario</DialogTitle>
+                                        <DialogDescription>
+                                            Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <ScrollArea className="h-72">
+                                        <div className="p-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <a href="/api/calendar" className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
+                                                Todos los Eventos
+                                            </a>
+                                            {categories.map(category => (
+                                                <a key={category} href={`/api/calendar?category=${encodeURIComponent(category)}`} className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
+                                                    {category}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </DialogContent>
+                             </Dialog>
                             <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { setNotificationManagerOpen(true); setSideMenuOpen(false); }}>
                                 <BellRing />
                                 Notificaciones
@@ -2488,4 +2512,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-

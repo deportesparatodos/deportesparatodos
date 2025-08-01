@@ -1,8 +1,8 @@
 
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import ical from 'ical-generator';
-import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, parse, isValid } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+import { addHours, isValid } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +22,7 @@ const normalizeCategory = (category: string): string => {
     return capitalized;
 };
 
-async function getAllEvents() {
+async function getAllEvents(filterCategory?: string | null) {
     try {
         const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
             fetch('https://streamed.su/api/matches/live').then(res => res.ok ? res.json() : []).catch(() => []),
@@ -46,7 +46,7 @@ async function getAllEvents() {
         const combinedData = Array.from(allMatchesMap.values());
         const timeZone = 'America/Argentina/Buenos_Aires';
 
-        return combinedData.map((match: StreamedMatch) => {
+        let allEvents = combinedData.map((match: StreamedMatch) => {
             const zonedEventTime = toZonedTime(new Date(match.date), timeZone);
             return {
               title: match.title,
@@ -55,16 +55,27 @@ async function getAllEvents() {
             };
         });
 
+        if (filterCategory) {
+            const normalizedFilter = normalizeCategory(filterCategory);
+            allEvents = allEvents.filter(event => normalizeCategory(event.category) === normalizedFilter);
+        }
+        
+        return allEvents;
+
     } catch (error) {
         console.error("Error fetching events for calendar:", error);
         return [];
     }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+
     try {
-        const events = await getAllEvents();
-        const calendar = ical({ name: 'Deportes Para Todos - Eventos' });
+        const events = await getAllEvents(category);
+        const calendarName = category ? `Deportes Para Todos - ${normalizeCategory(category)}` : 'Deportes Para Todos - Eventos';
+        const calendar = ical({ name: calendarName });
         
         const timeZone = 'America/Argentina/Buenos_Aires';
         calendar.timezone(timeZone);
@@ -85,7 +96,7 @@ export async function GET() {
             status: 200,
             headers: {
                 'Content-Type': 'text/calendar; charset=utf-8',
-                'Content-Disposition': 'attachment; filename="dpt-events.ics"',
+                'Content-Disposition': `attachment; filename="${category || 'all'}-events.ics"`,
             },
         });
     } catch (error) {
