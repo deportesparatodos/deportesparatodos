@@ -184,79 +184,81 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg flex flex-col max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Gestionar Suscripción</DialogTitle>
           <DialogDescription>
             Suscríbete para recibir notificaciones de eventos por correo.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="pushover-email">Tu Email</Label>
-            <Input
-              id="pushover-email"
-              placeholder="tu.email@ejemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          
-          <RadioGroup value={subscriptionType} onValueChange={(value) => setSubscriptionType(value as 'all' | 'specific')}>
-              <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="r1" />
-                  <Label htmlFor="r1">Notificarme de todos los eventos</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="specific" id="r2" />
-                  <Label htmlFor="r2">Notificarme solo de categorías específicas</Label>
-              </div>
-          </RadioGroup>
-
-          {subscriptionType === 'specific' && (
+        <ScrollArea className="flex-grow pr-6 -mr-6">
+            <div className="space-y-6 py-4">
             <div className="space-y-2">
-               <Label>Selecciona Categorías</Label>
-               <ScrollArea className="h-40 w-full rounded-md border p-4">
-                 <div className="space-y-2">
-                 {allCategories.map(category => (
-                   <div key={category} className="flex items-center space-x-2">
-                      <Checkbox 
-                         id={category}
-                         checked={selectedCategories.includes(category)}
-                         onCheckedChange={() => handleCategoryChange(category)}
-                      />
-                      <Label htmlFor={category} className="font-normal">{category}</Label>
-                   </div>
-                 ))}
-                 </div>
-               </ScrollArea>
+                <Label htmlFor="pushover-email">Tu Email</Label>
+                <Input
+                id="pushover-email"
+                placeholder="tu.email@ejemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                />
             </div>
-          )}
-           <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Importante</AlertTitle>
-            <AlertDescription>
-              El envío de correos se gestiona a través de Mailchimp. Podrás darte de baja en cualquier momento desde los propios correos.
-            </AlertDescription>
-          </Alert>
-        </div>
+            
+            <RadioGroup value={subscriptionType} onValueChange={(value) => setSubscriptionType(value as 'all' | 'specific')}>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="r1" />
+                    <Label htmlFor="r1">Notificarme de todos los eventos</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="specific" id="r2" />
+                    <Label htmlFor="r2">Notificarme solo de categorías específicas</Label>
+                </div>
+            </RadioGroup>
 
-        <DialogFooter className="sm:justify-between">
-            <Button type="button" variant="outline" onClick={handleSendTestEmail} disabled={isSendingTest || isSaving}>
-                {isSendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enviar Prueba
-            </Button>
-            <div className="flex gap-2">
+            {subscriptionType === 'specific' && (
+                <div className="space-y-2">
+                <Label>Selecciona Categorías</Label>
+                <ScrollArea className="h-40 w-full rounded-md border p-4">
+                    <div className="space-y-2">
+                    {allCategories.map(category => (
+                    <div key={category} className="flex items-center space-x-2">
+                        <Checkbox 
+                            id={category}
+                            checked={selectedCategories.includes(category)}
+                            onCheckedChange={() => handleCategoryChange(category)}
+                        />
+                        <Label htmlFor={category} className="font-normal">{category}</Label>
+                    </div>
+                    ))}
+                    </div>
+                </ScrollArea>
+                </div>
+            )}
+            <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Importante</AlertTitle>
+                <AlertDescription>
+                El envío de correos se gestiona a través de Mailchimp. Podrás darte de baja en cualquier momento desde los propios correos.
+                </AlertDescription>
+            </Alert>
+            </div>
+        </ScrollArea>
+
+        <DialogFooter className="flex-col-reverse gap-2 pt-4 flex-shrink-0">
+             <div className="grid grid-cols-2 gap-2">
                 <DialogClose asChild>
-                    <Button type="button" variant="secondary" disabled={isSaving}>
+                    <Button type="button" variant="secondary" disabled={isSaving} className="w-full">
                     Cancelar
                     </Button>
                 </DialogClose>
-                <Button type="submit" onClick={handleSave} disabled={isSaving}>
+                <Button type="submit" onClick={handleSave} disabled={isSaving} className="w-full">
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Guardar Cambios
                 </Button>
            </div>
+           <Button type="button" variant="outline" onClick={handleSendTestEmail} disabled={isSendingTest || isSaving} className="w-full">
+                {isSendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar Prueba
+            </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
