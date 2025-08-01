@@ -96,7 +96,6 @@ export async function GET(request: NextRequest) {
             status: 200,
             headers: {
                 'Content-Type': 'text/calendar; charset=utf-8',
-                'Content-Disposition': `inline; filename="${category || 'all'}-events.ics"`,
             },
         });
     } catch (error) {

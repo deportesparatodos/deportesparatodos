@@ -1646,38 +1646,6 @@ useEffect(() => {
                             />
                         </SheetHeader>
                         <div className="p-4 space-y-2">
-                             <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start gap-2">
-                                        <CalendarDays />
-                                        Añadir a Calendario
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Suscripción a Calendario</DialogTitle>
-                                        <DialogDescription>
-                                            Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <ScrollArea className="h-72">
-                                        <div className="p-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            <a href="/api/calendar" className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
-                                                Todos los Eventos
-                                            </a>
-                                            {categories.map(category => (
-                                                <a key={category} href={`/api/calendar?category=${encodeURIComponent(category)}`} className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
-                                                    {category}
-                                                </a>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </DialogContent>
-                             </Dialog>
-                            <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { setNotificationManagerOpen(true); setSideMenuOpen(false); }}>
-                                <BellRing />
-                                Notificaciones
-                            </Button>
                             <Dialog>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" className="w-full justify-start gap-2">
@@ -1786,6 +1754,38 @@ useEffect(() => {
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
+                            <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { setNotificationManagerOpen(true); setSideMenuOpen(false); }}>
+                                <BellRing />
+                                Notificaciones
+                            </Button>
+                             <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-start gap-2">
+                                        <CalendarDays />
+                                        Añadir a Calendario
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Suscripción a Calendario</DialogTitle>
+                                        <DialogDescription>
+                                            Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <ScrollArea className="h-72">
+                                        <div className="p-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <a href="/api/calendar" className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
+                                                Todos los Eventos
+                                            </a>
+                                            {categories.map(category => (
+                                                <a key={category} href={`/api/calendar?category=${encodeURIComponent(category)}`} className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
+                                                    {category}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </DialogContent>
+                             </Dialog>
                              <Dialog>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" className="w-full justify-start gap-2">
