@@ -153,89 +153,77 @@ export function RemoteControlDialog({
   );
 }
 
+interface RemoteControlViewState {
+    selectedEvents: (Event|null)[];
+    viewOrder: number[];
+    gridGap: number;
+    borderColor: string;
+    isChatEnabled: boolean;
+}
+
 // --- View for the "Controlling" device (e.g., phone) ---
 export function RemoteControlView({
   ablyChannel,
   onStop,
+  onSessionEnd,
   allEvents,
   allChannels,
   updateAllEvents,
-  initialEvents,
-  initialOrder,
-  initialGridGap,
-  initialBorderColor,
-  initialIsChatEnabled,
+  initialState,
 }: {
   ablyChannel: Ably.Types.RealtimeChannelPromise | null;
   onStop: () => void;
+  onSessionEnd: (finalState: {selectedEvents: (Event|null)[]}) => void;
   allEvents: Event[];
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
-  initialEvents: (Event|null)[],
-  initialOrder: number[],
-  initialGridGap: number;
-  initialBorderColor: string;
-  initialIsChatEnabled: boolean;
+  initialState: RemoteControlViewState,
 }) {
-    const [remoteEvents, setRemoteEvents] = useState<(Event | null)[]>(initialEvents);
-    const [remoteOrder, setRemoteOrder] = useState<number[]>(initialOrder);
-    const [gridGap, setGridGap] = useState(initialGridGap);
-    const [borderColor, setBorderColor] = useState(initialBorderColor);
-    const [isChatEnabled, setIsChatEnabled] = useState(initialIsChatEnabled);
-
+    const [remoteState, setRemoteState] = useState<RemoteControlViewState>(initialState);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
     const { toast } = useToast();
 
-    const updateRemoteState = useCallback((state: any) => {
+    const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
+        const updatedState = { ...remoteState, ...newState };
+        setRemoteState(updatedState);
         if (ablyChannel) {
             ablyChannel.publish('control-update', {
                 action: 'updateState',
-                payload: state,
+                payload: updatedState,
             });
         }
-    }, [ablyChannel]);
+    }, [ablyChannel, remoteState]);
     
     useEffect(() => {
         // When controller mounts, sync its state with the controlled device's initial state
-        const eventsToSend = remoteEvents.some(e => e !== null) ? remoteEvents : initialEvents;
-        const stateToSync = {
-            selectedEvents: eventsToSend, 
-            viewOrder: initialOrder,
-            gridGap: initialGridGap,
-            borderColor: initialBorderColor,
-            isChatEnabled: initialIsChatEnabled,
-        };
-        setRemoteEvents(eventsToSend);
-        setRemoteOrder(initialOrder);
-        setGridGap(initialGridGap);
-        setBorderColor(initialBorderColor);
-        setIsChatEnabled(initialIsChatEnabled);
-
-        updateRemoteState(stateToSync);
+        setRemoteState(initialState);
+        updateRemoteState(initialState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const handleStopAndPersist = () => {
+        if(ablyChannel){
+            ablyChannel.publish('control-update', { action: 'disconnect', payload: remoteState });
+        }
+        onSessionEnd({ selectedEvents: remoteState.selectedEvents });
+    };
+
     const handleEventsChange = (newEvents: (Event|null)[]) => {
-      setRemoteEvents(newEvents);
       const newActiveIndexes = newEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
-      const oldActiveIndexes = remoteOrder.filter(i => newActiveIndexes.includes(i));
+      const oldActiveIndexes = remoteState.viewOrder.filter(i => newActiveIndexes.includes(i));
       const fullOrder = Array.from({ length: 9 }, (_, i) => i);
       const finalNewOrder = [...oldActiveIndexes, ...fullOrder.filter(i => !oldActiveIndexes.includes(i))];
 
-      setRemoteOrder(finalNewOrder);
       updateRemoteState({ 
           selectedEvents: newEvents, 
           viewOrder: finalNewOrder,
-          gridGap: gridGap,
-          borderColor: borderColor,
-          isChatEnabled: isChatEnabled,
       });
     }
 
     const handleRemove = (index: number) => {
-        const newEvents = [...remoteEvents];
+        const newEvents = [...remoteState.selectedEvents];
         newEvents[index] = null;
         handleEventsChange(newEvents);
     };
@@ -248,34 +236,23 @@ export function RemoteControlView({
             fullNewOrder.push(i);
         }
       }
-      setRemoteOrder(fullNewOrder);
-      updateRemoteState({
-          selectedEvents: remoteEvents, 
-          viewOrder: fullNewOrder,
-          gridGap,
-          borderColor,
-          isChatEnabled,
-      });
+      updateRemoteState({ viewOrder: fullNewOrder });
     };
     
     const handleGridGapChange = (value: number) => {
-        setGridGap(value);
-        updateRemoteState({ gridGap: value, selectedEvents: remoteEvents, viewOrder: remoteOrder, borderColor, isChatEnabled });
+        updateRemoteState({ gridGap: value });
     };
 
     const handleBorderColorChange = (value: string) => {
-        setBorderColor(value);
-        updateRemoteState({ borderColor: value, selectedEvents: remoteEvents, viewOrder: remoteOrder, gridGap, isChatEnabled });
+        updateRemoteState({ borderColor: value });
     };
 
     const handleIsChatEnabledChange = (value: boolean) => {
-        setIsChatEnabled(value);
-        updateRemoteState({ isChatEnabled: value, selectedEvents: remoteEvents, viewOrder: remoteOrder, gridGap, borderColor });
+        updateRemoteState({ isChatEnabled: value });
     };
 
-
     const handleAddEvent = (event: Event, option: string) => {
-        const newEvents = [...remoteEvents];
+        const newEvents = [...remoteState.selectedEvents];
         const eventWithSelection = { ...event, selectedOption: option };
         const emptyIndex = newEvents.findIndex(e => e === null);
         if (emptyIndex !== -1) {
@@ -306,15 +283,15 @@ export function RemoteControlView({
                 Sesión Conectada
             </p>
             </div>
-            <Button variant="destructive" onClick={onStop}>
+            <Button variant="destructive" onClick={handleStopAndPersist}>
             <X className="mr-2 h-4 w-4" /> Terminar
             </Button>
         </header>
         <div className="flex-grow overflow-y-auto p-4">
             <LayoutConfigurator
-            order={remoteOrder.filter((i) => remoteEvents[i] !== null)}
+            order={remoteState.viewOrder.filter((i) => remoteState.selectedEvents[i] !== null)}
             onOrderChange={handleOrderChange}
-            eventDetails={remoteEvents}
+            eventDetails={remoteState.selectedEvents}
             onRemove={handleRemove}
             onModify={() =>
                 toast({
@@ -331,11 +308,11 @@ export function RemoteControlView({
                 description: 'La programación no está disponible en modo control remoto.',
                 })
             }
-            gridGap={gridGap}
+            gridGap={remoteState.gridGap}
             onGridGapChange={handleGridGapChange}
-            borderColor={borderColor}
+            borderColor={remoteState.borderColor}
             onBorderColorChange={handleBorderColorChange}
-            isChatEnabled={isChatEnabled}
+            isChatEnabled={remoteState.isChatEnabled}
             onIsChatEnabledChange={handleIsChatEnabledChange}
             onOpenChat={() => setIsRemoteChatOpen(true)}
             />
@@ -344,7 +321,7 @@ export function RemoteControlView({
             open={addEventsOpen}
             onOpenChange={setAddEventsOpen}
             onSelect={handleAddEvent}
-            selectedEvents={remoteEvents}
+            selectedEvents={remoteState.selectedEvents}
             allEvents={allEvents}
             allChannels={allChannels}
             onFetchEvents={async () => {}} // No fetching in remote
@@ -355,9 +332,10 @@ export function RemoteControlView({
         </div>
         <Dialog open={isRemoteChatOpen} onOpenChange={setIsRemoteChatOpen}>
             <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
-                <DialogHeader className="p-4 border-b">
-                  <DialogTitle>Chat en Vivo</DialogTitle>
-                </DialogHeader>
+              <DialogHeader className="p-4 border-b">
+                <DialogTitle>Chat en Vivo</DialogTitle>
+                <DialogDescription className="sr-only">Contenedor del chat en vivo de Minnit.</DialogDescription>
+              </DialogHeader>
                 <iframe
                     src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
                     title="Chat en Vivo"
@@ -368,3 +346,4 @@ export function RemoteControlView({
     </>
   );
 }
+

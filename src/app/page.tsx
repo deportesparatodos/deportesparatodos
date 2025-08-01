@@ -250,16 +250,6 @@ function HomePageContent() {
   
   const ablyClientRef = useRef<Ably.Realtime | null>(null);
 
-  const cowEvent: Event = {
-    title: "24/7 COWS",
-    time: "AHORA",
-    status: "En Vivo",
-    options: [{ url: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c", label: "UNICA OPCION", hd: false, language: '' }],
-    image: "https://extension.usu.edu/drought/images/drought-mitigation-cows-thumbnail.png",
-    sources: [], buttons: [], category: "24/7", language: "", date: "", source: "",
-    selectedOption: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c"
-  };
-
    const cleanupAbly = useCallback(() => {
     if (ablyChannel) {
         ablyChannel.detach();
@@ -273,6 +263,11 @@ function HomePageContent() {
     setRemoteSessionId(null);
     setRemoteControlMode('inactive');
   }, [ablyChannel]);
+
+  const handleSessionEnd = useCallback((finalState: { selectedEvents: (Event|null)[] }) => {
+    setSelectedEvents(finalState.selectedEvents);
+    cleanupAbly();
+  }, [cleanupAbly]);
 
 useEffect(() => {
     if (remoteControlMode !== 'inactive' && !ablyClientRef.current) {
@@ -310,6 +305,9 @@ useEffect(() => {
                  // The controller has connected, now we can enter view mode
                  setIsViewMode(true);
             } else if (action === 'disconnect') {
+                if (payload) { // Persist state if payload is sent
+                    setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
+                }
                 cleanupAbly();
                 setIsViewMode(false); // Exit view mode on disconnect
             }
@@ -322,7 +320,7 @@ useEffect(() => {
         };
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyClient, remoteSessionId, remoteControlMode]);
+}, [ablyClient, remoteSessionId, remoteControlMode, cleanupAbly]);
 
 
 useEffect(() => {
@@ -333,20 +331,13 @@ useEffect(() => {
         const initialSync = async () => {
             try {
                 // Announce connection to the controlled device
-                await channel.publish('control-update', { action: 'connect' });
-
-                // Send initial state
-                const eventsToSend = selectedEvents.some(e => e !== null) ? selectedEvents : [cowEvent, ...Array(8).fill(null)];
-                await channel.publish('control-update', {
-                    action: 'updateState',
-                    payload: { 
-                        selectedEvents: eventsToSend, 
-                        viewOrder,
-                        gridGap,
-                        borderColor,
-                        isChatEnabled,
-                    },
-                });
+                await channel.publish('control-update', { action: 'connect', payload: {
+                    initialEvents: selectedEvents,
+                    initialOrder: viewOrder,
+                    initialGridGap: gridGap,
+                    initialBorderColor: borderColor,
+                    initialIsChatEnabled: isChatEnabled,
+                } });
             } catch (err) {
                 console.error("Failed to publish initial state:", err);
                 toast({ variant: 'destructive', title: 'Error de Sincronización', description: 'No se pudo enviar el estado inicial al dispositivo controlado.' });
@@ -362,12 +353,12 @@ useEffect(() => {
   useEffect(() => {
     return () => {
       if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
-          ablyChannel.publish('control-update', { action: 'disconnect' });
+          ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } });
           cleanupAbly();
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ablyChannel, remoteControlMode]);
+  }, [ablyChannel, remoteControlMode, selectedEvents]);
 
 
   const getGridClasses = useCallback((count: number) => {
@@ -1015,10 +1006,11 @@ useEffect(() => {
   };
   
   const handleStopView = () => {
-    setIsViewMode(false);
     if (remoteControlMode === 'controlled') {
-        cleanupAbly(); // Also clean up if we manually stop while controlled
+       if (ablyChannel) ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } });
+        cleanupAbly();
     }
+    setIsViewMode(false);
     fetchEvents(false); // Check timestamp before fetching
   };
 
@@ -1247,15 +1239,18 @@ useEffect(() => {
     return (
       <RemoteControlView 
         ablyChannel={ablyChannel}
-        onStop={cleanupAbly}
+        onStop={() => handleSessionEnd({ selectedEvents })}
+        onSessionEnd={handleSessionEnd}
         allEvents={events}
         allChannels={channels}
         updateAllEvents={setEvents}
-        initialEvents={selectedEvents}
-        initialOrder={viewOrder}
-        initialGridGap={gridGap}
-        initialBorderColor={borderColor}
-        initialIsChatEnabled={isChatEnabled}
+        initialState={{
+            selectedEvents: selectedEvents,
+            viewOrder: viewOrder,
+            gridGap: gridGap,
+            borderColor: borderColor,
+            isChatEnabled: isChatEnabled,
+        }}
       />
     )
   }
@@ -1266,36 +1261,34 @@ useEffect(() => {
 
   if (isViewMode) {
      const numCameras = selectedEventsCount;
-     if (numCameras === 0) {
+     if (numCameras === 0 && remoteControlMode === 'controlled') {
       return (
         <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
-            {remoteControlMode === 'controlled' ? (
-                <div className="text-center space-y-4">
-                    <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
-                    <h1 className="text-2xl font-bold">Dispositivo bajo Control Remoto</h1>
-                    <p className="text-muted-foreground">
-                        Esperando comandos desde el dispositivo de control... <br/>
-                        Código de sesión: <span className="font-mono text-primary">{remoteSessionId}</span>
-                    </p>
-                    <Button variant="outline" onClick={() => {
-                        if (ablyChannel) ablyChannel.publish('control-update', { action: 'disconnect' });
-                        cleanupAbly();
-                        setIsViewMode(false);
-                    }}>
-                        <X className="mr-2 h-4 w-4" /> Detener Control
-                    </Button>
-                </div>
-            ) : (
-                <>
-                  <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
-                  <Button onClick={handleStopView}>
-                    <X className="mr-2 h-4 w-4" /> Volver Atrás
-                  </Button>
-                </>
-            )}
+            <div className="text-center space-y-4">
+                <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+                <h1 className="text-2xl font-bold">Dispositivo bajo Control Remoto</h1>
+                <p className="text-muted-foreground">
+                    Esperando comandos desde el dispositivo de control... <br/>
+                    Código de sesión: <span className="font-mono text-primary">{remoteSessionId}</span>
+                </p>
+                <Button variant="outline" onClick={handleStopView}>
+                    <X className="mr-2 h-4 w-4" /> Detener Control
+                </Button>
+            </div>
         </div>
       );
     }
+    if (numCameras === 0 && remoteControlMode !== 'controlled') {
+        return (
+            <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
+                <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
+                <Button onClick={handleStopView}>
+                    <X className="mr-2 h-4 w-4" /> Volver Atrás
+                </Button>
+            </div>
+        )
+    }
+
     const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
     
     return (
@@ -2491,3 +2484,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
