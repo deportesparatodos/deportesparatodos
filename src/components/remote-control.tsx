@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { Loader2, X, Airplay, MessageSquare } from 'lucide-react';
@@ -20,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LayoutConfigurator } from './layout-configurator';
 import { AddEventsDialog } from '@/app/page';
 import type Ably from 'ably';
+import { cn } from '@/lib/utils';
 
 // --- Main Dialog to start a remote session ---
 export function RemoteControlDialog({
@@ -43,7 +45,7 @@ export function RemoteControlDialog({
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedCode(newCode);
     setRemoteSessionId(newCode);
-    setRemoteControlMode('controlled'); // Set the mode, but don't enter view mode yet
+    setRemoteControlMode('controlled');
     setIsLoading(false);
   }, [setRemoteControlMode, setRemoteSessionId]);
 
@@ -76,7 +78,6 @@ export function RemoteControlDialog({
   }, [isOpen]);
   
   useEffect(() => {
-    // Automatically generate code when entering the 'controlled' view
     if (view === 'controlled' && isOpen && !generatedCode) {
       handleStartControlledSession();
     }
@@ -196,6 +197,26 @@ export function RemoteControlView({
         }
     }, [ablyChannel]);
     
+    useEffect(() => {
+        // When controller mounts, sync its state with the controlled device's initial state
+        const eventsToSend = remoteEvents.some(e => e !== null) ? remoteEvents : initialEvents;
+        const stateToSync = {
+            selectedEvents: eventsToSend, 
+            viewOrder: initialOrder,
+            gridGap: initialGridGap,
+            borderColor: initialBorderColor,
+            isChatEnabled: initialIsChatEnabled,
+        };
+        setRemoteEvents(eventsToSend);
+        setRemoteOrder(initialOrder);
+        setGridGap(initialGridGap);
+        setBorderColor(initialBorderColor);
+        setIsChatEnabled(initialIsChatEnabled);
+
+        updateRemoteState(stateToSync);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const handleEventsChange = (newEvents: (Event|null)[]) => {
       setRemoteEvents(newEvents);
       const newActiveIndexes = newEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
@@ -231,9 +252,9 @@ export function RemoteControlView({
       updateRemoteState({
           selectedEvents: remoteEvents, 
           viewOrder: fullNewOrder,
-          gridGap: gridGap,
-          borderColor: borderColor,
-          isChatEnabled: isChatEnabled,
+          gridGap,
+          borderColor,
+          isChatEnabled,
       });
     };
     
@@ -310,12 +331,6 @@ export function RemoteControlView({
                 description: 'La programación no está disponible en modo control remoto.',
                 })
             }
-            onNotificationManager={() =>
-                toast({
-                title: 'Info',
-                description: 'Las notificaciones no están disponibles en modo control remoto.',
-                })
-            }
             gridGap={gridGap}
             onGridGapChange={handleGridGapChange}
             borderColor={borderColor}
@@ -340,6 +355,9 @@ export function RemoteControlView({
         </div>
         <Dialog open={isRemoteChatOpen} onOpenChange={setIsRemoteChatOpen}>
             <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
+                <DialogHeader className="p-4 border-b">
+                  <DialogTitle>Chat en Vivo</DialogTitle>
+                </DialogHeader>
                 <iframe
                     src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
                     title="Chat en Vivo"
