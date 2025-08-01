@@ -37,6 +37,7 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [subscriptionType, setSubscriptionType] = useState<'all' | 'specific'>('all');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -135,6 +136,46 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
     );
   };
   
+  const handleSendTestEmail = async () => {
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast({
+        variant: 'destructive',
+        title: 'Correo Inválido',
+        description: 'Por favor, introduce una dirección de correo para enviar la prueba.',
+      });
+      return;
+    }
+    
+    setIsSendingTest(true);
+    try {
+      const response = await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: '¡Éxito!',
+          description: result.message || `Correo de prueba enviado a ${email}.`,
+        });
+      } else {
+        throw new Error(result.error || 'Ocurrió un error al enviar el correo de prueba.');
+      }
+    } catch (error: any) {
+      console.error('Error sending test email:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error de Envío',
+        description: error.message || 'No se pudo enviar el correo de prueba.',
+      });
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -194,16 +235,22 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
           </Alert>
         </div>
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" variant="secondary" disabled={isSaving}>
-              Cancelar
+        <DialogFooter className="sm:justify-between">
+            <Button type="button" variant="outline" onClick={handleSendTestEmail} disabled={isSendingTest || isSaving}>
+                {isSendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar Prueba
             </Button>
-          </DialogClose>
-          <Button type="submit" onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Guardar Cambios
-          </Button>
+            <div className="flex gap-2">
+                <DialogClose asChild>
+                    <Button type="button" variant="secondary" disabled={isSaving}>
+                    Cancelar
+                    </Button>
+                </DialogClose>
+                <Button type="submit" onClick={handleSave} disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Guardar Cambios
+                </Button>
+           </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
