@@ -1,12 +1,13 @@
 
 'use client';
 
+import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2 } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -166,6 +167,9 @@ interface LayoutConfiguratorProps extends EventListManagementProps {
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
   onOpenChat?: () => void;
+  remoteSessionId?: string | null;
+  remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
+  onStartControlledSession?: () => void;
 }
 
 export function LayoutConfigurator({
@@ -176,9 +180,21 @@ export function LayoutConfigurator({
   isChatEnabled,
   onIsChatEnabledChange,
   onOpenChat,
+  remoteSessionId,
+  remoteControlMode,
+  onStartControlledSession,
   ...eventProps
 }: LayoutConfiguratorProps) {
   
+  const [isStartingRemote, setIsStartingRemote] = useState(false);
+
+  const handleStartRemote = () => {
+    if (onStartControlledSession) {
+      setIsStartingRemote(true);
+      onStartControlledSession();
+    }
+  };
+
   const handleRestoreDefaults = () => {
     onGridGapChange(0);
     onBorderColorChange('#000000');
@@ -239,6 +255,40 @@ export function LayoutConfigurator({
           </div>
         </AccordionContent>
       </AccordionItem>
+      
+      {eventProps.isViewPage && (
+        <AccordionItem value="remote-control" className="border rounded-lg px-4">
+            <AccordionTrigger>
+                <div className='flex items-center gap-2'>
+                    <Airplay className="h-4 w-4" /> Control Remoto
+                </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 text-center">
+              {remoteControlMode === 'controlled' && remoteSessionId ? (
+                <>
+                  <p className="text-sm text-muted-foreground mb-2">
+                      Introduce este código en el dispositivo de control:
+                  </p>
+                  <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-3xl font-bold tracking-widest text-primary">
+                          {remoteSessionId}
+                      </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
+                  </p>
+                  <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
+                    {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Activar Control Remoto
+                  </Button>
+                </>
+              )}
+            </AccordionContent>
+        </AccordionItem>
+      )}
 
       <AccordionItem value="item-2" className="border rounded-lg px-4">
         <AccordionTrigger>Funciones Adicionales</AccordionTrigger>

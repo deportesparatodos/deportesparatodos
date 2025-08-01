@@ -99,45 +99,12 @@ export function CameraConfigurationComponent({
                   onAddEvent={onAddEvent}
                   onSchedule={onSchedule}
                   onNotificationManager={onNotification}
+                  remoteSessionId={remoteSessionId}
+                  remoteControlMode={remoteControlMode}
+                  onStartControlledSession={onStartControlledSession}
               />
-              {isViewPage && (
-                <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue='remote-control'>
-                    <AccordionItem value="remote-control" className="border rounded-lg px-4">
-                        <AccordionTrigger>
-                            <div className='flex items-center gap-2'>
-                                <Airplay className="h-4 w-4" /> Control Remoto
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="pt-4 text-center">
-                          {remoteControlMode === 'controlled' && remoteSessionId ? (
-                            <>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                  Introduce este código en el dispositivo de control:
-                              </p>
-                              <div className="p-3 bg-muted rounded-lg">
-                                  <p className="text-3xl font-bold tracking-widest text-primary">
-                                      {remoteSessionId}
-                                  </p>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm text-muted-foreground mb-3">
-                                Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
-                              </p>
-                              <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
-                                {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Activar Control Remoto
-                              </Button>
-                            </>
-                          )}
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-              )}
           </ScrollArea>
-          {isViewPage && (
-            <SheetFooter className="p-4 border-t border-border flex-shrink-0">
+           <SheetFooter className="p-4 border-t border-border flex-shrink-0">
               <div className="space-y-2 w-full">
                 <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { onNotification(); setSheetOpen(false); }}>
                     <Bell />
@@ -316,7 +283,6 @@ export function CameraConfigurationComponent({
               </Dialog>
             </div>
           </SheetFooter>
-          )}
         </SheetContent>
       </Sheet>
     </>
