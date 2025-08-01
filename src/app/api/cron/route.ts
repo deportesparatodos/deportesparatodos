@@ -1,8 +1,5 @@
 
 import { NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
-import { Resend } from 'resend';
-import type { Subscription } from '@/components/notification-manager';
 import type { Event } from '@/components/event-carousel';
 
 export const dynamic = 'force-dynamic'; 
@@ -13,6 +10,11 @@ interface StreamedMatch {
   category: string;
   date: number;
 }
+
+// NOTE: This CRON job is currently disabled because there is no central database
+// to fetch user subscriptions from since Vercel KV has been removed.
+// The logic for fetching events and generating email HTML is kept for future use
+// if a database is reintroduced.
 
 const normalizeCategory = (category: string): string => {
     const lowerCategory = category.toLowerCase();
@@ -95,59 +97,11 @@ const generateEmailHtml = (eventsByCategory: Record<string, Event[]>) => {
 };
 
 export async function GET() {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
-    const allEvents = await fetchAllEvents();
-    if (allEvents.length === 0) {
-      return NextResponse.json({ message: "No events found, skipping notifications." });
-    }
-
-    const subscriptionKeys = [];
-    let cursor = 0;
-    do {
-      const [nextCursor, keys] = await kv.scan(cursor, { match: 'subscription:*' });
-      cursor = nextCursor;
-      subscriptionKeys.push(...keys);
-    } while (cursor !== 0);
-
-    if (subscriptionKeys.length === 0) {
-        return NextResponse.json({ message: "No subscriptions found." });
-    }
-
-    const subscriptions: (Subscription | null)[] = await kv.mget(...subscriptionKeys);
-    const validSubscriptions = subscriptions.filter((s): s is Subscription => s !== null);
-
-    const emailsToSend: { to: string[]; html: string; subject: string; from: string }[] = [];
-
-    for (const sub of validSubscriptions) {
-        const userEvents = sub.subscribedCategories.includes('all')
-            ? allEvents
-            : allEvents.filter(event => sub.subscribedCategories.includes(event.category));
-
-        if (userEvents.length > 0) {
-            const eventsByCategory = userEvents.reduce<Record<string, Event[]>>((acc, event) => {
-                if (!acc[event.category]) {
-                    acc[event.category] = [];
-                }
-                acc[event.category].push(event);
-                return acc;
-            }, {});
-
-            const emailHtml = generateEmailHtml(eventsByCategory);
-            emailsToSend.push({
-                from: 'Deportes para Todos <onboarding@resend.dev>',
-                to: [sub.email],
-                subject: `📅 Tus eventos para hoy en Deportes para Todos`,
-                html: emailHtml,
-            });
-        }
-    }
-
-    if (emailsToSend.length > 0) {
-      await resend.batch.send(emailsToSend);
-    }
-
-    return NextResponse.json({ message: `Processed ${validSubscriptions.length} subscriptions and sent ${emailsToSend.length} emails.` });
+    // With the removal of Vercel KV, there is no central database to get subscriptions from.
+    // This cron job will therefore not send any emails.
+    // It is kept in place to avoid breaking deployments, and can be reactivated if a new database solution is implemented.
+    return NextResponse.json({ message: "Cron job executed, but no database is configured to fetch subscriptions." });
 
   } catch (error) {
     console.error('CRON Error:', error);

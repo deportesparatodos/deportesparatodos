@@ -45,7 +45,7 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
     if (open) {
       loadSubscription();
     }
-  }, [open]);
+  }, [open, toast]);
 
   const loadSubscription = () => {
     setIsLoading(true);
@@ -95,10 +95,11 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
     };
 
     try {
-      // We now save to localStorage and an API endpoint that uses it.
+      // Save to localStorage, which is now the primary source of truth.
       localStorage.setItem('notification-email', email);
       localStorage.setItem('notification-subscription', JSON.stringify(newSubscription));
       
+      // The API endpoint now just confirms the save without a database operation.
       const response = await fetch('/api/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
