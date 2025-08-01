@@ -1620,6 +1620,66 @@ useEffect(() => {
     );
   }
 
+  // --- Client-side component to build the webcal:// link ---
+const CalendarLink = ({ category, children }: { category?: string; children: React.ReactNode }) => {
+  const [href, setHref] = useState('');
+
+  useEffect(() => {
+    // This runs only on the client
+    const protocol = 'webcal://';
+    const host = window.location.host;
+    const path = category 
+      ? `/api/calendar?category=${encodeURIComponent(category)}`
+      : '/api/calendar';
+    
+    // Replace http/https from host if it's there from some SSR frameworks
+    const cleanHost = host.replace(/^https?:\/\//, '');
+
+    setHref(`${protocol}${cleanHost}${path}`);
+  }, [category]);
+
+  if (!href) {
+    // Render a disabled or placeholder button on the server or before hydration
+    return (
+        <Button variant="secondary" className="w-full justify-start gap-2" disabled>
+            {children}
+        </Button>
+    );
+  }
+
+  return (
+    <a href={href} className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
+        {children}
+    </a>
+  );
+};
+
+const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
+  return (
+    <DialogContent>
+        <DialogHeader>
+            <DialogTitle>Suscripción a Calendario</DialogTitle>
+            <DialogDescription>
+                Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
+            </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="h-72">
+            <div className="p-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <CalendarLink>
+                    Todos los Eventos
+                </CalendarLink>
+                {categories.map(category => (
+                    <CalendarLink key={category} category={category}>
+                        {category}
+                    </CalendarLink>
+                ))}
+            </div>
+        </ScrollArea>
+    </DialogContent>
+  );
+};
+
+
   // --- HOME VIEW (DEFAULT) ---
   const pageTitle = (
     <div className={cn(
@@ -1765,26 +1825,7 @@ useEffect(() => {
                                         Añadir a Calendario
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Suscripción a Calendario</DialogTitle>
-                                        <DialogDescription>
-                                            Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <ScrollArea className="h-72">
-                                        <div className="p-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            <a href="/api/calendar" className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
-                                                Todos los Eventos
-                                            </a>
-                                            {categories.map(category => (
-                                                <a key={category} href={`/api/calendar?category=${encodeURIComponent(category)}`} className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
-                                                    {category}
-                                                </a>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </DialogContent>
+                                <CalendarDialogContent categories={categories} />
                              </Dialog>
                              <Dialog>
                                 <DialogTrigger asChild>
