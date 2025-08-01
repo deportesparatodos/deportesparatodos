@@ -255,13 +255,11 @@ export function LayoutConfigurator({
           </div>
         </AccordionContent>
       </AccordionItem>
-      
+
       {eventProps.isViewPage && (
         <AccordionItem value="remote-control" className="border rounded-lg px-4">
             <AccordionTrigger>
-                <div className='flex items-center gap-2'>
-                    <Airplay className="h-4 w-4" /> Control Remoto
-                </div>
+                Control Remoto
             </AccordionTrigger>
             <AccordionContent className="pt-4 text-center">
               {remoteControlMode === 'controlled' && remoteSessionId ? (
@@ -289,7 +287,7 @@ export function LayoutConfigurator({
             </AccordionContent>
         </AccordionItem>
       )}
-
+      
       <AccordionItem value="item-2" className="border rounded-lg px-4">
         <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
         <AccordionContent className="pt-2">
