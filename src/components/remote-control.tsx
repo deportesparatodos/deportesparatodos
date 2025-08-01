@@ -277,7 +277,7 @@ export function RemoteControlView({
     <>
         <div className="fixed inset-0 bg-background z-50 flex flex-col">
         <header className="p-4 border-b border-border flex justify-between items-center flex-shrink-0">
-            <div className="text-center">
+            <div className="text-left">
             <h1 className="text-lg font-bold">Control Remoto</h1>
             <p className="text-sm text-muted-foreground">
                 Sesión Conectada
@@ -346,4 +346,3 @@ export function RemoteControlView({
     </>
   );
 }
-
