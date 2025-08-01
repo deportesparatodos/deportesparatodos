@@ -1,7 +1,9 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import mailchimp from '@mailchimp/mailchimp_marketing';
-import { format, toZonedTime, parse, isValid } from 'date-fns-tz';
+import { format, toZonedTime } from 'date-fns-tz';
+import { parse, isValid } from 'date-fns';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -99,9 +101,12 @@ const sortLogic = (a: Event, b: Event): number => {
     if (timeAIsUnknown && !timeBIsUnknown) return 1;
     if (!timeAIsUnknown && timeBIsUnknown) return -1;
     if (timeAIsUnknown && timeBIsUnknown) return a.title.localeCompare(b.title);
-
+    
     // Sort chronologically from 00:00 to 23:59
-    return a.time.localeCompare(b.time);
+    const timeA = parse(a.time, 'HH:mm', new Date()).getTime();
+    const timeB = parse(b.time, 'HH:mm', new Date()).getTime();
+
+    return timeA - timeB;
 };
 
 
