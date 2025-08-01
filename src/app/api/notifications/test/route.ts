@@ -101,6 +101,18 @@ function generateEmailHtml(events: Event[]): string {
             <p>Puedes ajustar tus preferencias en cualquier momento en la aplicación.</p>
         `;
     }
+    
+    // Custom sort function
+    const sortLogic = (a: Event, b: Event): number => {
+        const aIsUnknown = a.time === '--:--' || a.status === 'Desconocido';
+        const bIsUnknown = b.time === '--:--' || b.status === 'Desconocido';
+
+        if (aIsUnknown && !bIsUnknown) return 1;
+        if (!aIsUnknown && bIsUnknown) return -1;
+        
+        return a.time.localeCompare(b.time); // Chronological for known times
+    };
+
 
     // 1. Group events by category
     const groupedEvents = events.reduce<Record<string, Event[]>>((acc, event) => {
@@ -115,14 +127,8 @@ function generateEmailHtml(events: Event[]): string {
     // 2. Sort events within each category and generate HTML
     const eventListHtml = Object.entries(groupedEvents)
         .map(([category, categoryEvents]) => {
-            // Sort events: known times first, then unknown (--:--)
-            const sortedEvents = [...categoryEvents].sort((a, b) => {
-                const aIsUnknown = a.time === '--:--' || a.status === 'Desconocido';
-                const bIsUnknown = b.time === '--:--' || b.status === 'Desconocido';
-                if (aIsUnknown && !bIsUnknown) return 1;
-                if (!aIsUnknown && bIsUnknown) return -1;
-                return a.time.localeCompare(b.time); // Chronological for known times
-            });
+            
+            const sortedEvents = [...categoryEvents].sort(sortLogic);
 
             const eventsHtml = sortedEvents
                 .map(event => `
@@ -138,9 +144,9 @@ function generateEmailHtml(events: Event[]): string {
                 .join('');
 
             return `
-                <details>
-                    <summary style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 10px;">
-                        ${category} (${sortedEvents.length})
+                <details style="margin-top: 20px;">
+                    <summary style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 10px;">
+                       ${category} (${sortedEvents.length})
                     </summary>
                     ${eventsHtml}
                 </details>
