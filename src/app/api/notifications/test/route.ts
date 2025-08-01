@@ -102,19 +102,52 @@ function generateEmailHtml(events: Event[]): string {
         `;
     }
 
-    const eventListHtml = events
-        .map(event => `
-            <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                <p style="margin: 0; font-size: 16px;">
-                    <strong>${event.title}</strong>
-                    <span style="color: ${event.status === 'En Vivo' ? '#e53e3e' : '#718096'}; font-weight: bold; margin-left: 10px;">
-                        ${event.time} - ${event.status}
-                    </span>
-                </p>
-                <p style="margin: 5px 0 0; color: #4a5568;">Categoría: ${event.category}</p>
-            </div>
-        `)
+    // 1. Group events by category
+    const groupedEvents = events.reduce<Record<string, Event[]>>((acc, event) => {
+        const category = event.category || 'Otros';
+        if (!acc[category]) {
+            acc[category] = [];
+        }
+        acc[category].push(event);
+        return acc;
+    }, {});
+
+    // 2. Sort events within each category and generate HTML
+    const eventListHtml = Object.entries(groupedEvents)
+        .map(([category, categoryEvents]) => {
+            // Sort events: known times first, then unknown (--:--)
+            const sortedEvents = [...categoryEvents].sort((a, b) => {
+                const aIsUnknown = a.time === '--:--' || a.status === 'Desconocido';
+                const bIsUnknown = b.time === '--:--' || b.status === 'Desconocido';
+                if (aIsUnknown && !bIsUnknown) return 1;
+                if (!aIsUnknown && bIsUnknown) return -1;
+                return a.time.localeCompare(b.time); // Chronological for known times
+            });
+
+            const eventsHtml = sortedEvents
+                .map(event => `
+                    <div style="border-bottom: 1px solid #eee; padding: 10px 0; margin-left: 20px;">
+                        <p style="margin: 0; font-size: 16px;">
+                            <strong>${event.title}</strong>
+                            <span style="color: #718096; font-weight: bold; margin-left: 10px;">
+                                ${event.time}
+                            </span>
+                        </p>
+                    </div>
+                `)
+                .join('');
+
+            return `
+                <details>
+                    <summary style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 10px;">
+                        ${category} (${sortedEvents.length})
+                    </summary>
+                    ${eventsHtml}
+                </details>
+            `;
+        })
         .join('');
+
 
     return `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
