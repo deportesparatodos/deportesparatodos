@@ -327,7 +327,7 @@ useEffect(() => {
         };
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyClient, remoteSessionId, remoteControlMode, cleanupAbly]);
+}, [ablyClient, remoteSessionId, remoteControlMode]);
 
 
 useEffect(() => {
@@ -359,12 +359,12 @@ useEffect(() => {
   useEffect(() => {
     return () => {
       if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
-          ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } });
+          ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
           cleanupAbly();
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ablyChannel, remoteControlMode, selectedEvents]);
+  }, [ablyChannel, remoteControlMode]);
 
 
   const getGridClasses = useCallback((count: number) => {
@@ -403,21 +403,36 @@ useEffect(() => {
     }
     
     try {
-      const [liveResponse, todayResponse, sportsResponse, streamTpResponse, agendaResponse] = await Promise.all([
-        fetch('/api/streams?type=live').then(res => res.ok ? res.json() : []).catch(() => []),
-        fetch('/api/streams?type=all-today').then(res => res.ok ? res.json() : []).catch(() => []),
-        fetch('/api/streams?type=sports').then(res => res.ok ? res.json() : []).catch(() => []),
-        fetch('/api/streams?type=streamtp').then(res => res.ok ? res.json() : []).catch(() => []),
-        fetch('https://agenda-dpt.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => []),
-      ]);
+      const endpoints = [
+        { name: 'live', url: '/api/streams?type=live' },
+        { name: 'today', url: '/api/streams?type=all-today' },
+        { name: 'sports', url: '/api/streams?type=sports' },
+        { name: 'streamtp', url: '/api/streams?type=streamtp' },
+        { name: 'agenda', url: 'https://agenda-dpt.vercel.app/api/events' },
+      ];
+
+      const results = await Promise.allSettled(
+        endpoints.map(ep => fetch(ep.url).then(res => res.ok ? res.json() : Promise.reject(new Error(`Failed to fetch ${ep.url}`))))
+      );
+
+      const getData = <T,>(name: string): T[] => {
+        const result = results.find((r, i) => endpoints[i].name === name);
+        if (result?.status === 'fulfilled' && Array.isArray(result.value)) {
+          return result.value as T[];
+        }
+        if (result?.status === 'rejected') {
+            console.error(`Error fetching ${name}:`, result.reason);
+        }
+        return [];
+      };
 
       setLastFetchTimestamp(Date.now()); 
 
-      const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
-      const todayData: StreamedMatch[] = Array.isArray(todayResponse) ? todayResponse : [];
-      const sportsData: {id: string; name: string}[] = Array.isArray(sportsResponse) ? sportsResponse : [];
-      const streamTpData: StreamTpEvent[] = Array.isArray(streamTpResponse) ? streamTpResponse : [];
-      const agendaData: AgendaEvent[] = Array.isArray(agendaResponse) ? agendaResponse : [];
+      const liveData: StreamedMatch[] = getData<StreamedMatch>('live');
+      const todayData: StreamedMatch[] = getData<StreamedMatch>('today');
+      const sportsData: {id: string; name: string}[] = getData<{id: string; name: string}>('sports');
+      const streamTpData: StreamTpEvent[] = getData<StreamTpEvent>('streamtp');
+      const agendaData: AgendaEvent[] = getData<AgendaEvent>('agenda');
 
       const allMatchesMap = new Map<string, StreamedMatch>();
       
@@ -462,7 +477,7 @@ useEffect(() => {
           category: normalizeCategory(categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1)),
           language: '',
           date: format(zonedEventTime, 'yyyy-MM-dd'),
-          source: 'streamed.su',
+          source: 'streamed.pk',
           image: imageUrl,
           status: status,
         };
@@ -536,7 +551,7 @@ useEffect(() => {
       setEvents(combinedInitialEvents);
 
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error('Error in fetchEvents:', error);
       setEvents([]); 
     } finally {
         if (fromDialog) {
@@ -744,7 +759,7 @@ useEffect(() => {
 
     combinedEvents.forEach(event => {
         const normalized = normalizeTitle(event.title);
-        const key = event.source === 'streamed.su' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${normalized}|${event.time}`;
+        const key = event.source === 'streamed.pk' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${normalized}|${event.time}`;
 
         const existingEvent = eventMap.get(key);
 
@@ -1040,7 +1055,7 @@ useEffect(() => {
     setDialogOpen(true);
     
     // Fetch options if they are missing
-    if (event.source === 'streamed.su' && event.options.length === 0) {
+    if (event.source === 'streamed.pk' && event.options.length === 0) {
         const fetchStreamOptions = async () => {
             try {
                 const sourcePromises = event.sources.map(async (source) => {
@@ -2317,7 +2332,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         setIsModification(selection.isSelected);
         setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
         
-        if (event.source === 'streamed.su' && event.options.length === 0) {
+        if (event.source === 'streamed.pk' && event.options.length === 0) {
             try {
                 const sourcePromises = event.sources.map(async (source) => {
                     try {
