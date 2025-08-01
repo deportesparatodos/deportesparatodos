@@ -448,9 +448,9 @@ useEffect(() => {
 
         let imageUrl = 'https://i.ibb.co/dHPWxr8/depete.jpg';
         if (match.teams?.home?.badge && match.teams?.away?.badge) {
-            imageUrl = `https://streamed.su/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`;
+            imageUrl = `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`;
         } else if (match.poster) {
-            imageUrl = `https://streamed.su${match.poster}`;
+            imageUrl = `https://streamed.pk${match.poster}`;
         }
 
         return {

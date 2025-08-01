@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'claroperupoc.vtexassets.com' },
       { protocol: 'https', hostname: 'a.espncdn.com' },
       { protocol: 'https', hostname: 'cdn-icons-png.flaticon.com' },
-      { protocol: 'https', hostname: 'streamed.su' },
+      { protocol: 'https', hostname: 'streamed.pk' },
       { protocol: 'https', hostname: 'e7.pngegg.com' },
       { protocol: 'https', hostname: 'assets.goal.com' },
       { protocol: 'https', hostname: 'pbs.twimg.com' },

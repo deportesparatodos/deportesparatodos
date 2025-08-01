@@ -43,9 +43,9 @@ const normalizeCategory = (category: string): string => {
 async function getEventsForNotification(categories: string[]): Promise<Event[]> {
     try {
         const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
-            fetch('https://streamed.su/api/matches/live').then(res => res.ok ? res.json() : []).catch(() => []),
-            fetch('https://streamed.su/api/matches/all-today').then(res => res.ok ? res.json() : []).catch(() => []),
-            fetch('https://streamed.su/api/sports').then(res => res.ok ? res.json() : []).catch(() => []),
+            fetch('https://streamed.pk/api/matches/live').then(res => res.ok ? res.json() : []).catch(() => []),
+            fetch('https://streamed.pk/api/matches/all-today').then(res => res.ok ? res.json() : []).catch(() => []),
+            fetch('https://streamed.pk/api/sports').then(res => res.ok ? res.json() : []).catch(() => []),
         ]);
 
         const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];

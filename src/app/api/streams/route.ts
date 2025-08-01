@@ -4,10 +4,10 @@ import { NextResponse, type NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const API_ENDPOINTS = {
-  'live': 'https://streamed.su/api/matches/live',
-  'all-today': 'https://streamed.su/api/matches/all-today',
-  'sports': 'https://streamed.su/api/sports',
-  'stream': 'https://streamed.su/api/stream',
+  'live': 'https://streamed.pk/api/matches/live',
+  'all-today': 'https://streamed.pk/api/matches/all-today',
+  'sports': 'https://streamed.pk/api/sports',
+  'stream': 'https://streamed.pk/api/stream',
   'streamtp': 'https://streamtpglobal.com/eventos.json',
 };
 
