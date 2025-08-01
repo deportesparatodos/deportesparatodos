@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell, Airplay } from 'lucide-react';
+import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell, Airplay, Loader2 } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
@@ -35,6 +35,7 @@ interface CameraConfigurationProps {
   onNotification: () => void;
   remoteSessionId: string | null;
   remoteControlMode: 'inactive' | 'controlling' | 'controlled';
+  onStartControlledSession: () => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -56,8 +57,16 @@ export function CameraConfigurationComponent({
   onNotification,
   remoteSessionId,
   remoteControlMode,
+  onStartControlledSession,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [isStartingRemote, setIsStartingRemote] = useState(false);
+
+  const handleStartRemote = () => {
+    setIsStartingRemote(true);
+    onStartControlledSession();
+    // No need to set to false, as the component will re-render with the new mode
+  };
 
   return (
     <>
@@ -91,23 +100,37 @@ export function CameraConfigurationComponent({
                   onSchedule={onSchedule}
                   onNotificationManager={onNotification}
               />
-              {isViewPage && remoteControlMode === 'controlled' && remoteSessionId && (
-                <Accordion type="single" collapsible className="w-full space-y-4 py-1">
+              {isViewPage && (
+                <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue='remote-control'>
                     <AccordionItem value="remote-control" className="border rounded-lg px-4">
                         <AccordionTrigger>
                             <div className='flex items-center gap-2'>
                                 <Airplay className="h-4 w-4" /> Control Remoto
                             </div>
                         </AccordionTrigger>
-                        <AccordionContent className="pt-2 text-center">
-                            <p className="text-sm text-muted-foreground mb-2">
-                                Introduce este código en el dispositivo de control:
-                            </p>
-                            <div className="p-3 bg-muted rounded-lg">
-                                <p className="text-3xl font-bold tracking-widest text-primary">
-                                    {remoteSessionId}
-                                </p>
-                            </div>
+                        <AccordionContent className="pt-4 text-center">
+                          {remoteControlMode === 'controlled' && remoteSessionId ? (
+                            <>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                  Introduce este código en el dispositivo de control:
+                              </p>
+                              <div className="p-3 bg-muted rounded-lg">
+                                  <p className="text-3xl font-bold tracking-widest text-primary">
+                                      {remoteSessionId}
+                                  </p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
+                              </p>
+                              <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
+                                {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Activar Control Remoto
+                              </Button>
+                            </>
+                          )}
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>

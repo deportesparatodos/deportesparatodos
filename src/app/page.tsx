@@ -269,6 +269,14 @@ function HomePageContent() {
     cleanupAbly();
   }, [cleanupAbly]);
 
+  const handleStartControlledSession = useCallback(() => {
+    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+    setRemoteSessionId(newCode);
+    setRemoteControlMode('controlled');
+    // The main useEffect will handle Ably client creation
+    // No need to set isViewMode here, the controller will trigger it
+  }, [setRemoteControlMode, setRemoteSessionId]);
+
 useEffect(() => {
     if (remoteControlMode !== 'inactive' && !ablyClientRef.current) {
         const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
@@ -1514,6 +1522,7 @@ useEffect(() => {
                 onNotification={() => setNotificationManagerOpen(true)}
                 remoteSessionId={remoteSessionId}
                 remoteControlMode={remoteControlMode}
+                onStartControlledSession={handleStartControlledSession}
             />
 
             {isChatEnabled && (
@@ -2118,6 +2127,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                               setRemoteControlMode={setRemoteControlMode}
                               setRemoteSessionId={setRemoteSessionId}
                               ablyClient={ablyClient}
+                              onStartControlled={handleStartControlledSession}
                             />
 
                             <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
@@ -2555,3 +2565,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+

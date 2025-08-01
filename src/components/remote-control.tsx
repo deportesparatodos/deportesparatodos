@@ -28,10 +28,12 @@ export function RemoteControlDialog({
   ablyClient,
   setRemoteControlMode,
   setRemoteSessionId,
+  onStartControlled,
 }: {
   ablyClient: Ably.Realtime | null;
   setRemoteControlMode: (mode: 'inactive' | 'controlling' | 'controlled') => void;
   setRemoteSessionId: (id: string | null) => void;
+  onStartControlled: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<'main' | 'controlled' | 'controlling'>('main');
@@ -39,15 +41,6 @@ export function RemoteControlDialog({
   const [code, setCode] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const { toast } = useToast();
-
-  const handleStartControlledSession = useCallback(() => {
-    setIsLoading(true);
-    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedCode(newCode);
-    setRemoteSessionId(newCode);
-    setRemoteControlMode('controlled');
-    setIsLoading(false);
-  }, [setRemoteControlMode, setRemoteSessionId]);
 
   const handleStartControllingSession = () => {
     if (!code || code.length !== 4) {
@@ -66,6 +59,11 @@ export function RemoteControlDialog({
     setIsLoading(false);
   };
   
+  const handleSetControlledView = () => {
+    setView('controlled');
+    onStartControlled();
+  }
+
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
@@ -78,10 +76,17 @@ export function RemoteControlDialog({
   }, [isOpen]);
   
   useEffect(() => {
-    if (view === 'controlled' && isOpen && !generatedCode) {
-      handleStartControlledSession();
+    // This effect is to receive the generated code when the parent component sets it
+    if (view === 'controlled' && ablyClient?.connection.state === 'connected') {
+       const clientId = ablyClient.auth.clientId;
+       if(clientId && clientId.length === 4) {
+         setGeneratedCode(clientId);
+         setIsLoading(false);
+       }
     }
-  }, [view, isOpen, generatedCode, handleStartControlledSession]);
+  // This might be tricky, let's stick to the user's request of passing the function
+  // The logic is in the parent. Let's simplify this component.
+  }, [view, ablyClient]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -103,7 +108,7 @@ export function RemoteControlDialog({
             <Button onClick={() => setView('controlling')} size="lg">
               Controlar Otro Dispositivo
             </Button>
-            <Button onClick={() => setView('controlled')} variant="outline" size="lg">
+            <Button onClick={handleSetControlledView} variant="outline" size="lg">
               Conectar control remoto
             </Button>
           </div>
