@@ -340,10 +340,6 @@ export function RemoteControlView({
         </div>
         <Dialog open={isRemoteChatOpen} onOpenChange={setIsRemoteChatOpen}>
             <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
-                <DialogHeader className="p-4 border-b flex-row justify-between items-center">
-                    <DialogTitle>Chat en Vivo</DialogTitle>
-                    <DialogDescription className="sr-only">Contenedor del chat en vivo de Minnit.</DialogDescription>
-                </DialogHeader>
                 <iframe
                     src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
                     title="Chat en Vivo"
