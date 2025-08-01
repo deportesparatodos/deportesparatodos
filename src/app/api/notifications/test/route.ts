@@ -79,12 +79,13 @@ async function getEventsForNotification(categories: string[]): Promise<Event[]> 
         
         // Filter events based on selected categories
         const userCategories = new Set(categories.map(c => c.toLowerCase()));
+        const activeEvents = allEvents.filter(e => e.status === 'En Vivo' || e.status === 'Próximo');
+
         if (userCategories.has('all')) {
-            return allEvents.filter(e => e.status === 'En Vivo' || e.status === 'Próximo');
+            return activeEvents;
         }
 
-        return allEvents.filter(event => 
-            (event.status === 'En Vivo' || event.status === 'Próximo') &&
+        return activeEvents.filter(event => 
             userCategories.has(event.category.toLowerCase())
         );
 
