@@ -1,17 +1,16 @@
 
 import { NextResponse } from 'next/server';
-import type { Event } from '@/components/event-carousel';
-import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic'; 
 
-// NOTE: This CRON job is currently disabled because there is no central database
-// to fetch user subscriptions from since Vercel KV has been removed.
+// NOTE: This CRON job is currently disabled. 
 // It is kept in place to avoid breaking deployments, but it will not send emails.
+// To implement email sending, you would need to fetch subscribers from your
+// email provider (e.g., Mailchimp) and then loop through them to send emails.
 
 export async function GET() {
   try {
-    return NextResponse.json({ message: "Cron job executed, but no database is configured to fetch subscriptions." });
+    return NextResponse.json({ message: "Cron job executed, but no email sending logic is implemented." });
 
   } catch (error) {
     console.error('CRON Error:', error);

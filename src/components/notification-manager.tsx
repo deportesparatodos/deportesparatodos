@@ -36,19 +36,16 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
   const [email, setEmail] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [subscriptionType, setSubscriptionType] = useState<'all' | 'specific'>('all');
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSendingTest, setIsSendingTest] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
-      loadSubscription();
+      loadSubscriptionFromLocalStorage();
     }
-  }, [open, toast]);
+  }, [open]);
 
-  const loadSubscription = () => {
-    setIsLoading(true);
+  const loadSubscriptionFromLocalStorage = () => {
     try {
       const storedEmail = localStorage.getItem('notification-email');
       const storedSub = localStorage.getItem('notification-subscription');
@@ -70,10 +67,8 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'No se pudo cargar la configuración de notificaciones.',
+        description: 'No se pudo cargar la configuración de notificaciones guardada.',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -81,7 +76,7 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       toast({
         variant: 'destructive',
-        title: 'Error',
+        title: 'Correo Inválido',
         description: 'Por favor, introduce una dirección de correo válida.',
       });
       return;
@@ -89,87 +84,46 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
     
     setIsSaving(true);
     
-    const newSubscription: Subscription = {
+    const subscriptionData = {
       email,
-      subscribedCategories: subscriptionType === 'all' ? ['all'] : selectedCategories,
+      tags: subscriptionType === 'all' ? ['all'] : selectedCategories,
     };
 
     try {
-      // Save to localStorage, which is now the primary source of truth.
-      localStorage.setItem('notification-email', email);
-      localStorage.setItem('notification-subscription', JSON.stringify(newSubscription));
-      
-      // The API endpoint now just confirms the save without a database operation.
-      const response = await fetch('/api/notifications', {
+      const response = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newSubscription),
+        body: JSON.stringify(subscriptionData),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
+        // Save to localStorage on successful subscription
+        const localSubscription: Subscription = {
+          email,
+          subscribedCategories: subscriptionType === 'all' ? ['all'] : selectedCategories,
+        };
+        localStorage.setItem('notification-email', email);
+        localStorage.setItem('notification-subscription', JSON.stringify(localSubscription));
+
         toast({
-          title: 'Guardado',
-          description: 'Tus preferencias de notificación han sido guardadas.',
+          title: '¡Suscripción Exitosa!',
+          description: result.message || 'Te has suscrito a las notificaciones.',
         });
         onOpenChange(false);
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save subscription');
+        throw new Error(result.error || 'Ocurrió un error al suscribirte.');
       }
     } catch (error: any) {
       console.error('Error saving subscription:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'No se pudieron guardar tus preferencias. Inténtalo de nuevo.',
+        title: 'Error de Suscripción',
+        description: error.message || 'No se pudo completar la suscripción. Inténtalo de nuevo.',
       });
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleSendTest = async () => {
-     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Por favor, introduce una dirección de correo válida para enviar la prueba.',
-      });
-      return;
-    }
-    setIsSendingTest(true);
-
-    const testSubscription = {
-      email,
-      subscribedCategories: subscriptionType === 'all' ? ['all'] : selectedCategories,
-    };
-
-    try {
-      const response = await fetch('/api/notifications/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testSubscription),
-      });
-
-      if (response.ok) {
-        toast({
-          title: '¡Prueba Enviada!',
-          description: 'Revisa tu bandeja de entrada para confirmar la recepción de la notificación.',
-        });
-      } else {
-         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send test notification');
-      }
-
-    } catch (error: any) {
-      console.error('Error sending test notification:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error de Envío',
-        description: error.message || 'No se pudo enviar la notificación de prueba. Verifica la consola para más detalles.',
-      });
-    } finally {
-      setIsSendingTest(false);
     }
   };
   
@@ -185,84 +139,71 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Gestionar Notificaciones</DialogTitle>
+          <DialogTitle>Gestionar Suscripción</DialogTitle>
           <DialogDescription>
-            Recibe un resumen diario de los eventos a las 8:00 AM.
+            Suscríbete para recibir notificaciones de eventos por correo.
           </DialogDescription>
         </DialogHeader>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="space-y-6 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="pushover-email">Tu Email</Label>
+            <Input
+              id="pushover-email"
+              placeholder="tu.email@ejemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="pushover-email">Tu Email</Label>
-              <Input
-                id="pushover-email"
-                placeholder="tu.email@ejemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            
-            <RadioGroup value={subscriptionType} onValueChange={(value) => setSubscriptionType(value as 'all' | 'specific')}>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="all" id="r1" />
-                    <Label htmlFor="r1">Notificarme de todos los eventos</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="specific" id="r2" />
-                    <Label htmlFor="r2">Notificarme solo de categorías específicas</Label>
-                </div>
-            </RadioGroup>
-
-            {subscriptionType === 'specific' && (
-              <div className="space-y-2">
-                 <Label>Selecciona Categorías</Label>
-                 <ScrollArea className="h-40 w-full rounded-md border p-4">
-                   <div className="space-y-2">
-                   {allCategories.map(category => (
-                     <div key={category} className="flex items-center space-x-2">
-                        <Checkbox 
-                           id={category}
-                           checked={selectedCategories.includes(category)}
-                           onCheckedChange={() => handleCategoryChange(category)}
-                        />
-                        <Label htmlFor={category} className="font-normal">{category}</Label>
-                     </div>
-                   ))}
-                   </div>
-                 </ScrollArea>
+          
+          <RadioGroup value={subscriptionType} onValueChange={(value) => setSubscriptionType(value as 'all' | 'specific')}>
+              <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="all" id="r1" />
+                  <Label htmlFor="r1">Notificarme de todos los eventos</Label>
               </div>
-            )}
-             <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Importante</AlertTitle>
-              <AlertDescription>
-                Asegúrate de que tu proveedor de correo no marque nuestros emails como spam.
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
+              <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="specific" id="r2" />
+                  <Label htmlFor="r2">Notificarme solo de categorías específicas</Label>
+              </div>
+          </RadioGroup>
 
-        <DialogFooter className="sm:justify-between gap-2">
-          <Button type="button" variant="outline" onClick={handleSendTest} disabled={isLoading || isSendingTest || !email}>
-             {isSendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Enviar Prueba
-          </Button>
-          <div className="flex gap-2">
-            <DialogClose asChild>
-              <Button type="button" variant="secondary" disabled={isSaving}>
-                Cancelar
-              </Button>
-            </DialogClose>
-            <Button type="submit" onClick={handleSave} disabled={isLoading || isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Guardar Cambios
+          {subscriptionType === 'specific' && (
+            <div className="space-y-2">
+               <Label>Selecciona Categorías</Label>
+               <ScrollArea className="h-40 w-full rounded-md border p-4">
+                 <div className="space-y-2">
+                 {allCategories.map(category => (
+                   <div key={category} className="flex items-center space-x-2">
+                      <Checkbox 
+                         id={category}
+                         checked={selectedCategories.includes(category)}
+                         onCheckedChange={() => handleCategoryChange(category)}
+                      />
+                      <Label htmlFor={category} className="font-normal">{category}</Label>
+                   </div>
+                 ))}
+                 </div>
+               </ScrollArea>
+            </div>
+          )}
+           <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Importante</AlertTitle>
+            <AlertDescription>
+              El envío de correos se gestiona a través de Mailchimp. Podrás darte de baja en cualquier momento desde los propios correos.
+            </AlertDescription>
+          </Alert>
+        </div>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="secondary" disabled={isSaving}>
+              Cancelar
             </Button>
-          </div>
+          </DialogClose>
+          <Button type="submit" onClick={handleSave} disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Guardar Cambios
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

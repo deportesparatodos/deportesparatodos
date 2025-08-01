@@ -9,9 +9,8 @@
       "maxDuration": 300,
       "memory": 512
     },
-    "src/app/api/notifications/test/route.ts": {
-      "maxDuration": 60,
-      "memory": 512
+    "src/app/api/subscribe/route.ts": {
+      "maxDuration": 10
     },
      "src/app/api/ably/route.ts": {
       "maxDuration": 10
@@ -31,7 +30,9 @@
   ],
   "env": {
     "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
-    "RESEND_API_KEY": "re_K8qNK2bo_6MNsqN3M9NBaBkFBfnU4iKp4",
-    "NEXT_PUBLIC_ABLY_API_KEY": "kS8MIg.oMRzRw:rCKWrOYObgoMfrEn3dPmzHJVj4-lZHPnXPmVggVO9zY"
+    "NEXT_PUBLIC_ABLY_API_KEY": "kS8MIg.oMRzRw:rCKWrOYObgoMfrEn3dPmzHJVj4-lZHPnXPmVggVO9zY",
+    "MAILCHIMP_API_KEY": "YOUR_MAILCHIMP_API_KEY_HERE",
+    "MAILCHIMP_AUDIENCE_ID": "YOUR_MAILCHIMP_AUDIENCE_ID_HERE",
+    "MAILCHIMP_SERVER_PREFIX": "YOUR_MAILCHIMP_SERVER_PREFIX_HERE"
   }
 }
