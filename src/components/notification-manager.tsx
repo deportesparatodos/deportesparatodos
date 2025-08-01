@@ -147,11 +147,17 @@ export function NotificationManager({ open, onOpenChange, allCategories }: Notif
     }
     
     setIsSendingTest(true);
+
+    const testPayload = {
+      email,
+      categories: subscriptionType === 'all' ? ['all'] : selectedCategories,
+    };
+
     try {
       const response = await fetch('/api/notifications/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(testPayload),
       });
 
       const result = await response.json();
