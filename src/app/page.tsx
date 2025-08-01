@@ -250,14 +250,21 @@ function HomePageContent() {
   
   const ablyClientRef = useRef<Ably.Realtime | null>(null);
 
-   const cleanupAbly = useCallback(() => {
-    if (ablyChannel) {
-        ablyChannel.detach();
+   const cleanupAbly = useCallback(async () => {
+    const client = ablyClientRef.current;
+    if (client && (client.connection.state === 'connected' || client.connection.state === 'connecting')) {
+        const activeChannel = ablyChannel;
+        if (activeChannel) {
+            try {
+                await activeChannel.detach();
+            } catch (e) {
+                console.error('Error detaching from Ably channel:', e);
+            }
+        }
+        client.close();
     }
-    if (ablyClientRef.current) {
-        ablyClientRef.current.close();
-        ablyClientRef.current = null;
-    }
+
+    ablyClientRef.current = null;
     setAblyClient(null);
     setAblyChannel(null);
     setRemoteSessionId(null);
@@ -269,35 +276,28 @@ function HomePageContent() {
     cleanupAbly();
   }, [cleanupAbly]);
 
-  const handleStartControlledSession = useCallback(() => {
+  const handleStartControlledSession = useCallback(async () => {
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
+    ablyClientRef.current = client;
+    setAblyClient(client);
+
+    client.connection.on('failed', (error) => {
+        console.error("Ably connection failed:", error);
+        toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
+        cleanupAbly();
+    });
+
+    await client.connection.once('connected');
+
     setRemoteSessionId(newCode);
     setRemoteControlMode('controlled');
-    // The main useEffect will handle Ably client creation
-    // No need to set isViewMode here, the controller will trigger it
-  }, [setRemoteControlMode, setRemoteSessionId]);
-
-useEffect(() => {
-    if (remoteControlMode !== 'inactive' && !ablyClientRef.current) {
-        const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
-        ablyClientRef.current = client;
-        setAblyClient(client);
-
-        client.connection.on('failed', (error) => {
-            console.error("Ably connection failed:", error);
-            toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
-            cleanupAbly();
-        });
-    }
-
-    if (remoteControlMode === 'inactive' && ablyClientRef.current) {
-        cleanupAbly();
-    }
-}, [remoteControlMode, cleanupAbly, toast]);
+  }, [cleanupAbly, toast]);
 
 
 useEffect(() => {
-    if (ablyClient && remoteSessionId && remoteControlMode === 'controlled') {
+    if (remoteControlMode === 'controlled' && ablyClient && remoteSessionId) {
         const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
         setAblyChannel(channel);
 
@@ -310,14 +310,13 @@ useEffect(() => {
                 setBorderColor(payload.borderColor ?? '#000000');
                 setIsChatEnabled(payload.isChatEnabled ?? true);
             } else if (action === 'connect') {
-                 // The controller has connected, now we can enter view mode
                  setIsViewMode(true);
             } else if (action === 'disconnect') {
-                if (payload) { // Persist state if payload is sent
+                if (payload) {
                     setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
                 }
                 cleanupAbly();
-                setIsViewMode(false); // Exit view mode on disconnect
+                setIsViewMode(false);
             }
         };
 
@@ -338,7 +337,6 @@ useEffect(() => {
         
         const initialSync = async () => {
             try {
-                // Announce connection to the controlled device
                 await channel.publish('control-update', { action: 'connect', payload: {
                     initialEvents: selectedEvents,
                     initialOrder: viewOrder,
@@ -1014,8 +1012,7 @@ useEffect(() => {
   };
   
   const handleStopView = () => {
-    if (remoteControlMode === 'controlled') {
-       if (ablyChannel) ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } });
+    if (remoteControlMode !== 'inactive') {
         cleanupAbly();
     }
     setIsViewMode(false);
