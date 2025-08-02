@@ -1,6 +1,3 @@
-
-
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -197,7 +194,6 @@ function HomePageContent() {
   const [borderColor, setBorderColor] = useState<string>('#000000');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // View mode state
@@ -1584,7 +1580,6 @@ function HomePageContent() {
                     <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
                         <iframe
                             ref={el => (iframeRefs.current[originalIndex] = el)}
-                            ref={el => (iframeRefs.current[originalIndex] = el)}
                             src={iframeSrc}
                             title={`Stream ${originalIndex + 1}`}
                             className="w-full h-full border-0"
@@ -2572,4 +2567,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
