@@ -278,41 +278,26 @@ function HomePageContent() {
     cleanupAbly();
   }, [cleanupAbly]);
 
-  const initAblyAndGetChannel = useCallback(async (sessionId: string) => {
-      if (ablyClientRef.current) {
-          await cleanupAbly();
-      }
-
-      const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
-      ablyClientRef.current = client;
-      setAblyClient(client);
-
-      client.connection.on('failed', (error) => {
-          console.error("Ably connection failed:", error);
-          toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
-          cleanupAbly();
-      });
-
-      await client.connection.once('connected');
-      
-      const channel = client.channels.get(`remote-control:${sessionId}`);
-      setAblyChannel(channel);
-      return channel;
-  }, [cleanupAbly, toast]);
-
   const handleStartControlledSession = useCallback(async () => {
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     setRemoteSessionId(newCode);
+
+    const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
+    ablyClientRef.current = client;
+    setAblyClient(client);
+
+    client.connection.on('failed', (error) => {
+        console.error("Ably connection failed:", error);
+        toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
+        cleanupAbly();
+    });
+
+    await client.connection.once('connected');
+    
     setRemoteControlMode('controlled');
-    await initAblyAndGetChannel(newCode);
-  }, [initAblyAndGetChannel]);
-
-
-useEffect(() => {
-    if (remoteControlMode === 'controlling' && remoteSessionId) {
-        initAblyAndGetChannel(remoteSessionId);
-    }
-}, [remoteControlMode, remoteSessionId, initAblyAndGetChannel]);
+    const channel = client.channels.get(`remote-control:${newCode}`);
+    setAblyChannel(channel);
+  }, [cleanupAbly, toast]);
 
 
 useEffect(() => {
@@ -325,46 +310,8 @@ useEffect(() => {
                 setGridGap(payload.gridGap ?? 0);
                 setBorderColor(payload.borderColor ?? '#000000');
                 setIsChatEnabled(payload.isChatEnabled ?? true);
-            } else if (action === 'playClick') {
-                const iframe = iframeRefs.current[payload.index];
-                if (iframe?.contentWindow) {
-                    // Focus the iframe first, which is often necessary
-                    iframe.focus();
-
-                    // Create and dispatch a click event to the center of the document body
-                    const clickEvent = new MouseEvent('click', {
-                        bubbles: true,
-                        cancelable: true,
-                        view: iframe.contentWindow,
-                    });
-                    
-                    iframe.contentWindow.document.body.dispatchEvent(clickEvent);
-                    
-                    // As a fallback, try to find and click video elements
-                    try {
-                        const videoElements = iframe.contentWindow.document.getElementsByTagName('video');
-                        if (videoElements.length > 0) {
-                            videoElements[0].play();
-                        }
-                    } catch (e) {
-                        console.warn("Could not directly play video element in iframe:", e);
-                    }
-                }
             } else if (action === 'connect') {
-                // Controller has connected, send it the current state
                  setIsViewMode(true);
-                 if (ablyChannel) {
-                    ablyChannel.publish('control-update', {
-                        action: 'initialState',
-                        payload: {
-                            selectedEvents: selectedEvents,
-                            viewOrder: viewOrder,
-                            gridGap: gridGap,
-                            borderColor: borderColor,
-                            isChatEnabled: isChatEnabled,
-                        }
-                    }).catch(err => console.error("Failed to publish initial state:", err));
-                }
             } else if (action === 'disconnect') {
                 if (payload) {
                     setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
@@ -374,10 +321,10 @@ useEffect(() => {
             }
         };
 
-        ablyChannel.subscribe('control-update', messageListener);
+        ablyChannel.subscribe('remote-control', messageListener);
         
         return () => {
-            ablyChannel.unsubscribe('control-update', messageListener);
+            ablyChannel.unsubscribe('remote-control', messageListener);
         };
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -387,7 +334,7 @@ useEffect(() => {
   const handleStopView = () => {
     if (remoteControlMode !== 'inactive') {
         if(ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling'){
-             ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
+             ablyChannel.publish('remote-control', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
         }
         cleanupAbly();
     }
@@ -1280,19 +1227,13 @@ useEffect(() => {
   if (remoteControlMode === 'controlling') {
     return (
       <RemoteControlView 
-        ablyChannel={ablyChannel}
+        ablyClient={ablyClient}
         onStop={() => handleSessionEnd({ selectedEvents })}
+        sessionId={remoteSessionId!}
         onSessionEnd={handleSessionEnd}
         allEvents={events}
         allChannels={channels}
         updateAllEvents={setEvents}
-        initialState={{
-            selectedEvents: selectedEvents,
-            viewOrder: viewOrder,
-            gridGap: gridGap,
-            borderColor: borderColor,
-            isChatEnabled: isChatEnabled,
-        }}
       />
     )
   }

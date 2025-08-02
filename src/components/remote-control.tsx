@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -145,94 +145,92 @@ export function RemoteControlDialog({
   );
 }
 
-interface RemoteControlViewState {
-    selectedEvents: (Event|null)[];
-    viewOrder: number[];
-    gridGap: number;
-    borderColor: string;
-    isChatEnabled: boolean;
-}
-
 // --- View for the "Controlling" device (e.g., phone) ---
 export function RemoteControlView({
-  ablyChannel,
+  ablyClient,
   onStop,
+  sessionId,
   onSessionEnd,
   allEvents,
   allChannels,
   updateAllEvents,
-  initialState,
 }: {
-  ablyChannel: Ably.Types.RealtimeChannelPromise | null;
+  ablyClient: Ably.Realtime | null;
   onStop: () => void;
+  sessionId: string;
   onSessionEnd: (finalState: {selectedEvents: (Event|null)[]}) => void;
   allEvents: Event[];
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
-  initialState: RemoteControlViewState,
 }) {
-    const [remoteState, setRemoteState] = useState<RemoteControlViewState>(initialState);
-    const [addEventsOpen, setAddEventsOpen] = useState(false);
-    const [isFullScreen, setIsFullScreen] = useState(false);
-    const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
-    const [isConnecting, setIsConnecting] = useState(true);
-    const { toast } = useToast();
+  const [channel, setChannel] = useState<Ably.Types.RealtimeChannelPromise | null>(null);
+  const [remoteState, setRemoteState] = useState<{
+    selectedEvents: (Event | null)[];
+    viewOrder: number[];
+    gridGap: number;
+    borderColor: string;
+    isChatEnabled: boolean;
+  }>({
+    selectedEvents: Array(9).fill(null),
+    viewOrder: Array.from({ length: 9 }, (_, i) => i),
+    gridGap: 0,
+    borderColor: '#000000',
+    isChatEnabled: true,
+  });
+  const [addEventsOpen, setAddEventsOpen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(true);
+  const { toast } = useToast();
 
-    const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
-        const updatedState = { ...remoteState, ...newState };
-        setRemoteState(updatedState);
-        if (ablyChannel) {
-            ablyChannel.publish('control-update', {
-                action: 'updateState',
-                payload: updatedState,
-            });
-        }
-    }, [ablyChannel, remoteState]);
-    
-   useEffect(() => {
-    if (!ablyChannel) return;
+  useEffect(() => {
+    if (ablyClient && sessionId) {
+      const ablyChannel = ablyClient.channels.get(`remote-control:${sessionId}`);
+      setChannel(ablyChannel);
+      ablyChannel.publish('remote-control', { action: 'connect' });
 
-    const connectAndSync = async () => {
-      try {
-        // Wait for the channel to be attached before publishing
-        await ablyChannel.whenState('attached');
-
-        // 1. Controller connects and requests initial state
-        await ablyChannel.publish('control-update', { action: 'connect' });
-
-      } catch (err: any) {
-        console.error("Failed to publish connect message:", err);
-        toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar la conexión con el dispositivo.' });
+      const timeout = setTimeout(() => {
+        setIsConnecting(false);
+        toast({
+            variant: "destructive",
+            title: "Error de Conexión",
+            description: "No se pudo obtener el estado inicial del dispositivo. Asegúrate de que el código es correcto y ambos dispositivos están en línea."
+        });
         onStop();
+      }, 10000); // 10 second timeout
+
+      ablyChannel.subscribe('remote-control-state', (message: any) => {
+          clearTimeout(timeout);
+          setRemoteState(message.data);
+          setIsConnecting(false);
+      });
+      
+      return () => {
+          clearTimeout(timeout);
+          ablyChannel.unsubscribe();
       }
-    };
-    
-    // 2. Controller listens for the initial state from the controlled device
-    const messageListener = (message: any) => {
-        const { action, payload } = message.data;
-        if (action === 'initialState') {
-            setRemoteState(payload);
-            setIsConnecting(false);
-        }
-    };
-    ablyChannel.subscribe('control-update', messageListener);
-    
-    connectAndSync();
+    }
+  }, [ablyClient, sessionId, toast, onStop]);
 
-    return () => {
-        ablyChannel.unsubscribe('control-update', messageListener);
-    };
-}, [ablyChannel, onStop, toast]);
+  const updateRemoteState = useCallback((newState: Partial<typeof remoteState>) => {
+    const updatedState = { ...remoteState, ...newState };
+    setRemoteState(updatedState);
+    if (channel) {
+      channel.publish('remote-control', {
+        action: 'updateState',
+        payload: updatedState,
+      });
+    }
+  }, [channel, remoteState]);
 
+  const handleStopAndPersist = () => {
+      if(channel){
+        channel.publish('remote-control', { action: 'disconnect', payload: remoteState });
+      }
+      onSessionEnd({ selectedEvents: remoteState.selectedEvents });
+  };
 
-    const handleStopAndPersist = () => {
-        if(ablyChannel){
-            ablyChannel.publish('control-update', { action: 'disconnect', payload: remoteState });
-        }
-        onSessionEnd({ selectedEvents: remoteState.selectedEvents });
-    };
-
-    const handleEventsChange = (newEvents: (Event|null)[]) => {
+  const handleEventsChange = (newEvents: (Event|null)[]) => {
       const newActiveIndexes = newEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
       const oldActiveIndexes = remoteState.viewOrder.filter(i => newActiveIndexes.includes(i));
       const fullOrder = Array.from({ length: 9 }, (_, i) => i);
@@ -242,15 +240,15 @@ export function RemoteControlView({
           selectedEvents: newEvents, 
           viewOrder: finalNewOrder,
       });
-    }
+  }
 
-    const handleRemove = (index: number) => {
-        const newEvents = [...remoteState.selectedEvents];
-        newEvents[index] = null;
-        handleEventsChange(newEvents);
-    };
+  const handleRemove = (index: number) => {
+    const newEvents = [...remoteState.selectedEvents];
+    newEvents[index] = null;
+    handleEventsChange(newEvents);
+  };
 
-    const handleOrderChange = (newOrder: number[]) => {
+  const handleOrderChange = (newOrder: number[]) => {
       const fullNewOrder = [...newOrder];
       const presentIndexes = new Set(newOrder);
       for(let i=0; i<9; i++) {
@@ -259,89 +257,77 @@ export function RemoteControlView({
         }
       }
       updateRemoteState({ viewOrder: fullNewOrder });
-    };
-    
-    const handleGridGapChange = (value: number) => {
-        updateRemoteState({ gridGap: value });
-    };
+  };
+  
+  const handleGridGapChange = (value: number) => {
+    updateRemoteState({ gridGap: value });
+  };
 
-    const handleBorderColorChange = (value: string) => {
-        updateRemoteState({ borderColor: value });
-    };
+  const handleBorderColorChange = (value: string) => {
+    updateRemoteState({ borderColor: value });
+  };
 
-    const handleIsChatEnabledChange = (value: boolean) => {
-        updateRemoteState({ isChatEnabled: value });
-    };
+  const handleIsChatEnabledChange = (value: boolean) => {
+    updateRemoteState({ isChatEnabled: value });
+  };
 
-    const handleAddEvent = (event: Event, option: string) => {
-        const newEvents = [...remoteState.selectedEvents];
-        const eventWithSelection = { ...event, selectedOption: option };
-        const emptyIndex = newEvents.findIndex(e => e === null);
-        if (emptyIndex !== -1) {
-            newEvents[emptyIndex] = eventWithSelection;
-            handleEventsChange(newEvents);
-        } else {
-            toast({ title: 'Info', description: 'All 9 slots are full.' });
-        }
-        setAddEventsOpen(false);
-    };
-
-    const handlePlay = (index: number) => {
-      if (ablyChannel) {
-        ablyChannel.publish('control-update', {
-          action: 'playClick',
-          payload: { index },
-        });
-        toast({ title: 'Comando enviado', description: `Se envió la señal de reproducción a la ventana ${remoteState.viewOrder.indexOf(index) + 1}.`});
+  const handleAddEvent = (event: Event, option: string) => {
+      const newEvents = [...remoteState.selectedEvents];
+      const eventWithSelection = { ...event, selectedOption: option };
+      const emptyIndex = newEvents.findIndex(e => e === null);
+      if (emptyIndex !== -1) {
+          newEvents[emptyIndex] = eventWithSelection;
+          handleEventsChange(newEvents);
+      } else {
+          toast({ title: 'Info', description: 'All 9 slots are full.' });
       }
-    };
+      setAddEventsOpen(false);
+  };
 
-
-    if (isConnecting) {
-        return (
-            <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
-                <Loader2 className="h-10 w-10 animate-spin" />
-                <p className="mt-4 text-muted-foreground">Conectando al servicio de control remoto...</p>
-                 <Button variant="outline" onClick={onStop} className="mt-4">Cancelar</Button>
-            </div>
-        )
-    }
+  if (isConnecting) {
+    return (
+        <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin" />
+            <p className="mt-4 text-muted-foreground">Conectando al servicio de control remoto...</p>
+             <Button variant="outline" onClick={onStop} className="mt-4">Cancelar</Button>
+        </div>
+    )
+  }
 
   return (
     <>
-        <div className="fixed inset-0 bg-background z-50 flex flex-col">
+      <div className="fixed inset-0 bg-background z-50 flex flex-col">
         <header className="p-4 border-b border-border flex justify-between items-center flex-shrink-0">
-            <div className="text-left">
+          <div className="text-left">
             <h1 className="text-lg font-bold">Control Remoto</h1>
             <p className="text-sm text-muted-foreground">
-                Sesión Conectada
+              Sesión Conectada
             </p>
-            </div>
-            <Button variant="destructive" onClick={handleStopAndPersist}>
+          </div>
+          <Button variant="destructive" onClick={handleStopAndPersist}>
             <X className="mr-2 h-4 w-4" /> Terminar
-            </Button>
+          </Button>
         </header>
         <div className="flex-grow overflow-y-auto p-4">
-            <LayoutConfigurator
+          <LayoutConfigurator
             order={remoteState.viewOrder.filter((i) => remoteState.selectedEvents[i] !== null)}
             onOrderChange={handleOrderChange}
             eventDetails={remoteState.selectedEvents}
             onRemove={handleRemove}
-            onPlay={handlePlay}
             onModify={() =>
-                toast({
+              toast({
                 title: 'Info',
                 description:
-                    'La modificación debe hacerse eliminando y volviendo a añadir el evento.',
-                })
+                  'La modificación debe hacerse eliminando y volviendo a añadir el evento.',
+              })
             }
             isViewPage={true}
             onAddEvent={() => setAddEventsOpen(true)}
             onSchedule={() =>
-                toast({
+              toast({
                 title: 'Info',
                 description: 'La programación no está disponible en modo control remoto.',
-                })
+              })
             }
             gridGap={remoteState.gridGap}
             onGridGapChange={handleGridGapChange}
@@ -350,22 +336,22 @@ export function RemoteControlView({
             isChatEnabled={remoteState.isChatEnabled}
             onIsChatEnabledChange={handleIsChatEnabledChange}
             onOpenChat={() => setIsRemoteChatOpen(true)}
-            />
+          />
         </div>
         <AddEventsDialog
-            open={addEventsOpen}
-            onOpenChange={setAddEventsOpen}
-            onSelect={handleAddEvent}
-            selectedEvents={remoteState.selectedEvents}
-            allEvents={allEvents}
-            allChannels={allChannels}
-            onFetchEvents={async () => {}} // No fetching in remote
-            updateAllEvents={updateAllEvents}
-            isFullScreen={isFullScreen}
-            setIsFullScreen={setIsFullScreen}
+          open={addEventsOpen}
+          onOpenChange={setAddEventsOpen}
+          onSelect={handleAddEvent}
+          selectedEvents={remoteState.selectedEvents}
+          allEvents={allEvents}
+          allChannels={allChannels}
+          onFetchEvents={async () => {}} // No fetching in remote
+          updateAllEvents={updateAllEvents}
+          isFullScreen={isFullScreen}
+          setIsFullScreen={setIsFullScreen}
         />
-        </div>
-        <Dialog open={isRemoteChatOpen} onOpenChange={setIsRemoteChatOpen}>
+      </div>
+       <Dialog open={isRemoteChatOpen} onOpenChange={setIsRemoteChatOpen}>
             <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
               <DialogHeader className="p-4 border-b">
                 <DialogTitle>Chat en Vivo</DialogTitle>
@@ -381,4 +367,3 @@ export function RemoteControlView({
     </>
   );
 }
-

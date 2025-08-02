@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2 } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -25,7 +25,6 @@ interface EventListManagementProps {
   onReload?: (index: number) => void;
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
-  onPlay?: (index: number) => void; // Added onPlay prop
   isViewPage: boolean;
   onAddEvent?: () => void;
   onSchedule?: () => void;
@@ -39,7 +38,6 @@ export function EventListManagement({
   onReload,
   onRemove,
   onModify,
-  onPlay, // Added onPlay prop
   isViewPage,
   onAddEvent,
   onSchedule,
@@ -121,16 +119,6 @@ export function EventListManagement({
                           <RotateCw className="h-4 w-4" />
                         </Button>
                       )}
-                       {isViewPage && onPlay && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7"
-                            onClick={(e) => { e.stopPropagation(); onPlay(originalIndex); }}
-                          >
-                            <Play className="h-4 w-4" />
-                          </Button>
-                        )}
 
                       <Button 
                         variant="ghost" 
