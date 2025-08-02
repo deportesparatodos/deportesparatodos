@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -310,41 +309,48 @@ function HomePageContent() {
 
      const messageListener = (message: any) => {
         const { action, payload } = message.data;
-        if (action === 'updateState') {
-            setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
-            setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
-            setGridGap(payload.gridGap ?? 0);
-            setBorderColor(payload.borderColor ?? '#000000');
-            setIsChatEnabled(payload.isChatEnabled ?? true);
-        } else if (action === 'connect') {
-             setIsViewMode(true);
-             const currentState = {
-                selectedEvents: selectedEvents,
-                viewOrder: viewOrder,
-                gridGap: gridGap,
-                borderColor: borderColor,
-                isChatEnabled: isChatEnabled,
-             };
-             // Respond to the controller with the current state
-             channel.publish('initialState', currentState);
-        } else if (action === 'disconnect') {
-            if (payload) {
+        
+        switch(action) {
+            case 'updateState':
                 setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
-            }
-            cleanupAbly();
-            setIsViewMode(false);
-        } else if (action === 'playClick') {
-            const iframe = iframeRefs.current[payload.index];
-            if (iframe && iframe.contentWindow) {
-                iframe.focus();
-                // We send a synthetic click event to the iframe's document
-                const clickEvent = new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                    view: iframe.contentWindow
-                });
-                iframe.contentDocument?.body?.dispatchEvent(clickEvent);
-            }
+                setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
+                setGridGap(payload.gridGap ?? 0);
+                setBorderColor(payload.borderColor ?? '#000000');
+                setIsChatEnabled(payload.isChatEnabled ?? true);
+                break;
+            
+            case 'connect':
+                setIsViewMode(true);
+                const currentState = {
+                    selectedEvents: selectedEvents,
+                    viewOrder: viewOrder,
+                    gridGap: gridGap,
+                    borderColor: borderColor,
+                    isChatEnabled: isChatEnabled,
+                };
+                channel.publish('initialState', currentState);
+                break;
+            
+            case 'disconnect':
+                if (payload) {
+                    setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
+                }
+                cleanupAbly();
+                setIsViewMode(false);
+                break;
+
+            case 'playClick':
+                const iframe = iframeRefs.current[payload.index];
+                if (iframe && iframe.contentWindow) {
+                    iframe.focus();
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: iframe.contentWindow
+                    });
+                    iframe.contentDocument?.body?.dispatchEvent(clickEvent);
+                }
+                break;
         }
     };
     channel.subscribe(messageListener);
@@ -361,7 +367,7 @@ function HomePageContent() {
   useEffect(() => {
     return () => {
       if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
-          ablyChannel.publish('disconnect', { payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
+          ablyChannel.publish('disconnect', { selectedEvents }).catch(err => console.error("Error publishing disconnect:", err));
           cleanupAbly();
       }
     };
@@ -433,7 +439,7 @@ function HomePageContent() {
       const liveData: StreamedMatch[] = getData<StreamedMatch>('live');
       const todayData: StreamedMatch[] = getData<StreamedMatch>('today');
       const sportsData: {id: string; name: string}[] = getData<{id: string; name: string}>('sports');
-      const streamTpData: StreamTpEvent[] = getData<StreamTpEvent>('streamtp');
+      const streamTpData: StreampEvent[] = getData<StreamTpEvent>('streamtp');
       const agendaData: AgendaEvent[] = getData<AgendaEvent>('agenda');
 
       const allMatchesMap = new Map<string, StreamedMatch>();
@@ -2577,3 +2583,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
+    

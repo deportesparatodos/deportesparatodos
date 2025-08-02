@@ -173,14 +173,14 @@ export function RemoteControlView({
                 // Ensure the channel is attached before doing anything.
                 await ablyChannel.whenState('attached');
 
-                // Subscribe to the initial state message from the controlled device.
+                // 1. Subscribe to the 'initialState' message first.
                 ablyChannel.subscribe('initialState', (message: any) => {
                     setRemoteState(message.data);
                     setIsLoading(false);
                 });
 
-                // Publish the 'connect' message to tell the controlled device we are ready.
-                await ablyChannel.publish('connect', {});
+                // 2. Publish the 'connect' message to tell the controlled device we are ready.
+                await ablyChannel.publish('connect', { action: 'connect' });
 
             } catch (error: any) {
                 console.error("Error during remote control sync:", error);
@@ -205,13 +205,13 @@ export function RemoteControlView({
         if (!remoteState || !ablyChannel) return;
         const updatedState = { ...remoteState, ...newState };
         setRemoteState(updatedState);
-        ablyChannel.publish('updateState', updatedState);
+        ablyChannel.publish('updateState', { action: 'updateState', payload: updatedState });
     }, [ablyChannel, remoteState]);
     
 
     const handleStopAndPersist = () => {
         if(ablyChannel && remoteState){
-            ablyChannel.publish('disconnect', { payload: remoteState });
+            ablyChannel.publish('disconnect', { action: 'disconnect', payload: remoteState });
         }
         onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
     };
@@ -238,7 +238,7 @@ export function RemoteControlView({
     
     const handlePlayClick = (index: number) => {
         if (ablyChannel) {
-            ablyChannel.publish('playClick', { index });
+            ablyChannel.publish('playClick', { action: 'playClick', payload: { index } });
         }
     };
 
@@ -283,7 +283,7 @@ export function RemoteControlView({
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin" />
-                <p className="mt-4 text-muted-foreground">Conectando al servicio de control remoto...</p>
+                <p className="mt-4 text-muted-foreground">Conectando y esperando estado...</p>
             </div>
         )
     }
@@ -389,3 +389,5 @@ interface RemoteControlViewState {
   borderColor: string;
   isChatEnabled: boolean;
 }
+
+    
