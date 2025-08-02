@@ -151,12 +151,14 @@ export function RemoteControlView({
   allEvents,
   allChannels,
   updateAllEvents,
+  remoteSessionId,
 }: {
   ablyChannel: Ably.Types.RealtimeChannelPromise | null;
   onSessionEnd: (finalState: {selectedEvents: (Event|null)[]}) => void;
   allEvents: Event[];
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
+  remoteSessionId: string | null;
 }) {
     const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
@@ -165,76 +167,57 @@ export function RemoteControlView({
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
 
-    // This effect handles the initial handshake
+    const connectAndSync = useCallback(async () => {
+        if (!ablyChannel || !remoteSessionId) return;
+
+        try {
+            await ablyChannel.whenState('attached');
+            
+            ablyChannel.subscribe('remote-control', (message: any) => {
+                const { action, payload } = message.data;
+                if (payload.sessionId !== remoteSessionId) return;
+
+                if (action === 'initialState') {
+                    setRemoteState(payload);
+                    setIsLoading(false);
+                } else if (action === 'updateState') {
+                    setRemoteState(payload);
+                }
+            });
+
+            await ablyChannel.publish('remote-control', { action: 'connect', payload: { sessionId: remoteSessionId } });
+
+        } catch (error: any) {
+            console.error("Error during remote control sync:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error de Conexión',
+                description: `No se pudo sincronizar con el dispositivo. (${error.message})`,
+            });
+            onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
+        }
+    }, [ablyChannel, remoteSessionId, onSessionEnd, toast, remoteState?.selectedEvents]);
+
     useEffect(() => {
-        if (!ablyChannel) return;
-
-        const connectAndSync = async () => {
-            try {
-                // 1. Subscribe to the 'initialState' message first, so we are ready to receive it.
-                ablyChannel.subscribe('remote-control', (message: any) => {
-                    const { action, payload } = message.data;
-                    if (action === 'initialState') {
-                        setRemoteState(payload);
-                        setIsLoading(false); // Stop loading only when we get the state
-                    }
-                });
-
-                // 2. Wait for the channel to be attached.
-                await ablyChannel.whenState('attached');
-
-                // 3. Publish the 'connect' message to tell the controlled device we are ready.
-                await ablyChannel.publish('remote-control', { action: 'connect' });
-
-            } catch (error: any) {
-                console.error("Error during remote control sync:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Error de Conexión',
-                    description: `No se pudo sincronizar con el dispositivo. (${error.message})`,
-                });
-                onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
-            }
-        };
-
         connectAndSync();
-
-        // Cleanup subscription on unmount
-        return () => {
-            ablyChannel.unsubscribe('remote-control');
-        }
-    }, [ablyChannel, onSessionEnd, toast]);
-
-    // This effect listens for subsequent state updates (after initial handshake)
-     useEffect(() => {
-        if (!ablyChannel || isLoading) return; // Don't listen until initial load is done
-
-        const subscription = (message: any) => {
-             const { action, payload } = message.data;
-              if (action === 'updateState') {
-                  setRemoteState(payload);
-              }
-        };
-        
-        ablyChannel.subscribe('remote-control', subscription);
         
         return () => {
-             ablyChannel.unsubscribe('remote-control', subscription);
+            ablyChannel?.unsubscribe('remote-control');
         }
-    }, [ablyChannel, isLoading]);
+    }, [ablyChannel, connectAndSync]);
 
 
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
-        if (!remoteState || !ablyChannel) return;
-        const updatedState = { ...remoteState, ...newState };
+        if (!remoteState || !ablyChannel || !remoteSessionId) return;
+        const updatedState = { ...remoteState, ...newState, sessionId: remoteSessionId };
         setRemoteState(updatedState);
         ablyChannel.publish('remote-control', { action: 'updateState', payload: updatedState });
-    }, [ablyChannel, remoteState]);
+    }, [ablyChannel, remoteState, remoteSessionId]);
     
 
     const handleStopAndPersist = () => {
         if(ablyChannel && remoteState){
-            ablyChannel.publish('remote-control', { action: 'disconnect', payload: remoteState });
+            ablyChannel.publish('remote-control', { action: 'disconnect', payload: { ...remoteState, sessionId: remoteSessionId } });
         }
         onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
     };
@@ -250,7 +233,7 @@ export function RemoteControlView({
           selectedEvents: newEvents, 
           viewOrder: finalNewOrder,
       });
-  }
+    }
 
     const handleRemove = (index: number) => {
         if (!remoteState) return;
@@ -260,12 +243,12 @@ export function RemoteControlView({
     };
     
     const handlePlayClick = (index: number) => {
-        if (ablyChannel) {
-            ablyChannel.publish('remote-control', { action: 'playClick', payload: { index } });
+        if (ablyChannel && remoteSessionId) {
+            ablyChannel.publish('remote-control', { action: 'playClick', payload: { index, sessionId: remoteSessionId } });
         }
     };
 
-  const handleOrderChange = (newOrder: number[]) => {
+    const handleOrderChange = (newOrder: number[]) => {
       const fullNewOrder = [...newOrder];
       const presentIndexes = new Set(newOrder);
       for(let i=0; i<9; i++) {
@@ -274,19 +257,19 @@ export function RemoteControlView({
         }
       }
       updateRemoteState({ viewOrder: fullNewOrder });
-  };
+    };
   
-  const handleGridGapChange = (value: number) => {
-    updateRemoteState({ gridGap: value });
-  };
+    const handleGridGapChange = (value: number) => {
+        updateRemoteState({ gridGap: value });
+    };
 
-  const handleBorderColorChange = (value: string) => {
-    updateRemoteState({ borderColor: value });
-  };
+    const handleBorderColorChange = (value: string) => {
+        updateRemoteState({ borderColor: value });
+    };
 
-  const handleIsChatEnabledChange = (value: boolean) => {
-    updateRemoteState({ isChatEnabled: value });
-  };
+    const handleIsChatEnabledChange = (value: boolean) => {
+        updateRemoteState({ isChatEnabled: value });
+    };
 
     const handleAddEvent = (event: Event, option: string) => {
         if (!remoteState) return;
@@ -312,8 +295,6 @@ export function RemoteControlView({
     }
     
     if (!remoteState) {
-        // This case can happen if connection fails and isLoading is set to false.
-        // The error toast should have already been shown.
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-center p-4">
                  <X className="h-10 w-10 text-destructive mb-4" />
@@ -406,6 +387,7 @@ export function RemoteControlView({
 
 // This needs to be defined for the props of RemoteControlView
 interface RemoteControlViewState {
+  sessionId: string;
   selectedEvents: (Event | null)[];
   viewOrder: number[];
   gridGap: number;

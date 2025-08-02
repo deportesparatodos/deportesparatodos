@@ -241,7 +241,6 @@ function HomePageContent() {
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
 
   // --- Remote Control States ---
-  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null);
   const [ablyChannel, setAblyChannel] = useState<Ably.Types.RealtimeChannelPromise | null>(null);
   const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
   const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
@@ -268,7 +267,6 @@ function HomePageContent() {
     }
 
     ablyClientRef.current = null;
-    setAblyClient(null);
     setAblyChannel(null);
     setRemoteSessionId(null);
     setRemoteControlMode('inactive');
@@ -280,50 +278,44 @@ function HomePageContent() {
     cleanupAbly();
   }, [cleanupAbly]);
   
-  const initAblyAndGetChannel = useCallback(async (sessionId: string) => {
+  const initAbly = useCallback(async () => {
     if (ablyClientRef.current && ablyClientRef.current.connection.state !== 'closed') {
         await cleanupAbly();
     }
     const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
     ablyClientRef.current = client;
-    setAblyClient(client);
 
     client.connection.on('failed', (error) => {
         console.error("Ably connection failed:", error);
         toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason.message}` });
         cleanupAbly();
     });
-
+    
     await client.connection.once('connected');
-    const channel = client.channels.get(`remote-control:${sessionId}`);
-    setAblyChannel(channel);
-    return channel;
+    return client;
   }, [cleanupAbly, toast]);
 
 
   const handleStartControlledSession = useCallback(async () => {
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     setRemoteSessionId(newCode);
-    const channel = await initAblyAndGetChannel(newCode);
-    setRemoteControlMode('controlled');
+    
+    const client = await initAbly();
+    if (!client) return;
 
-    // Wait for the controller to send a 'connect' message
+    const channel = client.channels.get(`remote-control:${newCode}`);
+    setAblyChannel(channel);
+
     channel.subscribe('remote-control', (message: any) => {
         const { action, payload } = message.data;
         
+        if (payload.sessionId !== newCode) return;
+
         switch(action) {
-            case 'updateState':
-                setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
-                setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
-                setGridGap(payload.gridGap ?? 0);
-                setBorderColor(payload.borderColor ?? '#000000');
-                setIsChatEnabled(payload.isChatEnabled ?? true);
-                break;
-            
-            case 'connect':
-                // Once controller connects, enter view mode and send back the initial state
+            case 'connect': {
                 setIsViewMode(true);
                 const currentState = {
+                    sessionId: newCode,
                     selectedEvents: selectedEvents,
                     viewOrder: viewOrder,
                     gridGap: gridGap,
@@ -332,7 +324,14 @@ function HomePageContent() {
                 };
                 channel.publish('remote-control', { action: 'initialState', payload: currentState });
                 break;
-            
+            }
+            case 'updateState':
+                setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
+                setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
+                setGridGap(payload.gridGap ?? 0);
+                setBorderColor(payload.borderColor ?? '#000000');
+                setIsChatEnabled(payload.isChatEnabled ?? true);
+                break;
             case 'disconnect':
                 if (payload) {
                     setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
@@ -355,20 +354,27 @@ function HomePageContent() {
                 break;
         }
     });
-  }, [initAblyAndGetChannel, cleanupAbly, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled]);
+    setRemoteControlMode('controlled');
+
+  }, [initAbly, cleanupAbly, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled]);
 
   useEffect(() => {
-    if (remoteControlMode === 'controlling' && remoteSessionId && !ablyClient) {
-        initAblyAndGetChannel(remoteSessionId);
+    if (remoteControlMode === 'controlling' && remoteSessionId && !ablyClientRef.current) {
+        initAbly().then(client => {
+            if (client) {
+              const channel = client.channels.get(`remote-control:${remoteSessionId}`);
+              setAblyChannel(channel);
+            }
+        });
     }
-  }, [remoteControlMode, remoteSessionId, ablyClient, initAblyAndGetChannel]);
+  }, [remoteControlMode, remoteSessionId, initAbly]);
 
 
   // Cleanup effect
   useEffect(() => {
     return () => {
       if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
-          ablyChannel.publish('remote-control', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
+          ablyChannel.publish('remote-control', { action: 'disconnect', payload: { sessionId: remoteSessionId, selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
           cleanupAbly();
       }
     };
@@ -1276,6 +1282,7 @@ function HomePageContent() {
             allEvents={events}
             allChannels={channels}
             updateAllEvents={setEvents}
+            remoteSessionId={remoteSessionId}
         />
       </Suspense>
     )
@@ -2584,3 +2591,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
