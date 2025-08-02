@@ -1021,8 +1021,10 @@ function HomePageContent() {
     return { isSelected: false, window: null, selectedOption: null };
   };
 
+  const selectedEventsCount = selectedEvents.filter(Boolean).length;
+
   const handleStartView = () => {
-    if (remoteControlMode === 'controlled') return; // Don't allow manual start if controlled
+    if (remoteControlMode === 'controlled' || selectedEventsCount === 0) return;
     setIsViewMode(true);
   };
 
@@ -1227,8 +1229,6 @@ function HomePageContent() {
     setSelectedEvents(newSelectedEvents);
     setAddEventsDialogOpen(false);
   };
-
-  const selectedEventsCount = selectedEvents.filter(Boolean).length;
   
   const getItemClasses = (orderedIndex: number, count: number) => {
     if (isMobile) return '';
@@ -1278,6 +1278,8 @@ function HomePageContent() {
 
   if (isViewMode) {
      const numCameras = selectedEventsCount;
+     const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
+     
      if (numCameras === 0 && remoteControlMode === 'controlled') {
       return (
         <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
@@ -1294,7 +1296,7 @@ function HomePageContent() {
             </div>
         </div>
       );
-    }
+     }
     if (numCameras === 0 && remoteControlMode !== 'controlled') {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
@@ -1305,8 +1307,6 @@ function HomePageContent() {
             </div>
         );
     }
-
-    const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
     
     return (
       <div className="flex h-screen w-screen bg-background text-foreground group">
