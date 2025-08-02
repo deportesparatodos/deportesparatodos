@@ -281,7 +281,7 @@ function HomePageContent() {
   }, [cleanupAbly]);
   
   const initAblyAndGetChannel = useCallback(async (sessionId: string) => {
-    if (ablyClientRef.current) {
+    if (ablyClientRef.current && ablyClientRef.current.connection.state !== 'closed') {
         await cleanupAbly();
     }
     const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
@@ -324,7 +324,7 @@ function HomePageContent() {
                 borderColor: borderColor,
                 isChatEnabled: isChatEnabled,
              };
-             channel.publish('control-update', { action: 'initialState', payload: currentState });
+             channel.publish('initialState', { action: 'initialState', payload: currentState });
         } else if (action === 'disconnect') {
             if (payload) {
                 setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
@@ -349,10 +349,10 @@ function HomePageContent() {
   }, [initAblyAndGetChannel, cleanupAbly, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled]);
 
   useEffect(() => {
-    if (remoteControlMode === 'controlling' && remoteSessionId) {
+    if (remoteControlMode === 'controlling' && remoteSessionId && !ablyClient) {
         initAblyAndGetChannel(remoteSessionId);
     }
-  }, [remoteControlMode, remoteSessionId, initAblyAndGetChannel]);
+  }, [remoteControlMode, remoteSessionId, ablyClient, initAblyAndGetChannel]);
 
 
   // Cleanup effect
@@ -1297,7 +1297,7 @@ function HomePageContent() {
         </div>
       );
      }
-    if (numCameras === 0 && remoteControlMode !== 'controlled') {
+    if (numCameras === 0) {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
                 <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
@@ -2575,5 +2575,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
-    

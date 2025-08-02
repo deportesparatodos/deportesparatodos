@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
@@ -15,7 +14,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -173,7 +172,7 @@ export function RemoteControlView({
              try {
                 await ablyChannel.whenState('attached');
 
-                ablyChannel.subscribe('control-update', (message: any) => {
+                ablyChannel.subscribe('initialState', (message: any) => {
                     const { action, payload } = message.data;
                     if (action === 'initialState') {
                         setRemoteState(payload);
@@ -196,7 +195,7 @@ export function RemoteControlView({
         connectAndSync();
 
         return () => {
-            ablyChannel.unsubscribe('control-update');
+            ablyChannel.unsubscribe('initialState');
         }
     }, [ablyChannel, onSessionEnd, remoteState, toast]);
 
@@ -294,7 +293,18 @@ export function RemoteControlView({
     if (!remoteState) {
         // This case can happen if connection fails and isLoading is set to false.
         // The error toast should have already been shown.
-        return null; 
+        return (
+            <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-center p-4">
+                 <X className="h-10 w-10 text-destructive mb-4" />
+                <h1 className="text-lg font-bold">Conexión Fallida</h1>
+                <p className="mt-2 text-muted-foreground">
+                    No se pudo establecer la conexión. Por favor, verifica el código e inténtalo de nuevo.
+                </p>
+                <Button onClick={() => onSessionEnd({ selectedEvents: []})} className="mt-4">
+                    Cerrar
+                </Button>
+            </div>
+        );
     }
 
   return (
