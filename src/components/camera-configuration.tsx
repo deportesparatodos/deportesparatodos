@@ -65,7 +65,6 @@ export function CameraConfigurationComponent({
   const handleStartRemote = () => {
     setIsStartingRemote(true);
     onStartControlledSession();
-    // No need to set to false, as the component will re-render with the new mode
   };
 
   return (

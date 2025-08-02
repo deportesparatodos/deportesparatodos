@@ -55,7 +55,6 @@ export function RemoteControlDialog({
     setRemoteSessionId(code);
     setRemoteControlMode('controlling');
     setIsOpen(false);
-    // Don't setIsLoading to false here, the parent component will unmount/change view
   };
   
   const handleSetControlledView = () => {
@@ -167,44 +166,43 @@ export function RemoteControlView({
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
 
-    const connectAndSync = useCallback(async () => {
+    useEffect(() => {
         if (!ablyChannel || !remoteSessionId) return;
 
-        try {
-            await ablyChannel.whenState('attached');
-            
-            ablyChannel.subscribe('remote-control', (message: any) => {
-                const { action, payload } = message.data;
-                if (payload.sessionId !== remoteSessionId) return;
+        const connectAndSync = async () => {
+            try {
+                await ablyChannel.whenState('attached');
 
-                if (action === 'initialState') {
-                    setRemoteState(payload);
-                    setIsLoading(false);
-                } else if (action === 'updateState') {
-                    setRemoteState(payload);
-                }
-            });
+                ablyChannel.subscribe('remote-control', (message: any) => {
+                    const { action, payload } = message.data;
+                    if (payload.sessionId !== remoteSessionId) return;
 
-            await ablyChannel.publish('remote-control', { action: 'connect', payload: { sessionId: remoteSessionId } });
+                    if (action === 'initialState') {
+                        setRemoteState(payload);
+                        setIsLoading(false);
+                    } else if (action === 'updateState') {
+                        setRemoteState(payload);
+                    }
+                });
 
-        } catch (error: any) {
-            console.error("Error during remote control sync:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error de Conexión',
-                description: `No se pudo sincronizar con el dispositivo. (${error.message})`,
-            });
-            onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
-        }
-    }, [ablyChannel, remoteSessionId, onSessionEnd, toast, remoteState?.selectedEvents]);
+                await ablyChannel.publish('remote-control', { action: 'connect', payload: { sessionId: remoteSessionId } });
+            } catch (error: any) {
+                console.error("Error during remote control sync:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Error de Conexión',
+                    description: `No se pudo sincronizar con el dispositivo. (${error.message})`,
+                });
+                onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
+            }
+        };
 
-    useEffect(() => {
         connectAndSync();
         
         return () => {
             ablyChannel?.unsubscribe('remote-control');
         }
-    }, [ablyChannel, connectAndSync]);
+    }, [ablyChannel, remoteSessionId, onSessionEnd, toast, remoteState?.selectedEvents]);
 
 
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
