@@ -195,6 +195,7 @@ function HomePageContent() {
   const [borderColor, setBorderColor] = useState<string>('#000000');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // View mode state
   const [isViewMode, setIsViewMode] = useState(false);
@@ -277,6 +278,9 @@ function HomePageContent() {
   }, [cleanupAbly]);
 
   const handleStartControlledSession = useCallback(async () => {
+    if (ablyClientRef.current) {
+        await cleanupAbly();
+    }
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
     
     const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
@@ -290,6 +294,9 @@ function HomePageContent() {
     });
 
     await client.connection.once('connected');
+    
+    const channel = client.channels.get(`remote-control:${newCode}`);
+    setAblyChannel(channel);
 
     setRemoteSessionId(newCode);
     setRemoteControlMode('controlled');
@@ -297,10 +304,7 @@ function HomePageContent() {
 
 
 useEffect(() => {
-    if (remoteControlMode === 'controlled' && ablyClient && remoteSessionId) {
-        const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
-        setAblyChannel(channel);
-
+    if (remoteControlMode === 'controlled' && ablyChannel) {
         const messageListener = (message: any) => {
             const { action, payload } = message.data;
             if (action === 'updateState') {
@@ -309,6 +313,31 @@ useEffect(() => {
                 setGridGap(payload.gridGap ?? 0);
                 setBorderColor(payload.borderColor ?? '#000000');
                 setIsChatEnabled(payload.isChatEnabled ?? true);
+            } else if (action === 'playClick') {
+                const iframe = iframeRefs.current[payload.index];
+                if (iframe?.contentWindow) {
+                    // Focus the iframe first, which is often necessary
+                    iframe.focus();
+
+                    // Create and dispatch a click event to the center of the document body
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: iframe.contentWindow,
+                    });
+                    
+                    iframe.contentWindow.document.body.dispatchEvent(clickEvent);
+                    
+                    // As a fallback, try to find and click video elements
+                    try {
+                        const videoElements = iframe.contentWindow.document.getElementsByTagName('video');
+                        if (videoElements.length > 0) {
+                            videoElements[0].play();
+                        }
+                    } catch (e) {
+                        console.warn("Could not directly play video element in iframe:", e);
+                    }
+                }
             } else if (action === 'connect') {
                  setIsViewMode(true);
             } else if (action === 'disconnect') {
@@ -320,14 +349,14 @@ useEffect(() => {
             }
         };
 
-        channel.subscribe(messageListener);
+        ablyChannel.subscribe(messageListener);
         
         return () => {
-            channel.unsubscribe(messageListener);
+            ablyChannel.unsubscribe(messageListener);
         };
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyClient, remoteSessionId, remoteControlMode]);
+}, [ablyChannel, remoteControlMode]);
 
 
 useEffect(() => {
@@ -355,16 +384,16 @@ useEffect(() => {
 }, [ablyClient, remoteSessionId, remoteControlMode]);
 
 
-  // Cleanup effect
-  useEffect(() => {
-    return () => {
-      if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
-          ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
-          cleanupAbly();
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ablyChannel, remoteControlMode]);
+  const handleStopView = () => {
+    if (remoteControlMode !== 'inactive') {
+        if(ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling'){
+             ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
+        }
+        cleanupAbly();
+    }
+    setIsViewMode(false);
+    fetchEvents(false); // Check timestamp before fetching
+  };
 
 
   const getGridClasses = useCallback((count: number) => {
@@ -1026,13 +1055,6 @@ useEffect(() => {
     setIsViewMode(true);
   };
   
-  const handleStopView = () => {
-    if (remoteControlMode !== 'inactive') {
-        cleanupAbly();
-    }
-    setIsViewMode(false);
-    fetchEvents(false); // Check timestamp before fetching
-  };
 
   const openDialogForEvent = (event: Event) => {
     const selection = getEventSelection(event);
@@ -1590,6 +1612,7 @@ useEffect(() => {
                 return (
                     <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
                         <iframe
+                            ref={el => (iframeRefs.current[originalIndex] = el)}
                             src={iframeSrc}
                             title={`Stream ${originalIndex + 1}`}
                             className="w-full h-full border-0"

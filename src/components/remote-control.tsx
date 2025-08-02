@@ -14,7 +14,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -255,6 +255,17 @@ export function RemoteControlView({
         setAddEventsOpen(false);
     };
 
+    const handlePlay = (index: number) => {
+      if (ablyChannel) {
+        ablyChannel.publish('control-update', {
+          action: 'playClick',
+          payload: { index },
+        });
+        toast({ title: 'Comando enviado', description: `Se envió la señal de reproducción a la ventana ${remoteState.viewOrder.indexOf(index) + 1}.`});
+      }
+    };
+
+
     if (!ablyChannel) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
@@ -284,6 +295,7 @@ export function RemoteControlView({
             onOrderChange={handleOrderChange}
             eventDetails={remoteState.selectedEvents}
             onRemove={handleRemove}
+            onPlay={handlePlay}
             onModify={() =>
                 toast({
                 title: 'Info',
