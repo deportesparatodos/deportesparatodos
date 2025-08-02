@@ -196,6 +196,7 @@ function HomePageContent() {
   const [borderColor, setBorderColor] = useState<string>('#000000');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // View mode state
   const [isViewMode, setIsViewMode] = useState(false);
@@ -251,18 +252,20 @@ function HomePageContent() {
   
   const ablyClientRef = useRef<Ably.Realtime | null>(null);
 
-   const cleanupAbly = useCallback(async () => {
+  const cleanupAbly = useCallback(async () => {
     const client = ablyClientRef.current;
-    if (client && (client.connection.state === 'connected' || client.connection.state === 'connecting')) {
+    if (client) {
+      if (client.connection.state === 'connected' || client.connection.state === 'connecting') {
         const activeChannel = ablyChannel;
         if (activeChannel) {
-            try {
-                await activeChannel.detach();
-            } catch (e) {
-                console.error('Error detaching from Ably channel:', e);
-            }
+          try {
+            await activeChannel.detach();
+          } catch (e) {
+            console.error('Error detaching from Ably channel:', e);
+          }
         }
         client.close();
+      }
     }
 
     ablyClientRef.current = null;
@@ -272,88 +275,85 @@ function HomePageContent() {
     setRemoteControlMode('inactive');
   }, [ablyChannel]);
 
+
   const handleSessionEnd = useCallback((finalState: { selectedEvents: (Event|null)[] }) => {
     setSelectedEvents(finalState.selectedEvents);
     cleanupAbly();
   }, [cleanupAbly]);
-
-  const handleStartControlledSession = useCallback(async () => {
-    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-    
+  
+  const initAblyAndGetChannel = useCallback(async (sessionId: string) => {
+    if (ablyClientRef.current) {
+        await cleanupAbly();
+    }
     const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
     ablyClientRef.current = client;
     setAblyClient(client);
 
     client.connection.on('failed', (error) => {
         console.error("Ably connection failed:", error);
-        toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
+        toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason.message}` });
         cleanupAbly();
     });
 
     await client.connection.once('connected');
-
-    setRemoteSessionId(newCode);
-    setRemoteControlMode('controlled');
+    const channel = client.channels.get(`remote-control:${sessionId}`);
+    setAblyChannel(channel);
+    return channel;
   }, [cleanupAbly, toast]);
 
 
-useEffect(() => {
-    if (remoteControlMode === 'controlled' && ablyClient && remoteSessionId) {
-        const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
-        setAblyChannel(channel);
+  const handleStartControlledSession = useCallback(async () => {
+    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+    setRemoteSessionId(newCode);
+    const channel = await initAblyAndGetChannel(newCode);
+    setRemoteControlMode('controlled');
 
-        const messageListener = (message: any) => {
-            const { action, payload } = message.data;
-            if (action === 'updateState') {
+     const messageListener = (message: any) => {
+        const { action, payload } = message.data;
+        if (action === 'updateState') {
+            setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
+            setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
+            setGridGap(payload.gridGap ?? 0);
+            setBorderColor(payload.borderColor ?? '#000000');
+            setIsChatEnabled(payload.isChatEnabled ?? true);
+        } else if (action === 'connect') {
+             setIsViewMode(true);
+             const currentState = {
+                selectedEvents: selectedEvents,
+                viewOrder: viewOrder,
+                gridGap: gridGap,
+                borderColor: borderColor,
+                isChatEnabled: isChatEnabled,
+             };
+             channel.publish('control-update', { action: 'initialState', payload: currentState });
+        } else if (action === 'disconnect') {
+            if (payload) {
                 setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
-                setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
-                setGridGap(payload.gridGap ?? 0);
-                setBorderColor(payload.borderColor ?? '#000000');
-                setIsChatEnabled(payload.isChatEnabled ?? true);
-            } else if (action === 'connect') {
-                 setIsViewMode(true);
-            } else if (action === 'disconnect') {
-                if (payload) {
-                    setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
-                }
-                cleanupAbly();
-                setIsViewMode(false);
             }
-        };
-
-        channel.subscribe(messageListener);
-        
-        return () => {
-            channel.unsubscribe(messageListener);
-        };
-    }
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyClient, remoteSessionId, remoteControlMode]);
-
-
-useEffect(() => {
-    if (ablyClient && remoteSessionId && remoteControlMode === 'controlling') {
-        const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
-        setAblyChannel(channel);
-        
-        const initialSync = async () => {
-            try {
-                await channel.publish('control-update', { action: 'connect', payload: {
-                    initialEvents: selectedEvents,
-                    initialOrder: viewOrder,
-                    initialGridGap: gridGap,
-                    initialBorderColor: borderColor,
-                    initialIsChatEnabled: isChatEnabled,
-                } });
-            } catch (err) {
-                console.error("Failed to publish initial state:", err);
-                toast({ variant: 'destructive', title: 'Error de Sincronización', description: 'No se pudo enviar el estado inicial al dispositivo controlado.' });
+            cleanupAbly();
+            setIsViewMode(false);
+        } else if (action === 'playClick') {
+            const iframe = iframeRefs.current[payload.index];
+            if (iframe && iframe.contentWindow) {
+                iframe.focus();
+                // We send a synthetic click event to the iframe's document
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: iframe.contentWindow
+                });
+                iframe.contentDocument?.body?.dispatchEvent(clickEvent);
             }
-        };
-        initialSync();
+        }
+    };
+    channel.subscribe(messageListener);
+  }, [initAblyAndGetChannel, cleanupAbly, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled]);
+
+  useEffect(() => {
+    if (remoteControlMode === 'controlling' && remoteSessionId) {
+        initAblyAndGetChannel(remoteSessionId);
     }
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyClient, remoteSessionId, remoteControlMode]);
+  }, [remoteControlMode, remoteSessionId, initAblyAndGetChannel]);
 
 
   // Cleanup effect
@@ -1588,6 +1588,7 @@ useEffect(() => {
                 return (
                     <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
                         <iframe
+                            ref={el => (iframeRefs.current[originalIndex] = el)}
                             src={iframeSrc}
                             title={`Stream ${originalIndex + 1}`}
                             className="w-full h-full border-0"

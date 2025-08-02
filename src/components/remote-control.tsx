@@ -171,36 +171,32 @@ export function RemoteControlView({
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
     const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!ablyChannel) return;
 
         const connectAndSync = async () => {
-            try {
-                // Wait for the channel to be attached before doing anything
+             try {
                 await ablyChannel.whenState('attached');
 
-                // Subscribe to state updates from the controlled device
                 ablyChannel.subscribe('control-update', (message: any) => {
                     const { action, payload } = message.data;
-                    if (action === 'initialState' || action === 'updateState') {
+                    if (action === 'initialState') {
                         setRemoteState(payload);
+                        setIsLoading(false);
                     }
                 });
 
-                // Publish a connect message to request the initial state
                 await ablyChannel.publish('remote-control', { action: 'connect' });
-
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error during remote control sync:", error);
                 toast({
                     variant: 'destructive',
                     title: 'Error de Conexión',
-                    description: 'No se pudo iniciar la conexión con el dispositivo.',
+                    description: `No se pudo iniciar la conexión con el dispositivo. (${error.message})`,
                 });
-                if(remoteState) {
-                  onSessionEnd({selectedEvents: remoteState.selectedEvents });
-                }
+                onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
             }
         };
 
@@ -209,20 +205,17 @@ export function RemoteControlView({
         return () => {
             ablyChannel.unsubscribe('control-update');
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ablyChannel]);
+    }, [ablyChannel, onSessionEnd, remoteState, toast]);
 
 
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
-        if (!remoteState) return;
+        if (!remoteState || !ablyChannel) return;
         const updatedState = { ...remoteState, ...newState };
         setRemoteState(updatedState);
-        if (ablyChannel) {
-            ablyChannel.publish('remote-control', {
-                action: 'updateState',
-                payload: updatedState,
-            });
-        }
+        ablyChannel.publish('remote-control', {
+            action: 'updateState',
+            payload: updatedState,
+        });
     }, [ablyChannel, remoteState]);
     
 
@@ -251,6 +244,12 @@ export function RemoteControlView({
         const newEvents = [...remoteState.selectedEvents];
         newEvents[index] = null;
         handleEventsChange(newEvents);
+    };
+    
+    const handlePlayClick = (index: number) => {
+        if (ablyChannel) {
+            ablyChannel.publish('remote-control', { action: 'playClick', payload: { index } });
+        }
     };
 
     const handleOrderChange = (newOrder: number[]) => {
@@ -290,13 +289,19 @@ export function RemoteControlView({
         setAddEventsOpen(false);
     };
 
-    if (!remoteState) {
+    if (isLoading) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin" />
                 <p className="mt-4 text-muted-foreground">Conectando al servicio de control remoto...</p>
             </div>
         )
+    }
+    
+    if (!remoteState) {
+        // This case can happen if connection fails and isLoading is set to false.
+        // The error toast should have already been shown.
+        return null; 
     }
 
   return (
@@ -315,6 +320,7 @@ export function RemoteControlView({
         </header>
         <div className="flex-grow overflow-y-auto p-4">
             <LayoutConfigurator
+            remoteControlMode="controlling"
             order={remoteState.viewOrder.filter((i) => remoteState.selectedEvents[i] !== null)}
             onOrderChange={handleOrderChange}
             eventDetails={remoteState.selectedEvents}
@@ -326,6 +332,7 @@ export function RemoteControlView({
                     'La modificación debe hacerse eliminando y volviendo a añadir el evento.',
                 })
             }
+            onPlay={handlePlayClick}
             isViewPage={true}
             onAddEvent={() => setAddEventsOpen(true)}
             onSchedule={() =>
