@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -174,6 +175,7 @@ export function RemoteControlView({
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(true);
     const { toast } = useToast();
 
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
@@ -188,11 +190,32 @@ export function RemoteControlView({
     }, [ablyChannel, remoteState]);
     
     useEffect(() => {
-        // When controller mounts, sync its state with the controlled device's initial state
-        setRemoteState(initialState);
-        updateRemoteState(initialState);
+        if (!ablyChannel) return;
+
+        // 1. Controller connects and requests initial state
+        ablyChannel.publish('control-update', { action: 'connect' })
+          .catch(err => {
+              console.error("Failed to publish connect message:", err);
+              toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar la conexión con el dispositivo.' });
+              onStop();
+          });
+
+        // 2. Controller listens for the initial state from the controlled device
+        const messageListener = (message: any) => {
+            const { action, payload } = message.data;
+            if (action === 'initialState') {
+                setRemoteState(payload);
+                setIsConnecting(false);
+            }
+        };
+        ablyChannel.subscribe('control-update', messageListener);
+
+        return () => {
+            ablyChannel.unsubscribe('control-update', messageListener);
+        };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [ablyChannel]);
+
 
     const handleStopAndPersist = () => {
         if(ablyChannel){
@@ -266,11 +289,12 @@ export function RemoteControlView({
     };
 
 
-    if (!ablyChannel) {
+    if (isConnecting) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin" />
                 <p className="mt-4 text-muted-foreground">Conectando al servicio de control remoto...</p>
+                 <Button variant="outline" onClick={onStop} className="mt-4">Cancelar</Button>
             </div>
         )
     }

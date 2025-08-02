@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -350,7 +351,20 @@ useEffect(() => {
                     }
                 }
             } else if (action === 'connect') {
+                // Controller has connected, send it the current state
                  setIsViewMode(true);
+                 if (ablyChannel) {
+                    ablyChannel.publish('control-update', {
+                        action: 'initialState',
+                        payload: {
+                            selectedEvents: selectedEvents,
+                            viewOrder: viewOrder,
+                            gridGap: gridGap,
+                            borderColor: borderColor,
+                            isChatEnabled: isChatEnabled,
+                        }
+                    }).catch(err => console.error("Failed to publish initial state:", err));
+                }
             } else if (action === 'disconnect') {
                 if (payload) {
                     setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
@@ -367,29 +381,7 @@ useEffect(() => {
         };
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyChannel, remoteControlMode]);
-
-
-useEffect(() => {
-    if (ablyClient && remoteSessionId && remoteControlMode === 'controlling' && ablyChannel) {
-        const initialSync = async () => {
-            try {
-                await ablyChannel.publish('control-update', { action: 'connect', payload: {
-                    initialEvents: selectedEvents,
-                    initialOrder: viewOrder,
-                    initialGridGap: gridGap,
-                    initialBorderColor: borderColor,
-                    initialIsChatEnabled: isChatEnabled,
-                } });
-            } catch (err) {
-                console.error("Failed to publish initial state:", err);
-                toast({ variant: 'destructive', title: 'Error de Sincronización', description: 'No se pudo enviar el estado inicial al dispositivo controlado.' });
-            }
-        };
-        initialSync();
-    }
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyChannel]);
+}, [ablyChannel, remoteControlMode, cleanupAbly]);
 
 
   const handleStopView = () => {
