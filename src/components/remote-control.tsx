@@ -173,14 +173,17 @@ export function RemoteControlView({
                 // Ensure the channel is attached before doing anything.
                 await ablyChannel.whenState('attached');
 
-                // 1. Subscribe to the 'initialState' message first.
-                ablyChannel.subscribe('initialState', (message: any) => {
-                    setRemoteState(message.data);
-                    setIsLoading(false);
+                // 1. Subscribe to the 'initialState' and other messages.
+                ablyChannel.subscribe('remote-control', (message: any) => {
+                    const { action, payload } = message.data;
+                    if (action === 'initialState') {
+                        setRemoteState(payload);
+                        setIsLoading(false);
+                    }
                 });
 
                 // 2. Publish the 'connect' message to tell the controlled device we are ready.
-                await ablyChannel.publish('connect', { action: 'connect' });
+                await ablyChannel.publish('remote-control', { action: 'connect' });
 
             } catch (error: any) {
                 console.error("Error during remote control sync:", error);
@@ -205,13 +208,13 @@ export function RemoteControlView({
         if (!remoteState || !ablyChannel) return;
         const updatedState = { ...remoteState, ...newState };
         setRemoteState(updatedState);
-        ablyChannel.publish('updateState', { action: 'updateState', payload: updatedState });
+        ablyChannel.publish('remote-control', { action: 'updateState', payload: updatedState });
     }, [ablyChannel, remoteState]);
     
 
     const handleStopAndPersist = () => {
         if(ablyChannel && remoteState){
-            ablyChannel.publish('disconnect', { action: 'disconnect', payload: remoteState });
+            ablyChannel.publish('remote-control', { action: 'disconnect', payload: remoteState });
         }
         onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
     };
@@ -238,7 +241,7 @@ export function RemoteControlView({
     
     const handlePlayClick = (index: number) => {
         if (ablyChannel) {
-            ablyChannel.publish('playClick', { action: 'playClick', payload: { index } });
+            ablyChannel.publish('remote-control', { action: 'playClick', payload: { index } });
         }
     };
 
@@ -389,5 +392,3 @@ interface RemoteControlViewState {
   borderColor: string;
   isChatEnabled: boolean;
 }
-
-    

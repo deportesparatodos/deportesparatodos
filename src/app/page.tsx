@@ -307,7 +307,7 @@ function HomePageContent() {
     const channel = await initAblyAndGetChannel(newCode);
     setRemoteControlMode('controlled');
 
-     const messageListener = (message: any) => {
+    channel.subscribe('remote-control', (message: any) => {
         const { action, payload } = message.data;
         
         switch(action) {
@@ -328,7 +328,7 @@ function HomePageContent() {
                     borderColor: borderColor,
                     isChatEnabled: isChatEnabled,
                 };
-                channel.publish('initialState', currentState);
+                channel.publish('remote-control', { action: 'initialState', payload: currentState });
                 break;
             
             case 'disconnect':
@@ -352,8 +352,7 @@ function HomePageContent() {
                 }
                 break;
         }
-    };
-    channel.subscribe(messageListener);
+    });
   }, [initAblyAndGetChannel, cleanupAbly, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled]);
 
   useEffect(() => {
@@ -367,7 +366,7 @@ function HomePageContent() {
   useEffect(() => {
     return () => {
       if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
-          ablyChannel.publish('disconnect', { selectedEvents }).catch(err => console.error("Error publishing disconnect:", err));
+          ablyChannel.publish('remote-control', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
           cleanupAbly();
       }
     };
@@ -439,7 +438,7 @@ function HomePageContent() {
       const liveData: StreamedMatch[] = getData<StreamedMatch>('live');
       const todayData: StreamedMatch[] = getData<StreamedMatch>('today');
       const sportsData: {id: string; name: string}[] = getData<{id: string; name: string}>('sports');
-      const streamTpData: StreampEvent[] = getData<StreamTpEvent>('streamtp');
+      const streamTpData: StreamTpEvent[] = getData<StreamTpEvent>('streamtp');
       const agendaData: AgendaEvent[] = getData<AgendaEvent>('agenda');
 
       const allMatchesMap = new Map<string, StreamedMatch>();
@@ -1288,7 +1287,7 @@ function HomePageContent() {
      const numCameras = selectedEventsCount;
      const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
      
-    if (numCameras === 0 && remoteControlMode === 'controlled') {
+     if (numCameras === 0 && remoteControlMode === 'controlled') {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
                 <div className="text-center space-y-4">
@@ -2583,5 +2582,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
-    
