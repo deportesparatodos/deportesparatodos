@@ -277,30 +277,41 @@ function HomePageContent() {
     cleanupAbly();
   }, [cleanupAbly]);
 
+  const initAblyAndGetChannel = useCallback(async (sessionId: string) => {
+      if (ablyClientRef.current) {
+          await cleanupAbly();
+      }
+
+      const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
+      ablyClientRef.current = client;
+      setAblyClient(client);
+
+      client.connection.on('failed', (error) => {
+          console.error("Ably connection failed:", error);
+          toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
+          cleanupAbly();
+      });
+
+      await client.connection.once('connected');
+      
+      const channel = client.channels.get(`remote-control:${sessionId}`);
+      setAblyChannel(channel);
+      return channel;
+  }, [cleanupAbly, toast]);
+
   const handleStartControlledSession = useCallback(async () => {
-    if (ablyClientRef.current) {
-        await cleanupAbly();
-    }
     const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-    
-    const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=client-${Date.now()}`, autoConnect: true });
-    ablyClientRef.current = client;
-    setAblyClient(client);
-
-    client.connection.on('failed', (error) => {
-        console.error("Ably connection failed:", error);
-        toast({ variant: 'destructive', title: 'Error de Conexión', description: `No se pudo conectar a Ably: ${error.reason}` });
-        cleanupAbly();
-    });
-
-    await client.connection.once('connected');
-    
-    const channel = client.channels.get(`remote-control:${newCode}`);
-    setAblyChannel(channel);
-
     setRemoteSessionId(newCode);
     setRemoteControlMode('controlled');
-  }, [cleanupAbly, toast]);
+    await initAblyAndGetChannel(newCode);
+  }, [initAblyAndGetChannel]);
+
+
+useEffect(() => {
+    if (remoteControlMode === 'controlling' && remoteSessionId) {
+        initAblyAndGetChannel(remoteSessionId);
+    }
+}, [remoteControlMode, remoteSessionId, initAblyAndGetChannel]);
 
 
 useEffect(() => {
@@ -360,13 +371,10 @@ useEffect(() => {
 
 
 useEffect(() => {
-    if (ablyClient && remoteSessionId && remoteControlMode === 'controlling') {
-        const channel = ablyClient.channels.get(`remote-control:${remoteSessionId}`);
-        setAblyChannel(channel);
-        
+    if (ablyClient && remoteSessionId && remoteControlMode === 'controlling' && ablyChannel) {
         const initialSync = async () => {
             try {
-                await channel.publish('control-update', { action: 'connect', payload: {
+                await ablyChannel.publish('control-update', { action: 'connect', payload: {
                     initialEvents: selectedEvents,
                     initialOrder: viewOrder,
                     initialGridGap: gridGap,
@@ -381,7 +389,7 @@ useEffect(() => {
         initialSync();
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [ablyClient, remoteSessionId, remoteControlMode]);
+}, [ablyChannel]);
 
 
   const handleStopView = () => {
@@ -2600,3 +2608,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
