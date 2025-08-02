@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1257,21 +1258,18 @@ useEffect(() => {
 
   if (remoteControlMode === 'controlling') {
     return (
-      <RemoteControlView 
-        ablyChannel={ablyChannel}
-        onStop={() => handleSessionEnd({ selectedEvents })}
-        onSessionEnd={handleSessionEnd}
-        allEvents={events}
-        allChannels={channels}
-        updateAllEvents={setEvents}
-        initialState={{
-            selectedEvents: selectedEvents,
-            viewOrder: viewOrder,
-            gridGap: gridGap,
-            borderColor: borderColor,
-            isChatEnabled: isChatEnabled,
-        }}
-      />
+      <Suspense fallback={<div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin" />
+            <p className="mt-4 text-muted-foreground">Cargando modo de control...</p>
+        </div>}>
+        <RemoteControlView 
+            ablyChannel={ablyChannel}
+            onSessionEnd={handleSessionEnd}
+            allEvents={events}
+            allChannels={channels}
+            updateAllEvents={setEvents}
+        />
+      </Suspense>
     )
   }
 

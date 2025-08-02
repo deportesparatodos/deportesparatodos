@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -41,7 +41,7 @@ export function RemoteControlDialog({
   const [code, setCode] = useState('');
   const { toast } = useToast();
 
-  const handleStartControllingSession = () => {
+  const handleStartControllingSession = async () => {
     if (!code || code.length !== 4) {
       toast({
         variant: 'destructive',
@@ -55,7 +55,7 @@ export function RemoteControlDialog({
     setRemoteSessionId(code);
     setRemoteControlMode('controlling');
     setIsOpen(false);
-    setIsLoading(false);
+    // Don't setIsLoading to false here, the parent component will unmount/change view
   };
   
   const handleSetControlledView = () => {
@@ -155,53 +155,86 @@ interface RemoteControlViewState {
 // --- View for the "Controlling" device (e.g., phone) ---
 export function RemoteControlView({
   ablyChannel,
-  onStop,
   onSessionEnd,
   allEvents,
   allChannels,
   updateAllEvents,
-  initialState,
 }: {
   ablyChannel: Ably.Types.RealtimeChannelPromise | null;
-  onStop: () => void;
   onSessionEnd: (finalState: {selectedEvents: (Event|null)[]}) => void;
   allEvents: Event[];
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
-  initialState: RemoteControlViewState,
 }) {
-    const [remoteState, setRemoteState] = useState<RemoteControlViewState>(initialState);
+    const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
     const { toast } = useToast();
 
+    useEffect(() => {
+        if (!ablyChannel) return;
+
+        const connectAndSync = async () => {
+            try {
+                // Wait for the channel to be attached before doing anything
+                await ablyChannel.whenState('attached');
+
+                // Subscribe to state updates from the controlled device
+                ablyChannel.subscribe('control-update', (message: any) => {
+                    const { action, payload } = message.data;
+                    if (action === 'initialState' || action === 'updateState') {
+                        setRemoteState(payload);
+                    }
+                });
+
+                // Publish a connect message to request the initial state
+                await ablyChannel.publish('remote-control', { action: 'connect' });
+
+            } catch (error) {
+                console.error("Error during remote control sync:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Error de Conexión',
+                    description: 'No se pudo iniciar la conexión con el dispositivo.',
+                });
+                if(remoteState) {
+                  onSessionEnd({selectedEvents: remoteState.selectedEvents });
+                }
+            }
+        };
+
+        connectAndSync();
+
+        return () => {
+            ablyChannel.unsubscribe('control-update');
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ablyChannel]);
+
+
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
+        if (!remoteState) return;
         const updatedState = { ...remoteState, ...newState };
         setRemoteState(updatedState);
         if (ablyChannel) {
-            ablyChannel.publish('control-update', {
+            ablyChannel.publish('remote-control', {
                 action: 'updateState',
                 payload: updatedState,
             });
         }
     }, [ablyChannel, remoteState]);
     
-    useEffect(() => {
-        // When controller mounts, sync its state with the controlled device's initial state
-        setRemoteState(initialState);
-        updateRemoteState(initialState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const handleStopAndPersist = () => {
-        if(ablyChannel){
-            ablyChannel.publish('control-update', { action: 'disconnect', payload: remoteState });
+        if(ablyChannel && remoteState){
+            ablyChannel.publish('remote-control', { action: 'disconnect', payload: remoteState });
         }
-        onSessionEnd({ selectedEvents: remoteState.selectedEvents });
+        onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
     };
 
     const handleEventsChange = (newEvents: (Event|null)[]) => {
+      if (!remoteState) return;
       const newActiveIndexes = newEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
       const oldActiveIndexes = remoteState.viewOrder.filter(i => newActiveIndexes.includes(i));
       const fullOrder = Array.from({ length: 9 }, (_, i) => i);
@@ -214,6 +247,7 @@ export function RemoteControlView({
     }
 
     const handleRemove = (index: number) => {
+        if (!remoteState) return;
         const newEvents = [...remoteState.selectedEvents];
         newEvents[index] = null;
         handleEventsChange(newEvents);
@@ -243,6 +277,7 @@ export function RemoteControlView({
     };
 
     const handleAddEvent = (event: Event, option: string) => {
+        if (!remoteState) return;
         const newEvents = [...remoteState.selectedEvents];
         const eventWithSelection = { ...event, selectedOption: option };
         const emptyIndex = newEvents.findIndex(e => e === null);
@@ -255,7 +290,7 @@ export function RemoteControlView({
         setAddEventsOpen(false);
     };
 
-    if (!ablyChannel) {
+    if (!remoteState) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin" />
