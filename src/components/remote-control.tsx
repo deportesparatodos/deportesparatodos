@@ -189,32 +189,40 @@ export function RemoteControlView({
         }
     }, [ablyChannel, remoteState]);
     
-    useEffect(() => {
-        if (!ablyChannel) return;
+   useEffect(() => {
+    if (!ablyChannel) return;
+
+    const connectAndSync = async () => {
+      try {
+        // Wait for the channel to be attached before publishing
+        await ablyChannel.whenState('attached');
 
         // 1. Controller connects and requests initial state
-        ablyChannel.publish('control-update', { action: 'connect' })
-          .catch(err => {
-              console.error("Failed to publish connect message:", err);
-              toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar la conexión con el dispositivo.' });
-              onStop();
-          });
+        await ablyChannel.publish('control-update', { action: 'connect' });
 
-        // 2. Controller listens for the initial state from the controlled device
-        const messageListener = (message: any) => {
-            const { action, payload } = message.data;
-            if (action === 'initialState') {
-                setRemoteState(payload);
-                setIsConnecting(false);
-            }
-        };
-        ablyChannel.subscribe('control-update', messageListener);
+      } catch (err: any) {
+        console.error("Failed to publish connect message:", err);
+        toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar la conexión con el dispositivo.' });
+        onStop();
+      }
+    };
+    
+    // 2. Controller listens for the initial state from the controlled device
+    const messageListener = (message: any) => {
+        const { action, payload } = message.data;
+        if (action === 'initialState') {
+            setRemoteState(payload);
+            setIsConnecting(false);
+        }
+    };
+    ablyChannel.subscribe('control-update', messageListener);
+    
+    connectAndSync();
 
-        return () => {
-            ablyChannel.unsubscribe('control-update', messageListener);
-        };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ablyChannel]);
+    return () => {
+        ablyChannel.unsubscribe('control-update', messageListener);
+    };
+}, [ablyChannel, onStop, toast]);
 
 
     const handleStopAndPersist = () => {
