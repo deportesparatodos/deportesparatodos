@@ -1280,23 +1280,23 @@ function HomePageContent() {
      const numCameras = selectedEventsCount;
      const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
      
-     if (numCameras === 0 && remoteControlMode === 'controlled') {
-      return (
-        <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
-            <div className="text-center space-y-4">
-                <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
-                <h1 className="text-2xl font-bold">Dispositivo bajo Control Remoto</h1>
-                <p className="text-muted-foreground">
-                    Esperando comandos desde el dispositivo de control... <br/>
-                    Código de sesión: <span className="font-mono text-primary">{remoteSessionId}</span>
-                </p>
-                <Button variant="outline" onClick={handleStopView}>
-                    <X className="mr-2 h-4 w-4" /> Detener Control
-                </Button>
+    if (numCameras === 0 && remoteControlMode === 'controlled') {
+        return (
+            <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
+                <div className="text-center space-y-4">
+                    <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+                    <h1 className="text-2xl font-bold">Dispositivo bajo Control Remoto</h1>
+                    <p className="text-muted-foreground">
+                        Esperando comandos desde el dispositivo de control... <br/>
+                        Código de sesión: <span className="font-mono text-primary">{remoteSessionId}</span>
+                    </p>
+                    <Button variant="outline" onClick={handleStopView}>
+                        <X className="mr-2 h-4 w-4" /> Detener Control
+                    </Button>
+                </div>
             </div>
-        </div>
-      );
-     }
+        );
+    }
     if (numCameras === 0) {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">

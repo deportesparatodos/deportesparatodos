@@ -382,3 +382,12 @@ export function RemoteControlView({
     </>
   );
 }
+
+// This needs to be defined for the props of RemoteControlView
+interface RemoteControlViewState {
+  selectedEvents: (Event | null)[];
+  viewOrder: number[];
+  gridGap: number;
+  borderColor: string;
+  isChatEnabled: boolean;
+}
