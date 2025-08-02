@@ -198,15 +198,22 @@ export function RemoteControlView({
           const channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
           ablyRef.current.channel = channel;
 
-          channel.subscribe('initialState', (message: Ably.Types.Message) => {
-             if (message.data.sessionId === initialRemoteSessionId) {
-                setRemoteState(message.data);
-                setIsLoading(false);
+          // 1. Subscribe first
+          channel.subscribe('remote-control', (message: Ably.Types.Message) => {
+            const { action, payload } = message.data;
+            if (payload.sessionId !== initialRemoteSessionId) return;
+
+            if (action === 'initialState') {
+              setRemoteState(payload);
+              setIsLoading(false);
             }
           });
           
+          // 2. Wait for channel to be attached
           await channel.whenState('attached');
-          channel.publish('connect', { sessionId: initialRemoteSessionId });
+          
+          // 3. Publish connect message
+          channel.publish('remote-control', { action: 'connect', payload: { sessionId: initialRemoteSessionId }});
 
         } catch (error) {
            console.error("Error connecting as controller:", error);
@@ -220,7 +227,7 @@ export function RemoteControlView({
       return () => {
         const { channel } = ablyRef.current;
         if (channel && initialRemoteSessionId) {
-          channel.publish('disconnect', { sessionId: initialRemoteSessionId, selectedEvents: remoteState?.selectedEvents });
+          channel.publish('remote-control', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId, selectedEvents: remoteState?.selectedEvents } });
         }
         onSessionEnd();
       };
@@ -231,9 +238,9 @@ export function RemoteControlView({
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
         const { channel } = ablyRef.current;
         if (!remoteState || !channel || !initialRemoteSessionId) return;
-        const updatedState = { ...remoteState, ...newState, sessionId: initialRemoteSessionId };
-        setRemoteState(updatedState);
-        channel.publish('updateState', { payload: updatedState });
+        const updatedState = { ...remoteState, ...newState };
+        setRemoteState(updatedState as RemoteControlViewState);
+        channel.publish('remote-control', { action: 'updateState', payload: { ...updatedState, sessionId: initialRemoteSessionId }});
     }, [ablyRef, remoteState, initialRemoteSessionId]);
     
 
@@ -264,7 +271,7 @@ export function RemoteControlView({
     const handlePlayClick = (index: number) => {
         const { channel } = ablyRef.current;
         if (channel && initialRemoteSessionId) {
-            channel.publish('playClick', { payload: { index, sessionId: initialRemoteSessionId } });
+            channel.publish('remote-control', { action: 'playClick', payload: { index, sessionId: initialRemoteSessionId } });
         }
     };
 
@@ -437,3 +444,4 @@ export function RemoteControlView({
     </>
   );
 }
+

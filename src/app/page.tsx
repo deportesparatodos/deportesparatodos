@@ -283,64 +283,58 @@ function HomePageContent() {
       
       setRemoteControlMode('controlled');
 
-      channel.subscribe('connect', (message: Ably.Types.Message) => {
-        if (message.data.sessionId !== newCode) return;
-        
-        setIsViewMode(true);
-        const currentState = {
-            sessionId: newCode,
-            selectedEvents: selectedEvents,
-            viewOrder: viewOrder,
-            gridGap: gridGap,
-            borderColor: borderColor,
-            isChatEnabled: isChatEnabled,
-        };
-        channel.publish('initialState', currentState);
-      });
-      
-      channel.subscribe('updateState', (message: Ably.Types.Message) => {
-        const { payload } = message.data;
-        if (payload.sessionId !== newCode) return;
-        
-        setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
-        setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
-        setGridGap(payload.gridGap ?? 0);
-        setBorderColor(payload.borderColor ?? '#000000');
-        setIsChatEnabled(payload.isChatEnabled ?? true);
-      });
-      
-      channel.subscribe('playClick', (message: Ably.Types.Message) => {
-        const { payload } = message.data;
-        if (payload.sessionId !== newCode) return;
-        const iframe = iframeRefs.current[payload.index];
-        if (iframe && iframe.contentDocument) {
-           const body = iframe.contentDocument.body;
-           if(body) {
-               // A more robust way to simulate a click that might work on more embeds
-                const rect = body.getBoundingClientRect();
-                const x = rect.left + (rect.width / 2);
-                const y = rect.top + (rect.height / 2);
-                
-                const clickEvent = new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                    view: iframe.contentWindow,
-                    clientX: x,
-                    clientY: y
-                });
-                body.dispatchEvent(clickEvent);
-           }
-        }
-      });
+      channel.subscribe('remote-control', (message: Ably.Types.Message) => {
+          const { action, payload } = message.data;
+          
+          if(payload.sessionId !== newCode) return;
 
-      channel.subscribe('disconnect', (message: Ably.Types.Message) => {
-        if (message.data.sessionId === newCode) {
-            setSelectedEvents(message.data.selectedEvents || Array(9).fill(null));
-            cleanupAbly();
-            setIsViewMode(false);
-        }
+          switch(action) {
+              case 'connect':
+                  setIsViewMode(true); // Go to view mode immediately
+                  const currentState = {
+                      selectedEvents,
+                      viewOrder,
+                      gridGap,
+                      borderColor,
+                      isChatEnabled,
+                  };
+                  channel.publish('remote-control', { action: 'initialState', payload: { ...currentState, sessionId: newCode } });
+                  break;
+              case 'updateState':
+                  setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
+                  setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
+                  setGridGap(payload.gridGap ?? 0);
+                  setBorderColor(payload.borderColor ?? '#000000');
+                  setIsChatEnabled(payload.isChatEnabled ?? true);
+                  break;
+              case 'playClick': {
+                  const iframe = iframeRefs.current[payload.index];
+                  if (iframe && iframe.contentDocument) {
+                      const body = iframe.contentDocument.body;
+                      if(body) {
+                          const rect = body.getBoundingClientRect();
+                          const x = rect.left + (rect.width / 2);
+                          const y = rect.top + (rect.height / 2);
+                          
+                          const clickEvent = new MouseEvent('click', {
+                              bubbles: true,
+                              cancelable: true,
+                              view: iframe.contentWindow,
+                              clientX: x,
+                              clientY: y
+                          });
+                          body.dispatchEvent(clickEvent);
+                      }
+                  }
+                  break;
+              }
+              case 'disconnect':
+                  setSelectedEvents(message.data.selectedEvents || Array(9).fill(null));
+                  cleanupAbly();
+                  setIsViewMode(false);
+                  break;
+          }
       });
-
     } catch (error) {
       console.error("Failed to start controlled session:", error);
       toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
@@ -2563,5 +2557,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
