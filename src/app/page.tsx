@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -344,7 +346,7 @@ function HomePageContent() {
             }
         }
     };
-    channel.subscribe(messageListener);
+    channel.subscribe('remote-control', messageListener);
   }, [initAblyAndGetChannel, cleanupAbly, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled]);
 
   useEffect(() => {
@@ -358,7 +360,7 @@ function HomePageContent() {
   useEffect(() => {
     return () => {
       if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
-          ablyChannel.publish('control-update', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
+          ablyChannel.publish('remote-control', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
           cleanupAbly();
       }
     };
@@ -1024,6 +1026,13 @@ function HomePageContent() {
     if (remoteControlMode === 'controlled') return; // Don't allow manual start if controlled
     setIsViewMode(true);
   };
+
+  const handleStopView = useCallback(() => {
+    setIsViewMode(false);
+    if (remoteControlMode === 'controlled' || remoteControlMode === 'controlling') {
+      cleanupAbly();
+    }
+  }, [remoteControlMode, cleanupAbly]);
   
 
   const openDialogForEvent = (event: Event) => {
@@ -1295,7 +1304,7 @@ function HomePageContent() {
                     <X className="mr-2 h-4 w-4" /> Volver Atrás
                 </Button>
             </div>
-        )
+        );
     }
 
     const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
@@ -1407,7 +1416,7 @@ function HomePageContent() {
                                 <p>La página de inicio es tu centro de comando. Aquí encontrarás todo el contenido organizado para un acceso rápido y sencillo.</p>
                                 <ul className="list-disc pl-5 space-y-2">
                                     <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
-                                    <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
+                                    <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
                                     <li><strong>Carruseles de Eventos/Canales:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
                                     <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
                                 </ul>
@@ -1443,9 +1452,8 @@ function HomePageContent() {
                         </ScrollArea>
                         <DialogFooter>
                             <DialogClose asChild><Button>Entendido</Button></DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                        </DialogContent>
+                    </Dialog>
                   <Dialog open={errorsDialogOpen} onOpenChange={setErrorsDialogOpen}>
                       <DialogTrigger asChild>
                           <Button variant="outline" className="gap-2">
@@ -1738,7 +1746,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                             <p>La página de inicio es tu centro de comando. Aquí encontrarás todo el contenido organizado para un acceso rápido y sencillo.</p>
                                             <ul className="list-disc pl-5 space-y-2">
                                                 <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
-                                                <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", "Canales", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
+                                                <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
                                                 <li><strong>Carruseles de Eventos/Canales:</strong> El contenido está agrupado en filas por estado o tipo. Puedes deslizar cada carrusel para explorar los eventos. El orden es: Canales, En Vivo, Próximos, Canales 24/7, y más.</li>
                                                 <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
                                             </ul>
