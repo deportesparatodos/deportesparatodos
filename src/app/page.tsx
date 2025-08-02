@@ -1668,7 +1668,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 <CalendarLink>
                     Todos los Eventos
                 </CalendarLink>
-                {categories.map(category => (
+                {categories.filter(c => c.toLowerCase() !== '24/7').map(category => (
                     <CalendarLink key={category} category={category}>
                         {category}
                     </CalendarLink>
@@ -1917,11 +1917,11 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 </Link>
             </div>
         ) : (
-          <div className="flex items-center gap-4 pl-4 min-h-[40px]">
-            <Button variant="ghost" size="icon" onClick={handleBackToHome}>
+          <div className="flex items-center gap-4 pl-4 min-h-[40px] flex-nowrap overflow-hidden">
+            <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0'>
                 <ArrowLeft />
             </Button>
-            <h1 className="text-2xl font-bold capitalize">{currentView}</h1>
+            <h1 className="text-2xl font-bold capitalize truncate">{currentView}</h1>
           </div>
         )}
     </div>
@@ -2076,112 +2076,114 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
         </div>
        )}
         <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
-            <header className="sticky top-0 z-30 flex w-full items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm py-[10px]">
-                {pageTitle}
-                 <div className={cn(
-                    "flex items-center justify-end gap-1 px-2 md:px-4 flex-1",
-                    "md:gap-2",
-                    isMobile && " [&_button]:h-9 [&_button]:w-9 [&_svg]:h-5 [&_svg]:w-5",
-                     isMobile && isSearchOpen && 'w-full'
-                 )}>
-                    {isSearchOpen ? (
-                        <div className="relative w-full">
-                            <Input
-                                ref={r => { if (r) r.focus(); }}
-                                type="text"
-                                placeholder="Buscar evento o canal..."
-                                className="w-full pr-10"
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                            />
-                             <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
-                                onClick={() => {
-                                    setSearchTerm('');
-                                    setIsSearchOpen(false);
-                                }}
-                              >
-                                 <X className="h-4 w-4" />
-                             </Button>
-                        </div>
-                    ) : (
-                        <>
-                            <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
-                                <Search />
-                            </Button>
-                            
-                            <RemoteControlDialog 
-                              remoteSessionId={remoteSessionId}
-                              setRemoteControlMode={setRemoteControlMode}
-                              onStartControlling={(code) => {
-                                  setRemoteSessionId(code);
-                                  setRemoteControlMode('controlling');
-                              }}
-                              onStartControlled={handleStartControlledSession}
-                            />
+            <header className="sticky top-0 z-30 flex h-header-height w-full shrink-0 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm">
+                <div className="flex h-full flex-1 items-center justify-between overflow-hidden">
+                    {pageTitle}
+                     <div className={cn(
+                        "flex flex-shrink-0 items-center justify-end gap-1 px-2 md:px-4",
+                        "md:gap-2",
+                        isMobile && "flex-1 [&_button]:h-9 [&_button]:w-9 [&_svg]:h-5 [&_svg]:w-5",
+                         isMobile && isSearchOpen && 'w-full'
+                     )}>
+                        {isSearchOpen ? (
+                            <div className="relative w-full">
+                                <Input
+                                    ref={r => { if (r) r.focus(); }}
+                                    type="text"
+                                    placeholder="Buscar evento o canal..."
+                                    className="w-full pr-10"
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                />
+                                 <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" 
+                                    onClick={() => {
+                                        setSearchTerm('');
+                                        setIsSearchOpen(false);
+                                    }}
+                                  >
+                                     <X className="h-4 w-4" />
+                                 </Button>
+                            </div>
+                        ) : (
+                            <>
+                                <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)}>
+                                    <Search />
+                                </Button>
+                                
+                                <RemoteControlDialog 
+                                  remoteSessionId={remoteSessionId}
+                                  setRemoteControlMode={setRemoteControlMode}
+                                  onStartControlling={(code) => {
+                                      setRemoteSessionId(code);
+                                      setRemoteControlMode('controlling');
+                                  }}
+                                  onStartControlled={handleStartControlledSession}
+                                />
 
-                            <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <Settings />
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-h-[90vh] flex flex-col p-0">
-                                    <DialogHeader className="p-6 pb-4 text-center flex-shrink-0">
-                                      <DialogTitle>Configuración y Eventos</DialogTitle>
-                                      <DialogDescription>
-                                          Personaliza la vista y gestiona tus eventos seleccionados.
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <ScrollArea className="flex-grow overflow-y-auto">
-                                       <div className="px-6 pb-6">
-                                           <LayoutConfigurator
-                                                gridGap={gridGap}
-                                                onGridGapChange={setGridGap}
-                                                borderColor={borderColor}
-                                                onBorderColorChange={setBorderColor}
-                                                isChatEnabled={isChatEnabled}
-                                                onIsChatEnabledChange={setIsChatEnabled}
-                                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                                onOrderChange={handleOrderChange}
-                                                eventDetails={selectedEvents}
-                                                onRemove={handleEventRemove} 
-                                                onModify={openDialogForModification}
-                                                isViewPage={false}
-                                                onNotificationManager={() => setNotificationManagerOpen(true)}
-                                            />
-                                       </div>
-                                    </ScrollArea>
-                                </DialogContent>
-                            </Dialog>
+                                <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <Settings />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-h-[90vh] flex flex-col p-0">
+                                        <DialogHeader className="p-6 pb-4 text-center flex-shrink-0">
+                                          <DialogTitle>Configuración y Eventos</DialogTitle>
+                                          <DialogDescription>
+                                              Personaliza la vista y gestiona tus eventos seleccionados.
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <ScrollArea className="flex-grow overflow-y-auto">
+                                           <div className="px-6 pb-6">
+                                               <LayoutConfigurator
+                                                    gridGap={gridGap}
+                                                    onGridGapChange={setGridGap}
+                                                    borderColor={borderColor}
+                                                    onBorderColorChange={setBorderColor}
+                                                    isChatEnabled={isChatEnabled}
+                                                    onIsChatEnabledChange={setIsChatEnabled}
+                                                    order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                                    onOrderChange={handleOrderChange}
+                                                    eventDetails={selectedEvents}
+                                                    onRemove={handleEventRemove} 
+                                                    onModify={openDialogForModification}
+                                                    isViewPage={false}
+                                                    onNotificationManager={() => setNotificationManagerOpen(true)}
+                                                />
+                                           </div>
+                                        </ScrollArea>
+                                    </DialogContent>
+                                </Dialog>
 
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => fetchEvents(true)}
-                              disabled={isDataLoading}
-                              aria-label="Refrescar eventos"
-                            >
-                              <RotateCw className={cn(isDataLoading && "animate-spin")} />
-                            </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => fetchEvents(true)}
+                                  disabled={isDataLoading}
+                                  aria-label="Refrescar eventos"
+                                >
+                                  <RotateCw className={cn(isDataLoading && "animate-spin")} />
+                                </Button>
 
-                            <Button
-                                size="icon"
-                                onClick={handleStartView}
-                                disabled={selectedEventsCount === 0}
-                                className="bg-green-600 hover:bg-green-700 text-white relative"
-                            >
-                                <Play />
-                                 {selectedEventsCount > 0 && (
-                                    <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
-                                        {selectedEventsCount}
-                                    </Badge>
-                                )}
-                            </Button>
-                        </>
-                    )}
+                                <Button
+                                    size="icon"
+                                    onClick={handleStartView}
+                                    disabled={selectedEventsCount === 0}
+                                    className="bg-green-600 hover:bg-green-700 text-white relative"
+                                >
+                                    <Play />
+                                     {selectedEventsCount > 0 && (
+                                        <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
+                                            {selectedEventsCount}
+                                        </Badge>
+                                    )}
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -2557,6 +2559,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 

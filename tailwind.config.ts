@@ -66,6 +66,9 @@ export default {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+        height: {
+          'header-height': '75px',
+        },
   		keyframes: {
   			'accordion-down': {
   				from: {
