@@ -60,12 +60,6 @@ export function CameraConfigurationComponent({
   onStartControlledSession,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [isStartingRemote, setIsStartingRemote] = useState(false);
-
-  const handleStartRemote = () => {
-    setIsStartingRemote(true);
-    onStartControlledSession();
-  };
 
   return (
     <>

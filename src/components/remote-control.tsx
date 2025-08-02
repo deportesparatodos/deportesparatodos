@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -11,7 +11,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { Loader2, X, Airplay, MessageSquare, Play } from 'lucide-react';
@@ -27,12 +26,12 @@ import { cn } from '@/lib/utils';
 export function RemoteControlDialog({
   remoteSessionId,
   setRemoteControlMode,
-  setRemoteSessionId,
+  onStartControlling,
   onStartControlled,
 }: {
   remoteSessionId: string | null;
   setRemoteControlMode: (mode: 'inactive' | 'controlling' | 'controlled') => void;
-  setRemoteSessionId: (id: string | null) => void;
+  onStartControlling: (code: string) => void;
   onStartControlled: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +40,7 @@ export function RemoteControlDialog({
   const [code, setCode] = useState('');
   const { toast } = useToast();
 
-  const handleStartControllingSession = async () => {
+  const handleStartControllingSession = () => {
     if (!code || code.length !== 4) {
       toast({
         variant: 'destructive',
@@ -52,8 +51,7 @@ export function RemoteControlDialog({
     }
     
     setIsLoading(true);
-    setRemoteSessionId(code);
-    setRemoteControlMode('controlling');
+    onStartControlling(code);
     setIsOpen(false);
   };
   
@@ -71,6 +69,15 @@ export function RemoteControlDialog({
       }, 200);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && view === 'controlled' && !remoteSessionId) {
+      // The session ID might not be available immediately, show loading
+      setIsLoading(true);
+    } else {
+      setIsLoading(false);
+    }
+  }, [isOpen, view, remoteSessionId]);
   
 
   return (
@@ -106,7 +113,7 @@ export function RemoteControlDialog({
             </DialogDescription>
             <div className="p-4 bg-muted rounded-lg">
                 <p className="text-4xl font-bold tracking-widest text-primary">
-                    {remoteSessionId ? remoteSessionId : <Loader2 className="h-10 w-10 animate-spin mx-auto" />}
+                    {isLoading || !remoteSessionId ? <Loader2 className="h-10 w-10 animate-spin mx-auto" /> : remoteSessionId}
                 </p>
             </div>
              <p className="text-xs text-muted-foreground pt-2">
@@ -143,21 +150,32 @@ export function RemoteControlDialog({
   );
 }
 
+interface RemoteControlViewState {
+  sessionId: string;
+  selectedEvents: (Event | null)[];
+  viewOrder: number[];
+  gridGap: number;
+  borderColor: string;
+  isChatEnabled: boolean;
+}
+
 // --- View for the "Controlling" device (e.g., phone) ---
 export function RemoteControlView({
-  ablyChannel,
+  ablyRef,
+  initAbly,
   onSessionEnd,
   allEvents,
   allChannels,
   updateAllEvents,
-  remoteSessionId,
+  initialRemoteSessionId
 }: {
-  ablyChannel: Ably.Types.RealtimeChannelPromise | null;
-  onSessionEnd: (finalState: {selectedEvents: (Event|null)[]}) => void;
+  ablyRef: React.MutableRefObject<{ client: Ably.Realtime | null; channel: Ably.Types.RealtimeChannelPromise | null; }>;
+  initAbly: (clientIdSuffix: string) => Promise<Ably.Realtime>;
+  onSessionEnd: () => void;
   allEvents: Event[];
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
-  remoteSessionId: string | null;
+  initialRemoteSessionId: string | null;
 }) {
     const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
@@ -167,57 +185,58 @@ export function RemoteControlView({
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!ablyChannel || !remoteSessionId) return;
+      const connectAndSync = async () => {
+        if (!initialRemoteSessionId) return;
 
-        const connectAndSync = async () => {
-            try {
-                await ablyChannel.whenState('attached');
+        try {
+          const client = await initAbly('controlling');
+          const channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
+          ablyRef.current.channel = channel;
 
-                ablyChannel.subscribe('remote-control', (message: any) => {
-                    const { action, payload } = message.data;
-                    if (payload.sessionId !== remoteSessionId) return;
-
-                    if (action === 'initialState') {
-                        setRemoteState(payload);
-                        setIsLoading(false);
-                    } else if (action === 'updateState') {
-                        setRemoteState(payload);
-                    }
-                });
-
-                await ablyChannel.publish('remote-control', { action: 'connect', payload: { sessionId: remoteSessionId } });
-            } catch (error: any) {
-                console.error("Error during remote control sync:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Error de Conexión',
-                    description: `No se pudo sincronizar con el dispositivo. (${error.message})`,
-                });
-                onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
+          channel.subscribe('initialState', (message: Ably.Types.Message) => {
+             if (message.data.sessionId === initialRemoteSessionId) {
+                setRemoteState(message.data);
+                setIsLoading(false);
             }
-        };
+          });
+          
+          channel.publish('connect', { sessionId: initialRemoteSessionId });
 
-        connectAndSync();
-        
-        return () => {
-            ablyChannel?.unsubscribe('remote-control');
+        } catch (error) {
+           console.error("Error connecting as controller:", error);
+           toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo conectar con el dispositivo. Verifica el código.' });
+           onSessionEnd();
         }
-    }, [ablyChannel, remoteSessionId, onSessionEnd, toast, remoteState?.selectedEvents]);
+      };
+
+      connectAndSync();
+
+      return () => {
+        const { channel } = ablyRef.current;
+        if (channel) {
+          channel.publish('disconnect', { sessionId: initialRemoteSessionId, selectedEvents: remoteState?.selectedEvents });
+        }
+        onSessionEnd();
+      };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialRemoteSessionId, initAbly, onSessionEnd, toast]);
 
 
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
-        if (!remoteState || !ablyChannel || !remoteSessionId) return;
-        const updatedState = { ...remoteState, ...newState, sessionId: remoteSessionId };
+        const { channel } = ablyRef.current;
+        if (!remoteState || !channel || !initialRemoteSessionId) return;
+        const updatedState = { ...remoteState, ...newState, sessionId: initialRemoteSessionId };
         setRemoteState(updatedState);
-        ablyChannel.publish('remote-control', { action: 'updateState', payload: updatedState });
-    }, [ablyChannel, remoteState, remoteSessionId]);
+        channel.publish('updateState', { payload: updatedState });
+    }, [ablyRef, remoteState, initialRemoteSessionId]);
     
 
     const handleStopAndPersist = () => {
-        if(ablyChannel && remoteState){
-            ablyChannel.publish('remote-control', { action: 'disconnect', payload: { ...remoteState, sessionId: remoteSessionId } });
+        const { channel } = ablyRef.current;
+        if(channel && remoteState && initialRemoteSessionId){
+            channel.publish('disconnect', { sessionId: initialRemoteSessionId, selectedEvents: remoteState.selectedEvents });
         }
-        onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
+        onSessionEnd();
     };
 
     const handleEventsChange = (newEvents: (Event|null)[]) => {
@@ -241,8 +260,9 @@ export function RemoteControlView({
     };
     
     const handlePlayClick = (index: number) => {
-        if (ablyChannel && remoteSessionId) {
-            ablyChannel.publish('remote-control', { action: 'playClick', payload: { index, sessionId: remoteSessionId } });
+        const { channel } = ablyRef.current;
+        if (channel && initialRemoteSessionId) {
+            channel.publish('playClick', { payload: { index, sessionId: initialRemoteSessionId } });
         }
     };
 
@@ -300,7 +320,7 @@ export function RemoteControlView({
                 <p className="mt-2 text-muted-foreground">
                     No se pudo establecer la conexión. Por favor, verifica el código e inténtalo de nuevo.
                 </p>
-                <Button onClick={() => onSessionEnd({ selectedEvents: []})} className="mt-4">
+                <Button onClick={onSessionEnd} className="mt-4">
                     Cerrar
                 </Button>
             </div>
@@ -381,14 +401,4 @@ export function RemoteControlView({
         </Dialog>
     </>
   );
-}
-
-// This needs to be defined for the props of RemoteControlView
-interface RemoteControlViewState {
-  sessionId: string;
-  selectedEvents: (Event | null)[];
-  viewOrder: number[];
-  gridGap: number;
-  borderColor: string;
-  isChatEnabled: boolean;
 }
