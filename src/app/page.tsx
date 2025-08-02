@@ -326,7 +326,7 @@ function HomePageContent() {
                 isChatEnabled: isChatEnabled,
              };
              // Respond to the controller with the current state
-             channel.publish('remote-control', { action: 'initialState', payload: currentState });
+             channel.publish('initialState', currentState);
         } else if (action === 'disconnect') {
             if (payload) {
                 setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
@@ -347,7 +347,7 @@ function HomePageContent() {
             }
         }
     };
-    channel.subscribe('remote-control', messageListener);
+    channel.subscribe(messageListener);
   }, [initAblyAndGetChannel, cleanupAbly, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled]);
 
   useEffect(() => {
@@ -361,7 +361,7 @@ function HomePageContent() {
   useEffect(() => {
     return () => {
       if (ablyClientRef.current && ablyChannel && remoteControlMode === 'controlling') {
-          ablyChannel.publish('remote-control', { action: 'disconnect', payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
+          ablyChannel.publish('disconnect', { payload: { selectedEvents } }).catch(err => console.error("Error publishing disconnect:", err));
           cleanupAbly();
       }
     };
