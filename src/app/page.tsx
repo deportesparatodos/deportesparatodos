@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -283,23 +284,23 @@ function HomePageContent() {
       setRemoteControlMode('controlled');
 
       channel.subscribe('connect', (message: Ably.Types.Message) => {
-        if (message.data.sessionId === newCode) {
-            setIsViewMode(true);
-            const currentState = {
-                sessionId: newCode,
-                selectedEvents: selectedEvents,
-                viewOrder: viewOrder,
-                gridGap: gridGap,
-                borderColor: borderColor,
-                isChatEnabled: isChatEnabled,
-            };
-            channel.publish('initialState', currentState);
-        }
+        if (message.data.sessionId !== newCode) return;
+        
+        setIsViewMode(true);
+        const currentState = {
+            sessionId: newCode,
+            selectedEvents: selectedEvents,
+            viewOrder: viewOrder,
+            gridGap: gridGap,
+            borderColor: borderColor,
+            isChatEnabled: isChatEnabled,
+        };
+        channel.publish('initialState', currentState);
       });
       
       channel.subscribe('updateState', (message: Ably.Types.Message) => {
         const { payload } = message.data;
-         if (payload.sessionId !== newCode) return;
+        if (payload.sessionId !== newCode) return;
         
         setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
         setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
@@ -312,10 +313,23 @@ function HomePageContent() {
         const { payload } = message.data;
         if (payload.sessionId !== newCode) return;
         const iframe = iframeRefs.current[payload.index];
-        if (iframe && iframe.contentWindow) {
-          iframe.focus();
-          const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, view: iframe.contentWindow });
-          iframe.contentDocument?.body?.dispatchEvent(clickEvent);
+        if (iframe && iframe.contentDocument) {
+           const body = iframe.contentDocument.body;
+           if(body) {
+               // A more robust way to simulate a click that might work on more embeds
+                const rect = body.getBoundingClientRect();
+                const x = rect.left + (rect.width / 2);
+                const y = rect.top + (rect.height / 2);
+                
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: iframe.contentWindow,
+                    clientX: x,
+                    clientY: y
+                });
+                body.dispatchEvent(clickEvent);
+           }
         }
       });
 
@@ -2549,4 +2563,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 

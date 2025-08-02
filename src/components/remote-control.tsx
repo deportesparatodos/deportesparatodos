@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
@@ -13,7 +14,7 @@ import {
   DialogFooter,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play, Pencil } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +22,7 @@ import { LayoutConfigurator } from './layout-configurator';
 import { AddEventsDialog } from '@/app/page';
 import type Ably from 'ably';
 import { cn } from '@/lib/utils';
+import { EventSelectionDialog } from './event-selection-dialog';
 
 // --- Main Dialog to start a remote session ---
 export function RemoteControlDialog({
@@ -184,6 +186,9 @@ export function RemoteControlView({
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
 
+    const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
+    const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
+
     useEffect(() => {
       const connectAndSync = async () => {
         if (!initialRemoteSessionId) return;
@@ -200,6 +205,7 @@ export function RemoteControlView({
             }
           });
           
+          await channel.whenState('attached');
           channel.publish('connect', { sessionId: initialRemoteSessionId });
 
         } catch (error) {
@@ -213,7 +219,7 @@ export function RemoteControlView({
 
       return () => {
         const { channel } = ablyRef.current;
-        if (channel) {
+        if (channel && initialRemoteSessionId) {
           channel.publish('disconnect', { sessionId: initialRemoteSessionId, selectedEvents: remoteState?.selectedEvents });
         }
         onSessionEnd();
@@ -232,10 +238,6 @@ export function RemoteControlView({
     
 
     const handleStopAndPersist = () => {
-        const { channel } = ablyRef.current;
-        if(channel && remoteState && initialRemoteSessionId){
-            channel.publish('disconnect', { sessionId: initialRemoteSessionId, selectedEvents: remoteState.selectedEvents });
-        }
         onSessionEnd();
     };
 
@@ -303,6 +305,28 @@ export function RemoteControlView({
         setAddEventsOpen(false);
     };
 
+     const handleModifyEvent = (event: Event, index: number) => {
+        if (!remoteState) return;
+        const eventFromState = remoteState.selectedEvents[index];
+        if (eventFromState) {
+            const eventWithCurrentSelection = { ...event, selectedOption: eventFromState.selectedOption };
+            setModifyEvent({ event: eventWithCurrentSelection, index: index });
+            setModifyEventDialogOpen(true);
+        }
+    };
+
+    const handleModifyEventSelect = (event: Event, option: string) => {
+        if (!remoteState || modifyEvent === null) return;
+        const newEvents = [...remoteState.selectedEvents];
+        const eventWithSelection = { ...event, selectedOption: option };
+        newEvents[modifyEvent.index] = eventWithSelection;
+        
+        handleEventsChange(newEvents);
+
+        setModifyEvent(null);
+        setModifyEventDialogOpen(false);
+    };
+
     if (isLoading) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
@@ -343,36 +367,47 @@ export function RemoteControlView({
         </header>
         <div className="flex-grow overflow-y-auto p-4">
             <LayoutConfigurator
-            remoteControlMode="controlling"
-            order={remoteState.viewOrder.filter((i) => remoteState.selectedEvents[i] !== null)}
-            onOrderChange={handleOrderChange}
-            eventDetails={remoteState.selectedEvents}
-            onRemove={handleRemove}
-            onModify={() =>
-              toast({
-                title: 'Info',
-                description:
-                  'La modificación debe hacerse eliminando y volviendo a añadir el evento.',
-              })
-            }
-            onPlay={handlePlayClick}
-            isViewPage={true}
-            onAddEvent={() => setAddEventsOpen(true)}
-            onSchedule={() =>
-              toast({
-                title: 'Info',
-                description: 'La programación no está disponible en modo control remoto.',
-              })
-            }
-            gridGap={remoteState.gridGap}
-            onGridGapChange={handleGridGapChange}
-            borderColor={remoteState.borderColor}
-            onBorderColorChange={handleBorderColorChange}
-            isChatEnabled={remoteState.isChatEnabled}
-            onIsChatEnabledChange={handleIsChatEnabledChange}
-            onOpenChat={() => setIsRemoteChatOpen(true)}
-          />
+                remoteControlMode="controlling"
+                order={remoteState.viewOrder.filter((i) => remoteState.selectedEvents[i] !== null)}
+                onOrderChange={handleOrderChange}
+                eventDetails={remoteState.selectedEvents}
+                onRemove={handleRemove}
+                onModify={handleModifyEvent}
+                onPlay={handlePlayClick}
+                isViewPage={true}
+                onAddEvent={() => setAddEventsOpen(true)}
+                gridGap={remoteState.gridGap}
+                onGridGapChange={handleGridGapChange}
+                borderColor={remoteState.borderColor}
+                onBorderColorChange={handleBorderColorChange}
+                isChatEnabled={remoteState.isChatEnabled}
+                onIsChatEnabledChange={handleIsChatEnabledChange}
+                onOpenChat={() => setIsRemoteChatOpen(true)}
+             />
         </div>
+        
+        {modifyEvent && (
+            <EventSelectionDialog
+                isOpen={modifyEventDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setModifyEvent(null);
+                        setModifyEventDialogOpen(false);
+                    } else {
+                        setModifyEventDialogOpen(true);
+                    }
+                }}
+                event={modifyEvent.event}
+                onSelect={handleModifyEventSelect}
+                isModification={true}
+                onRemove={() => {}} // Remove is handled by main remote view
+                windowNumber={modifyEvent.index + 1}
+                isLoading={false}
+                setIsLoading={() => {}}
+                setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}
+            />
+        )}
+        
         <AddEventsDialog
           open={addEventsOpen}
           onOpenChange={setAddEventsOpen}

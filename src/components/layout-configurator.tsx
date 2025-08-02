@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -270,7 +271,7 @@ export function LayoutConfigurator({
         </AccordionContent>
       </AccordionItem>
       
-      {eventProps.isViewPage && (
+      {eventProps.isViewPage && remoteControlMode !== 'controlling' && (
         <AccordionItem value="remote-control" className="border rounded-lg px-4">
             <AccordionTrigger>Control Remoto</AccordionTrigger>
             <AccordionContent className="pt-4 text-center">
