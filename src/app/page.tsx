@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1452,8 +1451,9 @@ function HomePageContent() {
                         </ScrollArea>
                         <DialogFooter>
                             <DialogClose asChild><Button>Entendido</Button></DialogClose>
-                        </DialogContent>
-                    </Dialog>
+                        </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                   <Dialog open={errorsDialogOpen} onOpenChange={setErrorsDialogOpen}>
                       <DialogTrigger asChild>
                           <Button variant="outline" className="gap-2">
@@ -2575,3 +2575,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
+    
