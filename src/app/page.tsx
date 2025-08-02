@@ -307,6 +307,7 @@ function HomePageContent() {
     const channel = await initAblyAndGetChannel(newCode);
     setRemoteControlMode('controlled');
 
+    // Wait for the controller to send a 'connect' message
     channel.subscribe('remote-control', (message: any) => {
         const { action, payload } = message.data;
         
@@ -320,6 +321,7 @@ function HomePageContent() {
                 break;
             
             case 'connect':
+                // Once controller connects, enter view mode and send back the initial state
                 setIsViewMode(true);
                 const currentState = {
                     selectedEvents: selectedEvents,

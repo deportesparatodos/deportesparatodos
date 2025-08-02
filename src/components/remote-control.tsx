@@ -165,24 +165,25 @@ export function RemoteControlView({
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
 
+    // This effect handles the initial handshake
     useEffect(() => {
         if (!ablyChannel) return;
 
         const connectAndSync = async () => {
-             try {
-                // Ensure the channel is attached before doing anything.
-                await ablyChannel.whenState('attached');
-
-                // 1. Subscribe to the 'initialState' and other messages.
+            try {
+                // 1. Subscribe to the 'initialState' message first, so we are ready to receive it.
                 ablyChannel.subscribe('remote-control', (message: any) => {
                     const { action, payload } = message.data;
                     if (action === 'initialState') {
                         setRemoteState(payload);
-                        setIsLoading(false);
+                        setIsLoading(false); // Stop loading only when we get the state
                     }
                 });
 
-                // 2. Publish the 'connect' message to tell the controlled device we are ready.
+                // 2. Wait for the channel to be attached.
+                await ablyChannel.whenState('attached');
+
+                // 3. Publish the 'connect' message to tell the controlled device we are ready.
                 await ablyChannel.publish('remote-control', { action: 'connect' });
 
             } catch (error: any) {
@@ -190,7 +191,7 @@ export function RemoteControlView({
                 toast({
                     variant: 'destructive',
                     title: 'Error de Conexión',
-                    description: `No se pudo iniciar la conexión con el dispositivo. (${error.message})`,
+                    description: `No se pudo sincronizar con el dispositivo. (${error.message})`,
                 });
                 onSessionEnd({ selectedEvents: remoteState?.selectedEvents || Array(9).fill(null) });
             }
@@ -198,10 +199,29 @@ export function RemoteControlView({
 
         connectAndSync();
 
+        // Cleanup subscription on unmount
         return () => {
-            ablyChannel.unsubscribe();
+            ablyChannel.unsubscribe('remote-control');
         }
-    }, [ablyChannel, onSessionEnd, remoteState, toast]);
+    }, [ablyChannel, onSessionEnd, toast]);
+
+    // This effect listens for subsequent state updates (after initial handshake)
+     useEffect(() => {
+        if (!ablyChannel || isLoading) return; // Don't listen until initial load is done
+
+        const subscription = (message: any) => {
+             const { action, payload } = message.data;
+              if (action === 'updateState') {
+                  setRemoteState(payload);
+              }
+        };
+        
+        ablyChannel.subscribe('remote-control', subscription);
+        
+        return () => {
+             ablyChannel.unsubscribe('remote-control', subscription);
+        }
+    }, [ablyChannel, isLoading]);
 
 
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
