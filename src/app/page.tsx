@@ -374,10 +374,10 @@ useEffect(() => {
             }
         };
 
-        ablyChannel.subscribe(messageListener);
+        ablyChannel.subscribe('control-update', messageListener);
         
         return () => {
-            ablyChannel.unsubscribe(messageListener);
+            ablyChannel.unsubscribe('control-update', messageListener);
         };
     }
 // eslint-disable-next-line react-hooks/exhaustive-deps
