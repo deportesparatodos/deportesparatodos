@@ -269,12 +269,10 @@ export function LayoutConfigurator({
           </div>
         </AccordionContent>
       </AccordionItem>
-
+      
       {eventProps.isViewPage && (
         <AccordionItem value="remote-control" className="border rounded-lg px-4">
-            <AccordionTrigger>
-                Control Remoto
-            </AccordionTrigger>
+            <AccordionTrigger>Control Remoto</AccordionTrigger>
             <AccordionContent className="pt-4 text-center">
               {remoteControlMode === 'controlled' && remoteSessionId ? (
                 <>

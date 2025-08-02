@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -196,6 +197,7 @@ function HomePageContent() {
   const [borderColor, setBorderColor] = useState<string>('#000000');
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // View mode state
@@ -1027,13 +1029,6 @@ function HomePageContent() {
     setIsViewMode(true);
   };
   
-  const handleStopView = () => {
-    if (remoteControlMode !== 'inactive') {
-        cleanupAbly();
-    }
-    setIsViewMode(false);
-    fetchEvents(false); // Check timestamp before fetching
-  };
 
   const openDialogForEvent = (event: Event) => {
     const selection = getEventSelection(event);
@@ -1588,6 +1583,7 @@ function HomePageContent() {
                 return (
                     <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
                         <iframe
+                            ref={el => (iframeRefs.current[originalIndex] = el)}
                             ref={el => (iframeRefs.current[originalIndex] = el)}
                             src={iframeSrc}
                             title={`Stream ${originalIndex + 1}`}
@@ -2576,3 +2572,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
