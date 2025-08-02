@@ -170,9 +170,11 @@ export function RemoteControlView({
 
         const connectAndSync = async () => {
              try {
+                // Ensure the channel is attached before doing anything.
                 await ablyChannel.whenState('attached');
 
-                ablyChannel.subscribe('initialState', (message: any) => {
+                // Subscribe to the initial state message from the controlled device.
+                ablyChannel.subscribe('remote-control', (message: any) => {
                     const { action, payload } = message.data;
                     if (action === 'initialState') {
                         setRemoteState(payload);
@@ -180,7 +182,9 @@ export function RemoteControlView({
                     }
                 });
 
+                // Publish the 'connect' message to tell the controlled device we are ready.
                 await ablyChannel.publish('remote-control', { action: 'connect' });
+
             } catch (error: any) {
                 console.error("Error during remote control sync:", error);
                 toast({
@@ -195,7 +199,7 @@ export function RemoteControlView({
         connectAndSync();
 
         return () => {
-            ablyChannel.unsubscribe('initialState');
+            ablyChannel.unsubscribe('remote-control');
         }
     }, [ablyChannel, onSessionEnd, remoteState, toast]);
 

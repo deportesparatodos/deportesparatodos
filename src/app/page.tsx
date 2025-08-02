@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -324,7 +325,8 @@ function HomePageContent() {
                 borderColor: borderColor,
                 isChatEnabled: isChatEnabled,
              };
-             channel.publish('initialState', { action: 'initialState', payload: currentState });
+             // Respond to the controller with the current state
+             channel.publish('remote-control', { action: 'initialState', payload: currentState });
         } else if (action === 'disconnect') {
             if (payload) {
                 setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
