@@ -339,6 +339,15 @@ export function LayoutConfigurator({
                 </AccordionContent>
             </AccordionItem>
         )}
+        
+        {remoteControlMode === 'controlling' && (
+             <AccordionItem value="item-3" className="border rounded-lg px-4">
+                <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+                <AccordionContent className="pt-2">
+                    <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
+                </AccordionContent>
+            </AccordionItem>
+        )}
     </Accordion>
   );
 }

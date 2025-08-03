@@ -281,7 +281,7 @@ export function RemoteControlView({
       const presentIndexes = new Set(newOrder);
       for(let i=0; i<9; i++) {
         if(!presentIndexes.has(i)) {
-            fullNewOrder.push(i);
+          fullNewOrder.push(i);
         }
       }
       updateRemoteState({ viewOrder: fullNewOrder });
@@ -446,5 +446,6 @@ export function RemoteControlView({
     </>
   );
 }
+
 
 
