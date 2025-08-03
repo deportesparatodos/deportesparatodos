@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play, Pencil } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -159,6 +159,7 @@ interface RemoteControlViewState {
   gridGap: number;
   borderColor: string;
   isChatEnabled: boolean;
+  fullscreenIndex: number | null;
 }
 
 // --- View for the "Controlling" device (e.g., phone) ---
@@ -268,10 +269,10 @@ export function RemoteControlView({
         handleEventsChange(newEvents);
     };
     
-    const handlePlayClick = (index: number) => {
+    const handleToggleFullscreen = (index: number) => {
         const { channel } = ablyRef.current;
         if (channel && initialRemoteSessionId) {
-            channel.publish('remote-control', { action: 'playClick', payload: { index, sessionId: initialRemoteSessionId } });
+            channel.publish('remote-control', { action: 'toggleFullscreen', payload: { index, sessionId: initialRemoteSessionId } });
         }
     };
 
@@ -380,7 +381,8 @@ export function RemoteControlView({
                 eventDetails={remoteState.selectedEvents}
                 onRemove={handleRemove}
                 onModify={handleModifyEvent}
-                onPlay={handlePlayClick}
+                onToggleFullscreen={handleToggleFullscreen}
+                fullscreenIndex={remoteState.fullscreenIndex}
                 isViewPage={true}
                 onAddEvent={() => setAddEventsOpen(true)}
                 gridGap={remoteState.gridGap}
@@ -444,4 +446,5 @@ export function RemoteControlView({
     </>
   );
 }
+
 

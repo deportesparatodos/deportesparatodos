@@ -200,6 +200,7 @@ function HomePageContent() {
 
   // View mode state
   const [isViewMode, setIsViewMode] = useState(false);
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
@@ -263,14 +264,14 @@ function HomePageContent() {
   }, []);
 
   const initAbly = useCallback(async (clientIdSuffix: string) => {
-    if (ablyRef.current.client) {
-      await cleanupAbly();
-    }
+    //if (ablyRef.current.client) {
+    //  await cleanupAbly();
+    //}
     const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=${clientIdSuffix}-${Date.now()}` });
     await client.connection.once('connected');
     ablyRef.current.client = client;
     return client;
-  }, [cleanupAbly]);
+  }, []);
   
   const handleStartControlledSession = useCallback(async () => {
     try {
@@ -290,13 +291,14 @@ function HomePageContent() {
 
           switch(action) {
               case 'connect':
-                  setIsViewMode(true); // Go to view mode immediately
+                  setIsViewMode(true);
                   const currentState = {
                       selectedEvents,
                       viewOrder,
                       gridGap,
                       borderColor,
                       isChatEnabled,
+                      fullscreenIndex
                   };
                   channel.publish('remote-control', { action: 'initialState', payload: { ...currentState, sessionId: newCode } });
                   break;
@@ -306,28 +308,11 @@ function HomePageContent() {
                   setGridGap(payload.gridGap ?? 0);
                   setBorderColor(payload.borderColor ?? '#000000');
                   setIsChatEnabled(payload.isChatEnabled ?? true);
+                  setFullscreenIndex(payload.fullscreenIndex ?? null);
                   break;
-              case 'playClick': {
-                  const iframe = iframeRefs.current[payload.index];
-                  if (iframe && iframe.contentDocument) {
-                      const body = iframe.contentDocument.body;
-                      if(body) {
-                          const rect = body.getBoundingClientRect();
-                          const x = rect.left + (rect.width / 2);
-                          const y = rect.top + (rect.height / 2);
-                          
-                          const clickEvent = new MouseEvent('click', {
-                              bubbles: true,
-                              cancelable: true,
-                              view: iframe.contentWindow,
-                              clientX: x,
-                              clientY: y
-                          });
-                          body.dispatchEvent(clickEvent);
-                      }
-                  }
+               case 'toggleFullscreen':
+                  setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                   break;
-              }
               case 'disconnect':
                   setSelectedEvents(message.data.selectedEvents || Array(9).fill(null));
                   cleanupAbly();
@@ -340,7 +325,7 @@ function HomePageContent() {
       toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
       cleanupAbly();
     }
-  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled]);
+  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex]);
 
   const handleStopView = useCallback(() => {
     setIsViewMode(false);
@@ -1536,48 +1521,56 @@ function HomePageContent() {
             </Button>
           </div>
           
-          <main 
-            className={gridContainerClasses} 
-            style={{ 
-              gap: `${gridGap}px`,
-              padding: `${gridGap}px`,
-              backgroundColor: borderColor
-            }}
-          >
-            {selectedEvents.map((event, originalIndex) => {
-                if (!event) return null;
-                
-                const windowClasses = cn(
-                    "overflow-hidden",
-                    "relative",
-                    "bg-black",
-                    "order-[var(--order)]",
-                    getItemClasses(viewOrder.filter(i => selectedEvents[i] !== null).indexOf(originalIndex), numCameras)
-                );
+           <main 
+                className={cn(
+                    "relative w-full h-full",
+                    fullscreenIndex === null && gridContainerClasses
+                )} 
+                style={fullscreenIndex === null ? { 
+                    gap: `${gridGap}px`,
+                    padding: `${gridGap}px`,
+                    backgroundColor: borderColor
+                } : {}}
+            >
+                {selectedEvents.map((event, originalIndex) => {
+                    if (!event) return null;
 
-                let iframeSrc = event.selectedOption
-                    ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`
-                    : '';
-                
-                if (iframeSrc.includes("youtube-nocookie.com")) {
-                    iframeSrc += `&autoplay=1`;
-                }
+                    const isFullscreen = fullscreenIndex === originalIndex;
+                    
+                    const windowClasses = cn(
+                        "overflow-hidden bg-black",
+                        isFullscreen 
+                            ? "absolute inset-0 z-50" 
+                            : "relative order-[var(--order)] " + getItemClasses(viewOrder.filter(i => selectedEvents[i] !== null).indexOf(originalIndex), numCameras)
+                    );
 
-                return (
-                    <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
-                        <iframe
-                            ref={el => (iframeRefs.current[originalIndex] = el)}
-                            src={iframeSrc}
-                            title={`Stream ${originalIndex + 1}`}
-                            className="w-full h-full border-0"
-                            loading="eager"
-                            allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                            allowFullScreen
-                        />
-                    </div>
-                );
-            })}
-          </main>
+                    let iframeSrc = event.selectedOption
+                        ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`
+                        : '';
+                    
+                    if (iframeSrc.includes("youtube-nocookie.com")) {
+                        iframeSrc += `&autoplay=1`;
+                    }
+
+                    if (fullscreenIndex !== null && !isFullscreen) {
+                        return null; // Don't render other iframes when one is fullscreen
+                    }
+
+                    return (
+                        <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
+                            <iframe
+                                ref={el => (iframeRefs.current[originalIndex] = el)}
+                                src={iframeSrc}
+                                title={`Stream ${originalIndex + 1}`}
+                                className="w-full h-full border-0"
+                                loading="eager"
+                                allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                                allowFullScreen
+                            />
+                        </div>
+                    );
+                })}
+            </main>
         </div>
         
         {/* Chat Sidebar for Desktop */}
@@ -2559,6 +2552,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 

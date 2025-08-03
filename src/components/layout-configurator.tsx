@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -30,7 +30,8 @@ interface EventListManagementProps {
   onAddEvent?: () => void;
   onSchedule?: () => void;
   onNotificationManager?: () => void;
-  onPlay?: (index: number) => void;
+  onToggleFullscreen?: (index: number) => void;
+  fullscreenIndex?: number | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
 }
 
@@ -45,7 +46,8 @@ export function EventListManagement({
   onAddEvent,
   onSchedule,
   onNotificationManager,
-  onPlay,
+  onToggleFullscreen,
+  fullscreenIndex,
   remoteControlMode,
 }: EventListManagementProps) {
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
@@ -72,6 +74,8 @@ export function EventListManagement({
       {order.map((originalIndex, currentIndex) => {
         const event = eventDetails[originalIndex];
         if (!event) return null;
+
+        const isFullscreen = fullscreenIndex === originalIndex;
 
         return (
           <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
@@ -104,18 +108,18 @@ export function EventListManagement({
                       >
                         <ArrowDown className="h-4 w-4" />
                       </Button>
-                      
-                      {remoteControlMode === 'controlling' && onPlay && (
-                          <Button
+
+                      {remoteControlMode === 'controlling' && onToggleFullscreen && (
+                        <Button
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
-                            onClick={(e) => { e.stopPropagation(); onPlay(originalIndex); }}
-                          >
-                            <Play className="h-4 w-4" />
-                          </Button>
-                      )}
-
+                            onClick={(e) => { e.stopPropagation(); onToggleFullscreen(originalIndex); }}
+                        >
+                            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                        </Button>
+                       )}
+                      
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -327,12 +331,14 @@ export function LayoutConfigurator({
         </AccordionContent>
       </AccordionItem>
       
-      <AccordionItem value="item-3" className="border rounded-lg px-4">
-        <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
-          <AccordionContent className="pt-2">
-             <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
-          </AccordionContent>
-      </AccordionItem>
+       {remoteControlMode !== 'controlling' && (
+            <AccordionItem value="item-3" className="border rounded-lg px-4">
+                <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+                <AccordionContent className="pt-2">
+                    <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
+                </AccordionContent>
+            </AccordionItem>
+        )}
     </Accordion>
   );
 }
