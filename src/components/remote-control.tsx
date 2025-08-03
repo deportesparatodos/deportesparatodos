@@ -208,6 +208,10 @@ export function RemoteControlView({
               setRemoteState(payload);
               setIsLoading(false);
             }
+             if (action === 'minimizeFromControlled') {
+               setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: null } : null);
+             }
+
           });
           
           // 2. Wait for channel to be attached
@@ -271,8 +275,15 @@ export function RemoteControlView({
     
     const handleToggleFullscreen = (index: number) => {
         const { channel } = ablyRef.current;
-        if (channel && initialRemoteSessionId) {
-            channel.publish('remote-control', { action: 'toggleFullscreen', payload: { index, sessionId: initialRemoteSessionId } });
+        if (channel && initialRemoteSessionId && remoteState) {
+            const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
+            // Update local state immediately for responsiveness
+            setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: newFullscreenIndex } : null);
+            // Send command to controlled device
+            channel.publish('remote-control', { 
+                action: 'toggleFullscreen', 
+                payload: { index, sessionId: initialRemoteSessionId } 
+            });
         }
     };
 
@@ -446,6 +457,7 @@ export function RemoteControlView({
     </>
   );
 }
+
 
 
 

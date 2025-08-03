@@ -33,6 +33,7 @@ interface EventListManagementProps {
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
+  onPlayClick?: (index: number) => void;
 }
 
 export function EventListManagement({
@@ -49,6 +50,7 @@ export function EventListManagement({
   onToggleFullscreen,
   fullscreenIndex,
   remoteControlMode,
+  onPlayClick,
 }: EventListManagementProps) {
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];
@@ -109,7 +111,7 @@ export function EventListManagement({
                         <ArrowDown className="h-4 w-4" />
                       </Button>
 
-                      {remoteControlMode === 'controlling' && onToggleFullscreen && (
+                      {onToggleFullscreen && (
                         <Button
                             variant="ghost"
                             size="icon"
@@ -351,3 +353,4 @@ export function LayoutConfigurator({
     </Accordion>
   );
 }
+

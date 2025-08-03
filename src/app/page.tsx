@@ -313,6 +313,23 @@ function HomePageContent() {
                case 'toggleFullscreen':
                   setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                   break;
+              case 'playClick': {
+                    if (iframeRefs.current[payload.index]) {
+                        const iframe = iframeRefs.current[payload.index];
+                        const rect = iframe?.getBoundingClientRect();
+                        if (rect) {
+                            const clickEvent = new MouseEvent('click', {
+                                bubbles: true,
+                                cancelable: true,
+                                view: window,
+                                clientX: rect.left + rect.width / 2,
+                                clientY: rect.top + rect.height / 2,
+                            });
+                            iframe.dispatchEvent(clickEvent);
+                        }
+                    }
+                    break;
+                }
               case 'disconnect':
                   setSelectedEvents(message.data.selectedEvents || Array(9).fill(null));
                   cleanupAbly();
@@ -1129,6 +1146,20 @@ function HomePageContent() {
     });
   };
 
+  const handleMinimizeFromView = () => {
+    if (fullscreenIndex === null) return;
+    const { channel } = ablyRef.current;
+    if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
+        // Notify the controller that the view was minimized
+        channel.publish('remote-control', {
+            action: 'minimizeFromControlled',
+            payload: { sessionId: remoteSessionId, index: fullscreenIndex }
+        });
+    }
+    setFullscreenIndex(null);
+  };
+
+
   const handleModifyEventSelect = (event: Event, option: string) => {
       const newSelectedEvents = [...selectedEvents];
       const eventWithSelection = { ...event, selectedOption: option };
@@ -1463,7 +1494,7 @@ function HomePageContent() {
         <div className="relative flex flex-col h-screen w-screen flex-grow">
           <div
             className={cn(
-              "absolute z-20 flex items-center gap-2 transition-opacity duration-300",
+              "absolute z-30 flex items-center gap-2 transition-opacity duration-300",
               areControlsVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100",
               isChatOpen && !isMobile ? "flex-row-reverse left-0" : "left-auto"
             )}
@@ -1497,6 +1528,18 @@ function HomePageContent() {
                 remoteControlMode={remoteControlMode}
                 onStartControlledSession={handleStartControlledSession}
             />
+
+            {fullscreenIndex !== null && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="bg-transparent hover:bg-accent/80 text-white h-10 w-10"
+                onClick={handleMinimizeFromView}
+                aria-label="Minimizar"
+              >
+                <Minimize className="h-5 w-5" />
+              </Button>
+            )}
 
             {isChatEnabled && (
               <Button 
@@ -1540,7 +1583,7 @@ function HomePageContent() {
                     const windowClasses = cn(
                         "overflow-hidden bg-black",
                         isFullscreen 
-                            ? "absolute inset-0 z-50" 
+                            ? "absolute inset-0 z-20" 
                             : "relative order-[var(--order)] " + getItemClasses(viewOrder.filter(i => selectedEvents[i] !== null).indexOf(originalIndex), numCameras)
                     );
 
@@ -1551,10 +1594,11 @@ function HomePageContent() {
                     if (iframeSrc.includes("youtube-nocookie.com")) {
                         iframeSrc += `&autoplay=1`;
                     }
-
+                    
                     if (fullscreenIndex !== null && !isFullscreen) {
-                        return null; // Don't render other iframes when one is fullscreen
+                        return null;
                     }
+
 
                     return (
                         <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
@@ -2552,6 +2596,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 
