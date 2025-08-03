@@ -131,7 +131,7 @@ export function EventListManagement({
                           <Pencil className="h-4 w-4" />
                       </Button>
 
-                      {isViewPage && onReload && (
+                      {onReload && (
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -353,4 +353,5 @@ export function LayoutConfigurator({
     </Accordion>
   );
 }
+
 

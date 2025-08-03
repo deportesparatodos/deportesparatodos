@@ -264,9 +264,6 @@ function HomePageContent() {
   }, []);
 
   const initAbly = useCallback(async (clientIdSuffix: string) => {
-    //if (ablyRef.current.client) {
-    //  await cleanupAbly();
-    //}
     const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=${clientIdSuffix}-${Date.now()}` });
     await client.connection.once('connected');
     ablyRef.current.client = client;
@@ -284,7 +281,7 @@ function HomePageContent() {
       
       setRemoteControlMode('controlled');
 
-      channel.subscribe('remote-control', (message: Ably.Types.Message) => {
+      channel.subscribe('control-action', (message: Ably.Types.Message) => {
           const { action, payload } = message.data;
           
           if(payload.sessionId !== newCode) return;
@@ -300,7 +297,7 @@ function HomePageContent() {
                       isChatEnabled,
                       fullscreenIndex
                   };
-                  channel.publish('remote-control', { action: 'initialState', payload: { ...currentState, sessionId: newCode } });
+                  channel.publish('control-action', { action: 'initialState', payload: { ...currentState, sessionId: newCode } });
                   break;
               case 'updateState':
                   setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
@@ -313,23 +310,25 @@ function HomePageContent() {
                case 'toggleFullscreen':
                   setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                   break;
-              case 'playClick': {
-                    if (iframeRefs.current[payload.index]) {
-                        const iframe = iframeRefs.current[payload.index];
-                        const rect = iframe?.getBoundingClientRect();
-                        if (rect) {
-                            const clickEvent = new MouseEvent('click', {
-                                bubbles: true,
-                                cancelable: true,
-                                view: window,
-                                clientX: rect.left + rect.width / 2,
-                                clientY: rect.top + rect.height / 2,
-                            });
-                            iframe.dispatchEvent(clickEvent);
-                        }
-                    }
-                    break;
-                }
+              case 'playClick':
+                  if (iframeRefs.current[payload.index]) {
+                      const iframe = iframeRefs.current[payload.index];
+                      const rect = iframe?.getBoundingClientRect();
+                      if (rect) {
+                          const clickEvent = new MouseEvent('click', {
+                              bubbles: true,
+                              cancelable: true,
+                              view: window,
+                              clientX: rect.left + rect.width / 2,
+                              clientY: rect.top + rect.height / 2,
+                          });
+                          iframe.dispatchEvent(clickEvent);
+                      }
+                  }
+                  break;
+              case 'reload':
+                  handleReloadCamera(payload.index);
+                  break;
               case 'disconnect':
                   setSelectedEvents(message.data.selectedEvents || Array(9).fill(null));
                   cleanupAbly();
@@ -1150,10 +1149,9 @@ function HomePageContent() {
     if (fullscreenIndex === null) return;
     const { channel } = ablyRef.current;
     if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
-        // Notify the controller that the view was minimized
-        channel.publish('remote-control', {
+        channel.publish('control-action', {
             action: 'minimizeFromControlled',
-            payload: { sessionId: remoteSessionId, index: fullscreenIndex }
+            payload: { sessionId: remoteSessionId }
         });
     }
     setFullscreenIndex(null);
@@ -1595,13 +1593,15 @@ function HomePageContent() {
                         iframeSrc += `&autoplay=1`;
                     }
                     
-                    if (fullscreenIndex !== null && !isFullscreen) {
-                        return null;
-                    }
-
-
                     return (
-                        <div key={`window-stable-${originalIndex}`} className={windowClasses} style={{'--order': viewOrder.indexOf(originalIndex)} as React.CSSProperties}>
+                        <div 
+                           key={`window-stable-${originalIndex}`} 
+                           className={windowClasses} 
+                           style={{
+                             '--order': viewOrder.indexOf(originalIndex),
+                             display: (fullscreenIndex !== null && !isFullscreen) ? 'none' : 'block'
+                           } as React.CSSProperties}
+                        >
                             <iframe
                                 ref={el => (iframeRefs.current[originalIndex] = el)}
                                 src={iframeSrc}
@@ -2596,6 +2596,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 

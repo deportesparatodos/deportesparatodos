@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -199,8 +199,7 @@ export function RemoteControlView({
           const channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
           ablyRef.current.channel = channel;
 
-          // 1. Subscribe first
-          channel.subscribe('remote-control', (message: Ably.Types.Message) => {
+          channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
             if (payload.sessionId !== initialRemoteSessionId) return;
 
@@ -214,11 +213,9 @@ export function RemoteControlView({
 
           });
           
-          // 2. Wait for channel to be attached
           await channel.whenState('attached');
           
-          // 3. Publish connect message
-          channel.publish('remote-control', { action: 'connect', payload: { sessionId: initialRemoteSessionId }});
+          channel.publish('control-action', { action: 'connect', payload: { sessionId: initialRemoteSessionId }});
 
         } catch (error) {
            console.error("Error connecting as controller:", error);
@@ -232,7 +229,7 @@ export function RemoteControlView({
       return () => {
         const { channel } = ablyRef.current;
         if (channel && initialRemoteSessionId) {
-          channel.publish('remote-control', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId, selectedEvents: remoteState?.selectedEvents } });
+          channel.publish('control-action', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId, selectedEvents: remoteState?.selectedEvents } });
         }
         onSessionEnd();
       };
@@ -245,7 +242,7 @@ export function RemoteControlView({
         if (!remoteState || !channel || !initialRemoteSessionId) return;
         const updatedState = { ...remoteState, ...newState };
         setRemoteState(updatedState as RemoteControlViewState);
-        channel.publish('remote-control', { action: 'updateState', payload: { ...updatedState, sessionId: initialRemoteSessionId }});
+        channel.publish('control-action', { action: 'updateState', payload: { ...updatedState, sessionId: initialRemoteSessionId }});
     }, [ablyRef, remoteState, initialRemoteSessionId]);
     
 
@@ -277,12 +274,20 @@ export function RemoteControlView({
         const { channel } = ablyRef.current;
         if (channel && initialRemoteSessionId && remoteState) {
             const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
-            // Update local state immediately for responsiveness
             setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: newFullscreenIndex } : null);
-            // Send command to controlled device
-            channel.publish('remote-control', { 
+            channel.publish('control-action', { 
                 action: 'toggleFullscreen', 
                 payload: { index, sessionId: initialRemoteSessionId } 
+            });
+        }
+    };
+    
+    const handleReload = (index: number) => {
+        const { channel } = ablyRef.current;
+        if (channel && initialRemoteSessionId) {
+            channel.publish('control-action', {
+                action: 'reload',
+                payload: { index, sessionId: initialRemoteSessionId }
             });
         }
     };
@@ -391,6 +396,7 @@ export function RemoteControlView({
                 onOrderChange={handleOrderChange}
                 eventDetails={remoteState.selectedEvents}
                 onRemove={handleRemove}
+                onReload={handleReload}
                 onModify={handleModifyEvent}
                 onToggleFullscreen={handleToggleFullscreen}
                 fullscreenIndex={remoteState.fullscreenIndex}
@@ -457,6 +463,7 @@ export function RemoteControlView({
     </>
   );
 }
+
 
 
 
