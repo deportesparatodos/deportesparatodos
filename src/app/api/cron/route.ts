@@ -279,7 +279,8 @@ export async function GET() {
                     preview_text: `Tus eventos para: ${isAllCategories ? 'Todas las categorías' : tag}`,
                     title: `Notificación Diaria - ${tag} - ${new Date().toISOString()}`,
                     from_name: 'Deportes Para Todos',
-                    reply_to: 'no-reply@deportesparatodos.com',
+                    reply_to: 'deportesparatodos98@gmail.com',
+                    from_email: 'deportesparatodos98@gmail.com',
                 },
             });
 
@@ -312,5 +313,3 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal Server Error during CRON execution', details: errorBody?.detail }, { status: 500 });
   }
 }
-
-    

@@ -111,7 +111,7 @@ const sortLogic = (a: Event, b: Event): number => {
 };
 
 
-function generateEmailHtml(events: Event[], isAllCategories: boolean): string {
+function generateEmailHtml(events: Event[], isAllCategories: boolean, categoryName?: string): string {
     if (events.length === 0) {
         return `
             <h1>Eventos de Hoy</h1>
@@ -123,22 +123,6 @@ function generateEmailHtml(events: Event[], isAllCategories: boolean): string {
     let eventListHtml = '';
 
     if (isAllCategories) {
-        // Single list for all events
-        const sortedEvents = [...events].sort(sortLogic);
-        eventListHtml = sortedEvents.map(event => `
-            <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
-                <p style="margin: 0; font-size: 16px;">
-                    <strong>${event.title}</strong>
-                    <span style="color: #718096; font-weight: bold; margin-left: 10px;">
-                        ${event.time}
-                    </span>
-                </p>
-                <p style="margin: 5px 0 0; font-size: 14px; color: #555;">${event.category}</p>
-            </div>
-        `).join('');
-
-    } else {
-        // Group events by category in collapsible sections
         const groupedEvents = events.reduce<Record<string, Event[]>>((acc, event) => {
             const category = event.category || 'Otros';
             if (!acc[category]) {
@@ -150,9 +134,7 @@ function generateEmailHtml(events: Event[], isAllCategories: boolean): string {
 
         eventListHtml = Object.entries(groupedEvents)
             .map(([category, categoryEvents]) => {
-                
                 const sortedEvents = [...categoryEvents].sort(sortLogic);
-
                 const eventsHtml = sortedEvents
                     .map(event => `
                         <div style="border-bottom: 1px solid #eee; padding: 10px 0; margin-left: 20px;">
@@ -168,7 +150,7 @@ function generateEmailHtml(events: Event[], isAllCategories: boolean): string {
 
                 return `
                     <div style="margin-top: 20px;">
-                        <details>
+                        <details open>
                             <summary style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">
                                <h1 style="margin: 0; font-size: 18px; font-weight: bold; display: inline;">${category} (${sortedEvents.length})</h1>
                             </summary>
@@ -178,7 +160,24 @@ function generateEmailHtml(events: Event[], isAllCategories: boolean): string {
                 `;
             })
             .join('');
+
+    } else { // For specific category
+        const sortedEvents = [...events].sort(sortLogic);
+        eventListHtml = sortedEvents.map(event => `
+            <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                <p style="margin: 0; font-size: 16px;">
+                    <strong>${event.title}</strong>
+                    <span style="color: #718096; font-weight: bold; margin-left: 10px;">
+                        ${event.time}
+                    </span>
+                </p>
+            </div>
+        `).join('');
     }
+
+    const titleText = isAllCategories 
+        ? "Aquí están los eventos de hoy:"
+        : `Aquí están los eventos de hoy para ${categoryName}:`;
 
 
     return `
@@ -187,7 +186,7 @@ function generateEmailHtml(events: Event[], isAllCategories: boolean): string {
                 <h1 style="margin: 0;">Deportes para Todos</h1>
             </div>
             <div style="padding: 20px;">
-                <h2 style="color: #333;">Aquí están los eventos de hoy en tus categorías:</h2>
+                <h2 style="color: #333;">${titleText}</h2>
                 ${eventListHtml}
             </div>
             <div style="background-color: #f7f7f7; color: #777; padding: 15px; text-align: center; font-size: 12px;">
@@ -211,9 +210,10 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const events = await getEventsForNotification(categories);
         const isAllCategories = categories.includes('all');
-        const emailHtml = generateEmailHtml(events, isAllCategories);
+        const categoryName = isAllCategories ? undefined : categories[0];
+        const events = await getEventsForNotification(categories);
+        const emailHtml = generateEmailHtml(events, isAllCategories, categoryName);
 
         const subject = events.length > 0
             ? `¡Hay ${events.length} eventos para ti hoy!`
@@ -230,7 +230,8 @@ export async function POST(request: NextRequest) {
                 preview_text: 'Tus eventos seleccionados para hoy.',
                 title: `Prueba DPT - ${email} - ${new Date().toISOString()}`,
                 from_name: 'Deportes Para Todos',
-                reply_to: 'no-reply@deportesparatodos.com',
+                reply_to: 'deportesparatodos98@gmail.com',
+                from_email: 'deportesparatodos98@gmail.com',
                 auto_footer: true,
             },
         });
