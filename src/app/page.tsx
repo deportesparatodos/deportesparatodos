@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -235,6 +234,7 @@ function HomePageContent() {
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isSessionEnded, setIsSessionEnded] = useState(false);
 
 
   // Schedule related states
@@ -1265,11 +1265,16 @@ function HomePageContent() {
         <RemoteControlView 
             ablyRef={ablyRef}
             initAbly={initAbly}
-            onSessionEnd={cleanupAbly}
+            onSessionEnd={() => {
+              cleanupAbly();
+              setIsSessionEnded(false);
+            }}
             allEvents={events}
             allChannels={channels}
             updateAllEvents={setEvents}
             initialRemoteSessionId={remoteSessionId}
+            isSessionEnded={isSessionEnded}
+            setIsSessionEnded={setIsSessionEnded}
         />
       </Suspense>
     )
@@ -1730,7 +1735,8 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
   // --- HOME VIEW (DEFAULT) ---
   const pageTitle = (
     <div className={cn(
-        'flex items-center transition-all duration-300 pl-4 shrink-0',
+        'flex items-center transition-all duration-300 shrink-0',
+        currentView === 'home' ? 'pl-4' : 'pl-0',
         isMobile && isSearchOpen && 'w-0 opacity-0'
     )}>
         {currentView === 'home' ? (
@@ -1959,12 +1965,12 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                         height={37.5}
                         priority
                         data-ai-hint="logo"
-                        className='w-[110px] md:w-[150px] h-auto'
+                        className='w-auto h-auto max-h-[40px] max-w-[150px]'
                     />
                 </Link>
             </div>
         ) : (
-          <div className="flex items-center gap-1 min-h-full w-full pr-4">
+          <div className="flex items-center gap-1 min-h-full w-full">
             <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0'>
                 <ArrowLeft />
             </Button>
@@ -2135,13 +2141,17 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                              <div className={cn(
                                 "relative flex-1",
                                 !isMobile ? "max-w-sm" : "w-full",
-                                currentView === 'home' && !isMobile && 'ml-4' // Adjust margin for home view on desktop
+                                currentView === 'home' && !isMobile && 'ml-4',
+                                isMobile && 'pl-2'
                             )}>
                                 <Input
                                     ref={r => { if (r) r.focus(); }}
                                     type="text"
                                     placeholder="Buscar evento o canal..."
-                                    className="w-full pr-10"
+                                    className={cn(
+                                      "w-full pr-10",
+                                      isMobile && 'h-9'
+                                    )}
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
                                 />
@@ -2610,3 +2620,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     );
 }
 
+
+    
