@@ -1736,7 +1736,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
   const pageTitle = (
     <div className={cn(
         'flex items-center transition-all duration-300 shrink-0',
-        currentView === 'home' ? 'pl-4' : 'pl-0',
+        currentView === 'home' ? 'pl-4' : '',
         isMobile && isSearchOpen && 'w-0 opacity-0'
     )}>
         {currentView === 'home' ? (
@@ -1971,7 +1971,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
             </div>
         ) : (
           <div className="flex items-center gap-1 min-h-full w-full">
-            <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0'>
+            <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0 -ml-2'>
                 <ArrowLeft />
             </Button>
             <h1 className="text-2xl font-bold capitalize truncate shrink">{currentView}</h1>
@@ -2619,6 +2619,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
 
     
