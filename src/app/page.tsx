@@ -310,29 +310,19 @@ function HomePageContent() {
                case 'toggleFullscreen':
                   setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                   break;
-              case 'playClick':
-                  if (iframeRefs.current[payload.index]) {
-                      const iframe = iframeRefs.current[payload.index];
-                      const rect = iframe?.getBoundingClientRect();
-                      if (rect) {
-                          const clickEvent = new MouseEvent('click', {
-                              bubbles: true,
-                              cancelable: true,
-                              view: window,
-                              clientX: rect.left + rect.width / 2,
-                              clientY: rect.top + rect.height / 2,
-                          });
-                          iframe.dispatchEvent(clickEvent);
-                      }
-                  }
-                  break;
               case 'reload':
                   handleReloadCamera(payload.index);
                   break;
               case 'disconnect':
-                  setSelectedEvents(message.data.selectedEvents || Array(9).fill(null));
                   cleanupAbly();
                   setIsViewMode(false);
+                  break;
+              case 'minimizeFromControlled':
+                  channel.publish('control-action', {
+                      action: 'updateControllerIcon',
+                      payload: { sessionId: newCode }
+                  });
+                  setFullscreenIndex(null);
                   break;
           }
       });
@@ -344,11 +334,15 @@ function HomePageContent() {
   }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex]);
 
   const handleStopView = useCallback(() => {
+    const { channel } = ablyRef.current;
+    if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
+        channel.publish('control-action', { action: 'controlledViewClosed', payload: { sessionId: remoteSessionId } });
+    }
     setIsViewMode(false);
     if (remoteControlMode === 'controlled' || remoteControlMode === 'controlling') {
       cleanupAbly();
     }
-  }, [remoteControlMode, cleanupAbly]);
+  }, [remoteControlMode, cleanupAbly, remoteSessionId]);
 
 
   const getGridClasses = useCallback((count: number) => {
@@ -1954,7 +1948,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 </Link>
             </div>
         ) : (
-          <div className="flex items-center gap-4 pl-4 min-h-[40px] flex-nowrap overflow-hidden">
+          <div className="flex items-center gap-1 pl-1 min-h-full">
             <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0'>
                 <ArrowLeft />
             </Button>
@@ -2123,7 +2117,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                          isMobile && isSearchOpen && 'w-full'
                      )}>
                         {isSearchOpen ? (
-                            <div className="relative w-full">
+                            <div className={cn("relative w-full", !isMobile && "max-w-sm")}>
                                 <Input
                                     ref={r => { if (r) r.focus(); }}
                                     type="text"
@@ -2596,6 +2590,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
 
 
 

@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw } from 'lucide-react';
@@ -186,6 +187,7 @@ export function RemoteControlView({
     const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
+    const [isSessionEnded, setIsSessionEnded] = useState(false);
 
     const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
     const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
@@ -207,8 +209,11 @@ export function RemoteControlView({
               setRemoteState(payload);
               setIsLoading(false);
             }
-             if (action === 'minimizeFromControlled') {
+             if (action === 'minimizeFromControlled' || action === 'updateControllerIcon') {
                setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: null } : null);
+             }
+             if (action === 'controlledViewClosed') {
+                setIsSessionEnded(true);
              }
 
           });
@@ -351,6 +356,26 @@ export function RemoteControlView({
         setModifyEventDialogOpen(false);
     };
 
+    if (isSessionEnded) {
+        return (
+             <Dialog open={true} onOpenChange={() => onSessionEnd()}>
+                <DialogContent hideClose={true}>
+                    <DialogHeader>
+                        <DialogTitle>Sesión Finalizada</DialogTitle>
+                        <DialogDescription>
+                            La sesión de control remoto ha finalizado. Vuelve a colocar el código si deseas reconectar.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                         <DialogClose asChild>
+                            <Button onClick={() => onSessionEnd()}>Cerrar</Button>
+                         </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        )
+    }
+
     if (isLoading) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
@@ -463,6 +488,7 @@ export function RemoteControlView({
     </>
   );
 }
+
 
 
 
