@@ -489,8 +489,3 @@ export function RemoteControlView({
   );
 }
 
-
-
-
-
-

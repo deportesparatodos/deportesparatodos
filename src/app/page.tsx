@@ -307,7 +307,7 @@ function HomePageContent() {
                   setIsChatEnabled(payload.isChatEnabled ?? true);
                   setFullscreenIndex(payload.fullscreenIndex ?? null);
                   break;
-               case 'toggleFullscreen':
+              case 'toggleFullscreen':
                   setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                   break;
               case 'reload':
@@ -324,6 +324,22 @@ function HomePageContent() {
                   });
                   setFullscreenIndex(null);
                   break;
+              case 'playClick':
+                if (iframeRefs.current[payload.index]) {
+                  const iframe = iframeRefs.current[payload.index] as HTMLIFrameElement;
+                  const rect = iframe.getBoundingClientRect();
+                  
+                  // Simulate a click event in the center of the iframe
+                  // This is a workaround as we can't directly control the content
+                  const clickEvent = new MouseEvent('click', {
+                      bubbles: true,
+                      cancelable: true,
+                      clientX: rect.left + rect.width / 2,
+                      clientY: rect.top + rect.height / 2,
+                  });
+                  iframe.dispatchEvent(clickEvent);
+                }
+                break;
           }
       });
     } catch (error) {
@@ -1948,11 +1964,11 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 </Link>
             </div>
         ) : (
-          <div className="flex items-center gap-1 pl-1 min-h-full">
+          <div className="flex items-center gap-1 min-h-full w-full pr-4">
             <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0'>
                 <ArrowLeft />
             </Button>
-            <h1 className="text-2xl font-bold capitalize truncate">{currentView}</h1>
+            <h1 className="text-2xl font-bold capitalize truncate shrink">{currentView}</h1>
           </div>
         )}
     </div>
@@ -2112,12 +2128,15 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                     {pageTitle}
                      <div className={cn(
                         "flex flex-shrink-0 items-center justify-end gap-1 px-2 md:px-4",
-                        "md:gap-2",
                         isMobile && "flex-1 [&_button]:h-9 [&_button]:w-9 [&_svg]:h-5 [&_svg]:w-5",
-                         isMobile && isSearchOpen && 'w-full'
+                        isMobile && isSearchOpen && 'w-full'
                      )}>
                         {isSearchOpen ? (
-                            <div className={cn("relative w-full", !isMobile && "max-w-sm")}>
+                             <div className={cn(
+                                "relative flex-1",
+                                !isMobile ? "max-w-sm" : "w-full",
+                                currentView === 'home' && !isMobile && 'ml-4' // Adjust margin for home view on desktop
+                            )}>
                                 <Input
                                     ref={r => { if (r) r.focus(); }}
                                     type="text"
@@ -2590,12 +2609,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
-
-
-
-
-
-
-
 
