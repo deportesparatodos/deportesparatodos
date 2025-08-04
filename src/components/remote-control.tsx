@@ -171,7 +171,9 @@ export function RemoteControlView({
   allEvents,
   allChannels,
   updateAllEvents,
-  initialRemoteSessionId
+  initialRemoteSessionId,
+  isSessionEnded,
+  setIsSessionEnded,
 }: {
   ablyRef: React.MutableRefObject<{ client: Ably.Realtime | null; channel: Ably.Types.RealtimeChannelPromise | null; }>;
   initAbly: (clientIdSuffix: string) => Promise<Ably.Realtime>;
@@ -180,6 +182,8 @@ export function RemoteControlView({
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
   initialRemoteSessionId: string | null;
+  isSessionEnded: boolean;
+  setIsSessionEnded: (isEnded: boolean) => void;
 }) {
     const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
@@ -187,7 +191,6 @@ export function RemoteControlView({
     const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
-    const [isSessionEnded, setIsSessionEnded] = useState(false);
 
     const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
     const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
@@ -363,7 +366,7 @@ export function RemoteControlView({
                     <DialogHeader>
                         <DialogTitle>Sesión Finalizada</DialogTitle>
                         <DialogDescription>
-                            La sesión de control remoto ha finalizado. Vuelve a colocar el código si deseas reconectar.
+                            La sesión ha finalizado, vuelva a colocar el codigo si desea volver.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
@@ -488,4 +491,3 @@ export function RemoteControlView({
     </>
   );
 }
-

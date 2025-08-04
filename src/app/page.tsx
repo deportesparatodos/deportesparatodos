@@ -330,7 +330,6 @@ function HomePageContent() {
                   const iframe = iframeRefs.current[payload.index] as HTMLIFrameElement;
                   const rect = iframe.getBoundingClientRect();
                   
-                  // Simulate a click event in the center of the iframe
                   // This is a workaround as we can't directly control the content
                   const clickEvent = new MouseEvent('click', {
                       bubbles: true,
@@ -2620,5 +2619,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
-    
