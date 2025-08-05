@@ -9,6 +9,7 @@ const API_ENDPOINTS = {
   'sports': 'https://streamed.pk/api/sports',
   'stream': 'https://streamed.pk/api/stream',
   'streamtp': 'https://streamtpglobal.com/eventos.json',
+  'tc-chaser': 'https://tc-chaser.vercel.app/api/events',
 };
 
 export async function GET(request: NextRequest) {

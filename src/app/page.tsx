@@ -409,7 +409,7 @@ function HomePageContent() {
         { name: 'sports', url: '/api/streams?type=sports' },
         { name: 'streamtp', url: '/api/streams?type=streamtp' },
         { name: 'agenda', url: 'https://agenda-dpt.vercel.app/api/events' },
-        { name: 'tc-chaser', url: 'https://tc-chaser.vercel.app/api/events' },
+        { name: 'tc-chaser', url: '/api/streams?type=tc-chaser' },
       ];
 
       const results = await Promise.allSettled(
