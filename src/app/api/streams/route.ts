@@ -1,7 +1,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import puppeteer from 'puppeteer-core';
-import chrome from 'chrome-aws-lambda';
+import chromium from '@sparticuz/chromium-min';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,12 +24,17 @@ const API_ENDPOINTS = {
 async function fetchWithBrowser(url: string) {
   let browser = null;
   try {
-    const executablePath = await chrome.executablePath;
+    // These arguments are recommended for running Puppeteer in serverless environments.
+    const browserArgs = await chromium.args;
+    // Add this argument to prevent memory issues in some environments.
+    browserArgs.push('--disable-dev-shm-usage');
 
+    // Launch the browser using the path and arguments from the chromium package.
     browser = await puppeteer.launch({
-      args: chrome.args,
-      executablePath,
-      headless: chrome.headless,
+      args: browserArgs,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
@@ -68,6 +73,7 @@ async function fetchWithBrowser(url: string) {
     return null; // Return null to indicate failure.
   } finally {
     if (browser) {
+      // Ensure the browser is always closed, even if errors occur.
       await browser.close();
     }
   }
@@ -96,7 +102,11 @@ export async function GET(request: NextRequest) {
     
     try {
       const data = await fetchWithBrowser(apiUrl);
-      return NextResponse.json(data || []);
+      if (data === null) {
+        // fetchWithBrowser returns null on failure, propagate as a server error.
+        throw new Error("Failed to fetch stream data using browser.");
+      }
+      return NextResponse.json(data);
     } catch (error) {
       console.error(`Error in API route for ${apiUrl}:`, error);
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -113,6 +123,10 @@ export async function GET(request: NextRequest) {
     let data;
     if (isStreamedPkEndpoint) {
         data = await fetchWithBrowser(apiUrl);
+        if (data === null) {
+           console.warn(`API for type '${type}' failed to fetch with browser. Returning empty array.`);
+           return NextResponse.json([], { status: 200 });
+        }
     } else {
         const response = await fetch(apiUrl, {
             headers: { 'Accept': 'application/json' },
