@@ -1,13 +1,15 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
-import puppeteer from 'puppeteer-extra';
+import puppeteer from 'puppeteer';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import os from 'os';
 
 export const dynamic = 'force-dynamic';
 
-// Apply the stealth plugin to puppeteer
-puppeteer.use(StealthPlugin());
+// Although puppeteer-extra is not used directly, applying the stealth plugin
+// might still have some effect if the core 'puppeteer' package is what puppeteer-extra wraps.
+// For stability, we'll try with the core puppeteer. If issues persist, this can be revisited.
+// puppeteer.use(StealthPlugin());
 
 const API_ENDPOINTS = {
   'live': 'https://streamed.pk/api/matches/live',
@@ -20,7 +22,7 @@ const API_ENDPOINTS = {
 };
 
 /**
- * Fetches content from a URL using a headless browser (Puppeteer with stealth)
+ * Fetches content from a URL using a headless browser (Puppeteer)
  * to bypass anti-bot measures like Cloudflare's JS challenge.
  * @param url The URL to scrape.
  * @returns The parsed JSON object from the page, or null if an error occurs.
@@ -28,10 +30,10 @@ const API_ENDPOINTS = {
 async function fetchWithBrowser(url: string) {
   let browser = null;
   try {
-    // Launch the browser instance with stealth options.
-    // Puppeteer will automatically download a compatible browser version.
+    // Launch the browser instance.
+    // Puppeteer will automatically download a compatible browser version if not found.
     browser = await puppeteer.launch({ 
-        headless: true, // Run in the background without a visible UI
+        headless: true,
         // Recommended args for running in a server/container environment
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
@@ -42,7 +44,7 @@ async function fetchWithBrowser(url: string) {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     
     // Navigate to the URL and wait for the network to be idle, which is a good
-    // indicator that all dynamic content (including Cloudflare's scripts) has loaded.
+    // indicator that all dynamic content has loaded.
     await page.goto(url, { waitUntil: 'networkidle0' });
 
     // Extract the text content from the body of the page.
@@ -87,7 +89,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '`type` parameter is required' }, { status: 400 });
   }
   
-  const isStreamedPkEndpoint = type === 'live' || type === 'all-today' || type === 'sports';
+  const isStreamedPkEndpoint = type === 'live' || type === 'all-today' || type === 'sports' || type === 'stream';
 
   // Handle specific stream requests (e.g., /api/streams?type=stream&source=xxx&id=yyy)
   if (type === 'stream') {
