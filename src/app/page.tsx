@@ -467,12 +467,14 @@ function HomePageContent() {
             status = 'En Vivo';
         }
 
-        let imageUrl = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+        let imageUrl = 'https://i.ibb.co/dHPWxr8/depete.jpg'; // Default image
         if (match.teams?.home?.badge && match.teams?.away?.badge) {
             imageUrl = `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`;
         } else if (match.poster) {
-            imageUrl = `https://streamed.pk${match.poster}`;
+            // Use the proxy endpoint for posters that are not team-based
+            imageUrl = `https://streamed.pk/api/images/proxy/${match.poster}.webp`;
         }
+
 
         return {
           title: match.title,
@@ -2664,3 +2666,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
+    
