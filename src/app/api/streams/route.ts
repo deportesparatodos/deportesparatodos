@@ -1,12 +1,9 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import os from 'os';
+import puppeteer from 'puppeteer-core';
+import chrome from 'chrome-aws-lambda';
 
 export const dynamic = 'force-dynamic';
-
-puppeteer.use(StealthPlugin());
 
 const API_ENDPOINTS = {
   'live': 'https://streamed.pk/api/matches/live',
@@ -27,12 +24,12 @@ const API_ENDPOINTS = {
 async function fetchWithBrowser(url: string) {
   let browser = null;
   try {
-    // Launch the browser instance using puppeteer-extra.
-    // It will use the stealth plugin to appear more like a real user.
-    browser = await puppeteer.launch({ 
-        headless: true,
-        // Recommended args for running in a server/container environment
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    const executablePath = await chrome.executablePath;
+
+    browser = await puppeteer.launch({
+      args: chrome.args,
+      executablePath,
+      headless: chrome.headless,
     });
 
     const page = await browser.newPage();
@@ -40,8 +37,6 @@ async function fetchWithBrowser(url: string) {
     // Set a common user agent to appear more like a standard browser
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     
-    // Navigate to the URL and wait for the network to be idle, which is a good
-    // indicator that all dynamic content has loaded, including resolving Cloudflare challenges.
     await page.goto(url, { waitUntil: 'networkidle0' });
 
     // Extract the text content from the body of the page.
@@ -65,17 +60,13 @@ async function fetchWithBrowser(url: string) {
                 throw new Error('Failed to parse JSON content from <pre> tag.');
             }
         }
-        // If parsing still fails, throw an error.
         throw new Error('Failed to parse JSON content from page body.');
     }
 
   } catch (error) {
-    // Log any errors that occur during the process for debugging.
     console.error(`Error fetching with Puppeteer from ${url}:`, error);
     return null; // Return null to indicate failure.
   } finally {
-    // CRUCIAL: Always close the browser instance to free up resources.
-    // The 'finally' block ensures this happens even if an error is thrown.
     if (browser) {
       await browser.close();
     }
@@ -93,7 +84,6 @@ export async function GET(request: NextRequest) {
   
   const isStreamedPkEndpoint = type === 'live' || type === 'all-today' || type === 'sports' || type === 'stream';
 
-  // Handle specific stream requests (e.g., /api/streams?type=stream&source=xxx&id=yyy)
   if (type === 'stream') {
     const source = searchParams.get('source');
     const id = searchParams.get('id');
@@ -106,7 +96,6 @@ export async function GET(request: NextRequest) {
     
     try {
       const data = await fetchWithBrowser(apiUrl);
-      // If data is null (due to an error in fetchWithBrowser), return an empty array
       return NextResponse.json(data || []);
     } catch (error) {
       console.error(`Error in API route for ${apiUrl}:`, error);
@@ -114,7 +103,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Handle other list-based requests
   const apiUrl = API_ENDPOINTS[type];
 
   if (!apiUrl) {
@@ -123,26 +111,22 @@ export async function GET(request: NextRequest) {
 
   try {
     let data;
-    // Use the browser-based fetcher for Cloudflare-protected endpoints
     if (isStreamedPkEndpoint) {
         data = await fetchWithBrowser(apiUrl);
     } else {
-        // Use a standard fetch for unprotected endpoints
         const response = await fetch(apiUrl, {
             headers: { 'Accept': 'application/json' },
-            next: { revalidate: 1800 }, // Cache for 30 minutes
+            next: { revalidate: 1800 },
         });
 
         if (!response.ok) {
             const errorBody = await response.text();
             console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, {errorBody});
-            // Return empty array on failure to prevent frontend errors
             return NextResponse.json([], { status: 200 });
         }
         data = await response.json();
     }
     
-    // Ensure the data is an array, or return an empty one if not or if it's null
     if (!Array.isArray(data)) {
         console.warn(`API for type '${type}' did not return a valid array. Returning empty array instead.`);
         return NextResponse.json([], { status: 200 });
@@ -152,7 +136,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
-    // Return empty array on failure to prevent frontend errors
     return NextResponse.json([], { status: 200 });
   }
 }
