@@ -12,6 +12,7 @@ const API_ENDPOINTS = {
   'stream': 'https://streamed.pk/api/stream',
   'streamtp': 'https://streamtpglobal.com/eventos.json',
   'tc-chaser': 'https://tc-chaser.vercel.app/api/events',
+  'agenda': 'https://agenda-dpt.vercel.app/api/events',
 };
 
 // Helper function to use a headless browser for fetching data from protected endpoints

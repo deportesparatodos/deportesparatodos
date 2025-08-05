@@ -362,7 +362,7 @@ export function RemoteControlView({
     if (isSessionEnded) {
         return (
              <Dialog open={true} onOpenChange={() => onSessionEnd()}>
-                <DialogContent hideClose={true}>
+                <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Sesión Finalizada</DialogTitle>
                         <DialogDescription>

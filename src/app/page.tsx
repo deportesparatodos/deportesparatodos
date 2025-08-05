@@ -408,12 +408,15 @@ function HomePageContent() {
         { name: 'today', url: '/api/streams?type=all-today' },
         { name: 'sports', url: '/api/streams?type=sports' },
         { name: 'streamtp', url: '/api/streams?type=streamtp' },
-        { name: 'agenda', url: 'https://agenda-dpt.vercel.app/api/events' },
+        { name: 'agenda', url: '/api/streams?type=agenda' },
         { name: 'tc-chaser', url: '/api/streams?type=tc-chaser' },
       ];
 
       const results = await Promise.allSettled(
-        endpoints.map(ep => fetch(ep.url).then(res => res.ok ? res.json() : Promise.reject(new Error(`Failed to fetch ${ep.url}`))))
+        endpoints.map(ep => fetch(ep.url).then(res => {
+          if (res.ok) return res.json();
+          return Promise.reject(new Error(`Failed to fetch ${ep.url} with status ${res.status}`));
+        }))
       );
 
       const getData = <T,>(name: string): T[] => {
