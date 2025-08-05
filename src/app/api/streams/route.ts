@@ -24,14 +24,9 @@ const API_ENDPOINTS = {
 async function fetchWithBrowser(url: string) {
   let browser = null;
   try {
-    // These arguments are recommended for running Puppeteer in serverless environments.
-    const browserArgs = await chromium.args;
-    // Add this argument to prevent memory issues in some environments.
-    browserArgs.push('--disable-dev-shm-usage');
-
     // Launch the browser using the path and arguments from the chromium package.
     browser = await puppeteer.launch({
-      args: browserArgs,
+      args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
