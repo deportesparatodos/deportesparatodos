@@ -26,23 +26,25 @@ async function fetchData(url: string) {
 
     // If the URL is for streamed.pk and an API key is provided, use the scraper service.
     if (url.includes('streamed.pk') && scraperApiKey) {
-        const scraperUrl = new URL('https://api.scraperapi.com');
-        scraperUrl.searchParams.set('api_key', scraperApiKey);
-        scraperUrl.searchParams.set('url', url);
-        fetchUrl = scraperUrl.toString();
+        fetchUrl = `http://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
     }
     
-    const response = await fetch(fetchUrl, {
-        next: { revalidate: 300 }, // Cache for 5 minutes
-    });
+    try {
+        const response = await fetch(fetchUrl, {
+            next: { revalidate: 300 }, // Cache for 5 minutes
+        });
 
-    if (!response.ok) {
-        const errorBody = await response.text();
-        console.error(`Error fetching from ${url} (via ${fetchUrl}): ${response.status} ${response.statusText}`, {errorBody});
-        throw new Error(`Failed to fetch from ${url} with status ${response.status}`);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Error fetching from ${url} (via ${fetchUrl}): ${response.status} ${response.statusText}`, {errorBody});
+            throw new Error(`Failed to fetch from ${url} with status ${response.status}`);
+        }
+        
+        return response.json();
+    } catch (error) {
+        console.error(`Error in fetchData for ${url}:`, error);
+        return null; // Return null on any fetch error
     }
-    
-    return response.json();
 }
 
 export async function GET(request: NextRequest) {
@@ -66,6 +68,10 @@ export async function GET(request: NextRequest) {
     
     try {
       const data = await fetchData(apiUrl);
+       if (data === null) {
+          // If fetchData returns null, it means there was an error.
+          return NextResponse.json({ error: 'Failed to fetch stream data' }, { status: 500 });
+      }
       return NextResponse.json(data);
     } catch (error) {
       console.error(`Error in API route for ${apiUrl}:`, error);
@@ -82,6 +88,12 @@ export async function GET(request: NextRequest) {
   try {
     const data = await fetchData(apiUrl);
     
+    if (data === null) {
+        // Log the failure and return an empty array to prevent breaking the client.
+        console.warn(`API for type '${type}' failed to fetch. Returning empty array instead.`);
+        return NextResponse.json([], { status: 200 });
+    }
+
     if (!Array.isArray(data) && !(typeof data === 'object' && data !== null) ) {
         console.warn(`API for type '${type}' did not return a valid JSON object/array. Returning empty array instead.`);
         return NextResponse.json([], { status: 200 });
