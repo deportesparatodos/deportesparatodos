@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -93,6 +92,13 @@ interface AgendaEvent {
   source: string;
   image: string;
   status: string;
+}
+
+interface TCChaserEvent {
+  event_time_and_day: string; // "2025-08-09T10:00:00.000Z"
+  event_title: string;
+  end_date: string;
+  cover_image: string;
 }
 
 const channels247: Event[] = [
@@ -403,6 +409,7 @@ function HomePageContent() {
         { name: 'sports', url: '/api/streams?type=sports' },
         { name: 'streamtp', url: '/api/streams?type=streamtp' },
         { name: 'agenda', url: 'https://agenda-dpt.vercel.app/api/events' },
+        { name: 'tc-chaser', url: 'https://tc-chaser.vercel.app/api/events' },
       ];
 
       const results = await Promise.allSettled(
@@ -427,6 +434,8 @@ function HomePageContent() {
       const sportsData: {id: string; name: string}[] = getData<{id: string; name: string}>('sports');
       const streamTpData: StreamTpEvent[] = getData<StreamTpEvent>('streamtp');
       const agendaData: AgendaEvent[] = getData<AgendaEvent>('agenda');
+      const tcChaserData: TCChaserEvent[] = getData<TCChaserEvent>('tc-chaser');
+
 
       const allMatchesMap = new Map<string, StreamedMatch>();
       
@@ -539,8 +548,56 @@ function HomePageContent() {
             status: 'Desconocido',
           };
       });
+
+      const tcChaserOptions = [
+          { url: 'https://tvlibreonline.org/html/fl/?get=Q2FuYWw3', label: 'TV PUBLICA - 1', hd: false, language: '' },
+          { url: 'https://la14hd.com/vivo/canales.php?stream=tvpublica', label: 'TV PUBLICA - 2', hd: false, language: '' },
+          { url: 'https://streamtpglobal.com/global1.php?stream=tv_publica', label: 'TV PUBLICA - 3', hd: false, language: '' },
+          { url: 'https://tvlibreonline.org/html/fl/?get=RGVwb3JUVkhE', label: 'DEPORTV', hd: true, language: '' },
+          { url: 'https://streamtpglobal.com/global1.php?stream=dsports2', label: 'DIRECTV - 1', hd: false, language: '' },
+          { url: 'https://streamtpglobal.com/global1.php?stream=dsportsplus', label: 'DIRECTV - 2', hd: false, language: '' },
+          { url: 'https://streamtpglobal.com/global1.php?stream=dsports', label: 'DIRECTV - 3', hd: false, language: '' },
+          { url: 'https://la14hd.com/vivo/canales.php?stream=dsportsplus', label: 'DIRECTV - 4', hd: false, language: '' },
+          { url: 'https://la14hd.com/vivo/canales.php?stream=dsports', label: 'DIRECTV - 5', hd: false, language: '' },
+          { url: 'https://la14hd.com/vivo/canales.php?stream=dsports2', label: 'DIRECTV - 6', hd: false, language: '' },
+          { url: 'https://rereyano.ru/player/3/77', label: 'TYC SPORTS - 1', hd: false, language: '' },
+          { url: 'https://elcanaldeportivo.com/tycsports-sd.php', label: 'TYC SPORTS - 2', hd: false, language: '' },
+          { url: 'https://streamtpglobal.com/global1.php?stream=tycsports', label: 'TYC SPORTS - 3', hd: false, language: '' },
+          { url: 'https://tvlibreonline.org/html/fl/?get=VHlDU3BvcnQ', label: 'TYC SPORTS - 4', hd: false, language: '' },
+          { url: 'https://tvlibreonline.org/html/hls.html?get=aHR0cHM6Ly9saXZlLTAxLTAyLWVsdHJlY2Uudm9kZ2MubmV0L2VsdHJlY2V0di9pbmRleC5tM3U4', label: 'ELTRECE - 1', hd: true, language: '' },
+          { url: 'https://tvlibreonline.org/html/fl/?get=QXJ0ZWFySEQ', label: 'ELTRECE - 2', hd: true, language: '' },
+          { url: 'https://motorplay.tv/ar', label: 'OPCION DE PAGO', hd: true, language: '' },
+      ];
       
-      const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaEvents, formula1StaticEvent];
+      const tcChaserEvents: Event[] = tcChaserData.map(event => {
+          const now = new Date();
+          const startDate = new Date(event.event_time_and_day);
+          const endDate = new Date(event.end_date);
+          let status: Event['status'] = 'Próximo';
+          if(isAfter(now, startDate) && isBefore(now, endDate)) {
+              status = 'En Vivo';
+          } else if (isAfter(now, endDate)) {
+              status = 'Finalizado';
+          }
+
+          const zonedEventTime = toZonedTime(startDate, timeZone);
+
+          return {
+              title: event.event_title,
+              time: format(zonedEventTime, 'HH:mm'),
+              options: tcChaserOptions,
+              sources: [],
+              buttons: [],
+              category: 'Motor Sports',
+              language: '',
+              date: format(zonedEventTime, 'yyyy-MM-dd'),
+              source: 'tc-chaser',
+              image: event.cover_image,
+              status: status,
+          };
+      });
+      
+      const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaEvents, ...tcChaserEvents, formula1StaticEvent];
       
       setEvents(combinedInitialEvents);
 
@@ -794,7 +851,7 @@ function HomePageContent() {
     const processedEvents = mergedEvents.map(e => {
         let currentStatus = e.status;
 
-        if (e.status === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
+        if (e.source !== 'tc-chaser' && e.status === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
              try {
                 const eventDateTimeStr = `${e.date}T${e.time}:00`;
                 const eventDate = parse(eventDateTimeStr, "yyyy-MM-dd'T'HH:mm:ss", new Date());

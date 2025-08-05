@@ -53,6 +53,8 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'i.imgur.com' },
       { protocol: 'https', hostname: 'cdn.nba.com' },
       { protocol: 'https', hostname: 'wearechecking.online' },
+      { protocol: 'https', hostname: 'actc.org.ar' },
+      { protocol: 'https', hostname: 'www.tc2000.com.ar' },
     ],
   },
   typescript: {

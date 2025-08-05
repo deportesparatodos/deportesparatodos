@@ -24,17 +24,19 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick, displ
       ? event.time
       : '--:--';
 
+  const isTCChaserEvent = event.source === 'tc-chaser';
+
   return (
     <div 
       className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border flex flex-col h-full"
       onClick={onClick}
     >
-      <div className="relative w-full aspect-video">
+      <div className={cn("relative w-full aspect-video", isTCChaserEvent && "bg-white p-2")}>
         <Image
           src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
           alt={event.title}
           layout="fill"
-          objectFit="cover"
+          objectFit={isTCChaserEvent ? 'contain' : 'cover'}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.onerror = null; 
