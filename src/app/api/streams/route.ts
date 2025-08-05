@@ -23,10 +23,12 @@ async function fetchData(url: string) {
     const scraperApiKey = process.env.SCRAPER_API_KEY;
     
     let fetchUrl = url;
+    let isScraper = false;
 
     // If the URL is for streamed.pk and an API key is provided, use the scraper service.
     if (url.includes('streamed.pk') && scraperApiKey) {
         fetchUrl = `http://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
+        isScraper = true;
     }
     
     try {
