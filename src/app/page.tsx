@@ -1480,7 +1480,7 @@ function HomePageContent() {
                                 <p>La página de inicio es tu centro de comando. Aquí encontrarás todo el contenido organizado para un acceso rápido y sencillo.</p>
                                 <ul className="list-disc pl-5 space-y-2">
                                     <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
-                                    <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", "Baloncesto", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
+                                    <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
                                     <li><strong>Carruseles de Eventos/Canales:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
                                     <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
                                 </ul>
@@ -1939,7 +1939,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
         </div>
        )}
         <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
-            <header className="sticky top-0 z-30 flex h-header-height w-full shrink-0 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-4">
+            <header className="sticky top-0 z-30 flex h-header-height w-full shrink-0 items-center border-b border-border bg-background/80 backdrop-blur-sm px-4">
                 <div className={cn("flex items-center gap-2", isSearchOpen && 'hidden sm:flex')}>
                     {currentView === 'home' ? (
                         <>

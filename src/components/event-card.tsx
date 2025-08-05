@@ -37,6 +37,7 @@ export const EventCard: FC<EventCardProps> = ({ event, selection, onClick, displ
           alt={event.title}
           layout="fill"
           objectFit={isTCChaserEvent ? 'contain' : 'cover'}
+          className={isTCChaserEvent ? 'object-contain' : 'object-cover'}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.onerror = null; 
