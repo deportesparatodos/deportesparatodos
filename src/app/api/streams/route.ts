@@ -1,76 +1,35 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
-import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium-min';
 
 export const dynamic = 'force-dynamic';
 
 const API_ENDPOINTS = {
-  'live': 'https://streamed.pk/api/matches/live',
-  'all-today': 'https://streamed.pk/api/matches/all-today',
-  'sports': 'https://streamed.pk/api/sports',
-  'stream': 'https://streamed.pk/api/stream',
+  'live': 'https://cors-anywhere.herokuapp.com/https://streamed.pk/api/matches/live',
+  'all-today': 'https://cors-anywhere.herokuapp.com/https://streamed.pk/api/matches/all-today',
+  'sports': 'https://cors-anywhere.herokuapp.com/https://streamed.pk/api/sports',
+  'stream': 'https://cors-anywhere.herokuapp.com/https://streamed.pk/api/stream',
   'streamtp': 'https://streamtpglobal.com/eventos.json',
   'tc-chaser': 'https://tc-chaser.vercel.app/api/events',
   'agenda': 'https://agenda-dpt.vercel.app/api/events',
 };
 
-/**
- * Fetches content from a URL using a headless browser (Puppeteer)
- * to bypass anti-bot measures like Cloudflare's JS challenge.
- * @param url The URL to scrape.
- * @returns The parsed JSON object from the page, or null if an error occurs.
- */
 async function fetchWithBrowser(url: string) {
-  let browser = null;
+  // This function is no longer needed but kept to avoid breaking changes if referenced elsewhere.
+  // It will now just do a normal fetch.
   try {
-    // Launch the browser using the path and arguments from the chromium package.
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    });
-
-    const page = await browser.newPage();
-    
-    // Set a common user agent to appear more like a standard browser
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    
-    await page.goto(url, { waitUntil: 'networkidle0' });
-
-    // Extract the text content from the body of the page.
-    const content = await page.evaluate(() => document.body.textContent);
-
-    if (!content) {
-        throw new Error('No content found on the page');
-    }
-
-    // The content is expected to be a JSON string. Parse it.
-    try {
-        return JSON.parse(content);
-    } catch(e) {
-        // As a fallback, some sites might wrap their JSON in a <pre> tag.
-        const preContent = await page.evaluate(() => document.querySelector('pre')?.textContent);
-        if(preContent) {
-            try {
-                return JSON.parse(preContent);
-            } catch (preError) {
-                console.error(`Failed to parse <pre> content from ${url}:`, preError);
-                throw new Error('Failed to parse JSON content from <pre> tag.');
-            }
+    const response = await fetch(url, {
+        headers: {
+            'Origin': 'https://streamed.pk', // Try to mimic the origin
+            'X-Requested-With': 'XMLHttpRequest'
         }
-        throw new Error('Failed to parse JSON content from page body.');
+    });
+    if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
     }
-
+    return await response.json();
   } catch (error) {
-    console.error(`Error fetching with Puppeteer from ${url}:`, error);
-    return null; // Return null to indicate failure.
-  } finally {
-    if (browser) {
-      // Ensure the browser is always closed, even if errors occur.
-      await browser.close();
-    }
+    console.error(`Error fetching directly from ${url}:`, error);
+    return null;
   }
 }
 
@@ -83,8 +42,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '`type` parameter is required' }, { status: 400 });
   }
   
-  const isStreamedPkEndpoint = type === 'live' || type === 'all-today' || type === 'sports' || type === 'stream';
-
   if (type === 'stream') {
     const source = searchParams.get('source');
     const id = searchParams.get('id');
@@ -93,14 +50,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '`source` and `id` are required for type=stream' }, { status: 400 });
     }
     
+    // Note: The proxy might not work for this dynamic path, testing needed.
     const apiUrl = `${API_ENDPOINTS.stream}/${source}/${id}`;
     
     try {
-      const data = await fetchWithBrowser(apiUrl);
-      if (data === null) {
-        // fetchWithBrowser returns null on failure, propagate as a server error.
-        throw new Error("Failed to fetch stream data using browser.");
+      const response = await fetch(apiUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      if (!response.ok) {
+         throw new Error(`Failed to fetch stream data with status ${response.status}`);
       }
+      const data = await response.json();
       return NextResponse.json(data);
     } catch (error) {
       console.error(`Error in API route for ${apiUrl}:`, error);
@@ -115,29 +73,21 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    let data;
-    if (isStreamedPkEndpoint) {
-        data = await fetchWithBrowser(apiUrl);
-        if (data === null) {
-           console.warn(`API for type '${type}' failed to fetch with browser. Returning empty array.`);
-           return NextResponse.json([], { status: 200 });
-        }
-    } else {
-        const response = await fetch(apiUrl, {
-            headers: { 'Accept': 'application/json' },
-            next: { revalidate: 1800 },
-        });
+    const response = await fetch(apiUrl, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        next: { revalidate: 300 }, // Cache for 5 minutes
+    });
 
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, {errorBody});
-            return NextResponse.json([], { status: 200 });
-        }
-        data = await response.json();
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, {errorBody});
+        return NextResponse.json([], { status: 200 });
     }
     
-    if (!Array.isArray(data)) {
-        console.warn(`API for type '${type}' did not return a valid array. Returning empty array instead.`);
+    const data = await response.json();
+    
+    if (!Array.isArray(data) && !(typeof data === 'object' && data !== null) ) {
+        console.warn(`API for type '${type}' did not return a valid JSON object/array. Returning empty array instead.`);
         return NextResponse.json([], { status: 200 });
     }
 
