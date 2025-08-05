@@ -4,34 +4,14 @@ import { NextResponse, type NextRequest } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const API_ENDPOINTS = {
-  'live': 'https://cors-anywhere.herokuapp.com/https://streamed.pk/api/matches/live',
-  'all-today': 'https://cors-anywhere.herokuapp.com/https://streamed.pk/api/matches/all-today',
-  'sports': 'https://cors-anywhere.herokuapp.com/https://streamed.pk/api/sports',
-  'stream': 'https://cors-anywhere.herokuapp.com/https://streamed.pk/api/stream',
+  'live': 'https://streamed.pk/api/matches/live',
+  'all-today': 'https://streamed.pk/api/matches/all-today',
+  'sports': 'https://streamed.pk/api/sports',
+  'stream': 'https://streamed.pk/api/stream',
   'streamtp': 'https://streamtpglobal.com/eventos.json',
   'tc-chaser': 'https://tc-chaser.vercel.app/api/events',
   'agenda': 'https://agenda-dpt.vercel.app/api/events',
 };
-
-async function fetchWithBrowser(url: string) {
-  // This function is no longer needed but kept to avoid breaking changes if referenced elsewhere.
-  // It will now just do a normal fetch.
-  try {
-    const response = await fetch(url, {
-        headers: {
-            'Origin': 'https://streamed.pk', // Try to mimic the origin
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    });
-    if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(`Error fetching directly from ${url}:`, error);
-    return null;
-  }
-}
 
 
 export async function GET(request: NextRequest) {
@@ -50,7 +30,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '`source` and `id` are required for type=stream' }, { status: 400 });
     }
     
-    // Note: The proxy might not work for this dynamic path, testing needed.
     const apiUrl = `${API_ENDPOINTS.stream}/${source}/${id}`;
     
     try {
@@ -81,7 +60,7 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
         const errorBody = await response.text();
         console.error(`Error fetching from ${apiUrl}: ${response.status} ${response.statusText}`, {errorBody});
-        return NextResponse.json([], { status: 200 });
+        return NextResponse.json([], { status: 200 }); // Return empty array on failure
     }
     
     const data = await response.json();
@@ -95,6 +74,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
-    return NextResponse.json([], { status: 200 });
+    return NextResponse.json([], { status: 200 }); // Return empty array on failure
   }
 }
