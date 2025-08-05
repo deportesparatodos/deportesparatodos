@@ -17,14 +17,17 @@ async function fetchData(url: string) {
     const scraperApiKey = process.env.SCRAPER_API_KEY;
     
     let fetchUrl = url;
+    const isStreamedPk = url.includes('streamed.pk');
 
-    if (url.includes('streamed.pk') && scraperApiKey) {
+    if (isStreamedPk && scraperApiKey) {
         fetchUrl = `http://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
     }
     
     try {
         const response = await fetch(fetchUrl, {
-            next: { revalidate: 300 }, // Cache for 5 minutes
+            // Using a timeout is a good practice, but native fetch in this environment doesn't support it directly.
+            // Vercel's function timeout will act as our overall timeout.
+            next: { revalidate: isStreamedPk ? 0 : 300 }, // No cache for scraper, 5 min for others
         });
 
         if (!response.ok) {
@@ -36,7 +39,7 @@ async function fetchData(url: string) {
         return response.json();
     } catch (error) {
         console.error(`Error in fetchData for ${url}:`, error);
-        return null;
+        return null; // Return null on any fetch error
     }
 }
 
@@ -80,7 +83,8 @@ export async function GET(request: NextRequest) {
     const data = await fetchData(apiUrl);
     
     if (data === null) {
-        console.warn(`API for type '${type}' failed to fetch. Returning empty array instead.`);
+        // Log the failure and return an empty array, which the frontend expects.
+        console.warn(`API for type '${type}' failed to fetch or returned null. Returning empty array instead.`);
         return NextResponse.json([], { status: 200 });
     }
 
@@ -93,6 +97,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
+    // On catastrophic error, still return an empty array to prevent frontend from breaking.
     return NextResponse.json([], { status: 200 }); 
   }
 }
