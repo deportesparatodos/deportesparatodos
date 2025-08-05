@@ -571,7 +571,12 @@ function HomePageContent() {
       
       const tcChaserEvents: Event[] = tcChaserData.map(event => {
           const now = new Date();
-          const startDate = new Date(event.event_time_and_day);
+          let startDate = new Date(event.event_time_and_day);
+          
+          if (!event.event_title.includes("2000")) {
+              startDate = addHours(startDate, 3);
+          }
+
           const endDate = new Date(event.end_date);
           let status: Event['status'] = 'Próximo';
           if(isAfter(now, startDate) && isBefore(now, endDate)) {
