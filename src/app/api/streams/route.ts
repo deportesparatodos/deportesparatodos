@@ -28,16 +28,10 @@ const API_ENDPOINTS = {
 async function fetchWithBrowser(url: string) {
   let browser = null;
   try {
-    // Define the executable path for Chrome based on the operating system.
-    // This is crucial for running in different environments (local vs. deployment).
-    const executablePath = os.platform() === 'linux' 
-      ? '/usr/bin/google-chrome' // Path in many Linux environments (e.g., Vercel)
-      : undefined; // Let Puppeteer find the default path on other OS (e.g., macOS, Windows)
-
     // Launch the browser instance with stealth options.
+    // Puppeteer will automatically download a compatible browser version.
     browser = await puppeteer.launch({ 
         headless: true, // Run in the background without a visible UI
-        executablePath,
         // Recommended args for running in a server/container environment
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
