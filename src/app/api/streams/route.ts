@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const API_ENDPOINTS = {
+const API_ENDPOINTS: Record<string, string> = {
   'live': 'https://streamed.pk/api/matches/live',
   'all-today': 'https://streamed.pk/api/matches/all-today',
   'sports': 'https://streamed.pk/api/sports',
@@ -13,7 +13,7 @@ const API_ENDPOINTS = {
   'agenda': 'https://agenda-dpt.vercel.app/api/events',
 };
 
-async function fetchData(url: string) {
+async function fetchData(url: string, type: string) {
     const scraperApiKey = process.env.SCRAPER_API_KEY;
     
     let fetchUrl = url;
@@ -25,8 +25,6 @@ async function fetchData(url: string) {
     
     try {
         const response = await fetch(fetchUrl, {
-            // Using a timeout is a good practice, but native fetch in this environment doesn't support it directly.
-            // Vercel's function timeout will act as our overall timeout.
             next: { revalidate: isStreamedPk ? 0 : 300 }, // No cache for scraper, 5 min for others
         });
 
@@ -62,7 +60,7 @@ export async function GET(request: NextRequest) {
     const apiUrl = `${API_ENDPOINTS.stream}/${source}/${id}`;
     
     try {
-      const data = await fetchData(apiUrl);
+      const data = await fetchData(apiUrl, type);
        if (data === null) {
           return NextResponse.json({ error: 'Failed to fetch stream data' }, { status: 500 });
       }
@@ -80,10 +78,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await fetchData(apiUrl);
+    const data = await fetchData(apiUrl, type);
     
     if (data === null) {
-        // Log the failure and return an empty array, which the frontend expects.
         console.warn(`API for type '${type}' failed to fetch or returned null. Returning empty array instead.`);
         return NextResponse.json([], { status: 200 });
     }
@@ -97,7 +94,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
-    // On catastrophic error, still return an empty array to prevent frontend from breaking.
     return NextResponse.json([], { status: 200 }); 
   }
 }
+
+    

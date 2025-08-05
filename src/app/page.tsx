@@ -403,24 +403,40 @@ function HomePageContent() {
     }
     
     try {
-      const endpoints = [
-        { name: 'live', url: '/api/streams?type=live' },
-        { name: 'today', url: '/api/streams?type=all-today' },
-        { name: 'sports', url: '/api/streams?type=sports' },
+      const endpointsToScrape = [
+        { name: 'live', url: 'https://streamed.pk/api/matches/live' },
+        { name: 'today', url: 'https://streamed.pk/api/matches/all-today' },
+        { name: 'sports', url: 'https://streamed.pk/api/sports' },
+      ];
+      
+      const otherEndpoints = [
         { name: 'streamtp', url: '/api/streams?type=streamtp' },
         { name: 'agenda', url: '/api/streams?type=agenda' },
         { name: 'tc-chaser', url: '/api/streams?type=tc-chaser' },
       ];
 
-      const results = await Promise.allSettled(
-        endpoints.map(ep => fetch(ep.url).then(res => {
+      // Fetch scraped endpoints sequentially
+      const scrapedResults: Record<string, any> = {};
+      for (const endpoint of endpointsToScrape) {
+          const response = await fetch(`/api/streams?type=${endpoint.name}`);
+          if (response.ok) {
+              scrapedResults[endpoint.name] = await response.json();
+          } else {
+              console.error(`Error fetching ${endpoint.name}:`, response.statusText);
+              scrapedResults[endpoint.name] = [];
+          }
+      }
+
+      // Fetch other endpoints in parallel
+      const otherResults = await Promise.allSettled(
+        otherEndpoints.map(ep => fetch(ep.url).then(res => {
           if (res.ok) return res.json();
           return Promise.reject(new Error(`Failed to fetch ${ep.url} with status ${res.status}`));
         }))
       );
-
-      const getData = <T,>(name: string): T[] => {
-        const result = results.find((r, i) => endpoints[i].name === name);
+      
+      const getOtherData = <T,>(name: string): T[] => {
+        const result = otherResults.find((r, i) => otherEndpoints[i].name === name);
         if (result?.status === 'fulfilled' && Array.isArray(result.value)) {
           return result.value as T[];
         }
@@ -432,12 +448,12 @@ function HomePageContent() {
 
       setLastFetchTimestamp(Date.now()); 
 
-      const liveData: StreamedMatch[] = getData<StreamedMatch>('live');
-      const todayData: StreamedMatch[] = getData<StreamedMatch>('today');
-      const sportsData: {id: string; name: string}[] = getData<{id: string; name: string}>('sports');
-      const streamTpData: StreamTpEvent[] = getData<StreamTpEvent>('streamtp');
-      const agendaData: AgendaEvent[] = getData<AgendaEvent>('agenda');
-      const tcChaserData: TCChaserEvent[] = getData<TCChaserEvent>('tc-chaser');
+      const liveData: StreamedMatch[] = Array.isArray(scrapedResults.live) ? scrapedResults.live : [];
+      const todayData: StreamedMatch[] = Array.isArray(scrapedResults.today) ? scrapedResults.today : [];
+      const sportsData: {id: string; name: string}[] = Array.isArray(scrapedResults.sports) ? scrapedResults.sports : [];
+      const streamTpData: StreamTpEvent[] = getOtherData<StreamTpEvent>('streamtp');
+      const agendaData: AgendaEvent[] = getOtherData<AgendaEvent>('agenda');
+      const tcChaserData: TCChaserEvent[] = getOtherData<TCChaserEvent>('tc-chaser');
 
 
       const allMatchesMap = new Map<string, StreamedMatch>();
@@ -471,7 +487,6 @@ function HomePageContent() {
         if (match.teams?.home?.badge && match.teams?.away?.badge) {
             imageUrl = `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`;
         } else if (match.poster) {
-            // Use the proxy endpoint for posters that are not team-based
             imageUrl = `https://streamed.pk/api/images/proxy/${match.poster}.webp`;
         }
 
@@ -2666,5 +2681,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
+
+    
 
     
