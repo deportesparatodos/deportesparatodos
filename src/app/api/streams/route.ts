@@ -1,15 +1,12 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import os from 'os';
 
 export const dynamic = 'force-dynamic';
 
-// Although puppeteer-extra is not used directly, applying the stealth plugin
-// might still have some effect if the core 'puppeteer' package is what puppeteer-extra wraps.
-// For stability, we'll try with the core puppeteer. If issues persist, this can be revisited.
-// puppeteer.use(StealthPlugin());
+puppeteer.use(StealthPlugin());
 
 const API_ENDPOINTS = {
   'live': 'https://streamed.pk/api/matches/live',
@@ -30,8 +27,8 @@ const API_ENDPOINTS = {
 async function fetchWithBrowser(url: string) {
   let browser = null;
   try {
-    // Launch the browser instance.
-    // Puppeteer will automatically download a compatible browser version if not found.
+    // Launch the browser instance using puppeteer-extra.
+    // It will use the stealth plugin to appear more like a real user.
     browser = await puppeteer.launch({ 
         headless: true,
         // Recommended args for running in a server/container environment
@@ -44,7 +41,7 @@ async function fetchWithBrowser(url: string) {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     
     // Navigate to the URL and wait for the network to be idle, which is a good
-    // indicator that all dynamic content has loaded.
+    // indicator that all dynamic content has loaded, including resolving Cloudflare challenges.
     await page.goto(url, { waitUntil: 'networkidle0' });
 
     // Extract the text content from the body of the page.
@@ -61,10 +58,15 @@ async function fetchWithBrowser(url: string) {
         // As a fallback, some sites might wrap their JSON in a <pre> tag.
         const preContent = await page.evaluate(() => document.querySelector('pre')?.textContent);
         if(preContent) {
-            return JSON.parse(preContent);
+            try {
+                return JSON.parse(preContent);
+            } catch (preError) {
+                console.error(`Failed to parse <pre> content from ${url}:`, preError);
+                throw new Error('Failed to parse JSON content from <pre> tag.');
+            }
         }
         // If parsing still fails, throw an error.
-        throw new Error('Failed to parse JSON content from page.');
+        throw new Error('Failed to parse JSON content from page body.');
     }
 
   } catch (error) {
