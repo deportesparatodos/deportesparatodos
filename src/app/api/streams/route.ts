@@ -3,32 +3,23 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// URLs for the APIs we need to fetch data from.
 const API_ENDPOINTS = {
   'live': 'https://streamed.pk/api/matches/live',
   'all-today': 'https://streamed.pk/api/matches/all-today',
   'sports': 'https://streamed.pk/api/sports',
-  'stream': 'https://streamed.pk/api/stream', // This one needs path parameters
+  'stream': 'https://streamed.pk/api/stream', 
   'streamtp': 'https://streamtpglobal.com/eventos.json',
   'tc-chaser': 'https://tc-chaser.vercel.app/api/events',
   'agenda': 'https://agenda-dpt.vercel.app/api/events',
 };
 
-/**
- * Fetches data from a given URL, using a scraping API for streamed.pk to bypass Cloudflare.
- * @param url The URL to fetch.
- * @returns The JSON response from the URL.
- */
 async function fetchData(url: string) {
     const scraperApiKey = process.env.SCRAPER_API_KEY;
     
     let fetchUrl = url;
-    let isScraper = false;
 
-    // If the URL is for streamed.pk and an API key is provided, use the scraper service.
     if (url.includes('streamed.pk') && scraperApiKey) {
         fetchUrl = `http://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
-        isScraper = true;
     }
     
     try {
@@ -45,7 +36,7 @@ async function fetchData(url: string) {
         return response.json();
     } catch (error) {
         console.error(`Error in fetchData for ${url}:`, error);
-        return null; // Return null on any fetch error
+        return null;
     }
 }
 
@@ -57,7 +48,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '`type` parameter is required' }, { status: 400 });
   }
   
-  // Handle the special case for single stream fetching
   if (type === 'stream') {
     const source = searchParams.get('source');
     const id = searchParams.get('id');
@@ -71,7 +61,6 @@ export async function GET(request: NextRequest) {
     try {
       const data = await fetchData(apiUrl);
        if (data === null) {
-          // If fetchData returns null, it means there was an error.
           return NextResponse.json({ error: 'Failed to fetch stream data' }, { status: 500 });
       }
       return NextResponse.json(data);
@@ -91,7 +80,6 @@ export async function GET(request: NextRequest) {
     const data = await fetchData(apiUrl);
     
     if (data === null) {
-        // Log the failure and return an empty array to prevent breaking the client.
         console.warn(`API for type '${type}' failed to fetch. Returning empty array instead.`);
         return NextResponse.json([], { status: 200 });
     }
@@ -105,7 +93,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error(`Error in API route for ${apiUrl}:`, error);
-    // Return an empty array on failure to prevent the entire page from breaking.
     return NextResponse.json([], { status: 200 }); 
   }
 }
