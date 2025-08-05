@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const apiUrl = `${API_ENDPOINTS.stream}/${source}/${id}`;
     
     try {
-      const response = await fetch(apiUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const response = await fetch(apiUrl);
       if (!response.ok) {
          throw new Error(`Failed to fetch stream data with status ${response.status}`);
       }
@@ -53,7 +53,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const response = await fetch(apiUrl, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
         next: { revalidate: 300 }, // Cache for 5 minutes
     });
 
