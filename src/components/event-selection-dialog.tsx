@@ -107,48 +107,50 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     No se encontraron opciones de transmisión.
                 </div>
             ) : (
-              <ScrollArea className="h-full -mr-4 pr-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {event.options.map((option, index) => {
-                    const domain = getDomainFromUrl(option.url);
-                    const isSelected = selectedOptionUrl === option.url;
-                    return (
-                        <Tooltip key={index} delayDuration={300}>
-                            <TooltipTrigger asChild>
-                                <Button
-                                variant={isSelected ? 'default' : 'secondary'}
-                                className={cn(
-                                    "w-full border border-border hover:scale-105 transition-transform duration-200", 
-                                    event.options.length === 1 && "sm:col-span-2",
-                                    isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
-                                )}
-                                onClick={() => onSelect(event, option.url)}
-                                >
-                                {option.label}
-                                </Button>
-                            </TooltipTrigger>
-                            {domain && (
-                                <TooltipContent>
-                                    <p>{domain}</p>
-                                </TooltipContent>
-                            )}
-                        </Tooltip>
-                    );
-                })}
-                </div>
-                {isModification && (
-                  <Button
-                    variant="destructive"
-                    className="w-full mt-4"
-                    onClick={() => {
-                      onRemove();
-                      onOpenChange(false);
-                    }}
-                  >
-                    Eliminar Selección
-                  </Button>
-                )}
-              </ScrollArea>
+              <TooltipProvider>
+                <ScrollArea className="h-full -mr-4 pr-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {event.options.map((option, index) => {
+                      const domain = getDomainFromUrl(option.url);
+                      const isSelected = selectedOptionUrl === option.url;
+                      return (
+                          <Tooltip key={index} delayDuration={300}>
+                              <TooltipTrigger asChild>
+                                  <Button
+                                  variant={isSelected ? 'default' : 'secondary'}
+                                  className={cn(
+                                      "w-full border border-border hover:scale-105 transition-transform duration-200", 
+                                      event.options.length === 1 && "sm:col-span-2",
+                                      isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                  )}
+                                  onClick={() => onSelect(event, option.url)}
+                                  >
+                                  {option.label}
+                                  </Button>
+                              </TooltipTrigger>
+                              {domain && (
+                                  <TooltipContent>
+                                      <p>{domain}</p>
+                                  </TooltipContent>
+                              )}
+                          </Tooltip>
+                      );
+                  })}
+                  </div>
+                  {isModification && (
+                    <Button
+                      variant="destructive"
+                      className="w-full mt-4"
+                      onClick={() => {
+                        onRemove();
+                        onOpenChange(false);
+                      }}
+                    >
+                      Eliminar Selección
+                    </Button>
+                  )}
+                </ScrollArea>
+              </TooltipProvider>
             )}
         </div>
       </DialogContent>
