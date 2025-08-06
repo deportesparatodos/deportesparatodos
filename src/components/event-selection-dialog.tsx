@@ -54,6 +54,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   const timeDisplay = isLive ? 'AHORA' : isValidTimeFormat(event.time) ? event.time : '--:--';
   
   const selectedOptionUrl = event.selectedOption;
+  const isTCChaserEvent = event.source === 'tc-chaser';
 
 
   return (
@@ -68,12 +69,12 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         }}
         >
          <DialogHeader>
-          <div className="relative w-full aspect-video rounded-t-lg overflow-hidden mb-4">
+          <div className={cn("relative w-full aspect-video rounded-t-lg overflow-hidden mb-4", isTCChaserEvent && "bg-white p-2")}>
             <Image
               src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
               alt={event.title}
               layout="fill"
-              objectFit="cover"
+              objectFit={isTCChaserEvent ? 'contain' : 'cover'}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.onerror = null; 
