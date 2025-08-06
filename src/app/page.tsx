@@ -287,7 +287,6 @@ function HomePageContent() {
       ablyRef.current.channel = channel;
       
       setRemoteControlMode('controlled');
-      setIsViewMode(true); // Automatically enter view mode
 
       channel.subscribe('control-action', (message: Ably.Types.Message) => {
           const { action, payload } = message.data;
@@ -306,6 +305,9 @@ function HomePageContent() {
                       sessionId: newCode
                   };
                   channel.publish('control-action', { action: 'initialState', payload: currentState });
+                  break;
+              case 'startView':
+                  setIsViewMode(true);
                   break;
               case 'updateState':
                   setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
@@ -2677,4 +2679,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 

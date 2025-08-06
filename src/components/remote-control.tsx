@@ -102,7 +102,7 @@ export function RemoteControlDialog({
         {view === 'main' && (
           <div className="space-y-4 py-4">
               <Button onClick={handleSetControlledView} size="lg" className="w-full">
-                Conectar control remoto
+                Ser Controlado
               </Button>
               <Button onClick={() => setView('controlling')} variant="outline" size="lg" className="w-full">
                 Controlar Otro Dispositivo
@@ -206,6 +206,8 @@ export function RemoteControlView({
             if (action === 'initialState') {
               setRemoteState(payload);
               setIsLoading(false);
+              // Tell the controlled device to start the view now
+              channel.publish('control-action', { action: 'startView', payload: { sessionId: initialRemoteSessionId } });
             }
              if (action === 'minimizeFromControlled' || action === 'updateControllerIcon') {
                setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: null } : null);
