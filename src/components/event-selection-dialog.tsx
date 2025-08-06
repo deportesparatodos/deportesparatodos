@@ -95,18 +95,19 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className={cn("px-6 flex-grow overflow-y-auto", !isModification && "pb-6")}>
+        <div className={cn("px-6", !isModification && "pb-6")}>
              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex items-center justify-center h-full py-10">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             ) : event.options.length === 0 ? (
-                 <div className="flex items-center justify-center h-full text-center text-muted-foreground">
+                 <div className="flex items-center justify-center h-full text-center text-muted-foreground py-10">
                     No se encontraron opciones de transmisión.
                 </div>
             ) : (
               <TooltipProvider>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                <ScrollArea className="max-h-64 overflow-y-auto pr-3 -mr-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {event.options.map((option, index) => {
                       const domain = getDomainFromUrl(option.url);
                       const isSelected = selectedOptionUrl === option.url;
@@ -134,11 +135,12 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                       );
                   })}
                   </div>
+                </ScrollArea>
               </TooltipProvider>
             )}
         </div>
         {isModification && (
-            <div className="px-6 pb-6 pt-4 flex-shrink-0">
+            <div className="px-6 pb-6 pt-4 flex-shrink-0 mt-auto">
                 <Button
                     variant="destructive"
                     className="w-full"
