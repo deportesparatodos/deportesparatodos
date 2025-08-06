@@ -19,8 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Loader2 } from 'lucide-react';
-import { ScrollArea } from './ui/scroll-area';
+import { Loader2, Trash2 } from 'lucide-react';
 
 interface EventSelectionDialogProps {
   isOpen: boolean;
@@ -66,7 +65,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
           }
         }}
         >
-         <DialogHeader className="flex-shrink-0">
+         <DialogHeader className="flex-shrink-0 p-0">
           <div className={cn("relative w-full aspect-video rounded-t-lg overflow-hidden mb-4", (isTCChaserEvent || isChannel) && "bg-white p-2")}>
             <Image
               src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
@@ -82,7 +81,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             />
           </div>
           <DialogTitle className="text-center text-lg font-bold px-6">{event.title}</DialogTitle>
-           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1 px-6">
+           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1 px-6 pb-4">
                 {timeDisplay && <p className="font-semibold">{timeDisplay}</p>}
                 {event.status && (
                     <Badge className={cn(
@@ -96,7 +95,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="px-6 pt-4 pb-6 flex-grow overflow-hidden min-h-[100px] flex flex-col">
+        <div className="px-6 pb-6 flex-grow overflow-y-auto">
              {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -107,7 +106,6 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 </div>
             ) : (
               <TooltipProvider>
-                <ScrollArea className="pr-4 -mr-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {event.options.map((option, index) => {
                       const domain = getDomainFromUrl(option.url);
@@ -136,22 +134,24 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                       );
                   })}
                   </div>
-                  {isModification && (
-                    <Button
-                      variant="destructive"
-                      className="w-full mt-4"
-                      onClick={() => {
-                        onRemove();
-                        onOpenChange(false);
-                      }}
-                    >
-                      Eliminar Selección
-                    </Button>
-                  )}
-                </ScrollArea>
               </TooltipProvider>
             )}
         </div>
+        {isModification && (
+            <div className="px-6 pb-6 pt-0 flex-shrink-0">
+                <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => {
+                    onRemove();
+                    onOpenChange(false);
+                    }}
+                >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar Selección
+                </Button>
+            </div>
+        )}
       </DialogContent>
     </Dialog>
   );
