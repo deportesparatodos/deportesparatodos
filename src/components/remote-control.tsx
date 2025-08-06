@@ -89,11 +89,13 @@ export function RemoteControlDialog({
           <Airplay />
         </Button>
       </DialogTrigger>
-      <DialogContent className="gap-0">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Control Remoto</DialogTitle>
-          <DialogDescription>
-            Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.
+           <DialogDescription>
+            {view === 'controlled'
+              ? 'Introduce este código en el dispositivo que quieres usar como control:'
+              : 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -110,9 +112,6 @@ export function RemoteControlDialog({
         
         {view === 'controlled' && (
           <div className="grid py-4 text-center">
-             <DialogDescription>
-                Introduce este código en el dispositivo que quieres usar como control:
-            </DialogDescription>
             <div className="p-4 bg-muted rounded-lg">
                 <p className="text-4xl font-bold tracking-widest text-primary">
                     {isLoading || !remoteSessionId ? <Loader2 className="h-10 w-10 animate-spin mx-auto" /> : remoteSessionId}
@@ -493,5 +492,7 @@ export function RemoteControlView({
     </>
   );
 }
+
+    
 
     
