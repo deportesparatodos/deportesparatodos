@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { FC, useState, useEffect } from 'react';
@@ -16,6 +15,7 @@ import type { Channel } from './channel-list';
 import { Card } from './ui/card';
 import Image from 'next/image';
 import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
 
 export interface StreamOption {
   url: string;
@@ -103,7 +103,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                   className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
                   onClick={() => onChannelClick(channel)}
                 >
-                  <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
+                  <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white h-[100px] flex-shrink-0">
                     <Image
                       src={channel.logo}
                       alt={`${channel.name} logo`}

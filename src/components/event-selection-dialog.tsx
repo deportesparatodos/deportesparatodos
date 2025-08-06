@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { FC } from 'react';
@@ -22,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Loader2 } from 'lucide-react';
+import { ScrollArea } from './ui/scroll-area';
 
 interface EventSelectionDialogProps {
   isOpen: boolean;
@@ -55,12 +55,12 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   
   const selectedOptionUrl = event.selectedOption;
   const isTCChaserEvent = event.source === 'tc-chaser';
-
+  const isChannel = event.category === 'Canal';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-md bg-secondary border-border text-foreground p-0 flex flex-col"
+        className="sm:max-w-md bg-secondary border-border text-foreground p-0 flex flex-col max-h-[90vh]"
         onInteractOutside={(e) => {
            // This allows tooltips to work inside the dialog without closing it.
           if ((e.target as HTMLElement)?.closest('[data-radix-popper-content-wrapper]')) {
@@ -68,13 +68,14 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
           }
         }}
         >
-         <DialogHeader>
-          <div className={cn("relative w-full aspect-video rounded-t-lg overflow-hidden mb-4", isTCChaserEvent && "bg-white p-2")}>
+         <DialogHeader className="flex-shrink-0">
+          <div className={cn("relative w-full aspect-video rounded-t-lg overflow-hidden mb-4", (isTCChaserEvent || isChannel) && "bg-white p-2")}>
             <Image
               src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
               alt={event.title}
               layout="fill"
-              objectFit={isTCChaserEvent ? 'contain' : 'cover'}
+              objectFit={(isTCChaserEvent || isChannel) ? 'contain' : 'cover'}
+              className={(isTCChaserEvent || isChannel) ? 'object-contain' : 'object-cover'}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.onerror = null; 
@@ -97,18 +98,19 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="px-6 flex-grow">
+        <div className="px-6 flex-grow overflow-y-auto min-h-[100px] flex flex-col">
              {isLoading ? (
-                <div className="flex items-center justify-center h-24">
+                <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             ) : event.options.length === 0 ? (
-                 <div className="text-center text-muted-foreground py-8">
+                 <div className="flex items-center justify-center h-full text-center text-muted-foreground">
                     No se encontraron opciones de transmisión.
                 </div>
             ) : (
+              <ScrollArea className="h-full">
                 <TooltipProvider>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pr-4">
                     {event.options.map((option, index) => {
                         const domain = getDomainFromUrl(option.url);
                         const isSelected = selectedOptionUrl === option.url;
@@ -137,22 +139,21 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     })}
                     </div>
                 </TooltipProvider>
+              </ScrollArea>
             )}
         </div>
-         <DialogFooter className="mt-auto p-0">
+         <DialogFooter className="mt-auto p-6 pt-4 flex-shrink-0">
           {isModification && (
-            <div className="w-full px-6 pb-6 pt-0">
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => {
-                  onRemove();
-                  onOpenChange(false);
-                }}
-              >
-                Eliminar Selección
-              </Button>
-            </div>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => {
+                onRemove();
+                onOpenChange(false);
+              }}
+            >
+              Eliminar Selección
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

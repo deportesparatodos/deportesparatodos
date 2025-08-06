@@ -422,7 +422,7 @@ function HomePageContent() {
           if (response.ok) {
               scrapedResults[endpoint.name] = await response.json();
           } else {
-              console.error(`Error fetching ${endpoint.name}:`, response.statusText);
+              console.error(`Error fetching ${endpoint.name}: ${response.status} ${response.statusText}`);
               scrapedResults[endpoint.name] = [];
           }
       }
@@ -1904,20 +1904,17 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
           {itemsToDisplay.map((item, index) => {
-              if ('urls' in item) { // It's a Channel
-                  const channel = item as Channel;
-                  const channelAsEvent: Event = { title: channel.name, options: channel.urls, sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
-                  const selection = getEventSelection(channelAsEvent);
-                  return (
+              const isChannel = 'urls' in item;
+              return isChannel ? (
                       <Card 
                           key={`search-channel-${index}`}
                           className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
-                          onClick={() => handleChannelClick(channel)}
+                          onClick={() => handleChannelClick(item as Channel)}
                       >
-                          <div className="relative w-full flex-grow flex items-center justify-center p-4 bg-white/10 aspect-video">
+                          <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
                               <Image
-                                  src={channel.logo}
-                                  alt={`${channel.name} logo`}
+                                  src={(item as Channel).logo}
+                                  alt={`${(item as Channel).name} logo`}
                                   width={120}
                                   height={67.5}
                                   className="object-contain max-h-full max-w-full"
@@ -1927,7 +1924,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                       target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                                   }}
                               />
-                              {selection.isSelected && (
+                               {getEventSelection({...(item as any), category: 'Canal', time: 'AHORA'}).isSelected && (
                                   <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                                       <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
                                   </div>
@@ -1937,9 +1934,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                               <h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3>
                           </div>
                       </Card>
-                  );
-              } else { // It's an Event
-                  return (
+                  ) : (
                       <EventCard
                         key={`search-event-${index}`}
                         event={item as Event}
@@ -1948,7 +1943,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                         displayMode='checkmark'
                       />
                   );
-              }
           })}
       </div>
     );
@@ -2630,7 +2624,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                                 className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
                                                 onClick={() => handleChannelClick(channel)}
                                             >
-                                                <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white/10 h-[100px] flex-shrink-0">
+                                                <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white h-[100px] flex-shrink-0">
                                                     <Image
                                                         src={channel.logo}
                                                         alt={`${channel.name} logo`}
