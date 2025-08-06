@@ -45,7 +45,7 @@ interface EventCarouselProps {
   channels?: Channel[];
   onCardClick?: (event: Event) => void;
   onChannelClick?: (channel: Channel) => void;
-  getEventSelection?: (event: Event) => { isSelected: boolean; window: number | null };
+  getEventSelection?: (event: Event) => { isSelected: boolean; selectedOption: string | null };
 }
 
 export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection }) => {
@@ -85,6 +85,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                   event={event}
                   selection={getEventSelection(event)}
                   onClick={() => onCardClick(event)}
+                  displayMode="checkmark"
                 />
               </CarouselItem>
             ))}
@@ -118,7 +119,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                     />
                     {selection.isSelected && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                        <span className="text-5xl font-extrabold text-white drop-shadow-lg">{selection.window}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
                       </div>
                     )}
                   </div>
@@ -133,3 +134,5 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
+
+    

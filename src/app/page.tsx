@@ -294,17 +294,17 @@ function HomePageContent() {
           if(payload.sessionId !== newCode) return;
 
           switch(action) {
-              case 'connect':
-                  setIsViewMode(true);
+              case 'requestInitialState':
                   const currentState = {
                       selectedEvents,
                       viewOrder,
                       gridGap,
                       borderColor,
                       isChatEnabled,
-                      fullscreenIndex
+                      fullscreenIndex,
+                      sessionId: newCode
                   };
-                  channel.publish('control-action', { action: 'initialState', payload: { ...currentState, sessionId: newCode } });
+                  channel.publish('control-action', { action: 'initialState', payload: currentState });
                   break;
               case 'updateState':
                   setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
@@ -336,7 +336,6 @@ function HomePageContent() {
                   const iframe = iframeRefs.current[payload.index] as HTMLIFrameElement;
                   const rect = iframe.getBoundingClientRect();
                   
-                  // This is a workaround as we can't directly control the content
                   const clickEvent = new MouseEvent('click', {
                       bubbles: true,
                       cancelable: true,
@@ -1083,16 +1082,10 @@ function HomePageContent() {
   
   const getEventSelection = (event: Event) => {
     const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
-    
     if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
-      const activeEventIndexes = selectedEvents.map((e, i) => e ? i : -1).filter(i => i !== -1);
-      const orderedActiveIndexes = viewOrder.filter(i => activeEventIndexes.includes(i));
-      const displayPosition = orderedActiveIndexes.indexOf(selectionIndex) + 1;
-      
-      return { isSelected: true, window: displayPosition > 0 ? displayPosition : null, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
+      return { isSelected: true, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
     }
-
-    return { isSelected: false, window: null, selectedOption: null };
+    return { isSelected: false, selectedOption: null };
   };
 
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
@@ -1415,7 +1408,6 @@ function HomePageContent() {
                     onSelect={handleModifyEventSelect}
                     isModification={true}
                     onRemove={() => {}}
-                    windowNumber={modifyEvent.index + 1}
                     isLoading={isOptionsLoading}
                     setIsLoading={setIsOptionsLoading}
                     setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}
@@ -1690,11 +1682,11 @@ function HomePageContent() {
                     );
 
                     let iframeSrc = event.selectedOption
-                        ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`
+                        ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&amp;' : '?'}reload=${reloadCounters[originalIndex] || 0}`
                         : '';
                     
                     if (iframeSrc.includes("youtube-nocookie.com")) {
-                        iframeSrc += `&autoplay=1`;
+                        iframeSrc += `&amp;autoplay=1`;
                     }
                     
                     return (
@@ -2167,7 +2159,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                         <ul className="list-disc pl-6 space-y-1">
                                                             <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
                                                             <li>(b) Identificación clara del contenido presuntamente infringido.</li>
-                                                            <li>(c) Enlace directo al contenido incrustado en Deportes para Todos.</li>
+                                                            <li>(c) Enlace directo al contenido incrustrado en Deportes para Todos.</li>
                                                             <li>(d) Datos de contacto válidos (correo electrónico).</li>
                                                             <li>(e) Una declaración de buena fe indicando que el uso no está autorizado por usted, su agente o la ley.</li>
                                                             <li>(f) Una declaración de veracidad de la información, bajo pena de perjurio.</li>
@@ -2330,7 +2322,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 onSelect={handleEventSelect}
                 isModification={isModification}
                 onRemove={() => handleEventRemove(modificationIndex!)}
-                windowNumber={(modificationIndex ?? selectedEvents.findIndex(e => e === null))! + 1}
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={setDialogEvent}
@@ -2355,7 +2346,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 onSelect={handleModifyEventSelect}
                 isModification={true}
                 onRemove={() => {}} 
-                windowNumber={modifyEvent.index + 1}
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={event => setModifyEvent(prev => prev ? {...prev, event} : null)}
@@ -2413,9 +2403,9 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const getEventSelection = useCallback((eventTitle: string, eventTime: string) => {
         const selectionIndex = selectedEvents.findIndex(se => se?.title === eventTitle && se?.time === eventTime);
         if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
-            return { isSelected: true, window: selectionIndex + 1, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
+            return { isSelected: true, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
         }
-        return { isSelected: false, window: null, selectedOption: null };
+        return { isSelected: false, selectedOption: null };
     }, [selectedEvents]);
 
 
@@ -2436,7 +2426,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         setSubDialogOpen(true);
 
         setIsModification(selection.isSelected);
-        setModificationIndex(selection.isSelected ? selection.window! - 1 : selectedEvents.findIndex(e => e === null));
+        setModificationIndex(selection.isSelected ? selectedEvents.findIndex(se => se?.title === event.title) : selectedEvents.findIndex(e => e === null));
         
         if (event.source === 'streamed.pk' && event.options.length === 0) {
             try {
@@ -2673,7 +2663,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         onSelect={handleSubDialogSelect}
                         isModification={isModification}
                         onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
-                        windowNumber={(modificationIndex ?? 0) + 1}
                         isLoading={isSubDialogLoading}
                         setIsLoading={setIsSubDialogLoading}
                         setEventForDialog={setDialogEvent}
@@ -2683,9 +2672,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
+    
     
 
     
-
-

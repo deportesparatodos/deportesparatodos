@@ -223,7 +223,7 @@ export function RemoteControlView({
           
           await channel.whenState('attached');
           
-          channel.publish('control-action', { action: 'connect', payload: { sessionId: initialRemoteSessionId }});
+          channel.publish('control-action', { action: 'requestInitialState', payload: { sessionId: initialRemoteSessionId }});
 
         } catch (error) {
            console.error("Error connecting as controller:", error);
@@ -462,7 +462,6 @@ export function RemoteControlView({
                 onSelect={handleModifyEventSelect}
                 isModification={true}
                 onRemove={() => {}} // Remove is handled by main remote view
-                windowNumber={modifyEvent.index + 1}
                 isLoading={false}
                 setIsLoading={() => {}}
                 setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}

@@ -20,7 +20,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Loader2, Trash2 } from 'lucide-react';
-import { ScrollArea } from './ui/scroll-area';
 
 interface EventSelectionDialogProps {
   isOpen: boolean;
@@ -29,7 +28,6 @@ interface EventSelectionDialogProps {
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
   onRemove: () => void;
-  windowNumber: number;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   setEventForDialog: (event: Event) => void;
@@ -107,7 +105,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 </div>
             ) : (
               <TooltipProvider>
-                  <div className={cn("grid grid-cols-1 sm:grid-cols-2 gap-2")}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {event.options.map((option, index) => {
                       const domain = getDomainFromUrl(option.url);
                       const isSelected = selectedOptionUrl === option.url;
@@ -157,3 +155,5 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     </Dialog>
   );
 };
+
+    
