@@ -142,8 +142,8 @@ export function RemoteControlDialog({
         )}
 
         {view !== 'main' && (
-          <DialogFooter className="pt-4 border-t mt-4">
-            <Button variant="link" onClick={() => setView('main')}>
+          <DialogFooter className="pt-4 mt-4">
+            <Button variant="outline" size="lg" className="w-full" onClick={() => setView('main')}>
               Volver
             </Button>
           </DialogFooter>
