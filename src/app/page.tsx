@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -287,6 +288,7 @@ function HomePageContent() {
       ablyRef.current.channel = channel;
       
       setRemoteControlMode('controlled');
+      setIsViewMode(true); // Automatically enter view mode
 
       channel.subscribe('control-action', (message: Ably.Types.Message) => {
           const { action, payload } = message.data;
