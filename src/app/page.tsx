@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1822,7 +1821,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
     } else if (currentView === 'home') {
        return (
         <>
-            <div className="w-full space-y-4 pt-4 pb-1">
+            <div className="w-full space-y-4 pt-4 pb-1 md:mb-8">
                  <Carousel
                     opts={{
                         align: "start",
@@ -2678,3 +2677,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
