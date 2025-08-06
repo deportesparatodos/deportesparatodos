@@ -98,7 +98,7 @@ export function RemoteControlDialog({
         </DialogHeader>
 
         {view === 'main' && (
-          <div className="grid gap-4 py-4">
+          <div className="space-y-4 py-4">
               <Button onClick={handleSetControlledView} size="lg" className="w-full">
                 Conectar control remoto
               </Button>
