@@ -95,7 +95,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
         
-        <div className="px-6 pb-6 flex-grow overflow-y-auto">
+        <div className="px-6 pb-6 flex-grow overflow-y-auto flex flex-col min-h-0">
             {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -105,8 +105,8 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     No se encontraron opciones de transmisión.
                 </div>
             ) : (
-                <TooltipProvider>
-                    <ScrollArea className="max-h-64 pr-3 -mr-3">
+                <ScrollArea className="flex-grow min-h-0 pr-4 -mr-4">
+                    <TooltipProvider>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {event.options.map((option, index) => {
                                 const domain = getDomainFromUrl(option.url);
@@ -135,16 +135,16 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                                 );
                             })}
                         </div>
-                    </ScrollArea>
-                </TooltipProvider>
+                    </TooltipProvider>
+                </ScrollArea>
             )}
         </div>
         
         {isModification && (
-            <div className="px-6 pb-6 pt-0 flex-shrink-0 mt-auto">
+            <div className="px-6 flex-shrink-0 mt-auto border-t border-border pt-4 pb-4">
                 <Button
                     variant="destructive"
-                    className="w-full mb-[5px]"
+                    className="w-full"
                     onClick={() => {
                     onRemove();
                     onOpenChange(false);
