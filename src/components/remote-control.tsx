@@ -177,12 +177,16 @@ export function RemoteControlView({
     const handleStopAndPersist = useCallback(() => {
         if (remoteState) {
             onSessionEnd(remoteState);
+        } else {
+           // Fallback if remoteState is null for some reason
+           onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null});
         }
     }, [remoteState, onSessionEnd]);
 
     useEffect(() => {
       let presence: Ably.Types.RealtimePresencePromise | undefined;
       let channel: Ably.Types.RealtimeChannelPromise | undefined;
+      let connectionTimeout: NodeJS.Timeout;
 
       const connectAndSync = async () => {
         if (!initialRemoteSessionId) return;
@@ -194,14 +198,12 @@ export function RemoteControlView({
           
           presence = channel.presence;
           await presence.enter();
-          
-          // Give the controlled device a moment to respond to presence, then check
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          const members = await presence.get();
-          if (members.length <= 1) { // Only the controller is present
-              throw new Error("No active session found for this code.");
-          }
+
+          connectionTimeout = setTimeout(() => {
+            if (isLoading) {
+              throw new Error("La conexión ha tardado demasiado. Verifica el código.");
+            }
+          }, 10000); // 10 second timeout
 
           channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
@@ -209,6 +211,7 @@ export function RemoteControlView({
             if (payload.sessionId !== initialRemoteSessionId && action !== 'controlledViewClosed') return;
 
             if (action === 'initialState') {
+              clearTimeout(connectionTimeout);
               setRemoteState(payload);
               setIsLoading(false);
             }
@@ -226,14 +229,16 @@ export function RemoteControlView({
 
         } catch (error: any) {
            console.error("Error connecting as controller:", error);
+           clearTimeout(connectionTimeout);
            toast({ variant: 'destructive', title: 'Error de Conexión', description: error.message || 'No se pudo conectar. Verifica el código o que la vista esté activa.' });
-           onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null});
+           handleStopAndPersist();
         }
       };
 
       connectAndSync();
 
       return () => {
+        clearTimeout(connectionTimeout);
         const { channel: currentChannel, client: currentClient } = ablyRef.current;
         if (currentChannel && initialRemoteSessionId) {
             currentChannel.publish('control-action', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId } });
@@ -296,13 +301,8 @@ export function RemoteControlView({
     };
 
     const handleOrderChange = (newOrder: number[]) => {
-      const fullNewOrder = [...newOrder];
-      const presentIndexes = new Set(newOrder);
-      for(let i=0; i<9; i++) {
-        if(!presentIndexes.has(i)) {
-          fullNewOrder.push(i);
-        }
-      }
+      if (!remoteState) return;
+      const fullNewOrder = [...newOrder, ...remoteState.viewOrder.filter(i => !newOrder.includes(i))];
       updateRemoteState({ viewOrder: fullNewOrder });
     };
   
@@ -363,7 +363,7 @@ export function RemoteControlView({
         )
     }
     
-    if (!remoteState) {
+    if (!remoteState && !isLoading) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-center p-4">
                  <X className="h-10 w-10 text-destructive mb-4" />
@@ -377,6 +377,10 @@ export function RemoteControlView({
             </div>
         );
     }
+    
+    // This should not be reached if !remoteState, but as a fallback:
+    if (!remoteState) return null;
+
 
   return (
     <>
@@ -463,23 +467,21 @@ export function RemoteControlView({
             </DialogContent>
         </Dialog>
 
-        {isSessionEnded && (
-          <Dialog open={isSessionEnded} onOpenChange={(open) => { if(!open) handleStopAndPersist()}}>
-              <DialogContent>
-                  <DialogHeader>
-                      <DialogTitle>Sesión Terminada</DialogTitle>
-                      <DialogDescription>
-                          La sesión en el otro dispositivo ha terminado.
-                      </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                      <DialogClose asChild>
-                          <Button onClick={handleStopAndPersist}>Cerrar</Button>
-                      </DialogClose>
-                  </DialogFooter>
-              </DialogContent>
-          </Dialog>
-        )}
+        <Dialog open={isSessionEnded} onOpenChange={(open) => { if(!open) handleStopAndPersist()}}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Sesión Terminada</DialogTitle>
+                    <DialogDescription>
+                        La sesión en el otro dispositivo ha terminado.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button onClick={handleStopAndPersist}>Cerrar</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </>
   );
 }

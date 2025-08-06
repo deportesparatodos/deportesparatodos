@@ -282,7 +282,7 @@ function HomePageContent() {
   }, []);
   
   const handleStartControlledSession = useCallback(async () => {
-    if (remoteControlMode === 'controlled' && ablyRef.current.channel) return; // Session already active
+    if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
 
     try {
         const client = await initAbly('controlled');
@@ -291,6 +291,8 @@ function HomePageContent() {
 
         const channel = client.channels.get(`remote-control:${newCode}`);
         ablyRef.current.channel = channel;
+        
+        await channel.presence.enter();
         setRemoteControlMode('controlled');
 
         channel.subscribe('control-action', (message: Ably.Types.Message) => {
@@ -319,6 +321,9 @@ function HomePageContent() {
                 case 'reload':
                     handleReloadCamera(payload.index);
                     break;
+                 case 'startView':
+                    setIsViewMode(true);
+                    break;
                 case 'disconnect':
                      break;
             }
@@ -328,6 +333,9 @@ function HomePageContent() {
         presence.subscribe('leave', () => {
              // Handle controller leaving if needed, e.g., show a message
         });
+
+        setCodePopupOpen(true);
+        setIsViewMode(true);
 
     } catch (error) {
         console.error("Failed to start controlled session:", error);
@@ -346,8 +354,6 @@ function HomePageContent() {
       return;
     }
     await handleStartControlledSession();
-    setIsViewMode(true);
-    setCodePopupOpen(true);
   };
 
   const handleStopView = useCallback(() => {
@@ -798,14 +804,7 @@ function HomePageContent() {
   }, [isViewMode, isMobile]);
 
   const handleOrderChange = (newOrder: number[]) => {
-    const fullNewOrder = [...newOrder];
-    const presentIndexes = new Set(newOrder);
-    for(let i=0; i<9; i++) {
-        if(!presentIndexes.has(i)) {
-            fullNewOrder.push(i);
-        }
-    }
-    setViewOrder(fullNewOrder);
+    setViewOrder(newOrder);
   };
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
@@ -1682,18 +1681,22 @@ function HomePageContent() {
                     backgroundColor: borderColor
                 } : {}}
             >
-                {viewOrder.map((originalIndex) => {
-                    const event = selectedEvents[originalIndex];
+                {selectedEvents.map((event, originalIndex) => {
                     if (!event) return null;
 
                     const isFullscreen = fullscreenIndex === originalIndex;
+                    const orderIndex = viewOrder.indexOf(originalIndex);
                     
                      const windowClasses = cn(
-                        "overflow-hidden bg-black",
+                        "overflow-hidden bg-black relative",
                         isFullscreen 
                             ? "absolute inset-0 z-20" 
-                            : "relative " + getItemClasses(viewOrder.filter(i => selectedEvents[i] !== null).indexOf(originalIndex), numCameras)
+                            : getItemClasses(orderIndex, numCameras)
                     );
+                    
+                    if (fullscreenIndex !== null && !isFullscreen) {
+                        return null; 
+                    }
 
                     let iframeSrc = event.selectedOption
                         ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&amp;' : '?'}reload=${reloadCounters[originalIndex] || 0}`
@@ -1708,7 +1711,7 @@ function HomePageContent() {
                            key={`window-stable-${originalIndex}`} 
                            className={windowClasses} 
                            style={{
-                             display: (fullscreenIndex !== null && !isFullscreen) ? 'none' : 'block'
+                             order: orderIndex
                            }}
                         >
                             <iframe
@@ -2697,10 +2700,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
-
-
-
-
-
-
-
