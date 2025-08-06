@@ -194,6 +194,14 @@ export function RemoteControlView({
           
           presence = channel.presence;
           await presence.enter();
+          
+          // Give the controlled device a moment to respond to presence, then check
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const members = await presence.get();
+          if (members.length <= 1) { // Only the controller is present
+              throw new Error("No active session found for this code.");
+          }
 
           channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
@@ -211,12 +219,6 @@ export function RemoteControlView({
                 setIsSessionEnded(true);
              }
           });
-
-          // Check for other members. If none, the view isn't active.
-          const members = await presence.get();
-          if (members.length <= 1) {
-              throw new Error("No active session found for this code.");
-          }
           
           await channel.whenState('attached');
           
