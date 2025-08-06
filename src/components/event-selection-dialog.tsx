@@ -142,7 +142,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
               </ScrollArea>
             )}
         </div>
-         <DialogFooter className="mt-auto p-6 pt-4 flex-shrink-0">
+         <DialogFooter className="p-6 pt-4 flex-shrink-0">
           {isModification && (
             <Button
               variant="destructive"
