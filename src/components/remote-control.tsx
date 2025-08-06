@@ -30,11 +30,13 @@ export function RemoteControlDialog({
   setRemoteControlMode,
   onStartControlling,
   onStartControlled,
+  isViewMode
 }: {
   remoteSessionId: string | null;
   setRemoteControlMode: (mode: 'inactive' | 'controlling' | 'controlled') => void;
   onStartControlling: (code: string) => void;
   onStartControlled: () => void;
+  isViewMode: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<'main' | 'controlled' | 'controlling'>('main');
@@ -58,8 +60,8 @@ export function RemoteControlDialog({
   };
   
   const handleSetControlledView = () => {
-    setView('controlled');
     onStartControlled();
+    setView('controlled');
   }
 
   useEffect(() => {
@@ -74,7 +76,6 @@ export function RemoteControlDialog({
 
   useEffect(() => {
     if (isOpen && view === 'controlled' && !remoteSessionId) {
-      // The session ID might not be available immediately, show loading
       setIsLoading(true);
     } else {
       setIsLoading(false);
@@ -89,12 +90,12 @@ export function RemoteControlDialog({
           <Airplay />
         </Button>
       </DialogTrigger>
-      <DialogContent className={cn(view === 'main' && 'gap-0')}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Control Remoto</DialogTitle>
            <DialogDescription>
             {view === 'controlled'
-              ? 'Introduce este código en el dispositivo que quieres usar como control:'
+              ? 'Introduce este código en el dispositivo que quieres usar como control. El código es válido mientras esta página esté abierta.'
               : view === 'main'
                 ? 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'
                 : 'Introduce el código de 4 dígitos que aparece en el otro dispositivo.'
@@ -141,7 +142,7 @@ export function RemoteControlDialog({
 
         {view !== 'main' && (
           <DialogFooter>
-            <Button variant="outline" size="lg" className="w-full" onClick={() => setView('main')}>
+            <Button variant="outline" size="sm" className="w-full" onClick={() => setView('main')}>
               Volver
             </Button>
           </DialogFooter>
@@ -200,71 +201,78 @@ export function RemoteControlView({
     }, [remoteState, onSessionEnd]);
 
     useEffect(() => {
+      let presence: Ably.Types.RealtimePresencePromise | undefined;
+      let channel: Ably.Types.RealtimeChannelPromise | undefined;
+
       const connectAndSync = async () => {
         if (!initialRemoteSessionId) return;
 
         try {
           const client = await initAbly('controlling');
-          const channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
+          channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
           ablyRef.current.channel = channel;
           
-          const presence = channel.presence;
+          presence = channel.presence;
           await presence.enter();
 
           channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
-            if (payload.sessionId !== initialRemoteSessionId) return;
+            
+            if (payload.sessionId !== initialRemoteSessionId && action !== 'controlledViewClosed') return;
 
             if (action === 'initialState') {
               setRemoteState(payload);
               setIsLoading(false);
-              // Tell the controlled device to start the view now
-              channel.publish('control-action', { action: 'startView', payload: { sessionId: initialRemoteSessionId } });
             }
-             if (action === 'minimizeFromControlled' || action === 'updateControllerIcon') {
-               setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: null } : null);
+             if (action === 'updateState') {
+                setRemoteState(prevState => prevState ? {...prevState, ...payload} : payload);
              }
              if (action === 'controlledViewClosed') {
                 setIsSessionEnded(true);
              }
-
           });
+
+          // Check for other members. If none, the view isn't active.
+          const members = await presence.get();
+          if (members.length <= 1) {
+              throw new Error("No active session found for this code.");
+          }
           
           await channel.whenState('attached');
           
           channel.publish('control-action', { action: 'requestInitialState', payload: { sessionId: initialRemoteSessionId }});
 
-        } catch (error) {
+        } catch (error: any) {
            console.error("Error connecting as controller:", error);
-           toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo conectar con el dispositivo. Verifica el código.' });
-           if (remoteState) onSessionEnd(remoteState);
+           toast({ variant: 'destructive', title: 'Error de Conexión', description: error.message || 'No se pudo conectar. Verifica el código o que la vista esté activa.' });
+           onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null});
         }
       };
 
       connectAndSync();
 
       return () => {
-        const { channel } = ablyRef.current;
-        if (channel && initialRemoteSessionId && remoteState) {
-          channel.publish('control-action', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId, selectedEvents: remoteState.selectedEvents } });
+        const { channel: currentChannel, client: currentClient } = ablyRef.current;
+        if (currentChannel && initialRemoteSessionId) {
+            currentChannel.publish('control-action', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId } });
         }
+        if (presence) presence.leave();
+        if (currentChannel) currentChannel.detach();
+        if (currentClient) currentClient.close();
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialRemoteSessionId, initAbly, toast]);
 
 
-    const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>, isOptimistic: boolean = false) => {
+    const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
         const { channel } = ablyRef.current;
         if (!remoteState || !channel || !initialRemoteSessionId) return;
 
-        const updatedState = { ...remoteState, ...newState };
+        const updatedState = { ...remoteState, ...newState, sessionId: initialRemoteSessionId };
         
-        // Optimistically update the local state for a snappier UI
         setRemoteState(updatedState as RemoteControlViewState);
+        channel.publish('control-action', { action: 'updateState', payload: updatedState});
 
-        if (!isOptimistic) {
-          channel.publish('control-action', { action: 'updateState', payload: { ...updatedState, sessionId: initialRemoteSessionId }});
-        }
     }, [ablyRef, remoteState, initialRemoteSessionId]);
     
 
@@ -290,15 +298,9 @@ export function RemoteControlView({
     };
     
     const handleToggleFullscreen = (index: number) => {
-        const { channel } = ablyRef.current;
-        if (channel && initialRemoteSessionId && remoteState) {
-            const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
-            setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: newFullscreenIndex } : null);
-            channel.publish('control-action', { 
-                action: 'toggleFullscreen', 
-                payload: { index, sessionId: initialRemoteSessionId } 
-            });
-        }
+        if (!remoteState) return;
+        const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
+        updateRemoteState({ fullscreenIndex: newFullscreenIndex });
     };
     
     const handleReload = (index: number) => {
@@ -387,7 +389,7 @@ export function RemoteControlView({
                 <p className="mt-2 text-muted-foreground">
                     No se pudo establecer la conexión. Por favor, verifica el código e inténtalo de nuevo.
                 </p>
-                <Button onClick={() => { if(remoteState) onSessionEnd(remoteState); else onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null}); }} className="mt-4">
+                <Button onClick={handleStopAndPersist} className="mt-4">
                     Cerrar
                 </Button>
             </div>
@@ -480,7 +482,7 @@ export function RemoteControlView({
         </Dialog>
 
         {isSessionEnded && (
-          <Dialog open={isSessionEnded} onOpenChange={setIsSessionEnded}>
+          <Dialog open={isSessionEnded} onOpenChange={(open) => { if(!open) handleStopAndPersist()}}>
               <DialogContent>
                   <DialogHeader>
                       <DialogTitle>Sesión Terminada</DialogTitle>
@@ -499,10 +501,3 @@ export function RemoteControlView({
     </>
   );
 }
-
-    
-
-    
-
-
-

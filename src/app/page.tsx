@@ -278,96 +278,66 @@ function HomePageContent() {
   }, []);
   
   const handleStartControlledSession = useCallback(async () => {
-    if (!isViewMode) {
-        toast({ variant: 'destructive', title: 'Error', description: 'El modo controlado solo se puede iniciar desde la pantalla de visualización.' });
-        return;
-    }
+    if (ablyRef.current.client) return; // Session already active
+
     try {
-      const client = await initAbly('controlled');
-      const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-      setRemoteSessionId(newCode);
+        const client = await initAbly('controlled');
+        const newCode = remoteSessionId || Math.floor(1000 + Math.random() * 9000).toString();
+        if (!remoteSessionId) {
+            setRemoteSessionId(newCode);
+        }
 
-      const channel = client.channels.get(`remote-control:${newCode}`);
-      ablyRef.current.channel = channel;
-      
-      setRemoteControlMode('controlled');
+        const channel = client.channels.get(`remote-control:${newCode}`);
+        ablyRef.current.channel = channel;
+        setRemoteControlMode('controlled');
 
-      channel.subscribe('control-action', (message: Ably.Types.Message) => {
-          const { action, payload } = message.data;
-          
-          if(payload.sessionId !== newCode) return;
+        channel.subscribe('control-action', (message: Ably.Types.Message) => {
+            const { action, payload } = message.data;
+            if (payload.sessionId !== newCode) return;
 
-          switch(action) {
-              case 'requestInitialState':
-                  const currentState = {
-                      selectedEvents,
-                      viewOrder,
-                      gridGap,
-                      borderColor,
-                      isChatEnabled,
-                      fullscreenIndex,
-                      sessionId: newCode
-                  };
-                  channel.publish('control-action', { action: 'initialState', payload: currentState });
-                  break;
-              case 'startView':
-                  setIsViewMode(true);
-                  break;
-              case 'updateState':
-                  setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
-                  setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
-                  setGridGap(payload.gridGap ?? 0);
-                  setBorderColor(payload.borderColor ?? '#000000');
-                  setIsChatEnabled(payload.isChatEnabled ?? true);
-                  setFullscreenIndex(payload.fullscreenIndex ?? null);
-                  break;
-              case 'toggleFullscreen':
-                  setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
-                  break;
-              case 'reload':
-                  handleReloadCamera(payload.index);
-                  break;
-              case 'disconnect':
-                  cleanupAbly();
-                  break;
-              case 'minimizeFromControlled':
-                  channel.publish('control-action', {
-                      action: 'updateControllerIcon',
-                      payload: { sessionId: newCode }
-                  });
-                  setFullscreenIndex(null);
-                  break;
-              case 'playClick':
-                if (iframeRefs.current[payload.index]) {
-                  const iframe = iframeRefs.current[payload.index] as HTMLIFrameElement;
-                  const rect = iframe.getBoundingClientRect();
-                  
-                  const clickEvent = new MouseEvent('click', {
-                      bubbles: true,
-                      cancelable: true,
-                      clientX: rect.left + rect.width / 2,
-                      clientY: rect.top + rect.height / 2,
-                  });
-                  iframe.dispatchEvent(clickEvent);
-                }
-                break;
-          }
-      });
-      
-      const presence = channel.presence;
-      await presence.enter();
+            switch (action) {
+                case 'requestInitialState':
+                    if (!isViewMode) {
+                        // If not in view mode, we can't provide a state. Maybe signal this?
+                        return;
+                    }
+                    const currentState = {
+                        selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex,
+                        sessionId: newCode
+                    };
+                    channel.publish('control-action', { action: 'initialState', payload: currentState });
+                    break;
+                case 'updateState':
+                    setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
+                    setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
+                    setGridGap(payload.gridGap ?? 0);
+                    setBorderColor(payload.borderColor ?? '#000000');
+                    setIsChatEnabled(payload.isChatEnabled ?? true);
+                    setFullscreenIndex(payload.fullscreenIndex ?? null);
+                    break;
+                case 'toggleFullscreen':
+                    setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
+                    break;
+                case 'reload':
+                    handleReloadCamera(payload.index);
+                    break;
+                case 'disconnect':
+                    // Controller disconnected, but we keep the session alive on this end
+                    break;
+            }
+        });
 
-      presence.subscribe('leave', () => {
-          // A controller has left, we can clean up this session.
-          cleanupAbly();
-      });
+        const presence = channel.presence;
+        presence.subscribe('leave', (member) => {
+            // A controller left, we can just wait for a new one. The session remains.
+        });
 
     } catch (error) {
-      console.error("Failed to start controlled session:", error);
-      toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
-      cleanupAbly();
+        console.error("Failed to start controlled session:", error);
+        toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
+        cleanupAbly();
     }
-  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, isViewMode]);
+  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, isViewMode, remoteSessionId]);
 
   const handleStopView = useCallback(() => {
     const { channel } = ablyRef.current;
@@ -1107,8 +1077,11 @@ function HomePageContent() {
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
 
   const handleStartView = () => {
-    if (remoteControlMode === 'controlled' || selectedEventsCount === 0) return;
+    if (remoteControlMode === 'controlling' || selectedEventsCount === 0) return;
     setIsViewMode(true);
+    if (remoteControlMode === 'controlled') {
+        handleStartControlledSession();
+    }
   };
 
   
@@ -2259,6 +2232,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                       setRemoteControlMode('controlling');
                                   }}
                                   onStartControlled={handleStartControlledSession}
+                                  isViewMode={isViewMode}
                                 />
 
                                 <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
@@ -2698,6 +2672,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
 
