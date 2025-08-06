@@ -239,18 +239,23 @@ export function RemoteControlView({
         if (channel && initialRemoteSessionId) {
           channel.publish('control-action', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId, selectedEvents: remoteState?.selectedEvents } });
         }
-        onSessionEnd();
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialRemoteSessionId, initAbly, onSessionEnd, toast]);
+    }, [initialRemoteSessionId, initAbly, toast]);
 
 
-    const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
+    const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>, isOptimistic: boolean = false) => {
         const { channel } = ablyRef.current;
         if (!remoteState || !channel || !initialRemoteSessionId) return;
+
         const updatedState = { ...remoteState, ...newState };
+        
+        // Optimistically update the local state for a snappier UI
         setRemoteState(updatedState as RemoteControlViewState);
-        channel.publish('control-action', { action: 'updateState', payload: { ...updatedState, sessionId: initialRemoteSessionId }});
+
+        if (!isOptimistic) {
+          channel.publish('control-action', { action: 'updateState', payload: { ...updatedState, sessionId: initialRemoteSessionId }});
+        }
     }, [ablyRef, remoteState, initialRemoteSessionId]);
     
 
