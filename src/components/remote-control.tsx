@@ -89,13 +89,16 @@ export function RemoteControlDialog({
           <Airplay />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="gap-0">
         <DialogHeader>
           <DialogTitle>Control Remoto</DialogTitle>
            <DialogDescription>
             {view === 'controlled'
               ? 'Introduce este código en el dispositivo que quieres usar como control:'
-              : 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'}
+              : view === 'main'
+                ? 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'
+                : 'Introduce el código de 4 dígitos que aparece en el otro dispositivo.'
+              }
           </DialogDescription>
         </DialogHeader>
 
@@ -129,7 +132,7 @@ export function RemoteControlDialog({
               maxLength={4}
               className="text-center text-2xl h-14 tracking-widest font-mono"
             />
-            <Button onClick={handleStartControllingSession} disabled={isLoading} size="lg">
+            <Button onClick={handleStartControllingSession} disabled={isLoading} size="lg" className="w-full">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Conectar
             </Button>
@@ -189,6 +192,12 @@ export function RemoteControlView({
 
     const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
     const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
+    
+    const handleStopAndPersist = useCallback(() => {
+        if (remoteState) {
+            onSessionEnd(remoteState);
+        }
+    }, [remoteState, onSessionEnd]);
 
     useEffect(() => {
       const connectAndSync = async () => {
@@ -213,7 +222,7 @@ export function RemoteControlView({
                setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: null } : null);
              }
              if (action === 'controlledViewClosed') {
-                setIsSessionEnded(true);
+                handleStopAndPersist();
              }
 
           });
@@ -238,7 +247,7 @@ export function RemoteControlView({
         }
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialRemoteSessionId, initAbly, toast]);
+    }, [initialRemoteSessionId, initAbly, toast, handleStopAndPersist]);
 
 
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>, isOptimistic: boolean = false) => {
@@ -256,11 +265,6 @@ export function RemoteControlView({
     }, [ablyRef, remoteState, initialRemoteSessionId]);
     
 
-    const handleStopAndPersist = () => {
-        if (remoteState) {
-            onSessionEnd(remoteState);
-        }
-    };
 
     const handleEventsChange = (newEvents: (Event|null)[]) => {
       if (!remoteState) return;
@@ -362,26 +366,6 @@ export function RemoteControlView({
         setModifyEvent(null);
         setModifyEventDialogOpen(false);
     };
-
-    if (isSessionEnded) {
-        return (
-             <Dialog open={true} onOpenChange={() => { if(remoteState) onSessionEnd(remoteState)}}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Sesión Finalizada</DialogTitle>
-                        <DialogDescription>
-                            La sesión ha finalizado, vuelva a colocar el codigo si desea volver.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                         <DialogClose asChild>
-                            <Button onClick={() => {if(remoteState) onSessionEnd(remoteState)}}>Cerrar</Button>
-                         </DialogClose>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        )
-    }
 
     if (isLoading) {
         return (
@@ -498,3 +482,4 @@ export function RemoteControlView({
     
 
     
+
