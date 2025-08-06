@@ -108,7 +108,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 </div>
             ) : (
               <TooltipProvider>
-                <ScrollArea className="h-full -mr-4 pr-4">
+                <ScrollArea className="h-full -mr-4 pr-4 max-h-48">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {event.options.map((option, index) => {
                       const domain = getDomainFromUrl(option.url);
