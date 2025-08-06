@@ -153,7 +153,7 @@ export function RemoteControlDialog({
   );
 }
 
-interface RemoteControlViewState {
+export interface RemoteControlViewState {
   sessionId: string;
   selectedEvents: (Event | null)[];
   viewOrder: number[];
@@ -177,7 +177,7 @@ export function RemoteControlView({
 }: {
   ablyRef: React.MutableRefObject<{ client: Ably.Realtime | null; channel: Ably.Types.RealtimeChannelPromise | null; }>;
   initAbly: (clientIdSuffix: string) => Promise<Ably.Realtime>;
-  onSessionEnd: () => void;
+  onSessionEnd: (finalState: RemoteControlViewState) => void;
   allEvents: Event[];
   allChannels: Channel[];
   updateAllEvents: (events: Event[]) => void;
@@ -228,7 +228,7 @@ export function RemoteControlView({
         } catch (error) {
            console.error("Error connecting as controller:", error);
            toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo conectar con el dispositivo. Verifica el código.' });
-           onSessionEnd();
+           if (remoteState) onSessionEnd(remoteState);
         }
       };
 
@@ -236,8 +236,8 @@ export function RemoteControlView({
 
       return () => {
         const { channel } = ablyRef.current;
-        if (channel && initialRemoteSessionId) {
-          channel.publish('control-action', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId, selectedEvents: remoteState?.selectedEvents } });
+        if (channel && initialRemoteSessionId && remoteState) {
+          channel.publish('control-action', { action: 'disconnect', payload: { sessionId: initialRemoteSessionId, selectedEvents: remoteState.selectedEvents } });
         }
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -260,7 +260,9 @@ export function RemoteControlView({
     
 
     const handleStopAndPersist = () => {
-        onSessionEnd();
+        if (remoteState) {
+            onSessionEnd(remoteState);
+        }
     };
 
     const handleEventsChange = (newEvents: (Event|null)[]) => {
@@ -366,7 +368,7 @@ export function RemoteControlView({
 
     if (isSessionEnded) {
         return (
-             <Dialog open={true} onOpenChange={() => onSessionEnd()}>
+             <Dialog open={true} onOpenChange={() => { if(remoteState) onSessionEnd(remoteState)}}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Sesión Finalizada</DialogTitle>
@@ -376,7 +378,7 @@ export function RemoteControlView({
                     </DialogHeader>
                     <DialogFooter>
                          <DialogClose asChild>
-                            <Button onClick={() => onSessionEnd()}>Cerrar</Button>
+                            <Button onClick={() => {if(remoteState) onSessionEnd(remoteState)}}>Cerrar</Button>
                          </DialogClose>
                     </DialogFooter>
                 </DialogContent>
@@ -401,7 +403,7 @@ export function RemoteControlView({
                 <p className="mt-2 text-muted-foreground">
                     No se pudo establecer la conexión. Por favor, verifica el código e inténtalo de nuevo.
                 </p>
-                <Button onClick={onSessionEnd} className="mt-4">
+                <Button onClick={() => { if(remoteState) onSessionEnd(remoteState); else onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null}); }} className="mt-4">
                     Cerrar
                 </Button>
             </div>

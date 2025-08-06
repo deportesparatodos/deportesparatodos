@@ -56,7 +56,7 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RemoteControlDialog, RemoteControlView } from '@/components/remote-control';
+import { RemoteControlDialog, RemoteControlView, type RemoteControlViewState } from '@/components/remote-control';
 import Ably from 'ably';
 
 
@@ -1336,6 +1336,17 @@ function HomePageContent() {
     }
   };
 
+  const handleEndRemoteSession = (finalState: RemoteControlViewState) => {
+    setSelectedEvents(finalState.selectedEvents);
+    setViewOrder(finalState.viewOrder);
+    setGridGap(finalState.gridGap);
+    setBorderColor(finalState.borderColor);
+    setIsChatEnabled(finalState.isChatEnabled);
+    setFullscreenIndex(finalState.fullscreenIndex);
+    cleanupAbly();
+    setIsSessionEnded(false);
+  };
+
   if (remoteControlMode === 'controlling') {
     return (
       <Suspense fallback={<div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
@@ -1345,10 +1356,7 @@ function HomePageContent() {
         <RemoteControlView 
             ablyRef={ablyRef}
             initAbly={initAbly}
-            onSessionEnd={() => {
-              cleanupAbly();
-              setIsSessionEnded(false);
-            }}
+            onSessionEnd={handleEndRemoteSession}
             allEvents={events}
             allChannels={channels}
             updateAllEvents={setEvents}
@@ -2679,4 +2687,5 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
