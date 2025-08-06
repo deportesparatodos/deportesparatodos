@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Loader2, Trash2 } from 'lucide-react';
+import { ScrollArea } from './ui/scroll-area';
 
 interface EventSelectionDialogProps {
   isOpen: boolean;
@@ -95,7 +96,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="px-6 flex-grow overflow-y-auto">
+        <div className={cn("px-6 flex-grow overflow-y-auto", !isModification && "pb-6")}>
              {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -106,7 +107,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 </div>
             ) : (
               <TooltipProvider>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className={cn("grid grid-cols-1 sm:grid-cols-2 gap-2")}>
                   {event.options.map((option, index) => {
                       const domain = getDomainFromUrl(option.url);
                       const isSelected = selectedOptionUrl === option.url;
