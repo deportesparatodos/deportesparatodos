@@ -242,6 +242,7 @@ function HomePageContent() {
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
+  const [codePopupOpen, setCodePopupOpen] = useState(false);
 
 
   // Schedule related states
@@ -271,6 +272,9 @@ function HomePageContent() {
   }, []);
 
   const initAbly = useCallback(async (clientIdSuffix: string) => {
+    if (ablyRef.current.client) {
+      await ablyRef.current.client.connection.close();
+    }
     const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=${clientIdSuffix}-${Date.now()}` });
     await client.connection.once('connected');
     ablyRef.current.client = client;
@@ -278,14 +282,12 @@ function HomePageContent() {
   }, []);
   
   const handleStartControlledSession = useCallback(async () => {
-    if (ablyRef.current.client) return; // Session already active
+    if (remoteControlMode === 'controlled' && ablyRef.current.channel) return; // Session already active
 
     try {
         const client = await initAbly('controlled');
-        const newCode = remoteSessionId || Math.floor(1000 + Math.random() * 9000).toString();
-        if (!remoteSessionId) {
-            setRemoteSessionId(newCode);
-        }
+        const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+        setRemoteSessionId(newCode);
 
         const channel = client.channels.get(`remote-control:${newCode}`);
         ablyRef.current.channel = channel;
@@ -297,10 +299,6 @@ function HomePageContent() {
 
             switch (action) {
                 case 'requestInitialState':
-                    if (!isViewMode) {
-                        // If not in view mode, we can't provide a state. Maybe signal this?
-                        return;
-                    }
                     const currentState = {
                         selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex,
                         sessionId: newCode
@@ -322,14 +320,13 @@ function HomePageContent() {
                     handleReloadCamera(payload.index);
                     break;
                 case 'disconnect':
-                    // Controller disconnected, but we keep the session alive on this end
-                    break;
+                     break;
             }
         });
-
+        
         const presence = channel.presence;
-        presence.subscribe('leave', (member) => {
-            // A controller left, we can just wait for a new one. The session remains.
+        presence.subscribe('leave', () => {
+             // Handle controller leaving if needed, e.g., show a message
         });
 
     } catch (error) {
@@ -337,7 +334,21 @@ function HomePageContent() {
         toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
         cleanupAbly();
     }
-  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, isViewMode, remoteSessionId]);
+  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode]);
+  
+  const handleActivateControlledMode = async () => {
+    if (selectedEvents.filter(Boolean).length === 0) {
+      toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Debes seleccionar al menos un evento para iniciar el modo de control.',
+      });
+      return;
+    }
+    await handleStartControlledSession();
+    setIsViewMode(true);
+    setCodePopupOpen(true);
+  };
 
   const handleStopView = useCallback(() => {
     const { channel } = ablyRef.current;
@@ -1079,9 +1090,6 @@ function HomePageContent() {
   const handleStartView = () => {
     if (remoteControlMode === 'controlling' || selectedEventsCount === 0) return;
     setIsViewMode(true);
-    if (remoteControlMode === 'controlled') {
-        handleStartControlledSession();
-    }
   };
 
   
@@ -1388,6 +1396,23 @@ function HomePageContent() {
     
     return (
       <div className="flex h-screen w-screen bg-background text-foreground group">
+         <Dialog open={codePopupOpen} onOpenChange={setCodePopupOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Código de Control Remoto</DialogTitle>
+                    <DialogDescription>
+                        Introduce este código en el dispositivo que quieres usar como control.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 text-center">
+                    <div className="p-4 bg-muted rounded-lg">
+                        <p className="text-4xl font-bold tracking-widest text-primary">
+                            {remoteSessionId || <Loader2 className="h-10 w-10 animate-spin mx-auto" />}
+                        </p>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
         {modifyEvent && (
              <Dialog open={modifyEventDialogOpen} onOpenChange={(open) => { if (!open) { setModifyEvent(null); setModifyEventDialogOpen(false); } else { setModifyEventDialogOpen(true); } }}>
                 <EventSelectionDialog
@@ -2231,7 +2256,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                       setRemoteSessionId(code);
                                       setRemoteControlMode('controlling');
                                   }}
-                                  onStartControlled={handleStartControlledSession}
+                                  onActivateControlledMode={handleActivateControlledMode}
                                   isViewMode={isViewMode}
                                 />
 
@@ -2672,6 +2697,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
 

@@ -29,17 +29,17 @@ export function RemoteControlDialog({
   remoteSessionId,
   setRemoteControlMode,
   onStartControlling,
-  onStartControlled,
+  onActivateControlledMode,
   isViewMode
 }: {
   remoteSessionId: string | null;
   setRemoteControlMode: (mode: 'inactive' | 'controlling' | 'controlled') => void;
   onStartControlling: (code: string) => void;
-  onStartControlled: () => void;
+  onActivateControlledMode: () => Promise<void>;
   isViewMode: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [view, setView] = useState<'main' | 'controlled' | 'controlling'>('main');
+  const [view, setView] = useState<'main' | 'controlling'>('main');
   const [isLoading, setIsLoading] = useState(false);
   const [code, setCode] = useState('');
   const { toast } = useToast();
@@ -59,10 +59,11 @@ export function RemoteControlDialog({
     setIsOpen(false);
   };
   
-  const handleSetControlledView = () => {
-    onStartControlled();
-    setView('controlled');
-  }
+  const handleActivateControlled = async () => {
+    setIsOpen(false);
+    await onActivateControlledMode();
+  };
+
 
   useEffect(() => {
     if (!isOpen) {
@@ -73,15 +74,6 @@ export function RemoteControlDialog({
       }, 200);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen && view === 'controlled' && !remoteSessionId) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
-    }
-  }, [isOpen, view, remoteSessionId]);
-  
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -94,18 +86,16 @@ export function RemoteControlDialog({
         <DialogHeader>
           <DialogTitle>Control Remoto</DialogTitle>
            <DialogDescription>
-            {view === 'controlled'
-              ? 'Introduce este código en el dispositivo que quieres usar como control. El código es válido mientras esta página esté abierta.'
-              : view === 'main'
-                ? 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'
-                : 'Introduce el código de 4 dígitos que aparece en el otro dispositivo.'
-              }
+            {view === 'main'
+              ? 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'
+              : 'Introduce el código de 4 dígitos que aparece en el otro dispositivo.'
+            }
           </DialogDescription>
         </DialogHeader>
 
         {view === 'main' && (
           <div className="space-y-4 py-4">
-              <Button onClick={handleSetControlledView} size="lg" className="w-full">
+              <Button onClick={handleActivateControlled} size="lg" className="w-full">
                 Ser Controlado
               </Button>
               <Button onClick={() => setView('controlling')} variant="outline" size="lg" className="w-full">
@@ -114,16 +104,6 @@ export function RemoteControlDialog({
           </div>
         )}
         
-        {view === 'controlled' && (
-          <div className="grid py-4 text-center">
-            <div className="p-4 bg-muted rounded-lg">
-                <p className="text-4xl font-bold tracking-widest text-primary">
-                    {isLoading || !remoteSessionId ? <Loader2 className="h-10 w-10 animate-spin mx-auto" /> : remoteSessionId}
-                </p>
-            </div>
-          </div>
-        )}
-
         {view === 'controlling' && (
           <div className="grid gap-4 py-4">
             <Input
