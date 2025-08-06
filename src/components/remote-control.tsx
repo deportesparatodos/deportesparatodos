@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
@@ -142,7 +141,7 @@ export function RemoteControlDialog({
         )}
 
         {view !== 'main' && (
-          <DialogFooter className="pt-4 mt-4">
+          <DialogFooter>
             <Button variant="outline" size="lg" className="w-full" onClick={() => setView('main')}>
               Volver
             </Button>
@@ -497,3 +496,5 @@ export function RemoteControlView({
     </>
   );
 }
+
+    
