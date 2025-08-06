@@ -61,7 +61,6 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
       <DialogContent 
         className="sm:max-w-md bg-secondary border-border text-foreground p-0 flex flex-col max-h-[90vh]"
         onInteractOutside={(e) => {
-           // This allows tooltips to work inside the dialog without closing it.
           if ((e.target as HTMLElement)?.closest('[data-radix-popper-content-wrapper]')) {
             e.preventDefault();
           }
@@ -97,7 +96,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="px-6 pt-4 pb-6 flex-grow overflow-y-auto min-h-[100px] flex flex-col">
+        <div className="px-6 pt-4 pb-6 flex-grow overflow-hidden min-h-[100px] flex flex-col">
              {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -108,7 +107,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 </div>
             ) : (
               <TooltipProvider>
-                <ScrollArea className="h-full -mr-4 pr-4 max-h-48">
+                <ScrollArea className="pr-4 -mr-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {event.options.map((option, index) => {
                       const domain = getDomainFromUrl(option.url);
