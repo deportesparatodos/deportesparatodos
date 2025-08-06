@@ -89,7 +89,7 @@ export function RemoteControlDialog({
           <Airplay />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="gap-0">
         <DialogHeader>
           <DialogTitle>Control Remoto</DialogTitle>
           <DialogDescription>
@@ -109,7 +109,7 @@ export function RemoteControlDialog({
         )}
         
         {view === 'controlled' && (
-          <div className="grid gap-4 py-4 text-center">
+          <div className="grid py-4 text-center">
              <DialogDescription>
                 Introduce este código en el dispositivo que quieres usar como control:
             </DialogDescription>
@@ -118,9 +118,6 @@ export function RemoteControlDialog({
                     {isLoading || !remoteSessionId ? <Loader2 className="h-10 w-10 animate-spin mx-auto" /> : remoteSessionId}
                 </p>
             </div>
-             <p className="text-xs text-muted-foreground pt-2">
-                Esperando conexión del control remoto...
-            </p>
           </div>
         )}
 
