@@ -100,12 +100,12 @@ export function RemoteControlDialog({
 
         {view === 'main' && (
           <div className="grid gap-4 py-4">
-            <Button onClick={() => setView('controlling')} size="lg">
-              Controlar Otro Dispositivo
-            </Button>
-            <Button onClick={handleSetControlledView} variant="outline" size="lg">
-              Conectar control remoto
-            </Button>
+              <Button onClick={handleSetControlledView} size="lg" className="w-full">
+                Conectar control remoto
+              </Button>
+              <Button onClick={() => setView('controlling')} variant="outline" size="lg" className="w-full">
+                Controlar Otro Dispositivo
+              </Button>
           </div>
         )}
         
@@ -142,7 +142,7 @@ export function RemoteControlDialog({
         )}
 
         {view !== 'main' && (
-          <DialogFooter>
+          <DialogFooter className="pt-4 border-t mt-4">
             <Button variant="link" onClick={() => setView('main')}>
               Volver
             </Button>
