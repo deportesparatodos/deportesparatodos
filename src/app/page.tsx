@@ -1169,7 +1169,7 @@ function HomePageContent() {
   const handleChannelClick = (channel: Channel) => {
     const channelAsEvent: Event = {
       title: channel.name,
-      options: channel.urls,
+      options: channel.urls.map(u => ({...u, hd: false, language: ''})),
       sources: [],
       buttons: [],
       time: 'AHORA',
@@ -1823,7 +1823,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
     } else if (currentView === 'home') {
        return (
         <>
-            <div className="w-full space-y-4 pt-4 pb-1 md:mb-8">
+            <div className="w-full space-y-4 pt-4 md:mb-8">
                  <Carousel
                     opts={{
                         align: "start",
@@ -1908,44 +1908,50 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
           {itemsToDisplay.map((item, index) => {
               const isChannel = 'urls' in item;
-              return isChannel ? (
-                      <Card 
-                          key={`search-channel-${index}`}
-                          className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
-                          onClick={() => handleChannelClick(item as Channel)}
-                      >
-                          <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
-                              <Image
-                                  src={(item as Channel).logo}
-                                  alt={`${(item as Channel).name} logo`}
-                                  width={120}
-                                  height={67.5}
-                                  className="object-contain max-h-full max-w-full"
-                                  onError={e => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.onerror = null; 
-                                      target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-                                  }}
-                              />
-                               {getEventSelection({...(item as any), category: 'Canal', time: 'AHORA'}).isSelected && (
-                                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
-                                  </div>
-                              )}
-                          </div>
-                          <div className="p-3 bg-card min-h-[52px] flex items-center justify-center">
-                              <h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3>
-                          </div>
-                      </Card>
-                  ) : (
-                      <EventCard
-                        key={`search-event-${index}`}
-                        event={item as Event}
-                        selection={getEventSelection(item as Event)}
-                        onClick={() => openDialogForEvent(item as Event)}
-                        displayMode='checkmark'
-                      />
-                  );
+              if (isChannel) {
+                const channelAsEvent: Event = { title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo' };
+                const selection = getEventSelection(channelAsEvent);
+                return (
+                    <Card 
+                        key={`search-channel-${index}`}
+                        className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
+                        onClick={() => handleChannelClick(item as Channel)}
+                    >
+                        <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
+                            <Image
+                                src={(item as Channel).logo}
+                                alt={`${(item as Channel).name} logo`}
+                                width={120}
+                                height={67.5}
+                                className="object-contain max-h-full max-w-full"
+                                onError={e => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null; 
+                                    target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                                }}
+                            />
+                             {selection.isSelected && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-3 bg-card min-h-[52px] flex items-center justify-center">
+                            <h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3>
+                        </div>
+                    </Card>
+                );
+              } else {
+                 return (
+                    <EventCard
+                      key={`search-event-${index}`}
+                      event={item as Event}
+                      selection={getEventSelection(item as Event)}
+                      onClick={() => openDialogForEvent(item as Event)}
+                      displayMode='checkmark'
+                    />
+                );
+              }
           })}
       </div>
     );
@@ -2162,7 +2168,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                         <ul className="list-disc pl-6 space-y-1">
                                                             <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
                                                             <li>(b) Identificación clara del contenido presuntamente infringido.</li>
-                                                            <li>(c) Enlace directo al contenido incrustrado en Deportes para Todos.</li>
+                                                            <li>(c) Enlace directo al contenido incrustado en Deportes para Todos.</li>
                                                             <li>(d) Datos de contacto válidos (correo electrónico).</li>
                                                             <li>(e) Una declaración de buena fe indicando que el uso no está autorizado por usted, su agente o la ley.</li>
                                                             <li>(f) Una declaración de veracidad de la información, bajo pena de perjurio.</li>
@@ -2679,5 +2685,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
