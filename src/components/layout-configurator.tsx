@@ -156,7 +156,7 @@ export function EventListManagement({
         )
       })}
       {activeEventsCount === 0 && (
-          <p className="text-muted-foreground text-center pt-8">No hay eventos seleccionados.</p>
+          <p className="text-muted-foreground text-center py-8">No hay eventos seleccionados.</p>
       )}
       {isViewPage && onAddEvent && (
           <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={onAddEvent}>
