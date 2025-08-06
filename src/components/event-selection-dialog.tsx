@@ -95,7 +95,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="px-6 pb-6 flex-grow overflow-y-auto">
+        <div className="px-6 flex-grow overflow-y-auto">
              {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -138,7 +138,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             )}
         </div>
         {isModification && (
-            <div className="px-6 pb-6 pt-0 flex-shrink-0">
+            <div className="px-6 pb-6 pt-4 flex-shrink-0">
                 <Button
                     variant="destructive"
                     className="w-full"
