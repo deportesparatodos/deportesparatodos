@@ -405,7 +405,7 @@ function HomePageContent() {
     try {
       const endpointsToScrape = [
         { name: 'live', url: 'https://streamed.pk/api/matches/live' },
-        { name: 'today', url: 'https://streamed.pk/api/matches/all-today' },
+        { name: 'all-today', url: 'https://streamed.pk/api/matches/all-today' },
         { name: 'sports', url: 'https://streamed.pk/api/sports' },
       ];
       
@@ -449,7 +449,7 @@ function HomePageContent() {
       setLastFetchTimestamp(Date.now()); 
 
       const liveData: StreamedMatch[] = Array.isArray(scrapedResults.live) ? scrapedResults.live : [];
-      const todayData: StreamedMatch[] = Array.isArray(scrapedResults.today) ? scrapedResults.today : [];
+      const todayData: StreamedMatch[] = Array.isArray(scrapedResults['all-today']) ? scrapedResults['all-today'] : [];
       const sportsData: {id: string; name: string}[] = Array.isArray(scrapedResults.sports) ? scrapedResults.sports : [];
       const streamTpData: StreamTpEvent[] = getOtherData<StreamTpEvent>('streamtp');
       const agendaData: AgendaEvent[] = getOtherData<AgendaEvent>('agenda');
@@ -2679,3 +2679,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
