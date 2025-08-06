@@ -8,7 +8,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Event, StreamOption } from './event-carousel';
@@ -98,7 +97,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
 
-        <div className="px-6 flex-grow overflow-y-auto min-h-[100px] flex flex-col">
+        <div className="px-6 pt-4 pb-6 flex-grow overflow-y-auto min-h-[100px] flex flex-col">
              {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -108,54 +107,50 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     No se encontraron opciones de transmisión.
                 </div>
             ) : (
-              <ScrollArea className="h-full">
-                <TooltipProvider>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pr-4">
-                    {event.options.map((option, index) => {
-                        const domain = getDomainFromUrl(option.url);
-                        const isSelected = selectedOptionUrl === option.url;
-                        return (
-                            <Tooltip key={index} delayDuration={300}>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                    variant={isSelected ? 'default' : 'secondary'}
-                                    className={cn(
-                                        "w-full border border-border hover:scale-105 transition-transform duration-200", 
-                                        event.options.length === 1 && "sm:col-span-2",
-                                        isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
-                                    )}
-                                    onClick={() => onSelect(event, option.url)}
-                                    >
-                                    {option.label}
-                                    </Button>
-                                </TooltipTrigger>
-                                {domain && (
-                                    <TooltipContent>
-                                        <p>{domain}</p>
-                                    </TooltipContent>
+              <ScrollArea className="h-full -mr-4 pr-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {event.options.map((option, index) => {
+                    const domain = getDomainFromUrl(option.url);
+                    const isSelected = selectedOptionUrl === option.url;
+                    return (
+                        <Tooltip key={index} delayDuration={300}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                variant={isSelected ? 'default' : 'secondary'}
+                                className={cn(
+                                    "w-full border border-border hover:scale-105 transition-transform duration-200", 
+                                    event.options.length === 1 && "sm:col-span-2",
+                                    isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
                                 )}
-                            </Tooltip>
-                        );
-                    })}
-                    </div>
-                </TooltipProvider>
+                                onClick={() => onSelect(event, option.url)}
+                                >
+                                {option.label}
+                                </Button>
+                            </TooltipTrigger>
+                            {domain && (
+                                <TooltipContent>
+                                    <p>{domain}</p>
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    );
+                })}
+                </div>
+                {isModification && (
+                  <Button
+                    variant="destructive"
+                    className="w-full mt-4"
+                    onClick={() => {
+                      onRemove();
+                      onOpenChange(false);
+                    }}
+                  >
+                    Eliminar Selección
+                  </Button>
+                )}
               </ScrollArea>
             )}
         </div>
-         <DialogFooter className="p-6 pt-4 flex-shrink-0">
-          {isModification && (
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={() => {
-                onRemove();
-                onOpenChange(false);
-              }}
-            >
-              Eliminar Selección
-            </Button>
-          )}
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
