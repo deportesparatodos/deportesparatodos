@@ -222,7 +222,7 @@ export function RemoteControlView({
                setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: null } : null);
              }
              if (action === 'controlledViewClosed') {
-                handleStopAndPersist();
+                setIsSessionEnded(true);
              }
 
           });
@@ -247,7 +247,7 @@ export function RemoteControlView({
         }
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialRemoteSessionId, initAbly, toast, handleStopAndPersist]);
+    }, [initialRemoteSessionId, initAbly, toast]);
 
 
     const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>, isOptimistic: boolean = false) => {
@@ -475,6 +475,24 @@ export function RemoteControlView({
                 />
             </DialogContent>
         </Dialog>
+
+        {isSessionEnded && (
+          <Dialog open={isSessionEnded} onOpenChange={setIsSessionEnded}>
+              <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle>Sesión Terminada</DialogTitle>
+                      <DialogDescription>
+                          La sesión en el otro dispositivo ha terminado.
+                      </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                      <DialogClose asChild>
+                          <Button onClick={handleStopAndPersist}>Cerrar</Button>
+                      </DialogClose>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
+        )}
     </>
   );
 }
@@ -482,4 +500,5 @@ export function RemoteControlView({
     
 
     
+
 
