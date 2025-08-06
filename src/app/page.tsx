@@ -278,6 +278,10 @@ function HomePageContent() {
   }, []);
   
   const handleStartControlledSession = useCallback(async () => {
+    if (!isViewMode) {
+        toast({ variant: 'destructive', title: 'Error', description: 'El modo controlado solo se puede iniciar desde la pantalla de visualización.' });
+        return;
+    }
     try {
       const client = await initAbly('controlled');
       const newCode = Math.floor(1000 + Math.random() * 9000).toString();
@@ -325,7 +329,6 @@ function HomePageContent() {
                   break;
               case 'disconnect':
                   cleanupAbly();
-                  setIsViewMode(false);
                   break;
               case 'minimizeFromControlled':
                   channel.publish('control-action', {
@@ -350,12 +353,21 @@ function HomePageContent() {
                 break;
           }
       });
+      
+      const presence = channel.presence;
+      await presence.enter();
+
+      presence.subscribe('leave', () => {
+          // A controller has left, we can clean up this session.
+          cleanupAbly();
+      });
+
     } catch (error) {
       console.error("Failed to start controlled session:", error);
       toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
       cleanupAbly();
     }
-  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex]);
+  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, isViewMode]);
 
   const handleStopView = useCallback(() => {
     const { channel } = ablyRef.current;
@@ -363,6 +375,7 @@ function HomePageContent() {
         channel.publish('control-action', { action: 'controlledViewClosed', payload: { sessionId: remoteSessionId } });
     }
     setIsViewMode(false);
+    setFullscreenIndex(null);
     if (remoteControlMode === 'controlled' || remoteControlMode === 'controlling') {
       cleanupAbly();
     }
@@ -1909,7 +1922,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
           {itemsToDisplay.map((item, index) => {
               const isChannel = 'urls' in item;
               if (isChannel) {
-                const channelAsEvent: Event = { title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo' };
+                const channelAsEvent: Event = { title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: (item as Channel).logo };
                 const selection = getEventSelection(channelAsEvent);
                 return (
                     <Card 
@@ -2685,6 +2698,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
 

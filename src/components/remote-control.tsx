@@ -89,7 +89,7 @@ export function RemoteControlDialog({
           <Airplay />
         </Button>
       </DialogTrigger>
-      <DialogContent className="gap-0">
+      <DialogContent className={cn(view === 'main' && 'gap-0')}>
         <DialogHeader>
           <DialogTitle>Control Remoto</DialogTitle>
            <DialogDescription>
@@ -207,6 +207,9 @@ export function RemoteControlView({
           const client = await initAbly('controlling');
           const channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
           ablyRef.current.channel = channel;
+          
+          const presence = channel.presence;
+          await presence.enter();
 
           channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
@@ -500,5 +503,6 @@ export function RemoteControlView({
     
 
     
+
 
 
