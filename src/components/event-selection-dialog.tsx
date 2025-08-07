@@ -95,7 +95,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             </div>
         </DialogHeader>
         
-        <div className="px-6 pb-6 flex-grow overflow-y-auto flex flex-col min-h-0">
+        <div className="px-6 pb-6 flex-grow flex flex-col min-h-0">
             {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -105,7 +105,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     No se encontraron opciones de transmisión.
                 </div>
             ) : (
-                <ScrollArea className="flex-grow min-h-0 pr-4 -mr-4">
+                <ScrollArea className="flex-grow min-h-0 -mr-4 pr-4">
                     <TooltipProvider>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {event.options.map((option, index) => {
@@ -141,7 +141,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         </div>
         
         {isModification && (
-            <div className="px-6 flex-shrink-0 mt-auto border-t border-border pt-4 pb-4">
+            <div className="px-6 flex-shrink-0 border-t border-border pt-4 pb-4 mb-[5px]">
                 <Button
                     variant="destructive"
                     className="w-full"
