@@ -334,8 +334,8 @@ function HomePageContent() {
              // Handle controller leaving if needed, e.g., show a message
         });
 
-        setCodePopupOpen(true);
         setIsViewMode(true);
+        setCodePopupOpen(true);
 
     } catch (error) {
         console.error("Failed to start controlled session:", error);
@@ -1691,13 +1691,10 @@ function HomePageContent() {
                         "overflow-hidden bg-black relative",
                         isFullscreen 
                             ? "absolute inset-0 z-20" 
-                            : getItemClasses(orderIndex, numCameras)
+                            : getItemClasses(orderIndex, numCameras),
+                        fullscreenIndex !== null && !isFullscreen && 'hidden'
                     );
                     
-                    if (fullscreenIndex !== null && !isFullscreen) {
-                        return null; 
-                    }
-
                     let iframeSrc = event.selectedOption
                         ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&amp;' : '?'}reload=${reloadCounters[originalIndex] || 0}`
                         : '';
@@ -2700,3 +2697,4 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
