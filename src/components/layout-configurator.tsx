@@ -238,60 +238,89 @@ export function LayoutConfigurator({
   }
 
   return (
-    <Accordion type="single" collapsible className="w-full space-y-4 py-1">
-      <AccordionItem value="item-1" className="border rounded-lg px-4">
-        <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
-        <AccordionContent className="pt-2">
-          <div className="space-y-6 pb-4">
-            <div className="space-y-3">
-              <Label htmlFor="grid-gap">Bordes ({gridGap}px)</Label>
-              <Slider
-                id="grid-gap"
-                min={0}
-                max={20}
-                step={1}
-                value={[gridGap]}
-                onValueChange={(value) => onGridGapChange(value[0])}
-              />
-            </div>
-            <div className="space-y-3">
-              <Label htmlFor="border-color">Color de Borde</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="border-color"
-                  type="color"
-                  value={borderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
-                  className="w-14 h-10 p-1"
-                />
-                <Input
-                  type="text"
-                  value={borderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Vista Previa</Label>
-              <div className="p-2 rounded-md aspect-video" style={{ backgroundColor: borderColor }}>
-                <div className="grid grid-cols-3 h-full" style={{ gap: `${gridGap}px`}}>
-                  <div className="bg-card rounded-sm"></div>
-                  <div className="bg-card rounded-sm"></div>
-                  <div className="bg-card rounded-sm"></div>
-                  <div className="bg-card rounded-sm"></div>
-                  <div className="bg-card rounded-sm"></div>
-                  <div className="bg-card rounded-sm"></div>
+    <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
+      {!eventProps.isViewPage && (
+        <>
+          <AccordionItem value="item-1" className="border rounded-lg px-4">
+            <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
+            <AccordionContent className="pt-2">
+              <div className="space-y-6 pb-4">
+                <div className="space-y-3">
+                  <Label htmlFor="grid-gap">Bordes ({gridGap}px)</Label>
+                  <Slider
+                    id="grid-gap"
+                    min={0}
+                    max={20}
+                    step={1}
+                    value={[gridGap]}
+                    onValueChange={(value) => onGridGapChange(value[0])}
+                  />
                 </div>
+                <div className="space-y-3">
+                  <Label htmlFor="border-color">Color de Borde</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="border-color"
+                      type="color"
+                      value={borderColor}
+                      onChange={(e) => onBorderColorChange(e.target.value)}
+                      className="w-14 h-10 p-1"
+                    />
+                    <Input
+                      type="text"
+                      value={borderColor}
+                      onChange={(e) => onBorderColorChange(e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Vista Previa</Label>
+                  <div className="p-2 rounded-md aspect-video" style={{ backgroundColor: borderColor }}>
+                    <div className="grid grid-cols-3 h-full" style={{ gap: `${gridGap}px`}}>
+                      <div className="bg-card rounded-sm"></div>
+                      <div className="bg-card rounded-sm"></div>
+                      <div className="bg-card rounded-sm"></div>
+                      <div className="bg-card rounded-sm"></div>
+                      <div className="bg-card rounded-sm"></div>
+                      <div className="bg-card rounded-sm"></div>
+                    </div>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleRestoreDefaults} className="w-full gap-2">
+                    <RefreshCcw />
+                    Restaurar
+                </Button>
               </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleRestoreDefaults} className="w-full gap-2">
-                <RefreshCcw />
-                Restaurar
-            </Button>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-2" className="border rounded-lg px-4">
+            <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
+            <AccordionContent className="pt-2">
+                <div className="space-y-4 pb-4">
+                    <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-1.5 pr-4">
+                            <Label>Activar Chat</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Muestra u oculta el botón para abrir el chat en la vista de visualización.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={isChatEnabled}
+                            onCheckedChange={onIsChatEnabledChange}
+                        />
+                    </div>
+                    {onOpenChat && (
+                        <Button variant="outline" className="w-full" onClick={onOpenChat}>
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Abrir Chat
+                        </Button>
+                    )}
+                </div>
+            </AccordionContent>
+          </AccordionItem>
+        </>
+      )}
       
       {eventProps.isViewPage && remoteControlMode !== 'controlling' && (
         <AccordionItem value="remote-control" className="border rounded-lg px-4">
@@ -323,49 +352,13 @@ export function LayoutConfigurator({
         </AccordionItem>
       )}
       
-      <AccordionItem value="item-2" className="border rounded-lg px-4">
-        <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-        <AccordionContent className="pt-2">
-            <div className="space-y-4 pb-4">
-                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-1.5 pr-4">
-                        <Label>Activar Chat</Label>
-                        <p className="text-xs text-muted-foreground">
-                            Muestra u oculta el botón para abrir el chat en la vista de visualización.
-                        </p>
-                    </div>
-                    <Switch
-                        checked={isChatEnabled}
-                        onCheckedChange={onIsChatEnabledChange}
-                    />
-                </div>
-                {onOpenChat && (
-                    <Button variant="outline" className="w-full" onClick={onOpenChat}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Abrir Chat
-                    </Button>
-                )}
-            </div>
-        </AccordionContent>
+      <AccordionItem value="item-3" className="border rounded-lg px-4">
+          <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+              <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
+          </AccordionContent>
       </AccordionItem>
-      
-       {remoteControlMode !== 'controlling' && (
-            <AccordionItem value="item-3" className="border rounded-lg px-4">
-                <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
-                <AccordionContent className="pt-2 pb-4">
-                    <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
-                </AccordionContent>
-            </AccordionItem>
-        )}
-        
-        {remoteControlMode === 'controlling' && (
-             <AccordionItem value="item-3" className="border rounded-lg px-4">
-                <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
-                <AccordionContent className="pt-2 pb-4">
-                    <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
-                </AccordionContent>
-            </AccordionItem>
-        )}
+
     </Accordion>
   );
 }
