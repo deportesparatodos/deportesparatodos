@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -238,7 +237,7 @@ export function LayoutConfigurator({
   }
 
   return (
-    <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
+    <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-1">
       {!eventProps.isViewPage && (
         <>
           <AccordionItem value="item-1" className="border rounded-lg px-4">
