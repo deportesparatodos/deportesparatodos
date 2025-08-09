@@ -838,6 +838,10 @@ function HomePageContent() {
     setViewOrder(newOrder);
   };
   
+  const handleRestoreGridSettings = () => {
+    setGridGap(0);
+    setBorderColor('#000000');
+  };
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
@@ -1653,6 +1657,13 @@ function HomePageContent() {
                 remoteSessionId={remoteSessionId}
                 remoteControlMode={remoteControlMode}
                 onStartControlledSession={handleActivateControlledMode}
+                gridGap={gridGap}
+                onGridGapChange={setGridGap}
+                borderColor={borderColor}
+                onBorderColorChange={setBorderColor}
+                onRestoreGridSettings={handleRestoreGridSettings}
+                isChatEnabled={isChatEnabled}
+                onIsChatEnabledChange={setIsChatEnabled}
             />
 
             {fullscreenIndex !== null && (
@@ -2327,6 +2338,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 onGridGapChange={setGridGap}
                                                 borderColor={borderColor}
                                                 onBorderColorChange={setBorderColor}
+                                                onRestoreGridSettings={handleRestoreGridSettings}
                                                 isChatEnabled={isChatEnabled}
                                                 onIsChatEnabledChange={setIsChatEnabled}
                                             />

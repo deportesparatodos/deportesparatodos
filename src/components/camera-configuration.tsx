@@ -31,6 +31,13 @@ interface CameraConfigurationProps {
   remoteSessionId: string | null;
   remoteControlMode: 'inactive' | 'controlling' | 'controlled';
   onStartControlledSession: () => void;
+  gridGap: number;
+  onGridGapChange: (value: number) => void;
+  borderColor: string;
+  onBorderColorChange: (value: string) => void;
+  onRestoreGridSettings: () => void;
+  isChatEnabled: boolean;
+  onIsChatEnabledChange: (value: boolean) => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -47,6 +54,13 @@ export function CameraConfigurationComponent({
   remoteSessionId,
   remoteControlMode,
   onStartControlledSession,
+  gridGap,
+  onGridGapChange,
+  borderColor,
+  onBorderColorChange,
+  onRestoreGridSettings,
+  isChatEnabled,
+  onIsChatEnabledChange,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -78,6 +92,13 @@ export function CameraConfigurationComponent({
                   remoteSessionId={remoteSessionId}
                   remoteControlMode={remoteControlMode}
                   onStartControlledSession={onStartControlledSession}
+                  gridGap={gridGap}
+                  onGridGapChange={onGridGapChange}
+                  borderColor={borderColor}
+                  onBorderColorChange={onBorderColorChange}
+                  onRestoreGridSettings={onRestoreGridSettings}
+                  isChatEnabled={isChatEnabled}
+                  onIsChatEnabledChange={onIsChatEnabledChange}
               />
           </ScrollArea>
            <SheetFooter className="p-4 border-t border-border flex-shrink-0">

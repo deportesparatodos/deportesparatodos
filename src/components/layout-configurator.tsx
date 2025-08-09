@@ -37,6 +37,7 @@ export interface EventListManagementProps {
   onGridGapChange?: (value: number) => void;
   borderColor?: string;
   onBorderColorChange?: (value: string) => void;
+  onRestoreGridSettings?: () => void;
   isChatEnabled?: boolean;
   onIsChatEnabledChange?: (value: boolean) => void;
   onOpenChat?: () => void;
@@ -53,7 +54,7 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
-}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' >) {
+}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onRestoreGridSettings' >) {
     
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];
@@ -165,6 +166,7 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
   const { 
     gridGap = 0, onGridGapChange, 
     borderColor = '#000000', onBorderColorChange,
+    onRestoreGridSettings,
     isChatEnabled = true, onIsChatEnabledChange,
     order,
   } = eventProps;
@@ -258,6 +260,11 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
                         />
                     </div>
                 </div>
+                 {onRestoreGridSettings && (
+                    <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full">
+                        Restaurar
+                    </Button>
+                )}
             </AccordionContent>
         </AccordionItem>
 
@@ -386,6 +393,11 @@ function ViewPageMenu({
                         />
                     </div>
                 </div>
+                {eventProps.onRestoreGridSettings && (
+                    <Button variant="outline" size="sm" onClick={eventProps.onRestoreGridSettings} className="w-full">
+                        Restaurar
+                    </Button>
+                )}
             </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2" className="border rounded-lg px-4">
