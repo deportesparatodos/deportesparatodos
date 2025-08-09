@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell, Airplay, Loader2 } from 'lucide-react';
+import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell, Airplay, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
@@ -37,6 +37,8 @@ interface CameraConfigurationProps {
   remoteSessionId: string | null;
   remoteControlMode: 'inactive' | 'controlling' | 'controlled';
   onStartControlledSession: () => void;
+  mutedStates: boolean[];
+  onToggleMute: (index: number) => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -59,6 +61,8 @@ export function CameraConfigurationComponent({
   remoteSessionId,
   remoteControlMode,
   onStartControlledSession,
+  mutedStates,
+  onToggleMute,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -96,6 +100,8 @@ export function CameraConfigurationComponent({
                   remoteSessionId={remoteSessionId}
                   remoteControlMode={remoteControlMode}
                   onStartControlledSession={onStartControlledSession}
+                  mutedStates={mutedStates}
+                  onToggleMute={onToggleMute}
               />
           </ScrollArea>
            <SheetFooter className="p-4 border-t border-border flex-shrink-0">
