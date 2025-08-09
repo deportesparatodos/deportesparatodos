@@ -1758,6 +1758,8 @@ function HomePageContent() {
                                     loading="eager"
                                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                     allowFullScreen
+                                    // @ts-ignore
+                                    muted={event.isMuted}
                                 />
                             </div>
                         );
@@ -1791,6 +1793,8 @@ function HomePageContent() {
                                 loading="eager"
                                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                 allowFullScreen
+                                // @ts-ignore
+                                muted={event.isMuted}
                             />
                         </div>
                     );
