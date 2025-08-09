@@ -166,7 +166,63 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
     gridGap = 0, onGridGapChange, 
     borderColor = '#000000', onBorderColorChange,
     isChatEnabled = true, onIsChatEnabledChange,
+    order,
   } = eventProps;
+
+  const getGridClasses = (count: number) => {
+    switch (count) {
+      case 1: return 'grid-cols-1 grid-rows-1';
+      case 2: return 'grid-cols-2 grid-rows-1';
+      case 3: return 'grid-cols-2 grid-rows-2'; 
+      case 4: return 'grid-cols-2 grid-rows-2';
+      case 5: return 'grid-cols-3 grid-rows-2';
+      case 6: return 'grid-cols-3 grid-rows-2';
+      case 7: return 'grid-cols-3 grid-rows-3';
+      case 8: return 'grid-cols-3 grid-rows-3';
+      case 9: return 'grid-cols-3 grid-rows-3';
+      default: return 'grid-cols-1';
+    }
+  };
+  
+  const getItemClasses = (index: number, count: number) => {
+    if (count === 3 && index === 0) return 'col-span-2';
+    if (count === 5 && index < 2) return 'col-span-1';
+    if (count === 7 && index === 6) return 'col-start-2';
+    if (count === 8 && index === 6) return 'col-start-1';
+    if (count === 8 && index === 7) return 'col-start-2';
+    return '';
+  };
+  
+  const selectedCount = order.length;
+
+  const GridPreview = () => (
+    <div className="space-y-3">
+        <Label>Vista Previa</Label>
+        <div 
+          className={cn("w-full aspect-video rounded-md p-1", getGridClasses(selectedCount))} 
+          style={{
+            backgroundColor: borderColor,
+            display: selectedCount > 0 ? 'grid' : 'flex',
+            gap: `${gridGap / 4}rem`,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {selectedCount === 0 ? (
+            <span className="text-xs text-muted-foreground">Selecciona un evento</span>
+          ) : (
+            Array.from({ length: selectedCount }).map((_, i) => (
+              <div 
+                key={i} 
+                className={cn("bg-secondary/80 rounded-sm flex items-center justify-center", getItemClasses(i, selectedCount))}
+              >
+                  <span className="text-muted-foreground font-bold text-lg">{i + 1}</span>
+              </div>
+            ))
+          )}
+        </div>
+    </div>
+  );
 
   return (
     <Accordion type="single" collapsible className="w-full space-y-4 py-1">
@@ -174,6 +230,7 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
         <AccordionItem value="item-1" className="border rounded-lg px-4">
             <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
             <AccordionContent className="pt-4 pb-4 space-y-6">
+                <GridPreview />
                 <div className="space-y-3">
                     <Label>Espaciado entre ventanas ({gridGap}px)</Label>
                     <Slider
@@ -250,7 +307,7 @@ function ViewPageMenu({
   };
 
   return (
-      <Accordion type="multiple" defaultValue={["item-3"]} className="w-full space-y-4 py-1">
+      <Accordion type="single" collapsible className="w-full space-y-4 py-1">
           {eventProps.remoteControlMode !== 'controlling' && (
               <AccordionItem value="remote-control" className="border rounded-lg px-4">
                   <AccordionTrigger>Control Remoto</AccordionTrigger>
