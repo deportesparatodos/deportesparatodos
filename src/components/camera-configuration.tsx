@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell, Airplay, Loader2 } from 'lucide-react';
+import { Settings, FileText, AlertCircle, Mail, BookOpen, CalendarClock, Pencil, Trash2, Play, Bell, Airplay, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
@@ -24,6 +24,7 @@ interface CameraConfigurationProps {
   onReload: (index: number) => void;
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
+  onToggleMute: (index: number) => void;
   isViewPage: boolean;
   onAddEvent: () => void;
   onSchedule: () => void;
@@ -47,6 +48,7 @@ export function CameraConfigurationComponent({
   onReload, 
   onRemove,
   onModify,
+  onToggleMute,
   isViewPage,
   onAddEvent,
   onSchedule,
@@ -85,6 +87,7 @@ export function CameraConfigurationComponent({
                   onReload={onReload}
                   onRemove={onRemove}
                   onModify={onModify}
+                  onToggleMute={onToggleMute}
                   isViewPage={isViewPage}
                   onAddEvent={onAddEvent}
                   onSchedule={onSchedule}
