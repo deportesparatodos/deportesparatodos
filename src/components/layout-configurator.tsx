@@ -33,13 +33,13 @@ export interface EventListManagementProps {
   fullscreenIndex?: number | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
   onPlayClick?: (index: number) => void;
-  gridGap?: number;
-  onGridGapChange?: (value: number) => void;
-  borderColor?: string;
-  onBorderColorChange?: (value: string) => void;
-  onRestoreGridSettings?: () => void;
-  isChatEnabled?: boolean;
-  onIsChatEnabledChange?: (value: boolean) => void;
+  gridGap: number;
+  onGridGapChange: (value: number) => void;
+  borderColor: string;
+  onBorderColorChange: (value: string) => void;
+  onRestoreGridSettings: () => void;
+  isChatEnabled: boolean;
+  onIsChatEnabledChange: (value: boolean) => void;
   onOpenChat?: () => void;
   onStartControlledSession?: () => void;
 }
@@ -54,7 +54,7 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
-}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onRestoreGridSettings' >) {
+}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onRestoreGridSettings' | 'onStartControlledSession'>) {
     
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];
@@ -164,64 +164,25 @@ export function EventList({
 
 function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) {
   const { 
-    gridGap = 0, onGridGapChange, 
-    borderColor = '#000000', onBorderColorChange,
+    gridGap, onGridGapChange, 
+    borderColor, onBorderColorChange,
     onRestoreGridSettings,
-    isChatEnabled = true, onIsChatEnabledChange,
-    order,
+    isChatEnabled, onIsChatEnabledChange,
   } = eventProps;
-
-  const getGridClasses = (count: number) => {
-    switch (count) {
-      case 1: return 'grid-cols-1 grid-rows-1';
-      case 2: return 'grid-cols-2 grid-rows-1';
-      case 3: return 'grid-cols-2 grid-rows-2'; 
-      case 4: return 'grid-cols-2 grid-rows-2';
-      case 5: return 'grid-cols-3 grid-rows-2';
-      case 6: return 'grid-cols-3 grid-rows-2';
-      case 7: return 'grid-cols-3 grid-rows-3';
-      case 8: return 'grid-cols-3 grid-rows-3';
-      case 9: return 'grid-cols-3 grid-rows-3';
-      default: return 'grid-cols-1';
-    }
-  };
-  
-  const getItemClasses = (index: number, count: number) => {
-    if (count === 3 && index === 0) return 'col-span-2';
-    if (count === 5 && index < 2) return 'col-span-1';
-    if (count === 7 && index === 6) return 'col-start-2';
-    if (count === 8 && index === 6) return 'col-start-1';
-    if (count === 8 && index === 7) return 'col-start-2';
-    return '';
-  };
-  
-  const selectedCount = order.length;
 
   const GridPreview = () => (
     <div className="space-y-3">
         <Label>Vista Previa</Label>
         <div 
-          className={cn("w-full aspect-video rounded-md p-1", getGridClasses(selectedCount))} 
+          className="w-full aspect-video rounded-md p-1 grid grid-cols-3 grid-rows-2"
           style={{
             backgroundColor: borderColor,
-            display: selectedCount > 0 ? 'grid' : 'flex',
             gap: `${gridGap / 4}rem`,
-            alignItems: 'center',
-            justifyContent: 'center',
           }}
         >
-          {selectedCount === 0 ? (
-            <span className="text-xs text-muted-foreground">Selecciona un evento</span>
-          ) : (
-            Array.from({ length: selectedCount }).map((_, i) => (
-              <div 
-                key={i} 
-                className={cn("bg-secondary/80 rounded-sm flex items-center justify-center", getItemClasses(i, selectedCount))}
-              >
-                  <span className="text-muted-foreground font-bold text-lg">{i + 1}</span>
-              </div>
-            ))
-          )}
+          {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-secondary/80 rounded-sm flex items-center justify-center" />
+          ))}
         </div>
     </div>
   );
@@ -237,7 +198,7 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
                     <Label>Espaciado entre ventanas ({gridGap}px)</Label>
                     <Slider
                         value={[gridGap]}
-                        onValueChange={(value) => onGridGapChange?.(value[0])}
+                        onValueChange={(value) => onGridGapChange(value[0])}
                         max={32}
                         step={1}
                     />
@@ -248,23 +209,21 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
                         <Input
                             type="color"
                             value={borderColor}
-                            onChange={(e) => onBorderColorChange?.(e.target.value)}
+                            onChange={(e) => onBorderColorChange(e.target.value)}
                             className="w-12 h-10 p-1"
                         />
                         <Input
                             type="text"
                             value={borderColor}
-                            onChange={(e) => onBorderColorChange?.(e.target.value)}
+                            onChange={(e) => onBorderColorChange(e.target.value)}
                             placeholder="#000000"
                             className="flex-grow"
                         />
                     </div>
                 </div>
-                 {onRestoreGridSettings && (
-                    <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full">
-                        Restaurar
-                    </Button>
-                )}
+                <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full">
+                    Restaurar
+                </Button>
             </AccordionContent>
         </AccordionItem>
 
@@ -314,7 +273,7 @@ function ViewPageMenu({
   };
 
   return (
-      <Accordion type="single" collapsible className="w-full space-y-4 py-1">
+      <Accordion type="multiple" defaultValue={['item-3']} className="w-full space-y-4 py-1">
           {eventProps.remoteControlMode !== 'controlling' && (
               <AccordionItem value="remote-control" className="border rounded-lg px-4">
                   <AccordionTrigger>Control Remoto</AccordionTrigger>
@@ -369,8 +328,8 @@ function ViewPageMenu({
                 <div className="space-y-3">
                     <Label>Espaciado entre ventanas ({eventProps.gridGap}px)</Label>
                     <Slider
-                        value={[eventProps.gridGap ?? 0]}
-                        onValueChange={(value) => eventProps.onGridGapChange?.(value[0])}
+                        value={[eventProps.gridGap]}
+                        onValueChange={(value) => eventProps.onGridGapChange(value[0])}
                         max={32}
                         step={1}
                     />
@@ -381,23 +340,21 @@ function ViewPageMenu({
                         <Input
                             type="color"
                             value={eventProps.borderColor}
-                            onChange={(e) => eventProps.onBorderColorChange?.(e.target.value)}
+                            onChange={(e) => eventProps.onBorderColorChange(e.target.value)}
                             className="w-12 h-10 p-1"
                         />
                         <Input
                             type="text"
                             value={eventProps.borderColor}
-                            onChange={(e) => eventProps.onBorderColorChange?.(e.target.value)}
+                            onChange={(e) => eventProps.onBorderColorChange(e.target.value)}
                             placeholder="#000000"
                             className="flex-grow"
                         />
                     </div>
                 </div>
-                {eventProps.onRestoreGridSettings && (
-                    <Button variant="outline" size="sm" onClick={eventProps.onRestoreGridSettings} className="w-full">
-                        Restaurar
-                    </Button>
-                )}
+                <Button variant="outline" size="sm" onClick={eventProps.onRestoreGridSettings} className="w-full">
+                    Restaurar
+                </Button>
             </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2" className="border rounded-lg px-4">
