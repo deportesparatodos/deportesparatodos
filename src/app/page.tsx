@@ -45,7 +45,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isToday } from 'date-fns';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isToday, differenceInDays, isFuture } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -592,11 +592,13 @@ function HomePageContent() {
       ];
       
       const tcChaserEvents: Event[] = tcChaserData.map(event => {
-          const nowInBA = toZonedTime(new Date(), timeZone);
+          const now = new Date();
           const eventDate = toDate(event.event_time_and_day, { timeZone });
           
           let status: Event['status'] = 'Próximo';
-          if (isToday(eventDate) || isPast(eventDate)) {
+          const diffDays = differenceInDays(eventDate, now);
+
+          if (isPast(eventDate) || isToday(eventDate) || (isFuture(eventDate) && diffDays <= 3)) {
               status = 'En Vivo';
           }
 
@@ -2704,6 +2706,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
 
 
 
