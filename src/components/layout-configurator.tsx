@@ -33,6 +33,8 @@ interface EventListManagementProps {
   fullscreenIndex?: number | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
   onPlayClick?: (index: number) => void;
+  onToggleMute: (index: number) => void;
+  mutedStates: boolean[];
 }
 
 export function EventList({
@@ -45,7 +47,7 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
-}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' >) {
+}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onToggleMute' | 'mutedStates'>) {
     
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];
@@ -84,7 +86,7 @@ export function EventList({
                         <p className="text-sm font-semibold break-words">
                             {event.title}
                         </p>
-                        <div className="flex items-center justify-center gap-1">
+                         <div className="flex items-center justify-center gap-1">
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -134,7 +136,7 @@ export function EventList({
                                     <RotateCw className="h-4 w-4" />
                                 </Button>
                             )}
-
+                            
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -153,30 +155,75 @@ export function EventList({
 }
 
 
-function HomePageMenu({
-    gridGap,
-    onGridGapChange,
-    borderColor,
-    onBorderColorChange,
-    isChatEnabled,
-    onIsChatEnabledChange,
-    eventProps,
+function ViewPageMenu({
+  eventProps,
+  remoteSessionId,
+  remoteControlMode,
+  onStartControlledSession,
+  gridGap,
+  onGridGapChange,
+  borderColor,
+  onBorderColorChange,
+  isChatEnabled,
+  onIsChatEnabledChange,
 }: {
-    gridGap: number;
-    onGridGapChange: (value: number) => void;
-    borderColor: string;
-    onBorderColorChange: (value: string) => void;
-    isChatEnabled: boolean;
-    onIsChatEnabledChange: (value: boolean) => void;
-    eventProps: EventListManagementProps;
+  eventProps: EventListManagementProps;
+  remoteSessionId?: string | null;
+  remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
+  onStartControlledSession?: () => void;
+  gridGap: number;
+  onGridGapChange: (value: number) => void;
+  borderColor: string;
+  onBorderColorChange: (value: string) => void;
+  isChatEnabled: boolean;
+  onIsChatEnabledChange: (value: boolean) => void;
 }) {
+  const [isStartingRemote, setIsStartingRemote] = useState(false);
+
+  const handleStartRemote = () => {
+    if (onStartControlledSession) {
+      setIsStartingRemote(true);
+      onStartControlledSession();
+    }
+  };
+  
   const handleRestoreDefaults = () => {
     onGridGapChange(0);
     onBorderColorChange('#000000');
   }
 
   return (
-    <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-4 py-1">
+      <Accordion type="multiple" defaultValue={["item-3"]} className="w-full space-y-4 py-1">
+          {remoteControlMode !== 'controlling' && (
+              <AccordionItem value="remote-control" className="border rounded-lg px-4">
+                  <AccordionTrigger>Control Remoto</AccordionTrigger>
+                  <AccordionContent className="pt-4 pb-4 text-center">
+                      {remoteControlMode === 'controlled' && remoteSessionId ? (
+                          <>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                  Introduce este código en el dispositivo de control:
+                              </p>
+                              <div className="p-3 bg-muted rounded-lg">
+                                  <p className="text-3xl font-bold tracking-widest text-primary">
+                                      {remoteSessionId}
+                                  </p>
+                              </div>
+                          </>
+                      ) : (
+                          <>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                  Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
+                              </p>
+                              <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
+                                  {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Activar Control Remoto
+                              </Button>
+                          </>
+                      )}
+                  </AccordionContent>
+              </AccordionItem>
+          )}
+
         <AccordionItem value="item-1" className="border rounded-lg px-4">
             <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
             <AccordionContent className="pt-2">
@@ -250,69 +297,6 @@ function HomePageMenu({
                 </div>
             </AccordionContent>
         </AccordionItem>
-        
-        <AccordionItem value="item-3" className="border rounded-lg px-4">
-            <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
-            <AccordionContent className="pt-2 pb-4">
-                <EventList {...eventProps} />
-            </AccordionContent>
-        </AccordionItem>
-    </Accordion>
-  );
-}
-
-
-function ViewPageMenu({
-  eventProps,
-  remoteSessionId,
-  remoteControlMode,
-  onStartControlledSession,
-}: {
-  eventProps: EventListManagementProps;
-  remoteSessionId?: string | null;
-  remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
-  onStartControlledSession?: () => void;
-}) {
-  const [isStartingRemote, setIsStartingRemote] = useState(false);
-
-  const handleStartRemote = () => {
-    if (onStartControlledSession) {
-      setIsStartingRemote(true);
-      onStartControlledSession();
-    }
-  };
-
-  return (
-      <Accordion type="multiple" defaultValue={["item-3"]} className="w-full space-y-4 py-1">
-          {remoteControlMode !== 'controlling' && (
-              <AccordionItem value="remote-control" className="border rounded-lg px-4">
-                  <AccordionTrigger>Control Remoto</AccordionTrigger>
-                  <AccordionContent className="pt-4 pb-4 text-center">
-                      {remoteControlMode === 'controlled' && remoteSessionId ? (
-                          <>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                  Introduce este código en el dispositivo de control:
-                              </p>
-                              <div className="p-3 bg-muted rounded-lg">
-                                  <p className="text-3xl font-bold tracking-widest text-primary">
-                                      {remoteSessionId}
-                                  </p>
-                              </div>
-                          </>
-                      ) : (
-                          <>
-                              <p className="text-sm text-muted-foreground mb-3">
-                                  Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
-                              </p>
-                              <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
-                                  {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                  Activar Control Remoto
-                              </Button>
-                          </>
-                      )}
-                  </AccordionContent>
-              </AccordionItem>
-          )}
 
           <AccordionItem value="item-3" className="border rounded-lg px-4">
               <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
@@ -357,16 +341,12 @@ export function LayoutConfigurator({
   onIsChatEnabledChange: (value: boolean) => void;
 }) {
   
-  if (eventProps.isViewPage) {
-    return <ViewPageMenu 
-              eventProps={eventProps}
-              remoteSessionId={remoteSessionId}
-              remoteControlMode={remoteControlMode}
-              onStartControlledSession={onStartControlledSession}
-            />;
+  if (!eventProps.isViewPage) {
+    // Return nothing for the home page view as requested
+    return null;
   }
 
-  return <HomePageMenu 
+  return <ViewPageMenu 
             gridGap={gridGap}
             onGridGapChange={onGridGapChange}
             borderColor={borderColor}
@@ -374,5 +354,8 @@ export function LayoutConfigurator({
             isChatEnabled={isChatEnabled}
             onIsChatEnabledChange={onIsChatEnabledChange}
             eventProps={eventProps}
+            remoteSessionId={remoteSessionId}
+            remoteControlMode={remoteControlMode}
+            onStartControlledSession={onStartControlledSession}
           />;
 }
