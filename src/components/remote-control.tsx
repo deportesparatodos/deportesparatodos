@@ -20,10 +20,10 @@ import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
 import { LayoutConfigurator } from './layout-configurator';
-import { AddEventsDialog } from '@/app/page';
 import type Ably from 'ably';
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from './event-selection-dialog';
+import { AddEventsDialog } from './add-events-dialog';
 
 // --- Main Dialog to start a remote session ---
 export function RemoteControlDialog({
@@ -209,14 +209,12 @@ export function RemoteControlView({
           channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
             
-            if (payload.sessionId !== initialRemoteSessionId && action !== 'controlledViewClosed') return;
-
-            if (action === 'initialState') {
+            if (action === 'initialState' && payload.sessionId === initialRemoteSessionId) {
               clearTimeout(connectionTimeout);
               setRemoteState(payload);
               setIsLoading(false);
             }
-             if (action === 'updateState') {
+             if (action === 'updateState' && payload.sessionId === initialRemoteSessionId) {
                 setRemoteState(prevState => prevState ? {...prevState, ...payload} : payload);
              }
              if (action === 'controlledViewClosed') {

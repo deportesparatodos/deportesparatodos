@@ -60,6 +60,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RemoteControlDialog, RemoteControlView, type RemoteControlViewState } from '@/components/remote-control';
 import Ably from 'ably';
 import { Separator } from '@/components/ui/separator';
+import { AddEventsDialog } from '@/components/add-events-dialog';
 
 
 interface StreamedMatch {
@@ -105,6 +106,7 @@ interface TCChaserEvent {
 
 const channels247: Event[] = [
   {
+    id: 'south-park-247-static',
     title: "24/7 South Park",
     time: "AHORA",
     status: "En Vivo",
@@ -118,6 +120,7 @@ const channels247: Event[] = [
     source: "",
   },
   {
+    id: 'cows-247-static',
     title: "24/7 COWS",
     time: "AHORA",
     status: "En Vivo",
@@ -131,6 +134,7 @@ const channels247: Event[] = [
     source: "",
   },
   {
+    id: 'family-guy-247-static',
     title: "24/7 Family Guy",
     time: "AHORA",
     status: "En Vivo",
@@ -144,6 +148,7 @@ const channels247: Event[] = [
     source: "",
   },
   {
+    id: 'simpsons-247-static',
     title: "24/7 The Simpsons",
     time: "AHORA",
     status: "En Vivo",
@@ -157,6 +162,7 @@ const channels247: Event[] = [
     source: "",
   },
   {
+    id: 'korean-tv-247-static',
     title: "(North) Korean Central Television",
     time: "AHORA",
     status: "En Vivo",
@@ -172,6 +178,7 @@ const channels247: Event[] = [
 ];
 
 const formula1StaticEvent: Event = {
+  id: 'f1-multicam-static',
   title: "Formula 1: MULTICAM",
   time: "--:--",
   status: "Desconocido",
@@ -182,7 +189,7 @@ const formula1StaticEvent: Event = {
   category: "Motor Sports",
   language: "",
   date: "",
-  source: "",
+  source: "static",
 };
 
 
@@ -283,6 +290,24 @@ function HomePageContent() {
     return client;
   }, []);
   
+  // Effect to publish state changes when in controlled mode
+  useEffect(() => {
+    const { channel } = ablyRef.current;
+    if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
+        const currentState = {
+            selectedEvents,
+            viewOrder,
+            gridGap,
+            borderColor,
+            isChatEnabled,
+            fullscreenIndex,
+            sessionId: remoteSessionId,
+        };
+        channel.publish('control-action', { action: 'updateState', payload: currentState });
+    }
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode, remoteSessionId]);
+
+
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
 
@@ -481,6 +506,8 @@ function HomePageContent() {
       const initialEvents: Event[] = combinedData.map((match: StreamedMatch) => {
         const eventDate = new Date(match.date);
         const zonedEventTime = toZonedTime(eventDate, timeZone);
+        const time = format(zonedEventTime, 'HH:mm');
+        const date = format(zonedEventTime, 'yyyy-MM-dd');
         
         let status: Event['status'] = 'Desconocido';
         if (liveData.some(liveMatch => liveMatch.id === match.id)) {
@@ -496,14 +523,15 @@ function HomePageContent() {
 
 
         return {
+          id: `${match.title}-${date}-${time}-streamed.pk`,
           title: match.title,
-          time: format(zonedEventTime, 'HH:mm'),
+          time,
           options: [], // Options will be fetched on demand
           sources: match.sources, 
           buttons: [],
           category: normalizeCategory(categoryMap[match.category] || match.category.charAt(0).toUpperCase() + match.category.slice(1)),
           language: '',
-          date: format(zonedEventTime, 'yyyy-MM-dd'),
+          date,
           source: 'streamed.pk',
           image: imageUrl,
           status: status,
@@ -534,8 +562,10 @@ function HomePageContent() {
           } catch(e) {
             console.error("Could not parse time for streamtpglobal event", e);
           }
+          const date = format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd');
           
           return {
+              id: `${event.title}-${date}-${eventTime}-streamtpglobal`,
               title: event.title,
               time: eventTime,
               options: [{ url: event.link, label: optionLabel.toUpperCase(), hd: false, language: '' }],
@@ -543,7 +573,7 @@ function HomePageContent() {
               buttons: [],
               category: normalizeCategory(event.category === 'Other' ? 'Otros' : event.category),
               language: '',
-              date: format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd'),
+              date,
               source: 'streamtpglobal',
               image: 'https://i.ibb.co/dHPWxr8/depete.jpg',
               status: status,
@@ -559,6 +589,7 @@ function HomePageContent() {
           }));
 
           return {
+            id: `${event.title}-${event.date}---agenda`,
             title: event.title,
             time: '--:--',
             options: streamOptions,
@@ -603,16 +634,19 @@ function HomePageContent() {
           }
 
           const zonedEventTime = toZonedTime(eventDate, timeZone);
+          const time = format(zonedEventTime, 'HH:mm');
+          const date = format(zonedEventTime, 'yyyy-MM-dd');
 
           return {
+              id: `${event.event_title}-${date}-${time}-tc-chaser`,
               title: event.event_title,
-              time: format(zonedEventTime, 'HH:mm'),
+              time,
               options: tcChaserOptions,
               sources: [],
               buttons: [],
               category: 'Motor Sports',
               language: '',
-              date: format(zonedEventTime, 'yyyy-MM-dd'),
+              date,
               source: 'tc-chaser',
               image: event.cover_image,
               status: status,
@@ -825,9 +859,7 @@ function HomePageContent() {
     const eventMap = new Map<string, Event>();
 
     combinedEvents.forEach(event => {
-        const normalized = normalizeTitle(event.title);
-        const key = event.source === 'streamed.pk' ? `${normalized}|${event.date}|${event.time}` : `${normalized}|${normalized}|${event.time}`;
-
+        const key = event.id;
         const existingEvent = eventMap.get(key);
 
         if (existingEvent) {
@@ -1075,7 +1107,7 @@ function HomePageContent() {
   }, [selectedEvents]);
   
   const getEventSelection = (event: Event) => {
-    const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
+    const selectionIndex = selectedEvents.findIndex(se => se?.id === event.id);
     if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
       return { isSelected: true, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
     }
@@ -1097,7 +1129,7 @@ function HomePageContent() {
     
     if (selection.isSelected) {
         setIsModification(true);
-        const originalIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
+        const originalIndex = selectedEvents.findIndex(se => se?.id === event.id);
         setModificationIndex(originalIndex);
         if(selection.selectedOption) {
             eventForDialog.selectedOption = selection.selectedOption;
@@ -1141,7 +1173,7 @@ function HomePageContent() {
                 setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: streamOptions } : null);
                 
                 // Also update the main events array to cache the options
-                setEvents(prevEvents => prevEvents.map(e => (e.title === event.title && e.time === event.time) ? { ...e, options: streamOptions } : e));
+                setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, options: streamOptions } : e));
                 
             } catch (error) {
                 console.error(`Failed to fetch streams for ${event.title}`, error);
@@ -1159,6 +1191,7 @@ function HomePageContent() {
 
   const handleChannelClick = (channel: Channel) => {
     const channelAsEvent: Event = {
+      id: `${channel.name}-channel-static`,
       title: channel.name,
       options: channel.urls.map(u => ({...u, hd: false, language: ''})),
       sources: [],
@@ -1174,7 +1207,7 @@ function HomePageContent() {
 
     const selection = getEventSelection(channelAsEvent);
     if (selection.isSelected) {
-        const selectedEvent = selectedEvents.find(se => se?.title === channelAsEvent.title);
+        const selectedEvent = selectedEvents.find(se => se?.id === channelAsEvent.id);
         if (selectedEvent) {
           channelAsEvent.selectedOption = selectedEvent.selectedOption;
         }
@@ -1186,7 +1219,7 @@ function HomePageContent() {
 
     if (selection.isSelected) {
         setIsModification(true);
-        const originalIndex = selectedEvents.findIndex(se => se?.title === channelAsEvent.title && se?.time === channelAsEvent.time);
+        const originalIndex = selectedEvents.findIndex(se => se?.id === channelAsEvent.id);
         setModificationIndex(originalIndex);
     } else {
         setIsModification(false);
@@ -1275,7 +1308,7 @@ function HomePageContent() {
     const newSelectedEvents = [...selectedEvents];
     const eventWithSelection = { ...event, selectedOption: option };
 
-    const existingIndex = newSelectedEvents.findIndex(se => se?.title === event.title);
+    const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
     if (existingIndex !== -1) {
         newSelectedEvents[existingIndex] = eventWithSelection;
@@ -1671,7 +1704,7 @@ function HomePageContent() {
                     display: 'grid',
                 }}
             >
-                {viewOrder.map((originalIndex) => {
+                {viewOrder.map((originalIndex, orderedIndex) => {
                     const event = selectedEvents[originalIndex];
                     if (!event) return null;
 
@@ -1706,10 +1739,11 @@ function HomePageContent() {
                            key={`window-stable-${originalIndex}`} 
                            className={cn(
                                 "overflow-hidden bg-black relative",
-                                isFullscreen && 'absolute inset-0 z-20'
+                                isFullscreen && 'absolute inset-0 z-20',
+                                getItemClasses(orderedIndex, selectedEventsCount)
                             )}
                            style={{
-                             order: originalIndex
+                             order: orderedIndex
                            }}
                         >
                            <iframe
@@ -1876,7 +1910,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 pt-4">
                     {mobileSortedEvents.map((event, index) => (
                         <EventCard
-                            key={`mobile-event-${index}`}
+                            key={`mobile-event-${event.id}`}
                             event={event}
                             selection={getEventSelection(event)}
                             onClick={() => openDialogForEvent(event)}
@@ -1921,7 +1955,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
           {itemsToDisplay.map((item, index) => {
               const isChannel = 'urls' in item;
               if (isChannel) {
-                const channelAsEvent: Event = { title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: (item as Channel).logo };
+                const channelAsEvent: Event = { id: `${(item as Channel).name}-channel-static`, title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: (item as Channel).logo };
                 const selection = getEventSelection(channelAsEvent);
                 return (
                     <Card 
@@ -1956,7 +1990,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
               } else {
                  return (
                     <EventCard
-                      key={`search-event-${index}`}
+                      key={`search-event-${(item as Event).id}`}
                       event={item as Event}
                       selection={getEventSelection(item as Event)}
                       onClick={() => openDialogForEvent(item as Event)}
@@ -2204,7 +2238,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                     width={150}
                                     height={37.5}
                                     priority
-                                    data-ai-hint="logo"
                                     className='w-auto h-auto max-h-[40px] max-w-[150px]'
                                 />
                             </Link>
@@ -2400,319 +2433,3 @@ export default function Page() {
   );
 }
 
-
-export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents, isFullScreen, setIsFullScreen }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void, isFullScreen: boolean, setIsFullScreen: (isFullScreen: boolean) => void }) {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
-    
-    const [subDialogOpen, setSubDialogOpen] = useState(false);
-    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
-    const [isSubDialogLoading, setIsSubDialogLoading] = useState(false);
-    const [isModification, setIsModification] = useState(false);
-    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-
-    useEffect(() => {
-        if (!open) {
-            setSearchTerm('');
-            setIsFullScreen(false); // Reset fullscreen state on close
-        }
-    }, [open, setIsFullScreen]);
-
-    const handleForceFetch = async () => {
-        setIsAddEventsLoading(true);
-        await onFetchEvents();
-        setIsAddEventsLoading(false);
-    };
-
-    const getEventSelection = useCallback((eventTitle: string, eventTime: string) => {
-        const selectionIndex = selectedEvents.findIndex(se => se?.title === eventTitle && se?.time === eventTime);
-        if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
-            return { isSelected: true, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
-        }
-        return { isSelected: false, selectedOption: null };
-    }, [selectedEvents]);
-
-
-    const handleSubDialogSelect = (event: Event, option: string) => {
-        onSelect(event, option);
-        setSubDialogOpen(false);
-    };
-    
-    const openSubDialogForEvent = async (event: Event) => {
-        const selection = getEventSelection(event.title, event.time);
-        let eventForDialog = {...event};
-        if(selection.isSelected && selection.selectedOption){
-            eventForDialog.selectedOption = selection.selectedOption;
-        }
-
-        setIsSubDialogLoading(true);
-        setDialogEvent(eventForDialog); // Set event immediately to show dialog
-        setSubDialogOpen(true);
-
-        setIsModification(selection.isSelected);
-        setModificationIndex(selection.isSelected ? selectedEvents.findIndex(se => se?.title === event.title) : selectedEvents.findIndex(e => e === null));
-        
-        if (event.source === 'streamed.pk' && event.options.length === 0) {
-            try {
-                const sourcePromises = event.sources.map(async (source) => {
-                    try {
-                        const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                        if (response.ok) {
-                            const streams: any[] = await response.json();
-                            if (Array.isArray(streams)) {
-                                return streams.map(stream => ({
-                                    url: stream.embedUrl,
-                                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                                    hd: stream.hd,
-                                    language: stream.language,
-                                }));
-                            }
-                        }
-                    } catch (e) {
-                        console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
-                    }
-                    return [];
-                });
-                const results = await Promise.all(sourcePromises);
-                const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
-
-                const updatedEventForDialog = { ...eventForDialog, options: streamOptions };
-                setDialogEvent(updatedEventForDialog);
-
-                // Also update the main events array so we don't fetch again
-                updateAllEvents(allEvents.map(e => e.title === updatedEventForDialog.title && e.time === updatedEventForDialog.time ? { ...e, options: streamOptions } : e));
-            } catch (error) {
-                console.error(`Failed to fetch streams for ${event.title}`);
-                const updatedEventForDialog = { ...eventForDialog, options: [] };
-                setDialogEvent(updatedEventForDialog);
-            }
-        }
-        setIsSubDialogLoading(false);
-    };
-
-    const handleChannelClick = (channel: Channel) => {
-        const event: Event = {
-            title: channel.name,
-            options: channel.urls,
-            sources: [],
-            buttons: [],
-            time: 'AHORA',
-            category: 'Canal',
-            language: '',
-            date: '',
-            source: '',
-            status: 'En Vivo',
-            image: channel.logo,
-        };
-        const selection = getEventSelection(event.title, event.time);
-        if (selection.isSelected) {
-            const selectedEvent = selectedEvents.find(se => se?.title === event.title);
-            if (selectedEvent) {
-                event.selectedOption = selectedEvent.selectedOption;
-            }
-        }
-        openSubDialogForEvent(event);
-    };
-
-    const sortedAndFilteredEvents = useMemo(() => {
-        const lowercasedFilter = searchTerm.toLowerCase();
-        
-        const liveSortLogic = (a: Event, b: Event): number => a.title.localeCompare(b.title);
-        
-        const upcomingSortLogic = (a: Event, b: Event): number => {
-            const now = new Date();
-            const parseTime = (timeStr: string) => {
-                if (!/^\d{2}:\d{2}$/.test(timeStr)) return null;
-                const parsed = parse(timeStr, 'HH:mm', now);
-                return isValid(parsed) ? parsed : null;
-            };
-
-            const timeA = parseTime(a.time);
-            const timeB = parseTime(b.time);
-            
-            if (timeA && !timeB) return -1;
-            if (!timeA && timeB) return 1;
-            if (!timeA && !timeB) return a.title.localeCompare(b.title);
-            
-            const isPastA = isBefore(timeA!, now);
-            const isPastB = isBefore(timeB!, now);
-            
-            if (isPastA && !isPastB) return 1;
-            if (!isPastA && isPastB) return -1;
-            
-            return timeA!.getTime() - timeB!.getTime();
-        };
-
-        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-        const filtered = allEvents.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
-
-        const liveCustom = filtered.filter(e => e.status === 'En Vivo' && e.image && e.image !== placeholderImage).sort(liveSortLogic);
-        const liveDefault = filtered.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
-        const upcoming = filtered.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
-        const unknown = filtered.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
-        const finished = filtered.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
-
-        return [...liveCustom, ...liveDefault, ...upcoming, ...unknown, ...finished];
-    }, [searchTerm, allEvents]);
-
-
-    const filteredChannels = useMemo(() => {
-        const lowercasedFilter = searchTerm.toLowerCase();
-        return allChannels.filter(c => c.name.toLowerCase().includes(lowercasedFilter));
-    }, [searchTerm, allChannels]);
-
-    return (
-        <Dialog open={open} onOpenChange={isOpen => { onOpenChange(isOpen); }}>
-            <DialogContent 
-                hideClose={true}
-                className={cn(
-                    "flex flex-col p-4 transition-all duration-300",
-                    isFullScreen 
-                        ? "w-screen h-screen max-w-none rounded-none" 
-                        : "h-[90vh] sm:max-w-4xl"
-                )}
-            >
-                <DialogHeader className='flex-row items-center justify-between pb-0'>
-                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
-                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
-                            {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); setIsFullScreen(false); }}>
-                           <X className="h-5 w-5" />
-                        </Button>
-                    </div>
-                </DialogHeader>
-                 
-                <div className="relative flex-grow flex flex-col mt-2">
-                    <Tabs defaultValue="eventos" className="flex-grow flex flex-col">
-                        <div className="flex flex-col gap-2">
-                            <div className="relative flex-grow mt-[5px]">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                <Input
-                                    type="text"
-                                    placeholder="Buscar..."
-                                    className="w-full pl-10 pr-20"
-                                    value={searchTerm}
-                                    onChange={e => setSearchTerm(e.target.value)}
-                                />
-                                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleForceFetch} disabled={isAddEventsLoading}>
-                                        <RotateCw className={cn("h-5 w-5", isAddEventsLoading && "animate-spin")} />
-                                    </Button>
-                                    {searchTerm && (
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8"
-                                            onClick={() => setSearchTerm('')}
-                                        >
-                                            <X className="h-5 w-5" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="eventos">Eventos</TabsTrigger>
-                                <TabsTrigger value="canales">Canales</TabsTrigger>
-                            </TabsList>
-                        </div>
-
-                        <TabsContent value="eventos" className="flex-grow mt-4 h-0">
-                            <ScrollArea className="h-full pr-4 -mr-4">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {sortedAndFilteredEvents.map((event, index) => (
-                                        <EventCard
-                                            key={`event-${event.title}-${index}`}
-                                            event={event}
-                                            selection={getEventSelection(event.title, event.time)}
-                                            onClick={() => openSubDialogForEvent(event)}
-                                            displayMode="checkmark"
-                                        />
-                                    ))}
-                                </div>
-                            </ScrollArea>
-                        </TabsContent>
-
-                        <TabsContent value="canales" className="flex-grow mt-4 h-0">
-                            <ScrollArea className="h-full pr-4 -mr-4">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {filteredChannels.map((channel, index) => {
-                                        const channelAsEvent: Event = { title: channel.name, options: [], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
-                                        const selection = getEventSelection(channelAsEvent.title, channelAsEvent.time);
-                                        return (
-                                            <Card 
-                                                key={`search-channel-${channel.name}-${index}`}
-                                                className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
-                                                onClick={() => handleChannelClick(channel)}
-                                            >
-                                                <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white h-[100px] flex-shrink-0">
-                                                    <Image
-                                                        src={channel.logo}
-                                                        alt={`${channel.name} logo`}
-                                                        width={120}
-                                                        height={67.5}
-                                                        className="object-contain max-h-full max-w-full"
-                                                        onError={e => { e.currentTarget.src = 'https://i.ibb.co/dHPWxr8/depete.jpg'; }}
-                                                    />
-                                                    {selection.isSelected && (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="p-3 bg-card flex-grow flex flex-col justify-center">
-                                                    <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
-                                                </div>
-                                            </Card>
-                                        );
-                                    })}
-                                </div>
-                            </ScrollArea>
-                        </TabsContent>
-                    </Tabs>
-                    {isAddEventsLoading && (
-                        <div className="absolute inset-0 bg-background flex items-center justify-center z-10 rounded-lg">
-                            <Loader2 className="h-10 w-10 animate-spin" />
-                        </div>
-                    )}
-                </div>
-            </DialogContent>
-            {dialogEvent && (
-                <Dialog open={subDialogOpen} onOpenChange={setSubDialogOpen}>
-                    <EventSelectionDialog
-                        isOpen={subDialogOpen}
-                        onOpenChange={setSubDialogOpen}
-                        event={dialogEvent}
-                        onSelect={handleSubDialogSelect}
-                        isModification={isModification}
-                        onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
-                        isLoading={isSubDialogLoading}
-                        setIsLoading={setIsSubDialogLoading}
-                        setEventForDialog={setDialogEvent}
-                    />
-                </Dialog>
-            )}
-        </Dialog>
-    );
-}
-    
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    

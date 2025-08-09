@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { FC, useState, useEffect } from 'react';
@@ -25,6 +26,7 @@ export interface StreamOption {
 }
 
 export interface Event {
+  id: string;
   time: string;
   title: string;
   options: StreamOption[];
@@ -78,7 +80,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             getEventSelection &&
             events.map((event, index) => (
               <CarouselItem
-                key={`event-${event.title}-${index}`}
+                key={event.id}
                 className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
               >
                 <EventCard
@@ -93,7 +95,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             onChannelClick &&
             getEventSelection &&
             channels.map((channel, index) => {
-              const channelAsEvent: Event = { title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+              const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
               const selection = getEventSelection(channelAsEvent);
               return (
               <CarouselItem
@@ -134,5 +136,3 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
-
-    
