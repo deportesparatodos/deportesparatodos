@@ -293,10 +293,12 @@ export function RemoteControlView({
     };
 
     const handleToggleMute = (index: number) => {
-        if (!remoteState) return;
-        const newMutedStates = [...remoteState.mutedStates];
-        newMutedStates[index] = !newMutedStates[index];
-        updateRemoteState({ mutedStates: newMutedStates });
+        const { channel } = ablyRef.current;
+        if (channel && initialRemoteSessionId && remoteState) {
+            const newMutedStates = [...remoteState.mutedStates];
+            newMutedStates[index] = !newMutedStates[index];
+            updateRemoteState({ mutedStates: newMutedStates });
+        }
     };
     
     const handleReload = (index: number) => {
@@ -496,3 +498,5 @@ export function RemoteControlView({
     </>
   );
 }
+
+    

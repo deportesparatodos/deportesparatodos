@@ -282,6 +282,23 @@ function HomePageContent() {
     return client;
   }, []);
   
+    const handleToggleMute = useCallback((index: number) => {
+        setMutedStates(prev => {
+            const newMutedStates = [...prev];
+            newMutedStates[index] = !newMutedStates[index];
+            return newMutedStates;
+        });
+        if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
+            ablyRef.current.channel.publish('control-action', {
+                action: 'updateState',
+                payload: {
+                    mutedStates: mutedStates.map((s, i) => i === index ? !s : s),
+                    sessionId: remoteSessionId
+                }
+            });
+        }
+    }, [remoteControlMode, remoteSessionId, mutedStates]);
+  
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
 
@@ -320,6 +337,9 @@ function HomePageContent() {
                 case 'toggleFullscreen':
                     setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                     break;
+                case 'toggleMute':
+                    handleToggleMute(payload.index);
+                    break;
                  case 'reload':
                     handleReloadCamera(payload.index);
                     break;
@@ -344,7 +364,7 @@ function HomePageContent() {
         toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
         cleanupAbly();
     }
-  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode, mutedStates]);
+  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode, mutedStates, handleToggleMute]);
   
   const handleActivateControlledMode = async () => {
     if (selectedEvents.filter(Boolean).length === 0) {
@@ -817,17 +837,6 @@ function HomePageContent() {
     setViewOrder(newOrder);
   };
   
-  const handleToggleMute = (index: number) => {
-    const newMutedStates = [...mutedStates];
-    newMutedStates[index] = !newMutedStates[index];
-    setMutedStates(newMutedStates);
-     if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
-        ablyRef.current.channel.publish('control-action', {
-            action: 'updateState',
-            payload: { mutedStates: newMutedStates, sessionId: remoteSessionId }
-        });
-    }
-  };
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
@@ -1654,7 +1663,7 @@ function HomePageContent() {
                 onNotification={() => setNotificationManagerOpen(true)}
                 remoteSessionId={remoteSessionId}
                 remoteControlMode={remoteControlMode}
-                onStartControlledSession={handleStartControlledSession}
+                onStartControlledSession={handleActivateControlledMode}
                 mutedStates={mutedStates}
                 onToggleMute={handleToggleMute}
             />
@@ -2406,7 +2415,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 event={modifyEvent.event}
                 onSelect={handleModifyEventSelect}
                 isModification={true}
-                onRemove={() => handleEventRemove(modifyEvent.index)} 
+                onRemove={() => {}} // Remove is handled by main remote view
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={event => setModifyEvent(prev => prev ? {...prev, event} : null)}
@@ -2748,3 +2757,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 
 
 
+
+
+    
