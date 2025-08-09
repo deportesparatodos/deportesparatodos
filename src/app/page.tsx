@@ -59,6 +59,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RemoteControlDialog, RemoteControlView, type RemoteControlViewState } from '@/components/remote-control';
 import Ably from 'ably';
+import { Separator } from '@/components/ui/separator';
 
 
 interface StreamedMatch {
@@ -1610,12 +1611,6 @@ function HomePageContent() {
                 onRemove={handleEventRemove}
                 onModify={openDialogForModification}
                 isViewPage={true}
-                gridGap={gridGap}
-                onGridGapChange={setGridGap}
-                borderColor={borderColor}
-                onBorderColorChange={setBorderColor}
-                isChatEnabled={isChatEnabled}
-                onIsChatEnabledChange={setIsChatEnabled}
                 onAddEvent={() => {
                   setDialogContext('view');
                   setAddEventsDialogOpen(true);
@@ -2294,12 +2289,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 eventDetails={selectedEvents}
                                                 onRemove={handleEventRemove}
                                                 onModify={openDialogForModification}
-                                                gridGap={gridGap}
-                                                onGridGapChange={setGridGap}
-                                                borderColor={borderColor}
-                                                onBorderColorChange={setBorderColor}
-                                                isChatEnabled={isChatEnabled}
-                                                onIsChatEnabledChange={setIsChatEnabled}
                                                 onAddEvent={() => setAddEventsDialogOpen(true)}
                                             />
                                         </ScrollArea>

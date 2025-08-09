@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -152,29 +153,45 @@ export function EventList({
   );
 }
 
+interface HomePageMenuProps {
+  eventProps: EventListManagementProps;
+}
+
+function HomePageMenu({
+  eventProps,
+}: HomePageMenuProps) {
+
+  return (
+    <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-4 py-1">
+      <AccordionItem value="item-3" className="border rounded-lg px-4">
+        <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+        <AccordionContent className="pt-2 pb-4">
+          <EventList {...eventProps} />
+           {eventProps.onAddEvent && (
+            <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
+                <Plus className="mr-2 h-4 w-4" />
+                Añadir Evento/Canal
+            </Button>
+           )}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
+
+interface ViewPageMenuProps {
+  eventProps: EventListManagementProps;
+  remoteSessionId?: string | null;
+  remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
+  onStartControlledSession?: () => void;
+}
+
 function ViewPageMenu({
   eventProps,
   remoteSessionId,
   remoteControlMode,
   onStartControlledSession,
-  gridGap,
-  onGridGapChange,
-  borderColor,
-  onBorderColorChange,
-  isChatEnabled,
-  onIsChatEnabledChange,
-}: {
-  eventProps: EventListManagementProps;
-  remoteSessionId?: string | null;
-  remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
-  onStartControlledSession?: () => void;
-  gridGap: number;
-  onGridGapChange: (value: number) => void;
-  borderColor: string;
-  onBorderColorChange: (value: string) => void;
-  isChatEnabled: boolean;
-  onIsChatEnabledChange: (value: boolean) => void;
-}) {
+}: ViewPageMenuProps) {
   const [isStartingRemote, setIsStartingRemote] = useState(false);
 
   const handleStartRemote = () => {
@@ -183,11 +200,6 @@ function ViewPageMenu({
       onStartControlledSession();
     }
   };
-  
-  const handleRestoreDefaults = () => {
-    onGridGapChange(0);
-    onBorderColorChange('#000000');
-  }
 
   return (
       <Accordion type="multiple" defaultValue={["item-3"]} className="w-full space-y-4 py-1">
@@ -221,80 +233,6 @@ function ViewPageMenu({
               </AccordionItem>
           )}
 
-        <AccordionItem value="item-1" className="border rounded-lg px-4">
-            <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
-            <AccordionContent className="pt-2">
-                <div className="space-y-6 pb-4">
-                    <div className="space-y-3">
-                        <Label htmlFor="grid-gap">Bordes ({gridGap}px)</Label>
-                        <Slider
-                            id="grid-gap"
-                            min={0}
-                            max={20}
-                            step={1}
-                            value={[gridGap]}
-                            onValueChange={(value) => onGridGapChange(value[0])}
-                        />
-                    </div>
-                    <div className="space-y-3">
-                        <Label htmlFor="border-color">Color de Borde</Label>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                id="border-color"
-                                type="color"
-                                value={borderColor}
-                                onChange={(e) => onBorderColorChange(e.target.value)}
-                                className="w-14 h-10 p-1"
-                            />
-                            <Input
-                                type="text"
-                                value={borderColor}
-                                onChange={(e) => onBorderColorChange(e.target.value)}
-                                className="flex-1"
-                            />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Vista Previa</Label>
-                        <div className="p-2 rounded-md aspect-video" style={{ backgroundColor: borderColor }}>
-                            <div className="grid grid-cols-3 h-full" style={{ gap: `${gridGap}px`}}>
-                                <div className="bg-card rounded-sm"></div>
-                                <div className="bg-card rounded-sm"></div>
-                                <div className="bg-card rounded-sm"></div>
-                                <div className="bg-card rounded-sm"></div>
-                                <div className="bg-card rounded-sm"></div>
-                                <div className="bg-card rounded-sm"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={handleRestoreDefaults} className="w-full gap-2">
-                        <RefreshCcw />
-                        Restaurar
-                    </Button>
-                </div>
-            </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="item-2" className="border rounded-lg px-4">
-            <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-            <AccordionContent className="pt-2">
-                <div className="space-y-4 pb-4">
-                    <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-1.5 pr-4">
-                            <Label>Activar Chat</Label>
-                            <p className="text-xs text-muted-foreground">
-                                Muestra u oculta el botón para abrir el chat en la vista de visualización.
-                            </p>
-                        </div>
-                        <Switch
-                            checked={isChatEnabled}
-                            onCheckedChange={onIsChatEnabledChange}
-                        />
-                    </div>
-                </div>
-            </AccordionContent>
-        </AccordionItem>
-
           <AccordionItem value="item-3" className="border rounded-lg px-4">
               <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
               <AccordionContent className="pt-2 pb-4">
@@ -317,161 +255,16 @@ function ViewPageMenu({
   );
 }
 
-function HomePageMenu({
-  eventProps,
-  gridGap,
-  onGridGapChange,
-  borderColor,
-  onBorderColorChange,
-  isChatEnabled,
-  onIsChatEnabledChange,
-}: {
-  eventProps: EventListManagementProps;
-  gridGap: number;
-  onGridGapChange: (value: number) => void;
-  borderColor: string;
-  onBorderColorChange: (value: string) => void;
-  isChatEnabled: boolean;
-  onIsChatEnabledChange: (value: boolean) => void;
-}) {
-    const handleRestoreDefaults = () => {
-    onGridGapChange(0);
-    onBorderColorChange('#000000');
-  }
 
-  return (
-    <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-4 py-1">
-      <AccordionItem value="item-1" className="border rounded-lg px-4">
-        <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
-        <AccordionContent className="pt-2">
-          <div className="space-y-6 pb-4">
-            <div className="space-y-3">
-              <Label htmlFor="grid-gap">Bordes ({gridGap}px)</Label>
-              <Slider
-                id="grid-gap"
-                min={0}
-                max={20}
-                step={1}
-                value={[gridGap]}
-                onValueChange={(value) => onGridGapChange(value[0])}
-              />
-            </div>
-            <div className="space-y-3">
-              <Label htmlFor="border-color">Color de Borde</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="border-color"
-                  type="color"
-                  value={borderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
-                  className="w-14 h-10 p-1"
-                />
-                <Input
-                  type="text"
-                  value={borderColor}
-                  onChange={(e) => onBorderColorChange(e.target.value)}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-             <div className="space-y-2">
-                <Label>Vista Previa</Label>
-                <div className="p-2 rounded-md aspect-video" style={{ backgroundColor: borderColor }}>
-                    <div className="grid grid-cols-3 h-full" style={{ gap: `${gridGap}px`}}>
-                        <div className="bg-card rounded-sm"></div>
-                        <div className="bg-card rounded-sm"></div>
-                        <div className="bg-card rounded-sm"></div>
-                        <div className="bg-card rounded-sm"></div>
-                        <div className="bg-card rounded-sm"></div>
-                        <div className="bg-card rounded-sm"></div>
-                    </div>
-                </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleRestoreDefaults} className="w-full gap-2">
-                <RefreshCcw />
-                Restaurar
-            </Button>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-      
-      <AccordionItem value="item-2" className="border rounded-lg px-4">
-        <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-        <AccordionContent className="pt-2">
-          <div className="space-y-4 pb-4">
-            <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-1.5 pr-4">
-                <Label>Activar Chat</Label>
-                <p className="text-xs text-muted-foreground">
-                  Muestra u oculta el botón del chat en la vista de transmisión.
-                </p>
-              </div>
-              <Switch checked={isChatEnabled} onCheckedChange={onIsChatEnabledChange} />
-            </div>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem value="item-3" className="border rounded-lg px-4">
-        <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
-        <AccordionContent className="pt-2 pb-4">
-          <EventList {...eventProps} />
-           {eventProps.onAddEvent && (
-            <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
-                <Plus className="mr-2 h-4 w-4" />
-                Añadir Evento/Canal
-            </Button>
-           )}
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  );
-}
-
-
-export function LayoutConfigurator({
-  isViewPage,
-  gridGap,
-  onGridGapChange,
-  borderColor,
-  onBorderColorChange,
-  isChatEnabled,
-  onIsChatEnabledChange,
-  remoteSessionId,
-  remoteControlMode,
-  onStartControlledSession,
-  ...eventProps
-}: EventListManagementProps & {
-  gridGap: number;
-  onGridGapChange: (value: number) => void;
-  borderColor: string;
-  onBorderColorChange: (value: string) => void;
-  isChatEnabled: boolean;
-  onIsChatEnabledChange: (value: boolean) => void;
-}) {
+export function LayoutConfigurator(props: EventListManagementProps) {
   
-  if (isViewPage) {
+  if (props.isViewPage) {
     return <ViewPageMenu 
-              gridGap={gridGap}
-              onGridGapChange={onGridGapChange}
-              borderColor={borderColor}
-              onBorderColorChange={onBorderColorChange}
-              isChatEnabled={isChatEnabled}
-              onIsChatEnabledChange={onIsChatEnabledChange}
-              eventProps={eventProps}
-              remoteSessionId={remoteSessionId}
-              remoteControlMode={remoteControlMode}
-              onStartControlledSession={onStartControlledSession}
+              eventProps={props}
+              remoteSessionId={props.remoteSessionId}
+              remoteControlMode={props.remoteControlMode}
             />;
   }
 
-  return <HomePageMenu 
-            gridGap={gridGap}
-            onGridGapChange={onGridGapChange}
-            borderColor={borderColor}
-            onBorderColorChange={onBorderColorChange}
-            isChatEnabled={isChatEnabled}
-            onIsChatEnabledChange={onIsChatEnabledChange}
-            eventProps={eventProps}
-          />;
+  return <HomePageMenu eventProps={props} />;
 }

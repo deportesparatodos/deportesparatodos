@@ -24,12 +24,6 @@ interface CameraConfigurationProps {
   onReload: (index: number) => void;
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
-  gridGap: number;
-  onGridGapChange: (value: number) => void;
-  borderColor: string;
-  onBorderColorChange: (value: string) => void;
-  isChatEnabled: boolean;
-  onIsChatEnabledChange: (value: boolean) => void;
   isViewPage: boolean;
   onAddEvent: () => void;
   onSchedule: () => void;
@@ -46,12 +40,6 @@ export function CameraConfigurationComponent({
   onReload, 
   onRemove,
   onModify,
-  gridGap,
-  onGridGapChange,
-  borderColor,
-  onBorderColorChange,
-  isChatEnabled,
-  onIsChatEnabledChange,
   isViewPage,
   onAddEvent,
   onSchedule,
@@ -77,12 +65,6 @@ export function CameraConfigurationComponent({
           <Separator className="my-4 flex-shrink-0" />
           <ScrollArea className="flex-grow h-0 px-6">
               <LayoutConfigurator
-                  gridGap={gridGap}
-                  onGridGapChange={onGridGapChange}
-                  borderColor={borderColor}
-                  onBorderColorChange={onBorderColorChange}
-                  isChatEnabled={isChatEnabled}
-                  onIsChatEnabledChange={onIsChatEnabledChange}
                   order={order}
                   onOrderChange={onOrderChange}
                   eventDetails={eventDetails}
