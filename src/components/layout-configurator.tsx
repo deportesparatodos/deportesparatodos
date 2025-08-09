@@ -17,9 +17,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
-import { ScrollArea } from './ui/scroll-area';
 
-interface EventListManagementProps {
+export interface EventListManagementProps {
   order: number[];
   onOrderChange: (newOrder: number[]) => void;
   eventDetails: (Event | null)[];
@@ -34,6 +33,14 @@ interface EventListManagementProps {
   fullscreenIndex?: number | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
   onPlayClick?: (index: number) => void;
+  gridGap?: number;
+  onGridGapChange?: (value: number) => void;
+  borderColor?: string;
+  onBorderColorChange?: (value: string) => void;
+  isChatEnabled?: boolean;
+  onIsChatEnabledChange?: (value: boolean) => void;
+  onOpenChat?: () => void;
+  onStartControlledSession?: () => void;
 }
 
 export function EventList({
@@ -153,16 +160,67 @@ export function EventList({
   );
 }
 
-interface HomePageMenuProps {
-  eventProps: EventListManagementProps;
-}
 
-function HomePageMenu({
-  eventProps,
-}: HomePageMenuProps) {
+function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) {
+  const { 
+    gridGap = 0, onGridGapChange, 
+    borderColor = '#000000', onBorderColorChange,
+    isChatEnabled = true, onIsChatEnabledChange,
+  } = eventProps;
 
   return (
     <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-4 py-1">
+        
+        <AccordionItem value="item-1" className="border rounded-lg px-4">
+            <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
+            <AccordionContent className="pt-4 pb-4 space-y-6">
+                <div className="space-y-3">
+                    <Label>Espaciado entre ventanas ({gridGap}px)</Label>
+                    <Slider
+                        value={[gridGap]}
+                        onValueChange={(value) => onGridGapChange?.(value[0])}
+                        max={32}
+                        step={1}
+                    />
+                </div>
+                <div className="space-y-3">
+                    <Label>Color de Borde</Label>
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="color"
+                            value={borderColor}
+                            onChange={(e) => onBorderColorChange?.(e.target.value)}
+                            className="w-12 h-10 p-1"
+                        />
+                        <Input
+                            type="text"
+                            value={borderColor}
+                            onChange={(e) => onBorderColorChange?.(e.target.value)}
+                            placeholder="#000000"
+                            className="flex-grow"
+                        />
+                    </div>
+                </div>
+            </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="item-2" className="border rounded-lg px-4">
+            <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
+            <AccordionContent className="pt-4 pb-4">
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="chat-switch" className="flex flex-col gap-1">
+                        <span>Activar Chat en Vivo</span>
+                        <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
+                    </Label>
+                    <Switch
+                        id="chat-switch"
+                        checked={isChatEnabled}
+                        onCheckedChange={onIsChatEnabledChange}
+                    />
+                </div>
+            </AccordionContent>
+        </AccordionItem>
+
       <AccordionItem value="item-3" className="border rounded-lg px-4">
         <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
         <AccordionContent className="pt-2 pb-4">
@@ -179,42 +237,32 @@ function HomePageMenu({
   );
 }
 
-interface ViewPageMenuProps {
-  eventProps: EventListManagementProps;
-  remoteSessionId?: string | null;
-  remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
-  onStartControlledSession?: () => void;
-}
-
 function ViewPageMenu({
   eventProps,
-  remoteSessionId,
-  remoteControlMode,
-  onStartControlledSession,
-}: ViewPageMenuProps) {
+}: {eventProps: EventListManagementProps}) {
   const [isStartingRemote, setIsStartingRemote] = useState(false);
 
   const handleStartRemote = () => {
-    if (onStartControlledSession) {
+    if (eventProps.onStartControlledSession) {
       setIsStartingRemote(true);
-      onStartControlledSession();
+      eventProps.onStartControlledSession();
     }
   };
 
   return (
       <Accordion type="multiple" defaultValue={["item-3"]} className="w-full space-y-4 py-1">
-          {remoteControlMode !== 'controlling' && (
+          {eventProps.remoteControlMode !== 'controlling' && (
               <AccordionItem value="remote-control" className="border rounded-lg px-4">
                   <AccordionTrigger>Control Remoto</AccordionTrigger>
                   <AccordionContent className="pt-4 pb-4 text-center">
-                      {remoteControlMode === 'controlled' && remoteSessionId ? (
+                      {eventProps.remoteControlMode === 'controlled' && eventProps.remoteSessionId ? (
                           <>
                               <p className="text-sm text-muted-foreground mb-2">
                                   Introduce este código en el dispositivo de control:
                               </p>
                               <div className="p-3 bg-muted rounded-lg">
                                   <p className="text-3xl font-bold tracking-widest text-primary">
-                                      {remoteSessionId}
+                                      {eventProps.remoteSessionId}
                                   </p>
                               </div>
                           </>
@@ -259,11 +307,7 @@ function ViewPageMenu({
 export function LayoutConfigurator(props: EventListManagementProps) {
   
   if (props.isViewPage) {
-    return <ViewPageMenu 
-              eventProps={props}
-              remoteSessionId={props.remoteSessionId}
-              remoteControlMode={props.remoteControlMode}
-            />;
+    return <ViewPageMenu eventProps={props} />;
   }
 
   return <HomePageMenu eventProps={props} />;

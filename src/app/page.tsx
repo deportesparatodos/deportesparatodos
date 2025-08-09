@@ -2290,6 +2290,12 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 onRemove={handleEventRemove}
                                                 onModify={openDialogForModification}
                                                 onAddEvent={() => setAddEventsDialogOpen(true)}
+                                                gridGap={gridGap}
+                                                onGridGapChange={setGridGap}
+                                                borderColor={borderColor}
+                                                onBorderColorChange={setBorderColor}
+                                                isChatEnabled={isChatEnabled}
+                                                onIsChatEnabledChange={setIsChatEnabled}
                                             />
                                         </ScrollArea>
                                     </SheetContent>
