@@ -44,8 +44,8 @@ import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
-import { toZonedTime, format, toDate } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, differenceInDays, isPast, isToday, isFuture } from 'date-fns';
+import { toZonedTime, format } from 'date-fns-tz';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isToday, isFuture, differenceInDays, toDate } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -1672,17 +1672,19 @@ function HomePageContent() {
                     "relative grid w-full h-full",
                     fullscreenIndex === null && gridContainerClasses
                 )} 
-                style={fullscreenIndex === null ? { 
-                    gap: `${gridGap}px`,
-                    padding: `${gridGap}px`,
-                    backgroundColor: borderColor
-                } : {}}
+                style={{ 
+                    ...fullscreenIndex === null ? { 
+                        gap: `${gridGap}px`,
+                        padding: `${gridGap}px`,
+                        backgroundColor: borderColor
+                    } : {},
+                    display: 'grid',
+                }}
             >
                 {selectedEvents.map((event, originalIndex) => {
                     if (!event) return null;
 
                     const isFullscreen = fullscreenIndex === originalIndex;
-                    const orderIndex = viewOrder.indexOf(originalIndex);
                     
                     if (fullscreenIndex !== null && !isFullscreen) {
                         return (
@@ -1714,10 +1716,10 @@ function HomePageContent() {
                            className={cn(
                                 "overflow-hidden bg-black relative",
                                 isFullscreen && 'absolute inset-0 z-20',
-                                !isFullscreen && getItemClasses(orderIndex, numCameras)
+                                !isFullscreen && getItemClasses(viewOrder.indexOf(originalIndex), numCameras)
                             )}
                            style={{
-                             order: orderIndex
+                             order: viewOrder.indexOf(originalIndex)
                            }}
                         >
                             <iframe
@@ -2706,6 +2708,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
+
 
 
 
