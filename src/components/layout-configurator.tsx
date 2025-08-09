@@ -169,7 +169,7 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
   } = eventProps;
 
   return (
-    <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-4 py-1">
+    <Accordion type="single" collapsible className="w-full space-y-4 py-1">
         
         <AccordionItem value="item-1" className="border rounded-lg px-4">
             <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
@@ -299,6 +299,54 @@ function ViewPageMenu({
                   )}
               </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="item-1" className="border rounded-lg px-4">
+            <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
+            <AccordionContent className="pt-4 pb-4 space-y-6">
+                <div className="space-y-3">
+                    <Label>Espaciado entre ventanas ({eventProps.gridGap}px)</Label>
+                    <Slider
+                        value={[eventProps.gridGap ?? 0]}
+                        onValueChange={(value) => eventProps.onGridGapChange?.(value[0])}
+                        max={32}
+                        step={1}
+                    />
+                </div>
+                <div className="space-y-3">
+                    <Label>Color de Borde</Label>
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="color"
+                            value={eventProps.borderColor}
+                            onChange={(e) => eventProps.onBorderColorChange?.(e.target.value)}
+                            className="w-12 h-10 p-1"
+                        />
+                        <Input
+                            type="text"
+                            value={eventProps.borderColor}
+                            onChange={(e) => eventProps.onBorderColorChange?.(e.target.value)}
+                            placeholder="#000000"
+                            className="flex-grow"
+                        />
+                    </div>
+                </div>
+            </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-2" className="border rounded-lg px-4">
+            <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
+            <AccordionContent className="pt-4 pb-4">
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="chat-switch" className="flex flex-col gap-1">
+                        <span>Activar Chat en Vivo</span>
+                        <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
+                    </Label>
+                    <Switch
+                        id="chat-switch"
+                        checked={eventProps.isChatEnabled}
+                        onCheckedChange={eventProps.onIsChatEnabledChange}
+                    />
+                </div>
+            </AccordionContent>
+        </AccordionItem>
       </Accordion>
   );
 }
