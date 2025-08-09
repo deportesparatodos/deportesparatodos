@@ -230,10 +230,10 @@ export function LayoutConfigurator({
     onBorderColorChange('#000000');
   }
 
-  // View for the Home Page Settings
+  // --- VIEW FOR HOME PAGE (isViewPage = false) ---
   if (!eventProps.isViewPage) {
     return (
-       <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
+       <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-4 py-1">
           <AccordionItem value="item-1" className="border rounded-lg px-4">
             <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
             <AccordionContent className="pt-2">
@@ -325,7 +325,7 @@ export function LayoutConfigurator({
     );
   }
 
-  // View for the View Page Settings
+  // --- VIEW FOR VIEW PAGE (isViewPage = true) ---
   return (
     <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
         {remoteControlMode !== 'controlling' && (
@@ -367,3 +367,4 @@ export function LayoutConfigurator({
     </Accordion>
   );
 }
+
