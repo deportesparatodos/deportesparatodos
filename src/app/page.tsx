@@ -204,7 +204,7 @@ function HomePageContent() {
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
-  const [mutedStates, setMutedStates] = useState<boolean[]>(Array(9).fill(false));
+  const [mutedStates, setMutedStates] = useState<boolean[]>(Array(9).fill(true));
 
 
   // View mode state
@@ -284,23 +284,25 @@ function HomePageContent() {
     return client;
   }, []);
   
-  // Centralized mute handler
   const handleToggleMute = useCallback((index: number) => {
-    const newMutedStates = [...mutedStates];
-    newMutedStates[index] = !newMutedStates[index];
-    setMutedStates(newMutedStates);
+      setMutedStates(prev => {
+          const newMutedStates = [...prev];
+          newMutedStates[index] = !newMutedStates[index];
+          return newMutedStates;
+      });
 
-    // If in controlled mode, notify the controller
-    if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
-        ablyRef.current.channel.publish('control-action', {
-            action: 'updateState',
-            payload: {
-                mutedStates: newMutedStates,
-                sessionId: remoteSessionId
-            }
-        });
-    }
+      if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
+          ablyRef.current.channel.publish('control-action', {
+              action: 'updateMutedState',
+              payload: {
+                  index: index,
+                  isMuted: !mutedStates[index],
+                  sessionId: remoteSessionId
+              }
+          });
+      }
   }, [mutedStates, remoteControlMode, remoteSessionId]);
+
   
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
@@ -336,12 +338,12 @@ function HomePageContent() {
                     setBorderColor(payload.borderColor ?? '#000000');
                     setIsChatEnabled(payload.isChatEnabled ?? true);
                     setFullscreenIndex(payload.fullscreenIndex ?? null);
-                    setMutedStates(payload.mutedStates ?? Array(9).fill(false));
+                    setMutedStates(payload.mutedStates ?? Array(9).fill(true));
                     break;
                 case 'toggleFullscreen':
                     setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                     break;
-                case 'toggleMute': // Action received from controller
+                case 'toggleMute': 
                     handleToggleMute(payload.index);
                     break;
                  case 'reload':
@@ -1718,7 +1720,8 @@ function HomePageContent() {
                     display: 'grid',
                 }}
             >
-                {selectedEvents.map((event, originalIndex) => {
+                {viewOrder.map((originalIndex) => {
+                    const event = selectedEvents[originalIndex];
                     if (!event) return null;
 
                     const isFullscreen = fullscreenIndex === originalIndex;
@@ -1728,7 +1731,7 @@ function HomePageContent() {
                             <div key={`window-stable-${originalIndex}`} className="hidden">
                                 <iframe
                                     ref={el => (iframeRefs.current[originalIndex] = el)}
-                                    src={`${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`}
+                                    src={`${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`}
                                     title={`Stream ${originalIndex + 1}`}
                                     className="w-full h-full border-0"
                                     loading="eager"
@@ -1753,14 +1756,13 @@ function HomePageContent() {
                            key={`window-stable-${originalIndex}`} 
                            className={cn(
                                 "overflow-hidden bg-black relative",
-                                isFullscreen && 'absolute inset-0 z-20',
-                                !isFullscreen && getItemClasses(viewOrder.indexOf(originalIndex), numCameras)
+                                isFullscreen && 'absolute inset-0 z-20'
                             )}
                            style={{
-                             order: viewOrder.indexOf(originalIndex)
+                             order: originalIndex
                            }}
                         >
-                            <iframe
+                           <iframe
                                 ref={el => (iframeRefs.current[originalIndex] = el)}
                                 src={iframeSrc}
                                 title={`Stream ${originalIndex + 1}`}
@@ -1768,7 +1770,7 @@ function HomePageContent() {
                                 loading="eager"
                                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                 allowFullScreen
-                                muted={mutedStates[originalIndex]}
+                                {...(mutedStates[originalIndex] && { muted: true })}
                             />
                         </div>
                     );
@@ -2337,7 +2339,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 onRemove={handleEventRemove} 
                                                 onModify={openDialogForModification}
                                                 isViewPage={false}
-                                                onNotificationManager={() => { setConfigDialogOpen(false); setNotificationManagerOpen(true); }}
                                             />
                                         </ScrollArea>
                                     </DialogContent>

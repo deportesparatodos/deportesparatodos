@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -38,7 +37,6 @@ interface EventListManagementProps {
   onToggleMute?: (index: number) => void;
 }
 
-// Sub-component for the Event List, shared between both menus
 export function EventList({
   order,
   onOrderChange,
@@ -171,7 +169,6 @@ export function EventList({
 }
 
 
-// --- Component for the Home Page Settings Panel ---
 function HomePageMenu({
     gridGap,
     onGridGapChange,
@@ -276,19 +273,11 @@ function HomePageMenu({
                 <EventList {...eventProps} />
             </AccordionContent>
         </AccordionItem>
-        
-        {eventProps.onNotificationManager && (
-            <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={eventProps.onNotificationManager}>
-                <BellRing className="mr-2 h-4 w-4" />
-                Gestionar Notificaciones
-            </Button>
-        )}
     </Accordion>
   );
 }
 
 
-// --- Component for the View Page Settings Panel ---
 function ViewPageMenu({
   eventProps,
   remoteSessionId,
@@ -310,7 +299,7 @@ function ViewPageMenu({
   };
 
   return (
-      <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
+      <Accordion type="multiple" defaultValue={["item-3"]} className="w-full space-y-4 py-1">
           {remoteControlMode !== 'controlling' && (
               <AccordionItem value="remote-control" className="border rounded-lg px-4">
                   <AccordionTrigger>Control Remoto</AccordionTrigger>
@@ -364,7 +353,6 @@ function ViewPageMenu({
 }
 
 
-// --- Main exported component ---
 export function LayoutConfigurator({
   gridGap,
   onGridGapChange,
