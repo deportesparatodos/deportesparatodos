@@ -299,6 +299,16 @@ export function RemoteControlView({
         }
     };
 
+    const handleToggleMute = (index: number) => {
+        if (!remoteState) return;
+        const newEvents = [...remoteState.selectedEvents];
+        const event = newEvents[index];
+        if(event) {
+            event.isMuted = !event.isMuted;
+            updateRemoteState({ selectedEvents: newEvents });
+        }
+    }
+
     const handleOrderChange = (newOrder: number[]) => {
       if (!remoteState) return;
       const fullNewOrder = [...newOrder, ...remoteState.viewOrder.filter(i => !newOrder.includes(i))];
@@ -320,7 +330,7 @@ export function RemoteControlView({
     const handleAddEvent = (event: Event, option: string) => {
         if (!remoteState) return;
         const newEvents = [...remoteState.selectedEvents];
-        const eventWithSelection = { ...event, selectedOption: option };
+        const eventWithSelection = { ...event, selectedOption: option, isMuted: false };
         const emptyIndex = newEvents.findIndex(e => e === null);
         if (emptyIndex !== -1) {
             newEvents[emptyIndex] = eventWithSelection;
@@ -404,6 +414,7 @@ export function RemoteControlView({
                 onRemove={handleRemove}
                 onReload={handleReload}
                 onModify={handleModifyEvent}
+                onToggleMute={handleToggleMute}
                 onToggleFullscreen={handleToggleFullscreen}
                 fullscreenIndex={remoteState.fullscreenIndex}
                 isViewPage={true}
@@ -412,6 +423,7 @@ export function RemoteControlView({
                 onGridGapChange={handleGridGapChange}
                 borderColor={remoteState.borderColor}
                 onBorderColorChange={handleBorderColorChange}
+                onRestoreGridSettings={() => {}}
                 isChatEnabled={remoteState.isChatEnabled}
                 onIsChatEnabledChange={handleIsChatEnabledChange}
                 onOpenChat={() => setIsRemoteChatOpen(true)}

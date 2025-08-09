@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize, Volume2, VolumeX } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -42,6 +42,7 @@ export interface EventListManagementProps {
   onIsChatEnabledChange: (value: boolean) => void;
   onOpenChat?: () => void;
   onStartControlledSession?: () => void;
+  onToggleMute: (index: number) => void;
 }
 
 export function EventList({
@@ -54,6 +55,7 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
+  onToggleMute,
 }: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onRestoreGridSettings' | 'onStartControlledSession'>) {
     
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
@@ -131,6 +133,15 @@ export function EventList({
                                 onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
                             >
                                 <Pencil className="h-4 w-4" />
+                            </Button>
+                            
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={(e) => { e.stopPropagation(); onToggleMute(originalIndex); }}
+                            >
+                                {event.isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                             </Button>
 
                             {isViewPage && onReload && (

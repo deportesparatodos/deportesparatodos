@@ -1082,7 +1082,7 @@ function HomePageContent() {
 
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
-    const eventWithSelection = { ...event, selectedOption: optionUrl };
+    const eventWithSelection = { ...event, selectedOption: optionUrl, isMuted: false };
 
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
@@ -1207,6 +1207,7 @@ function HomePageContent() {
       source: '',
       status: 'En Vivo',
       image: channel.logo,
+      isMuted: false,
     };
 
     const selection = getEventSelection(channelAsEvent);
@@ -1270,6 +1271,17 @@ function HomePageContent() {
     setFullscreenIndex(null);
   };
 
+  const handleToggleMute = useCallback((index: number) => {
+      setSelectedEvents(currentSelected => {
+          const newSelected = [...currentSelected];
+          const event = newSelected[index];
+          if (event) {
+              newSelected[index] = { ...event, isMuted: !event.isMuted };
+          }
+          return newSelected;
+      });
+  }, []);
+
 
   const handleModifyEventSelect = (event: Event, option: string) => {
       const newSelectedEvents = [...selectedEvents];
@@ -1310,7 +1322,7 @@ function HomePageContent() {
 
   const handleAddEventSelect = (event: Event, option: string) => {
     const newSelectedEvents = [...selectedEvents];
-    const eventWithSelection = { ...event, selectedOption: option };
+    const eventWithSelection = { ...event, selectedOption: option, isMuted: false };
 
     const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
@@ -1647,6 +1659,7 @@ function HomePageContent() {
                 onReload={handleReloadCamera}
                 onRemove={handleEventRemove}
                 onModify={openDialogForModification}
+                onToggleMute={handleToggleMute}
                 isViewPage={true}
                 onAddEvent={() => {
                   setDialogContext('view');
@@ -1732,6 +1745,7 @@ function HomePageContent() {
                                     loading="eager"
                                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                     allowFullScreen
+                                    muted={event.isMuted}
                                 />
                             </div>
                         );
@@ -1765,6 +1779,7 @@ function HomePageContent() {
                                 loading="eager"
                                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                 allowFullScreen
+                                muted={event.isMuted}
                             />
                         </div>
                     );
@@ -2334,6 +2349,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 onRemove={handleEventRemove}
                                                 onModify={openDialogForModification}
                                                 onAddEvent={() => setAddEventsDialogOpen(true)}
+                                                onToggleMute={handleToggleMute}
                                                 gridGap={gridGap}
                                                 onGridGapChange={setGridGap}
                                                 borderColor={borderColor}

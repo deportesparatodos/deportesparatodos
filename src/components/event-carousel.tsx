@@ -39,6 +39,7 @@ export interface Event {
   image?: string;
   status: 'Próximo' | 'En Vivo' | 'Finalizado' | 'Desconocido';
   selectedOption?: string;
+  isMuted?: boolean;
 }
 
 interface EventCarouselProps {
