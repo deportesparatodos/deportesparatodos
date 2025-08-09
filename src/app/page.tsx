@@ -59,8 +59,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RemoteControlDialog, RemoteControlView, type RemoteControlViewState } from '@/components/remote-control';
 import Ably from 'ably';
-import { Separator } from '@/components/ui/separator';
 import { AddEventsDialog } from '@/components/add-events-dialog';
+import { Separator } from '@/components/ui/separator';
 
 
 interface StreamedMatch {
@@ -2212,7 +2212,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                         <h3 className="font-bold text-foreground">Sobre el uso de subdominios:</h3>
                                                         <p>Deportes para Todos utiliza subdominios como https://www.google.com/search?q=gh.deportesparatodos.com con fines exclusivamente organizativos y técnicos, para centralizar y facilitar el acceso a iframes de terceros. Estos subdominios no almacenan, manipulan ni retransmiten contenido audiovisual, sino que actúan como una ventana hacia los streams originales disponibles públicamente en sitios como streamtp3.com, la12hd.com y otros. En ningún caso se modifica la fuente original ni se interviene en el contenido emitido por dichos terceros.</p>
                                                         <h3 className="font-bold text-foreground">Sobre la experiencia del usuario:</h3>
-                                                        <p>Deportes para Todos puede aplicar medidas para mejorar la experiencia de navegación, como la reducción de anuncios emergentes o contenido intrusivo de terceros. Estas medidas no interfieren con el contenido audiovisual transmitido dentro de los reproductores embebidos, ni modifican las señales originales. Cualquier bloqueo se limita a elementos externos ajenos a la emisión en sí.</p>
+                                                        <p>Deportes para Todos puede aplicar medidas para mejorar la experiencia del usuario, como la reducción de anuncios emergentes o contenido intrusivo de terceros. Estas medidas no interfieren con el contenido audiovisual transmitido dentro de los reproductores embebidos, ni modifican las señales originales. Cualquier bloqueo se limita a elementos externos ajenos a la emisión en sí.</p>
                                                         <h3 className="font-bold text-foreground">Monetización, publicidad y patrocinadores</h3>
                                                         <p>Deportes para Todos puede exhibir anuncios publicitarios proporcionados por plataformas de monetización de terceros (como Monetag) y/o incluir contenido patrocinado de empresas vinculadas al sector iGaming (casas de apuestas, juegos online y plataformas similares).</p>
                                                         <p>Estos ingresos publicitarios permiten el mantenimiento del sitio, pero no están directamente vinculados al contenido embebido ni implican relación comercial con las plataformas desde las cuales se obtiene dicho contenido.</p>
