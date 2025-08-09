@@ -37,10 +37,6 @@ interface CameraConfigurationProps {
   remoteSessionId: string | null;
   remoteControlMode: 'inactive' | 'controlling' | 'controlled';
   onStartControlledSession: () => void;
-  onToggleFullscreen: (index: number) => void;
-  onToggleMute: (index: number) => void;
-  mutedStates: boolean[];
-  fullscreenIndex: number | null;
 }
 
 export function CameraConfigurationComponent({ 
@@ -63,10 +59,6 @@ export function CameraConfigurationComponent({
   remoteSessionId,
   remoteControlMode,
   onStartControlledSession,
-  onToggleFullscreen,
-  onToggleMute,
-  mutedStates,
-  fullscreenIndex
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -104,10 +96,6 @@ export function CameraConfigurationComponent({
                   remoteSessionId={remoteSessionId}
                   remoteControlMode={remoteControlMode}
                   onStartControlledSession={onStartControlledSession}
-                  onToggleFullscreen={onToggleFullscreen}
-                  fullscreenIndex={fullscreenIndex}
-                  onToggleMute={onToggleMute}
-                  mutedStates={mutedStates}
               />
           </ScrollArea>
            <SheetFooter className="p-4 border-t border-border flex-shrink-0">

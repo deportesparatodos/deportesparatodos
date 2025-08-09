@@ -46,7 +46,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays, isToday } from 'date-fns';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -230,6 +230,7 @@ function HomePageContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [currentView, setCurrentView] = useState<string>('home');
+  const [homeSettingsOpen, setHomeSettingsOpen] = useState(false);
   
   // Dialog/Popup states
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
@@ -1692,7 +1693,6 @@ function HomePageContent() {
                                     loading="eager"
                                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                     allowFullScreen
-                                    muted
                                 />
                             </div>
                         );
@@ -1725,7 +1725,6 @@ function HomePageContent() {
                                 loading="eager"
                                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                 allowFullScreen
-                                muted
                             />
                         </div>
                     );
@@ -2276,6 +2275,36 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                 >
                                   <RotateCw className={cn(isDataLoading && "animate-spin")} />
                                 </Button>
+                                 <Sheet open={homeSettingsOpen} onOpenChange={setHomeSettingsOpen}>
+                                    <SheetTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                        <Settings />
+                                      </Button>
+                                    </SheetTrigger>
+                                    <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                       <SheetHeader className="p-6 pb-0 text-center flex-shrink-0">
+                                          <SheetTitle>Configuración y Eventos</SheetTitle>
+                                       </SheetHeader>
+                                        <Separator className="my-4 flex-shrink-0" />
+                                        <ScrollArea className="flex-grow h-0 px-6">
+                                            <LayoutConfigurator
+                                                isViewPage={false}
+                                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                                onOrderChange={handleOrderChange}
+                                                eventDetails={selectedEvents}
+                                                onRemove={handleEventRemove}
+                                                onModify={openDialogForModification}
+                                                gridGap={gridGap}
+                                                onGridGapChange={setGridGap}
+                                                borderColor={borderColor}
+                                                onBorderColorChange={setBorderColor}
+                                                isChatEnabled={isChatEnabled}
+                                                onIsChatEnabledChange={setIsChatEnabled}
+                                                onAddEvent={() => setAddEventsDialogOpen(true)}
+                                            />
+                                        </ScrollArea>
+                                    </SheetContent>
+                                  </Sheet>
 
                                 <Button
                                     size="icon"
