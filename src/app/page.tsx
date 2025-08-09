@@ -45,7 +45,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid } from 'date-fns';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isToday } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -95,7 +95,7 @@ interface AgendaEvent {
 }
 
 interface TCChaserEvent {
-  event_time_and_day: string; // "2025-08-09T10:00:00.000Z"
+  event_time_and_day: string; // "2025-08-10T00:00:00.000Z"
   event_title: string;
   end_date: string;
   cover_image: string;
@@ -592,20 +592,15 @@ function HomePageContent() {
       ];
       
       const tcChaserEvents: Event[] = tcChaserData.map(event => {
-          const now = new Date();
-          let startDate = new Date(event.event_time_and_day);
+          const nowInBA = toZonedTime(new Date(), timeZone);
+          const eventDate = toDate(event.event_time_and_day, { timeZone });
           
-          startDate = addHours(startDate, 3);
-
-          const endDate = new Date(event.end_date);
           let status: Event['status'] = 'Próximo';
-          if(isAfter(now, startDate) && isBefore(now, endDate)) {
+          if (isToday(eventDate) || isPast(eventDate)) {
               status = 'En Vivo';
-          } else if (isAfter(now, endDate)) {
-              status = 'Finalizado';
           }
 
-          const zonedEventTime = toZonedTime(startDate, timeZone);
+          const zonedEventTime = toZonedTime(eventDate, timeZone);
 
           return {
               title: event.event_title,
@@ -844,7 +839,7 @@ function HomePageContent() {
                              : (event.image && event.image !== placeholderImage) 
                                ? event.image 
                                : placeholderImage;
-            const newTitle = event.title.length > existingEvent.title.length ? event.title : existingEvent.title;
+            const newTitle = event.title.length > existingEvent.title.length ? event.title : event.title;
 
             eventMap.set(key, {
                 ...existingEvent,
@@ -1672,7 +1667,7 @@ function HomePageContent() {
           
            <main 
                 className={cn(
-                    "relative w-full h-full",
+                    "relative grid w-full h-full",
                     fullscreenIndex === null && gridContainerClasses
                 )} 
                 style={fullscreenIndex === null ? { 
@@ -1687,13 +1682,21 @@ function HomePageContent() {
                     const isFullscreen = fullscreenIndex === originalIndex;
                     const orderIndex = viewOrder.indexOf(originalIndex);
                     
-                     const windowClasses = cn(
-                        "overflow-hidden bg-black relative",
-                        isFullscreen 
-                            ? "absolute inset-0 z-20" 
-                            : getItemClasses(orderIndex, numCameras),
-                        fullscreenIndex !== null && !isFullscreen && 'hidden'
-                    );
+                    if (fullscreenIndex !== null && !isFullscreen) {
+                        return (
+                            <div key={`window-stable-${originalIndex}`} className="hidden">
+                                <iframe
+                                    ref={el => (iframeRefs.current[originalIndex] = el)}
+                                    src={`${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`}
+                                    title={`Stream ${originalIndex + 1}`}
+                                    className="w-full h-full border-0"
+                                    loading="eager"
+                                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                                    allowFullScreen
+                                />
+                            </div>
+                        );
+                    }
                     
                     let iframeSrc = event.selectedOption
                         ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&amp;' : '?'}reload=${reloadCounters[originalIndex] || 0}`
@@ -1706,7 +1709,11 @@ function HomePageContent() {
                     return (
                         <div 
                            key={`window-stable-${originalIndex}`} 
-                           className={windowClasses} 
+                           className={cn(
+                                "overflow-hidden bg-black relative",
+                                isFullscreen && 'absolute inset-0 z-20',
+                                !isFullscreen && getItemClasses(orderIndex, numCameras)
+                            )}
                            style={{
                              order: orderIndex
                            }}
@@ -2273,7 +2280,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                               Personaliza la vista y gestiona tus eventos seleccionados.
                                           </DialogDescription>
                                         </DialogHeader>
-                                        <ScrollArea className="flex-grow overflow-y-auto">
+                                        <ScrollArea className="flex-grow h-0">
                                            <div className="px-6 pb-6">
                                                <LayoutConfigurator
                                                     gridGap={gridGap}
@@ -2697,4 +2704,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
+
+
+
 
