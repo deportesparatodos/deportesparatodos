@@ -197,6 +197,7 @@ export function RemoteControlView({
           const client = await initAbly('controlling');
           channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
           ablyRef.current.channel = channel;
+          presence = channel.presence;
           
           await presence.enter();
 

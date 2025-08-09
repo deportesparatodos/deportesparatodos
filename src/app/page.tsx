@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -44,8 +45,8 @@ import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
-import { toZonedTime, format, toDate } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays, isToday } from 'date-fns';
+import { toZonedTime, format } from 'date-fns-tz';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays, toDate } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -283,24 +284,23 @@ function HomePageContent() {
     return client;
   }, []);
   
-    const handleToggleMute = useCallback((index: number) => {
-        setMutedStates(prev => {
-            const newMutedStates = [...prev];
-            newMutedStates[index] = !newMutedStates[index];
-            return newMutedStates;
-        });
+  const handleToggleMute = useCallback((index: number) => {
+    setMutedStates(prev => {
+        const newMutedStates = [...prev];
+        newMutedStates[index] = !newMutedStates[index];
+        return newMutedStates;
+    });
 
-        // If this device is controlled, it should also notify the controller of the state change
-        if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
-             ablyRef.current.channel.publish('control-action', {
-                action: 'updateState',
-                payload: {
-                    mutedStates: mutedStates.map((s, i) => i === index ? !s : s),
-                    sessionId: remoteSessionId
-                }
-            });
-        }
-    }, [mutedStates, remoteControlMode, remoteSessionId]);
+    if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
+         ablyRef.current.channel.publish('control-action', {
+            action: 'updateState',
+            payload: {
+                mutedStates: mutedStates.map((s, i) => i === index ? !s : s),
+                sessionId: remoteSessionId
+            }
+        });
+    }
+  }, [mutedStates, remoteControlMode, remoteSessionId]);
   
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
@@ -313,7 +313,8 @@ function HomePageContent() {
         const channel = client.channels.get(`remote-control:${newCode}`);
         ablyRef.current.channel = channel;
         
-        await channel.presence.enter();
+        const presence = channel.presence;
+        await presence.enter();
         setRemoteControlMode('controlled');
 
         channel.subscribe('control-action', (message: Ably.Types.Message) => {
@@ -354,7 +355,6 @@ function HomePageContent() {
             }
         });
         
-        const presence = channel.presence;
         presence.subscribe('leave', () => {
              // Handle controller leaving if needed, e.g., show a message
         });
@@ -623,7 +623,7 @@ function HomePageContent() {
           let status: Event['status'] = 'Próximo';
           const diffDays = differenceInDays(eventDate, now);
 
-          if (isPast(eventDate) || isToday(eventDate) || (isFuture(eventDate) && diffDays <= 3)) {
+          if (isPast(eventDate) || diffDays <= 3) {
               status = 'En Vivo';
           }
 
