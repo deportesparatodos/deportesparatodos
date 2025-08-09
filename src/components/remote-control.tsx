@@ -295,9 +295,12 @@ export function RemoteControlView({
     const handleToggleMute = (index: number) => {
         const { channel } = ablyRef.current;
         if (channel && initialRemoteSessionId && remoteState) {
-             const newMutedStates = [...remoteState.mutedStates];
+            // Optimistically update local UI
+            const newMutedStates = [...remoteState.mutedStates];
             newMutedStates[index] = !newMutedStates[index];
-            updateRemoteState({ mutedStates: newMutedStates });
+            setRemoteState(prevState => prevState ? { ...prevState, mutedStates: newMutedStates } : null);
+
+            // Send command to controlled device
             channel.publish('control-action', {
                 action: 'toggleMute',
                 payload: { index, sessionId: initialRemoteSessionId }

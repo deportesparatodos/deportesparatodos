@@ -45,7 +45,7 @@ import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
-import { toZonedTime, format, toDate } from 'date-fns-tz';
+import { toZonedTime, format } from 'date-fns-tz';
 import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays, isToday } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
@@ -284,24 +284,23 @@ function HomePageContent() {
     return client;
   }, []);
   
+  // Centralized mute handler
   const handleToggleMute = useCallback((index: number) => {
-    setMutedStates(prevMutedStates => {
-      const newMutedStates = [...prevMutedStates];
-      newMutedStates[index] = !newMutedStates[index];
+    const newMutedStates = [...mutedStates];
+    newMutedStates[index] = !newMutedStates[index];
+    setMutedStates(newMutedStates);
 
-      // If in controlled mode, notify the controller
-      if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
-           ablyRef.current.channel.publish('control-action', {
-              action: 'updateState',
-              payload: {
-                  mutedStates: newMutedStates,
-                  sessionId: remoteSessionId
-              }
-          });
-      }
-      return newMutedStates;
-    });
-  }, [remoteControlMode, remoteSessionId]);
+    // If in controlled mode, notify the controller
+    if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
+        ablyRef.current.channel.publish('control-action', {
+            action: 'updateState',
+            payload: {
+                mutedStates: newMutedStates,
+                sessionId: remoteSessionId
+            }
+        });
+    }
+  }, [mutedStates, remoteControlMode, remoteSessionId]);
   
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
@@ -342,7 +341,7 @@ function HomePageContent() {
                 case 'toggleFullscreen':
                     setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                     break;
-                case 'toggleMute':
+                case 'toggleMute': // Action received from controller
                     handleToggleMute(payload.index);
                     break;
                  case 'reload':
@@ -619,7 +618,7 @@ function HomePageContent() {
       
       const tcChaserEvents: Event[] = tcChaserData.map(event => {
           const now = new Date();
-          const eventDate = toDate(event.event_time_and_day, { timeZone });
+          const eventDate = new Date(event.event_time_and_day);
           
           let status: Event['status'] = 'Próximo';
           if (isPast(eventDate) || differenceInDays(eventDate, now) <= 3) {
@@ -905,7 +904,7 @@ function HomePageContent() {
         if (e.source !== 'tc-chaser' && e.status === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
              try {
                 const eventDateTimeStr = `${e.date}T${e.time}:00`;
-                const eventDate = parse(eventDateTimeStr, "yyyy-MM-dd'T'HH:mm:ss", new Date());
+                const eventDate = new Date(eventDateTimeStr);
                 
                 if(isValid(eventDate)) {
                     const zonedEventTime = toZonedTime(eventDate, timeZone);
@@ -1103,11 +1102,11 @@ function HomePageContent() {
     setModificationIndex(null);
   };
   
-  const handleEventRemove = (windowIndex: number) => {
+  const handleEventRemove = useCallback((windowIndex: number) => {
     const newSelectedEvents = [...selectedEvents];
     newSelectedEvents[windowIndex] = null;
     setSelectedEvents(newSelectedEvents);
-  };
+  }, [selectedEvents]);
   
   const getEventSelection = (event: Event) => {
     const selectionIndex = selectedEvents.findIndex(se => se?.title === event.title && se?.time === event.time);
@@ -2420,7 +2419,12 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 event={modifyEvent.event}
                 onSelect={handleModifyEventSelect}
                 isModification={true}
-                onRemove={() => handleEventRemove(modifyEvent.index)}
+                onRemove={() => { 
+                    if(modifyEvent){
+                      handleEventRemove(modifyEvent.index)
+                    } 
+                    setModifyEventDialogOpen(false)
+                }}
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={event => setModifyEvent(prev => prev ? {...prev, event} : null)}
