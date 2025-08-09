@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw, Volume2, VolumeX } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -141,7 +141,6 @@ export interface RemoteControlViewState {
   borderColor: string;
   isChatEnabled: boolean;
   fullscreenIndex: number | null;
-  mutedStates: boolean[];
 }
 
 // --- View for the "Controlling" device (e.g., phone) ---
@@ -181,7 +180,7 @@ export function RemoteControlView({
             onSessionEnd(remoteState);
         } else {
            // Fallback if remoteState is null for some reason
-           onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null, mutedStates: []});
+           onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null});
         }
     }, [remoteState, onSessionEnd]);
 
@@ -290,22 +289,6 @@ export function RemoteControlView({
         if (!remoteState) return;
         const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
         updateRemoteState({ fullscreenIndex: newFullscreenIndex });
-    };
-
-    const handleToggleMute = (index: number) => {
-        const { channel } = ablyRef.current;
-        if (channel && initialRemoteSessionId && remoteState) {
-            // Optimistically update local UI
-            const newMutedStates = [...remoteState.mutedStates];
-            newMutedStates[index] = !newMutedStates[index];
-            setRemoteState(prevState => prevState ? { ...prevState, mutedStates: newMutedStates } : null);
-
-            // Send command to controlled device
-            channel.publish('control-action', {
-                action: 'toggleMute',
-                payload: { index, sessionId: initialRemoteSessionId }
-            });
-        }
     };
     
     const handleReload = (index: number) => {
@@ -434,8 +417,6 @@ export function RemoteControlView({
                 isChatEnabled={remoteState.isChatEnabled}
                 onIsChatEnabledChange={handleIsChatEnabledChange}
                 onOpenChat={() => setIsRemoteChatOpen(true)}
-                mutedStates={remoteState.mutedStates}
-                onToggleMute={handleToggleMute}
              />
         </div>
         
@@ -505,5 +486,3 @@ export function RemoteControlView({
     </>
   );
 }
-
-    

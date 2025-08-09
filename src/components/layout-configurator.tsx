@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize, Volume2, VolumeX } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -33,8 +33,6 @@ interface EventListManagementProps {
   fullscreenIndex?: number | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
   onPlayClick?: (index: number) => void;
-  mutedStates?: boolean[];
-  onToggleMute?: (index: number) => void;
 }
 
 export function EventList({
@@ -47,8 +45,6 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
-  mutedStates,
-  onToggleMute,
 }: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' >) {
     
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
@@ -75,7 +71,6 @@ export function EventList({
             if (!event) return null;
 
             const isFullscreen = fullscreenIndex === originalIndex;
-            const isMuted = mutedStates ? mutedStates[originalIndex] : false;
 
             return (
                 <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
@@ -108,17 +103,6 @@ export function EventList({
                             >
                                 <ArrowDown className="h-4 w-4" />
                             </Button>
-                           
-                            {isViewPage && onToggleMute && (
-                               <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={(e) => { e.stopPropagation(); onToggleMute(originalIndex); }}
-                               >
-                                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                               </Button>
-                            )}
 
                             {isViewPage && onToggleFullscreen && (
                                 <Button

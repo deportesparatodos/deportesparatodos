@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays, Volume2, VolumeX } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -204,8 +204,6 @@ function HomePageContent() {
   const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
-  const [mutedStates, setMutedStates] = useState<boolean[]>(Array(9).fill(true));
-
 
   // View mode state
   const [isViewMode, setIsViewMode] = useState(false);
@@ -234,7 +232,6 @@ function HomePageContent() {
   const [currentView, setCurrentView] = useState<string>('home');
   
   // Dialog/Popup states
-  const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
   const [errorsDialogOpen, setErrorsDialogOpen] = useState(false);
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
@@ -284,26 +281,6 @@ function HomePageContent() {
     return client;
   }, []);
   
-  const handleToggleMute = useCallback((index: number) => {
-      setMutedStates(prev => {
-          const newMutedStates = [...prev];
-          newMutedStates[index] = !newMutedStates[index];
-          return newMutedStates;
-      });
-
-      if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
-          ablyRef.current.channel.publish('control-action', {
-              action: 'updateMutedState',
-              payload: {
-                  index: index,
-                  isMuted: !mutedStates[index],
-                  sessionId: remoteSessionId
-              }
-          });
-      }
-  }, [mutedStates, remoteControlMode, remoteSessionId]);
-
-  
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
 
@@ -326,7 +303,7 @@ function HomePageContent() {
             switch (action) {
                 case 'requestInitialState':
                     const currentState = {
-                        selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, mutedStates,
+                        selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex,
                         sessionId: newCode
                     };
                     channel.publish('control-action', { action: 'initialState', payload: currentState });
@@ -338,13 +315,9 @@ function HomePageContent() {
                     setBorderColor(payload.borderColor ?? '#000000');
                     setIsChatEnabled(payload.isChatEnabled ?? true);
                     setFullscreenIndex(payload.fullscreenIndex ?? null);
-                    setMutedStates(payload.mutedStates ?? Array(9).fill(true));
                     break;
                 case 'toggleFullscreen':
                     setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
-                    break;
-                case 'toggleMute': 
-                    handleToggleMute(payload.index);
                     break;
                  case 'reload':
                     handleReloadCamera(payload.index);
@@ -369,7 +342,7 @@ function HomePageContent() {
         toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
         cleanupAbly();
     }
-  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode, mutedStates, handleToggleMute]);
+  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode]);
   
   const handleActivateControlledMode = async () => {
     if (selectedEvents.filter(Boolean).length === 0) {
@@ -697,16 +670,6 @@ function HomePageContent() {
 
     const storedChatEnabled = localStorage.getItem('isChatEnabled');
     if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
-
-    const storedMutedStates = localStorage.getItem('mutedStates');
-    if (storedMutedStates) {
-        try {
-            const parsedMuted = JSON.parse(storedMutedStates);
-            if(Array.isArray(parsedMuted) && parsedMuted.length === 9) {
-                setMutedStates(parsedMuted);
-            }
-        } catch(e) { console.error("Failed to parse mutedStates from localStorage", e); }
-    }
     
     const storedSchedules = localStorage.getItem('schedules');
     if (storedSchedules) {
@@ -772,10 +735,9 @@ function HomePageContent() {
         localStorage.setItem('gridGap', gridGap.toString());
         localStorage.setItem('borderColor', borderColor);
         localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
-        localStorage.setItem('mutedStates', JSON.stringify(mutedStates));
         localStorage.setItem('schedules', JSON.stringify(schedules));
     }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone, mutedStates]); 
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -1231,7 +1193,6 @@ function HomePageContent() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
-    setConfigDialogOpen(false); // Close main config dialog
     const currentEventState = selectedEvents[index];
     if (!currentEventState) return;
     const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
@@ -1292,10 +1253,6 @@ function HomePageContent() {
       // Close dialogs
       setModifyEvent(null);
       setModifyEventDialogOpen(false);
-      // Re-open config dialog if we are not in view mode
-      if (!isViewMode) {
-        setConfigDialogOpen(true);
-      }
   };
   
   const handleAddEventToSchedule = (event: Event, option: string) => {
@@ -1667,8 +1624,6 @@ function HomePageContent() {
                 remoteSessionId={remoteSessionId}
                 remoteControlMode={remoteControlMode}
                 onStartControlledSession={handleActivateControlledMode}
-                mutedStates={mutedStates}
-                onToggleMute={handleToggleMute}
             />
 
             {fullscreenIndex !== null && (
@@ -1737,7 +1692,7 @@ function HomePageContent() {
                                     loading="eager"
                                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                     allowFullScreen
-                                    muted={mutedStates[originalIndex]}
+                                    muted
                                 />
                             </div>
                         );
@@ -1770,7 +1725,7 @@ function HomePageContent() {
                                 loading="eager"
                                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                 allowFullScreen
-                                {...(mutedStates[originalIndex] && { muted: true })}
+                                muted
                             />
                         </div>
                     );
@@ -2312,38 +2267,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                   isViewMode={isViewMode}
                                 />
 
-                                <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <Settings />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-h-[90vh] flex flex-col p-0">
-                                        <DialogHeader className="p-6 pb-4 text-center flex-shrink-0">
-                                          <DialogTitle>Configuración y Eventos</DialogTitle>
-                                          <DialogDescription>
-                                              Personaliza la vista y gestiona tus eventos seleccionados.
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <ScrollArea className="flex-grow h-0 px-6 pb-6">
-                                           <LayoutConfigurator
-                                                gridGap={gridGap}
-                                                onGridGapChange={setGridGap}
-                                                borderColor={borderColor}
-                                                onBorderColorChange={setBorderColor}
-                                                isChatEnabled={isChatEnabled}
-                                                onIsChatEnabledChange={setIsChatEnabled}
-                                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                                onOrderChange={handleOrderChange}
-                                                eventDetails={selectedEvents}
-                                                onRemove={handleEventRemove} 
-                                                onModify={openDialogForModification}
-                                                isViewPage={false}
-                                            />
-                                        </ScrollArea>
-                                    </DialogContent>
-                                </Dialog>
-
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -2410,9 +2333,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                     if (!open) {
                         setModifyEvent(null);
                         setModifyEventDialogOpen(false);
-                         if (!isViewMode) {
-                           setConfigDialogOpen(true);
-                         }
                     } else {
                         setModifyEventDialogOpen(true);
                     }
