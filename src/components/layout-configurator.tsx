@@ -37,7 +37,8 @@ interface EventListManagementProps {
   onToggleMute?: (index: number) => void;
 }
 
-export function EventListManagement({
+// Sub-component for the Event List, shared between both menus
+export function EventList({
   order,
   onOrderChange,
   eventDetails,
@@ -45,16 +46,12 @@ export function EventListManagement({
   onRemove,
   onModify,
   isViewPage,
-  onAddEvent,
-  onSchedule,
-  onNotificationManager,
   onToggleFullscreen,
   fullscreenIndex,
-  remoteControlMode,
-  onPlayClick,
   mutedStates,
   onToggleMute,
-}: EventListManagementProps) {
+}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' >) {
+    
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
@@ -68,227 +65,191 @@ export function EventListManagement({
 
   const activeEventsCount = order.length;
 
+  if (activeEventsCount === 0) {
+      return <p className="text-muted-foreground text-center py-8">No hay eventos seleccionados.</p>
+  }
+  
   return (
     <div className="space-y-4">
-      {order.map((originalIndex, currentIndex) => {
-        const event = eventDetails[originalIndex];
-        if (!event) return null;
+        {order.map((originalIndex, currentIndex) => {
+            const event = eventDetails[originalIndex];
+            if (!event) return null;
 
-        const isFullscreen = fullscreenIndex === originalIndex;
-        const isMuted = mutedStates ? mutedStates[originalIndex] : false;
+            const isFullscreen = fullscreenIndex === originalIndex;
+            const isMuted = mutedStates ? mutedStates[originalIndex] : false;
 
-        return (
-          <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-              <div 
-                className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
-              >
-                  {currentIndex + 1}
-              </div>
-              
-              <div className="flex-grow flex flex-col gap-2 text-center">
-                  <p className="text-sm font-semibold break-words">
-                    {event.title}
-                  </p>
-                  <div className="flex items-center justify-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7" 
-                        onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'up'); }}
-                        disabled={currentIndex === 0}
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7" 
-                        onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'down'); }}
-                        disabled={currentIndex === activeEventsCount - 1}
-                      >
-                        <ArrowDown className="h-4 w-4" />
-                      </Button>
-                     
-                      {isViewPage && onToggleMute && (
-                         <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={(e) => { e.stopPropagation(); onToggleMute(originalIndex); }}
-                         >
-                            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                         </Button>
-                      )}
+            return (
+                <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
+                    <div 
+                        className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
+                    >
+                        {currentIndex + 1}
+                    </div>
+                    
+                    <div className="flex-grow flex flex-col gap-2 text-center">
+                        <p className="text-sm font-semibold break-words">
+                            {event.title}
+                        </p>
+                        <div className="flex items-center justify-center gap-1">
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7" 
+                                onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'up'); }}
+                                disabled={currentIndex === 0}
+                            >
+                                <ArrowUp className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7" 
+                                onClick={(e) => { e.stopPropagation(); handleMove(currentIndex, 'down'); }}
+                                disabled={currentIndex === activeEventsCount - 1}
+                            >
+                                <ArrowDown className="h-4 w-4" />
+                            </Button>
+                           
+                            {isViewPage && onToggleMute && (
+                               <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={(e) => { e.stopPropagation(); onToggleMute(originalIndex); }}
+                               >
+                                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                               </Button>
+                            )}
 
-                      {isViewPage && onToggleFullscreen && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={(e) => { e.stopPropagation(); onToggleFullscreen(originalIndex); }}
-                        >
-                            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                        </Button>
-                       )}
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7"
-                        onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
-                      >
-                          <Pencil className="h-4 w-4" />
-                      </Button>
+                            {isViewPage && onToggleFullscreen && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={(e) => { e.stopPropagation(); onToggleFullscreen(originalIndex); }}
+                                >
+                                    {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                                </Button>
+                             )}
+                            
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7"
+                                onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
 
-                      {isViewPage && onReload && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7"
-                          onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
-                        >
-                          <RotateCw className="h-4 w-4" />
-                        </Button>
-                      )}
+                            {isViewPage && onReload && (
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-7 w-7"
+                                    onClick={(e) => { e.stopPropagation(); onReload(originalIndex); }}
+                                >
+                                    <RotateCw className="h-4 w-4" />
+                                </Button>
+                            )}
 
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={(e) => { e.stopPropagation(); onRemove(originalIndex); }}
-                      >
-                          <Trash2 className="h-4 w-4" />
-                      </Button>
-                  </div>
-              </div>
-          </div>
-        )
-      })}
-      {activeEventsCount === 0 && (
-          <p className="text-muted-foreground text-center py-8">No hay eventos seleccionados.</p>
-      )}
-      {isViewPage && onAddEvent && (
-          <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={onAddEvent}>
-              <Plus className="mr-2 h-4 w-4" />
-              Añadir Evento/Canal
-          </Button>
-      )}
-      {isViewPage && onSchedule && (
-          <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onSchedule}>
-              <CalendarClock className="mr-2 h-4 w-4" />
-              Programar Selección
-          </Button>
-      )}
-       {isViewPage && onNotificationManager && (
-          <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onNotificationManager}>
-              <BellRing className="mr-2 h-4 w-4" />
-              Gestionar Notificaciones
-          </Button>
-      )}
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={(e) => { e.stopPropagation(); onRemove(originalIndex); }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )
+        })}
     </div>
   );
 }
 
 
-interface LayoutConfiguratorProps extends EventListManagementProps {
-  gridGap: number;
-  onGridGapChange: (value: number) => void;
-  borderColor: string;
-  onBorderColorChange: (value: string) => void;
-  isChatEnabled: boolean;
-  onIsChatEnabledChange: (value: boolean) => void;
-  onOpenChat?: () => void;
-  remoteSessionId?: string | null;
-  onStartControlledSession?: () => void;
-}
-
-export function LayoutConfigurator({
-  gridGap,
-  onGridGapChange,
-  borderColor,
-  onBorderColorChange,
-  isChatEnabled,
-  onIsChatEnabledChange,
-  onOpenChat,
-  remoteSessionId,
-  remoteControlMode,
-  onStartControlledSession,
-  ...eventProps
-}: LayoutConfiguratorProps) {
-  
-  const [isStartingRemote, setIsStartingRemote] = useState(false);
-
-  const handleStartRemote = () => {
-    if (onStartControlledSession) {
-      setIsStartingRemote(true);
-      onStartControlledSession();
-    }
-  };
-
+// --- Component for the Home Page Settings Panel ---
+function HomePageMenu({
+    gridGap,
+    onGridGapChange,
+    borderColor,
+    onBorderColorChange,
+    isChatEnabled,
+    onIsChatEnabledChange,
+    eventProps,
+}: {
+    gridGap: number;
+    onGridGapChange: (value: number) => void;
+    borderColor: string;
+    onBorderColorChange: (value: string) => void;
+    isChatEnabled: boolean;
+    onIsChatEnabledChange: (value: boolean) => void;
+    eventProps: EventListManagementProps;
+}) {
   const handleRestoreDefaults = () => {
     onGridGapChange(0);
     onBorderColorChange('#000000');
   }
 
-  // --- VIEW FOR HOME PAGE (isViewPage = false) ---
-  if (!eventProps.isViewPage) {
-    return (
-       <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-4 py-1">
-          <AccordionItem value="item-1" className="border rounded-lg px-4">
+  return (
+    <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full space-y-4 py-1">
+        <AccordionItem value="item-1" className="border rounded-lg px-4">
             <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
             <AccordionContent className="pt-2">
-              <div className="space-y-6 pb-4">
-                <div className="space-y-3">
-                  <Label htmlFor="grid-gap">Bordes ({gridGap}px)</Label>
-                  <Slider
-                    id="grid-gap"
-                    min={0}
-                    max={20}
-                    step={1}
-                    value={[gridGap]}
-                    onValueChange={(value) => onGridGapChange(value[0])}
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="border-color">Color de Borde</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="border-color"
-                      type="color"
-                      value={borderColor}
-                      onChange={(e) => onBorderColorChange(e.target.value)}
-                      className="w-14 h-10 p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={borderColor}
-                      onChange={(e) => onBorderColorChange(e.target.value)}
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Vista Previa</Label>
-                  <div className="p-2 rounded-md aspect-video" style={{ backgroundColor: borderColor }}>
-                    <div className="grid grid-cols-3 h-full" style={{ gap: `${gridGap}px`}}>
-                      <div className="bg-card rounded-sm"></div>
-                      <div className="bg-card rounded-sm"></div>
-                      <div className="bg-card rounded-sm"></div>
-                      <div className="bg-card rounded-sm"></div>
-                      <div className="bg-card rounded-sm"></div>
-                      <div className="bg-card rounded-sm"></div>
+                <div className="space-y-6 pb-4">
+                    <div className="space-y-3">
+                        <Label htmlFor="grid-gap">Bordes ({gridGap}px)</Label>
+                        <Slider
+                            id="grid-gap"
+                            min={0}
+                            max={20}
+                            step={1}
+                            value={[gridGap]}
+                            onValueChange={(value) => onGridGapChange(value[0])}
+                        />
                     </div>
-                  </div>
+                    <div className="space-y-3">
+                        <Label htmlFor="border-color">Color de Borde</Label>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                id="border-color"
+                                type="color"
+                                value={borderColor}
+                                onChange={(e) => onBorderColorChange(e.target.value)}
+                                className="w-14 h-10 p-1"
+                            />
+                            <Input
+                                type="text"
+                                value={borderColor}
+                                onChange={(e) => onBorderColorChange(e.target.value)}
+                                className="flex-1"
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Vista Previa</Label>
+                        <div className="p-2 rounded-md aspect-video" style={{ backgroundColor: borderColor }}>
+                            <div className="grid grid-cols-3 h-full" style={{ gap: `${gridGap}px`}}>
+                                <div className="bg-card rounded-sm"></div>
+                                <div className="bg-card rounded-sm"></div>
+                                <div className="bg-card rounded-sm"></div>
+                                <div className="bg-card rounded-sm"></div>
+                                <div className="bg-card rounded-sm"></div>
+                                <div className="bg-card rounded-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleRestoreDefaults} className="w-full gap-2">
+                        <RefreshCcw />
+                        Restaurar
+                    </Button>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleRestoreDefaults} className="w-full gap-2">
-                    <RefreshCcw />
-                    Restaurar
-                </Button>
-              </div>
             </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="item-2" className="border rounded-lg px-4">
+        </AccordionItem>
+        
+        <AccordionItem value="item-2" className="border rounded-lg px-4">
             <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
             <AccordionContent className="pt-2">
                 <div className="space-y-4 pb-4">
@@ -306,65 +267,139 @@ export function LayoutConfigurator({
                     </div>
                 </div>
             </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="item-3" className="border rounded-lg px-4">
+        </AccordionItem>
+        
+        <AccordionItem value="item-3" className="border rounded-lg px-4">
             <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
             <AccordionContent className="pt-2 pb-4">
-                <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
+                <EventList {...eventProps} />
             </AccordionContent>
-          </AccordionItem>
-          
-          {eventProps.onNotificationManager && (
+        </AccordionItem>
+        
+        {eventProps.onNotificationManager && (
             <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={eventProps.onNotificationManager}>
                 <BellRing className="mr-2 h-4 w-4" />
                 Gestionar Notificaciones
             </Button>
-          )}
-      </Accordion>
-    );
-  }
-
-  // --- VIEW FOR VIEW PAGE (isViewPage = true) ---
-  return (
-    <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
-        {remoteControlMode !== 'controlling' && (
-          <AccordionItem value="remote-control" className="border rounded-lg px-4">
-              <AccordionTrigger>Control Remoto</AccordionTrigger>
-              <AccordionContent className="pt-4 pb-4 text-center">
-                {remoteControlMode === 'controlled' && remoteSessionId ? (
-                  <>
-                    <p className="text-sm text-muted-foreground mb-2">
-                        Introduce este código en el dispositivo de control:
-                    </p>
-                    <div className="p-3 bg-muted rounded-lg">
-                        <p className="text-3xl font-bold tracking-widest text-primary">
-                            {remoteSessionId}
-                        </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
-                    </p>
-                    <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
-                      {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Activar Control Remoto
-                    </Button>
-                  </>
-                )}
-              </AccordionContent>
-          </AccordionItem>
         )}
-
-        <AccordionItem value="item-3" className="border rounded-lg px-4">
-            <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
-            <AccordionContent className="pt-2 pb-4">
-                <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
-            </AccordionContent>
-        </AccordionItem>
     </Accordion>
   );
 }
 
+
+// --- Component for the View Page Settings Panel ---
+function ViewPageMenu({
+  eventProps,
+  remoteSessionId,
+  remoteControlMode,
+  onStartControlledSession,
+}: {
+  eventProps: EventListManagementProps;
+  remoteSessionId?: string | null;
+  remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
+  onStartControlledSession?: () => void;
+}) {
+  const [isStartingRemote, setIsStartingRemote] = useState(false);
+
+  const handleStartRemote = () => {
+    if (onStartControlledSession) {
+      setIsStartingRemote(true);
+      onStartControlledSession();
+    }
+  };
+
+  return (
+      <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
+          {remoteControlMode !== 'controlling' && (
+              <AccordionItem value="remote-control" className="border rounded-lg px-4">
+                  <AccordionTrigger>Control Remoto</AccordionTrigger>
+                  <AccordionContent className="pt-4 pb-4 text-center">
+                      {remoteControlMode === 'controlled' && remoteSessionId ? (
+                          <>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                  Introduce este código en el dispositivo de control:
+                              </p>
+                              <div className="p-3 bg-muted rounded-lg">
+                                  <p className="text-3xl font-bold tracking-widest text-primary">
+                                      {remoteSessionId}
+                                  </p>
+                              </div>
+                          </>
+                      ) : (
+                          <>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                  Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
+                              </p>
+                              <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
+                                  {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Activar Control Remoto
+                              </Button>
+                          </>
+                      )}
+                  </AccordionContent>
+              </AccordionItem>
+          )}
+
+          <AccordionItem value="item-3" className="border rounded-lg px-4">
+              <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+              <AccordionContent className="pt-2 pb-4">
+                   <EventList {...eventProps} />
+                   {eventProps.onAddEvent && (
+                      <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Añadir Evento/Canal
+                      </Button>
+                  )}
+                  {eventProps.onSchedule && (
+                      <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={eventProps.onSchedule}>
+                          <CalendarClock className="mr-2 h-4 w-4" />
+                          Programar Selección
+                      </Button>
+                  )}
+              </AccordionContent>
+          </AccordionItem>
+      </Accordion>
+  );
+}
+
+
+// --- Main exported component ---
+export function LayoutConfigurator({
+  gridGap,
+  onGridGapChange,
+  borderColor,
+  onBorderColorChange,
+  isChatEnabled,
+  onIsChatEnabledChange,
+  remoteSessionId,
+  remoteControlMode,
+  onStartControlledSession,
+  ...eventProps
+}: EventListManagementProps & {
+  gridGap: number;
+  onGridGapChange: (value: number) => void;
+  borderColor: string;
+  onBorderColorChange: (value: string) => void;
+  isChatEnabled: boolean;
+  onIsChatEnabledChange: (value: boolean) => void;
+}) {
+  
+  if (eventProps.isViewPage) {
+    return <ViewPageMenu 
+              eventProps={eventProps}
+              remoteSessionId={remoteSessionId}
+              remoteControlMode={remoteControlMode}
+              onStartControlledSession={onStartControlledSession}
+            />;
+  }
+
+  return <HomePageMenu 
+            gridGap={gridGap}
+            onGridGapChange={onGridGapChange}
+            borderColor={borderColor}
+            onBorderColorChange={onBorderColorChange}
+            isChatEnabled={isChatEnabled}
+            onIsChatEnabledChange={onIsChatEnabledChange}
+            eventProps={eventProps}
+          />;
+}

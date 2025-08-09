@@ -24,7 +24,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from './ui/label';
 import type { Event } from './event-carousel';
-import { EventListManagement } from './layout-configurator';
+import { EventList } from './layout-configurator';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import type { Channel } from './channel-list';
@@ -186,7 +186,6 @@ export function ScheduleManager({
                 onSelect={handleModifyEventForSchedule}
                 isModification={true}
                 onRemove={() => {}}
-                windowNumber={modifyEventForSchedule.index + 1}
                 isLoading={false}
                 setIsLoading={() => {}}
                 setEventForDialog={() => {}}
@@ -304,7 +303,7 @@ export function ScheduleManager({
 
                   <ScrollArea className="flex-grow h-0">
                       <div className="p-4">
-                          <EventListManagement
+                          <EventList
                               order={currentOrder ? currentOrder.filter(i => currentSelection[i] !== null) : []}
                               onOrderChange={handleOrderChange}
                               eventDetails={currentSelection}
@@ -337,5 +336,3 @@ export function ScheduleManager({
     </>
   );
 }
-
-
