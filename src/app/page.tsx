@@ -775,6 +775,19 @@ function HomePageContent() {
     }
   }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
 
+  // Mute/unmute iframe effect
+  useEffect(() => {
+    if (isViewMode) {
+      selectedEvents.forEach((event, index) => {
+        const iframe = iframeRefs.current[index];
+        if (iframe && typeof event?.isMuted === 'boolean') {
+          // @ts-ignore - The 'muted' property does exist on HTMLIFrameElement in some contexts or can be handled by the loaded content
+          iframe.muted = event.isMuted;
+        }
+      });
+    }
+  }, [selectedEvents, isViewMode]);
+
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -1745,7 +1758,6 @@ function HomePageContent() {
                                     loading="eager"
                                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                     allowFullScreen
-                                    muted={event.isMuted}
                                 />
                             </div>
                         );
@@ -1779,7 +1791,6 @@ function HomePageContent() {
                                 loading="eager"
                                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                 allowFullScreen
-                                muted={event.isMuted}
                             />
                         </div>
                     );
@@ -2460,4 +2471,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
