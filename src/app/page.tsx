@@ -44,8 +44,8 @@ import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
-import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isToday, differenceInDays, isFuture } from 'date-fns';
+import { toZonedTime, format, toDate } from 'date-fns-tz';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, differenceInDays, isPast, isToday, isFuture } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -318,7 +318,7 @@ function HomePageContent() {
                 case 'toggleFullscreen':
                     setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
                     break;
-                case 'reload':
+                 case 'reload':
                     handleReloadCamera(payload.index);
                     break;
                  case 'startView':
@@ -1417,7 +1417,7 @@ function HomePageContent() {
                     event={modifyEvent.event}
                     onSelect={handleModifyEventSelect}
                     isModification={true}
-                    onRemove={() => {}}
+                    onRemove={() => handleEventRemove(modifyEvent.index)}
                     isLoading={isOptionsLoading}
                     setIsLoading={setIsOptionsLoading}
                     setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}
@@ -1567,7 +1567,7 @@ function HomePageContent() {
                                     <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
                                     <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones.</p>
                                     <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
@@ -2375,7 +2375,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 event={modifyEvent.event}
                 onSelect={handleModifyEventSelect}
                 isModification={true}
-                onRemove={() => {}} 
+                onRemove={() => handleEventRemove(modifyEvent.index)} 
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={event => setModifyEvent(prev => prev ? {...prev, event} : null)}
@@ -2706,6 +2706,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     
 
     
+
+
 
 
 
