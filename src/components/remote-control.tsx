@@ -198,7 +198,6 @@ export function RemoteControlView({
           channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
           ablyRef.current.channel = channel;
           
-          presence = channel.presence;
           await presence.enter();
 
           connectionTimeout = setTimeout(() => {
@@ -295,9 +294,10 @@ export function RemoteControlView({
     const handleToggleMute = (index: number) => {
         const { channel } = ablyRef.current;
         if (channel && initialRemoteSessionId && remoteState) {
-            const newMutedStates = [...remoteState.mutedStates];
-            newMutedStates[index] = !newMutedStates[index];
-            updateRemoteState({ mutedStates: newMutedStates });
+            channel.publish('control-action', {
+                action: 'toggleMute',
+                payload: { index, sessionId: initialRemoteSessionId }
+            });
         }
     };
     

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -44,7 +45,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format, toDate } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isToday, isFuture, differenceInDays } from 'date-fns';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays, isToday } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -288,8 +289,10 @@ function HomePageContent() {
             newMutedStates[index] = !newMutedStates[index];
             return newMutedStates;
         });
+
+        // If this device is controlled, it should also notify the controller of the state change
         if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
-            ablyRef.current.channel.publish('control-action', {
+             ablyRef.current.channel.publish('control-action', {
                 action: 'updateState',
                 payload: {
                     mutedStates: mutedStates.map((s, i) => i === index ? !s : s),
@@ -297,7 +300,7 @@ function HomePageContent() {
                 }
             });
         }
-    }, [remoteControlMode, remoteSessionId, mutedStates]);
+    }, [mutedStates, remoteControlMode, remoteSessionId]);
   
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
@@ -2391,7 +2394,12 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 event={dialogEvent}
                 onSelect={handleEventSelect}
                 isModification={isModification}
-                onRemove={() => handleEventRemove(modificationIndex!)}
+                onRemove={() => {
+                  if(modificationIndex !== null) {
+                    handleEventRemove(modificationIndex)
+                  }
+                  setDialogOpen(false)
+                }}
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={setDialogEvent}
@@ -2415,7 +2423,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 event={modifyEvent.event}
                 onSelect={handleModifyEventSelect}
                 isModification={true}
-                onRemove={() => {}} // Remove is handled by main remote view
+                onRemove={() => handleEventRemove(modifyEvent.index)}
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={event => setModifyEvent(prev => prev ? {...prev, event} : null)}
@@ -2758,5 +2766,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
 
 
 
+
+    
 
     
