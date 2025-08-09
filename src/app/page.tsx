@@ -46,7 +46,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
-import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays, toDate } from 'date-fns';
+import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays, isToday } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -285,17 +285,15 @@ function HomePageContent() {
   }, []);
   
   const handleToggleMute = useCallback((index: number) => {
-    setMutedStates(prev => {
-        const newMutedStates = [...prev];
-        newMutedStates[index] = !newMutedStates[index];
-        return newMutedStates;
-    });
+    const newMutedStates = [...mutedStates];
+    newMutedStates[index] = !newMutedStates[index];
+    setMutedStates(newMutedStates);
 
     if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
          ablyRef.current.channel.publish('control-action', {
             action: 'updateState',
             payload: {
-                mutedStates: mutedStates.map((s, i) => i === index ? !s : s),
+                mutedStates: newMutedStates,
                 sessionId: remoteSessionId
             }
         });
@@ -618,12 +616,10 @@ function HomePageContent() {
       
       const tcChaserEvents: Event[] = tcChaserData.map(event => {
           const now = new Date();
-          const eventDate = toDate(event.event_time_and_day, { timeZone });
+          const eventDate = new Date(event.event_time_and_day);
           
           let status: Event['status'] = 'Próximo';
-          const diffDays = differenceInDays(eventDate, now);
-
-          if (isPast(eventDate) || diffDays <= 3) {
+          if (isPast(eventDate) || differenceInDays(eventDate, now) <= 3) {
               status = 'En Vivo';
           }
 
