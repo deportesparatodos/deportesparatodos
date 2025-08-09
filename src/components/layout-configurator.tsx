@@ -70,12 +70,6 @@ export function EventListManagement({
 
   return (
     <div className="space-y-4">
-       {onNotificationManager && !isViewPage && (
-          <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={onNotificationManager}>
-              <BellRing className="mr-2 h-4 w-4" />
-              Gestionar Notificaciones
-          </Button>
-      )}
       {order.map((originalIndex, currentIndex) => {
         const event = eventDetails[originalIndex];
         if (!event) return null;
@@ -114,8 +108,8 @@ export function EventListManagement({
                       >
                         <ArrowDown className="h-4 w-4" />
                       </Button>
-
-                      {onToggleMute && (
+                     
+                      {isViewPage && onToggleMute && (
                          <Button
                             variant="ghost"
                             size="icon"
@@ -126,7 +120,7 @@ export function EventListManagement({
                          </Button>
                       )}
 
-                      {onToggleFullscreen && (
+                      {isViewPage && onToggleFullscreen && (
                         <Button
                             variant="ghost"
                             size="icon"
@@ -146,7 +140,7 @@ export function EventListManagement({
                           <Pencil className="h-4 w-4" />
                       </Button>
 
-                      {onReload && (
+                      {isViewPage && onReload && (
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -236,10 +230,10 @@ export function LayoutConfigurator({
     onBorderColorChange('#000000');
   }
 
-  return (
-    <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
-      {!eventProps.isViewPage && (
-        <>
+  // View for the Home Page Settings
+  if (!eventProps.isViewPage) {
+    return (
+       <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
           <AccordionItem value="item-1" className="border rounded-lg px-4">
             <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
             <AccordionContent className="pt-2">
@@ -293,6 +287,7 @@ export function LayoutConfigurator({
               </div>
             </AccordionContent>
           </AccordionItem>
+          
           <AccordionItem value="item-2" className="border rounded-lg px-4">
             <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
             <AccordionContent className="pt-2">
@@ -309,55 +304,66 @@ export function LayoutConfigurator({
                             onCheckedChange={onIsChatEnabledChange}
                         />
                     </div>
-                    {onOpenChat && (
-                        <Button variant="outline" className="w-full" onClick={onOpenChat}>
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            Abrir Chat
-                        </Button>
-                    )}
                 </div>
             </AccordionContent>
           </AccordionItem>
-        </>
-      )}
-      
-      {eventProps.isViewPage && remoteControlMode !== 'controlling' && (
-        <AccordionItem value="remote-control" className="border rounded-lg px-4">
-            <AccordionTrigger>Control Remoto</AccordionTrigger>
-            <AccordionContent className="pt-4 pb-4 text-center">
-              {remoteControlMode === 'controlled' && remoteSessionId ? (
-                <>
-                  <p className="text-sm text-muted-foreground mb-2">
-                      Introduce este código en el dispositivo de control:
-                  </p>
-                  <div className="p-3 bg-muted rounded-lg">
-                      <p className="text-3xl font-bold tracking-widest text-primary">
-                          {remoteSessionId}
-                      </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
-                  </p>
-                  <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
-                    {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Activar Control Remoto
-                  </Button>
-                </>
-              )}
+          
+          <AccordionItem value="item-3" className="border rounded-lg px-4">
+            <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+            <AccordionContent className="pt-2 pb-4">
+                <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
+            </AccordionContent>
+          </AccordionItem>
+          
+          {eventProps.onNotificationManager && (
+            <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={eventProps.onNotificationManager}>
+                <BellRing className="mr-2 h-4 w-4" />
+                Gestionar Notificaciones
+            </Button>
+          )}
+      </Accordion>
+    );
+  }
+
+  // View for the View Page Settings
+  return (
+    <Accordion type="single" collapsible className="w-full space-y-4 py-1" defaultValue="item-3">
+        {remoteControlMode !== 'controlling' && (
+          <AccordionItem value="remote-control" className="border rounded-lg px-4">
+              <AccordionTrigger>Control Remoto</AccordionTrigger>
+              <AccordionContent className="pt-4 pb-4 text-center">
+                {remoteControlMode === 'controlled' && remoteSessionId ? (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-2">
+                        Introduce este código en el dispositivo de control:
+                    </p>
+                    <div className="p-3 bg-muted rounded-lg">
+                        <p className="text-3xl font-bold tracking-widest text-primary">
+                            {remoteSessionId}
+                        </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
+                    </p>
+                    <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
+                      {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Activar Control Remoto
+                    </Button>
+                  </>
+                )}
+              </AccordionContent>
+          </AccordionItem>
+        )}
+
+        <AccordionItem value="item-3" className="border rounded-lg px-4">
+            <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+            <AccordionContent className="pt-2 pb-4">
+                <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
             </AccordionContent>
         </AccordionItem>
-      )}
-      
-      <AccordionItem value="item-3" className="border rounded-lg px-4">
-          <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
-          <AccordionContent className="pt-2 pb-4">
-              <EventListManagement {...eventProps} remoteControlMode={remoteControlMode} />
-          </AccordionContent>
-      </AccordionItem>
-
     </Accordion>
   );
 }

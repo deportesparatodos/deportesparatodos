@@ -45,7 +45,7 @@ import { EventCard } from '@/components/event-card';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
-import { toZonedTime, format } from 'date-fns-tz';
+import { toZonedTime, format, toDate } from 'date-fns-tz';
 import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays, isToday } from 'date-fns';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
@@ -285,20 +285,23 @@ function HomePageContent() {
   }, []);
   
   const handleToggleMute = useCallback((index: number) => {
-    const newMutedStates = [...mutedStates];
-    newMutedStates[index] = !newMutedStates[index];
-    setMutedStates(newMutedStates);
+    setMutedStates(prevMutedStates => {
+      const newMutedStates = [...prevMutedStates];
+      newMutedStates[index] = !newMutedStates[index];
 
-    if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
-         ablyRef.current.channel.publish('control-action', {
-            action: 'updateState',
-            payload: {
-                mutedStates: newMutedStates,
-                sessionId: remoteSessionId
-            }
-        });
-    }
-  }, [mutedStates, remoteControlMode, remoteSessionId]);
+      // If in controlled mode, notify the controller
+      if (remoteControlMode === 'controlled' && ablyRef.current.channel && remoteSessionId) {
+           ablyRef.current.channel.publish('control-action', {
+              action: 'updateState',
+              payload: {
+                  mutedStates: newMutedStates,
+                  sessionId: remoteSessionId
+              }
+          });
+      }
+      return newMutedStates;
+    });
+  }, [remoteControlMode, remoteSessionId]);
   
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
@@ -616,7 +619,7 @@ function HomePageContent() {
       
       const tcChaserEvents: Event[] = tcChaserData.map(event => {
           const now = new Date();
-          const eventDate = new Date(event.event_time_and_day);
+          const eventDate = toDate(event.event_time_and_day, { timeZone });
           
           let status: Event['status'] = 'Próximo';
           if (isPast(eventDate) || differenceInDays(eventDate, now) <= 3) {
@@ -2321,24 +2324,22 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                               Personaliza la vista y gestiona tus eventos seleccionados.
                                           </DialogDescription>
                                         </DialogHeader>
-                                        <ScrollArea className="flex-grow h-0">
-                                           <div className="px-6 pb-6">
-                                               <LayoutConfigurator
-                                                    gridGap={gridGap}
-                                                    onGridGapChange={setGridGap}
-                                                    borderColor={borderColor}
-                                                    onBorderColorChange={setBorderColor}
-                                                    isChatEnabled={isChatEnabled}
-                                                    onIsChatEnabledChange={setIsChatEnabled}
-                                                    order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                                    onOrderChange={handleOrderChange}
-                                                    eventDetails={selectedEvents}
-                                                    onRemove={handleEventRemove} 
-                                                    onModify={openDialogForModification}
-                                                    isViewPage={false}
-                                                    onNotificationManager={() => setNotificationManagerOpen(true)}
-                                                />
-                                           </div>
+                                        <ScrollArea className="flex-grow h-0 px-6 pb-6">
+                                           <LayoutConfigurator
+                                                gridGap={gridGap}
+                                                onGridGapChange={setGridGap}
+                                                borderColor={borderColor}
+                                                onBorderColorChange={setBorderColor}
+                                                isChatEnabled={isChatEnabled}
+                                                onIsChatEnabledChange={setIsChatEnabled}
+                                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                                onOrderChange={handleOrderChange}
+                                                eventDetails={selectedEvents}
+                                                onRemove={handleEventRemove} 
+                                                onModify={openDialogForModification}
+                                                isViewPage={false}
+                                                onNotificationManager={() => { setConfigDialogOpen(false); setNotificationManagerOpen(true); }}
+                                            />
                                         </ScrollArea>
                                     </DialogContent>
                                 </Dialog>
