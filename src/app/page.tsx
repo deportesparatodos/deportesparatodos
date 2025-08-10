@@ -301,8 +301,7 @@ function HomePageContent() {
         ablyRef.current.channel = channel;
         
         await channel.presence.enter();
-        setRemoteControlStarted(true);
-        setRemoteControlMode('controlled');
+        setRemoteControlStarted(true); // Set this only when the process is complete
         setIsViewMode(true);
         setCodePopupOpen(true);
 
@@ -1315,13 +1314,19 @@ function HomePageContent() {
     const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
     if (existingIndex !== -1) {
+        // Event is already in the selection, just update its option
         newSelectedEvents[existingIndex] = eventWithSelection;
     } else {
+        // Event is new, find an empty slot
         const emptyIndex = newSelectedEvents.findIndex(e => e === null);
         if (emptyIndex !== -1) {
             newSelectedEvents[emptyIndex] = eventWithSelection;
         } else {
-            alert("No empty slots available.");
+            toast({
+                variant: 'destructive',
+                title: 'Selección Completa',
+                description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
+            });
             return;
         }
     }
@@ -2371,3 +2376,4 @@ export default function Page() {
 
 
     
+
