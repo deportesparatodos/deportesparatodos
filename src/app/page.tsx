@@ -781,16 +781,7 @@ function HomePageContent() {
       selectedEvents.forEach((event, index) => {
         const iframe = iframeRefs.current[index];
         if (iframe && event) {
-          // The "Reload Trick" for muting
-          // A muted event will have its src set to about:blank
-          // An unmuted event will have its src set to the actual stream URL
-          const targetSrc = event.isMuted 
-            ? 'about:blank' 
-            : `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
-
-          if (iframe.src !== targetSrc) {
-            iframe.src = targetSrc;
-          }
+          iframe.src = `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
         }
       });
     }
@@ -1103,7 +1094,7 @@ function HomePageContent() {
 
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
-    const eventWithSelection = { ...event, selectedOption: optionUrl, isMuted: false };
+    const eventWithSelection = { ...event, selectedOption: optionUrl };
 
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
@@ -1228,7 +1219,6 @@ function HomePageContent() {
       source: '',
       status: 'En Vivo',
       image: channel.logo,
-      isMuted: false,
     };
 
     const selection = getEventSelection(channelAsEvent);
@@ -1292,17 +1282,6 @@ function HomePageContent() {
     setFullscreenIndex(null);
   };
 
-  const handleToggleMute = useCallback((index: number) => {
-      setSelectedEvents(currentSelected => {
-          const newSelected = [...currentSelected];
-          const event = newSelected[index];
-          if (event) {
-              newSelected[index] = { ...event, isMuted: !event.isMuted };
-          }
-          return newSelected;
-      });
-  }, []);
-
 
   const handleModifyEventSelect = (event: Event, option: string) => {
       const newSelectedEvents = [...selectedEvents];
@@ -1343,7 +1322,7 @@ function HomePageContent() {
 
   const handleAddEventSelect = (event: Event, option: string) => {
     const newSelectedEvents = [...selectedEvents];
-    const eventWithSelection = { ...event, selectedOption: option, isMuted: false };
+    const eventWithSelection = { ...event, selectedOption: option };
 
     const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
@@ -1680,7 +1659,6 @@ function HomePageContent() {
                 onReload={handleReloadCamera}
                 onRemove={handleEventRemove}
                 onModify={openDialogForModification}
-                onToggleMute={handleToggleMute}
                 isViewPage={true}
                 onAddEvent={() => {
                   setDialogContext('view');
@@ -2368,7 +2346,6 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 onRemove={handleEventRemove}
                                                 onModify={openDialogForModification}
                                                 onAddEvent={() => setAddEventsDialogOpen(true)}
-                                                onToggleMute={handleToggleMute}
                                                 gridGap={gridGap}
                                                 onGridGapChange={setGridGap}
                                                 borderColor={borderColor}

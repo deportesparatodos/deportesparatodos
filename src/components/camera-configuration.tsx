@@ -24,7 +24,6 @@ interface CameraConfigurationProps {
   onReload: (index: number) => void;
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
-  onToggleMute: (index: number) => void;
   isViewPage: boolean;
   onAddEvent: () => void;
   onSchedule: () => void;
@@ -48,7 +47,6 @@ export function CameraConfigurationComponent({
   onReload, 
   onRemove,
   onModify,
-  onToggleMute,
   isViewPage,
   onAddEvent,
   onSchedule,
@@ -87,7 +85,6 @@ export function CameraConfigurationComponent({
                   onReload={onReload}
                   onRemove={onRemove}
                   onModify={onModify}
-                  onToggleMute={onToggleMute}
                   isViewPage={isViewPage}
                   onAddEvent={onAddEvent}
                   onSchedule={onSchedule}
