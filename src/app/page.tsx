@@ -250,6 +250,8 @@ function HomePageContent() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
   const [codePopupOpen, setCodePopupOpen] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [isErrorsOpen, setIsErrorsOpen] = useState(false);
 
 
   // Schedule related states
@@ -603,31 +605,23 @@ function HomePageContent() {
       ];
       
       const tcChaserEvents: Event[] = tcChaserData.map(event => {
-          const now = new Date();
           const eventDate = new Date(event.event_time_and_day);
-          
-          let status: Event['status'] = 'Próximo';
-          if (isPast(eventDate) || differenceInDays(eventDate, now) <= 3) {
-              status = 'En Vivo';
-          }
-
           const zonedEventTime = toZonedTime(eventDate, timeZone);
-          const time = format(zonedEventTime, 'HH:mm');
           const date = format(zonedEventTime, 'yyyy-MM-dd');
-
+      
           return {
-              id: `${event.event_title}-${date}-${time}-tc-chaser`,
+              id: `${event.event_title}-${date}---tc-chaser`,
               title: event.event_title,
-              time,
+              time: '--:--',
               options: tcChaserOptions,
               sources: [],
               buttons: [],
               category: 'Motor Sports',
               language: '',
-              date,
+              date: date,
               source: 'tc-chaser',
               image: event.cover_image,
-              status: status,
+              status: 'Desconocido',
           };
       });
       
@@ -795,13 +789,13 @@ function HomePageContent() {
   }, []);
 
   useEffect(() => {
-    if (welcomePopupOpen) {
+    if (welcomePopupOpen && !isTutorialOpen && !isErrorsOpen) {
       startTimer();
     } else {
       stopTimer();
     }
     return stopTimer;
-  }, [welcomePopupOpen, startTimer, stopTimer]);
+  }, [welcomePopupOpen, startTimer, stopTimer, isTutorialOpen, isErrorsOpen]);
 
  useEffect(() => {
     if (!isViewMode || isMobile) {
@@ -1529,7 +1523,7 @@ function HomePageContent() {
                   </Alert>
               </div>
                <DialogModalFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
-                  <Dialog open={!welcomePopupOpen} onOpenChange={(open) => {if(open) setWelcomePopupOpen(false);}}>
+                  <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
                     <DialogTrigger asChild>
                        <Button variant="outline" className="gap-2">
                           <BookOpen /> Tutorial
@@ -1586,7 +1580,7 @@ function HomePageContent() {
                         </DialogModalFooter>
                     </DialogContent>
                   </Dialog>
-                   <Dialog open={!welcomePopupOpen} onOpenChange={(open) => {if(open) setWelcomePopupOpen(false);}}>
+                   <Dialog open={isErrorsOpen} onOpenChange={setIsErrorsOpen}>
                       <DialogTrigger asChild>
                           <Button variant="outline" className="gap-2">
                              <AlertCircle /> Solución de Errores
@@ -2374,3 +2368,4 @@ export default function Page() {
     </Suspense>
   );
 }
+
