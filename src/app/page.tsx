@@ -22,6 +22,7 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetFooter,
+  SheetClose,
 } from "@/components/ui/sheet";
 import { 
     Dialog,
@@ -30,7 +31,7 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter as DialogModalFooter,
-    DialogClose,
+    DialogClose as DialogModalClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -1512,12 +1513,12 @@ function HomePageContent() {
               <DialogHeader className="sr-only">
                   <DialogTitle>Bienvenida</DialogTitle>
               </DialogHeader>
-               <DialogClose asChild>
+               <DialogModalClose asChild>
                 <Button variant="ghost" className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10" onClick={() => setWelcomePopupOpen(false)}>
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>
                 </Button>
-              </DialogClose>
+              </DialogModalClose>
               <div className="relative">
                   <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
               </div>
@@ -1588,7 +1589,7 @@ function HomePageContent() {
                             </div>
                         </ScrollArea>
                         <DialogModalFooter>
-                            <DialogClose asChild><Button>Entendido</Button></DialogClose>
+                            <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
                         </DialogModalFooter>
                     </DialogContent>
                   </Dialog>
@@ -1626,7 +1627,7 @@ function HomePageContent() {
                               </div>
                           </ScrollArea>
                           <DialogModalFooter>
-                              <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                              <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
                           </DialogModalFooter>
                       </DialogContent>
                   </Dialog>
@@ -2078,12 +2079,17 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                         <Settings />
                                       </Button>
                                     </SheetTrigger>
-                                     <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
-                                       <SheetHeader className="p-6 pb-4 flex-shrink-0 text-center">
+                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                       <SheetHeader className="p-4 flex-row justify-between items-center border-b">
                                            <SheetTitle>Configuración</SheetTitle>
+                                            <SheetClose asChild>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                                    <X className="h-5 w-5" />
+                                                </Button>
+                                            </SheetClose>
                                        </SheetHeader>
                                         <ScrollArea className="flex-grow h-0">
-                                          <div className="p-6 pt-0">
+                                          <div className="p-6 pt-4">
                                             <LayoutConfigurator
                                                 isViewPage={false}
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
@@ -2103,7 +2109,8 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                             />
                                           </div>
                                         </ScrollArea>
-                                        <SheetFooter className="p-4 border-t border-border flex-shrink-0 flex-col space-y-2">
+                                        <SheetFooter className="p-4 border-t border-border flex-shrink-0">
+                                            <div className="flex flex-col space-y-2">
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button variant="outline" className="w-full justify-start gap-2">
@@ -2158,7 +2165,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                         </div>
                                                     </ScrollArea>
                                                     <DialogModalFooter>
-                                                        <DialogClose asChild><Button>Entendido</Button></DialogClose>
+                                                        <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
                                                     </DialogModalFooter>
                                                 </DialogContent>
                                             </Dialog>
@@ -2197,7 +2204,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                         </div>
                                                     </ScrollArea>
                                                     <DialogModalFooter>
-                                                        <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                                                        <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
                                                     </DialogModalFooter>
                                                 </DialogContent>
                                             </Dialog>
@@ -2229,9 +2236,9 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                       <p>¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales a deportesparatodosvercel@gmail.com.</p>
                                                   </div>
                                                   <DialogModalFooter>
-                                                      <DialogClose asChild>
+                                                      <DialogModalClose asChild>
                                                           <Button variant={'outline'}>Cerrar</Button>
-                                                      </DialogClose>
+                                                      </DialogModalClose>
                                                   </DialogModalFooter>
                                               </DialogContent>
                                           </Dialog>
@@ -2267,10 +2274,11 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                         </div>
                                                     </ScrollArea>
                                                     <DialogModalFooter>
-                                                        <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                                                        <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
                                                     </DialogModalFooter>
                                                 </DialogContent>
                                           </Dialog>
+                                          </div>
                                         </SheetFooter>
                                   </SheetContent>
                                   </Sheet>
@@ -2376,4 +2384,5 @@ export default function Page() {
 
 
     
+
 
