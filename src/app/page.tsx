@@ -238,7 +238,6 @@ function HomePageContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [currentView, setCurrentView] = useState<string>('home');
-  const [homeSettingsOpen, setHomeSettingsOpen] = useState(false);
   
   // Dialog/Popup states
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
@@ -263,6 +262,8 @@ function HomePageContent() {
   const ablyRef = useRef<{ client: Ably.Realtime | null; channel: Ably.Types.RealtimeChannelPromise | null }>({ client: null, channel: null });
   const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
   const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
+  const [remoteControlStarted, setRemoteControlStarted] = useState(false);
+
 
   // Notification states
   const { toast } = useToast();
@@ -278,6 +279,7 @@ function HomePageContent() {
     ablyRef.current = { client: null, channel: null };
     setRemoteSessionId(null);
     setRemoteControlMode('inactive');
+    setRemoteControlStarted(false);
   }, []);
 
   const initAbly = useCallback(async (clientIdSuffix: string) => {
@@ -292,6 +294,7 @@ function HomePageContent() {
 
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
+    setRemoteControlStarted(true);
 
     try {
         const client = await initAbly('controlled');
@@ -301,13 +304,12 @@ function HomePageContent() {
         const channel = client.channels.get(`remote-control:${newCode}`);
         ablyRef.current.channel = channel;
         
-        const presence = channel.presence;
-        await presence.enter();
+        await channel.presence.enter();
         setRemoteControlMode('controlled');
 
         channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
-            if (payload.sessionId !== newCode) return;
+            if (!payload || payload.sessionId !== newCode) return;
 
             switch (action) {
                 case 'requestInitialState':
@@ -317,8 +319,7 @@ function HomePageContent() {
                     };
                     channel.publish('control-action', { action: 'initialState', payload: currentState });
                     break;
-                case 'updateState':
-                    // Apply state changes from controller
+                case 'updateState': // Full state update
                     if (payload.selectedEvents) setSelectedEvents(payload.selectedEvents);
                     if (payload.viewOrder) setViewOrder(payload.viewOrder);
                     if (payload.gridGap !== undefined) setGridGap(payload.gridGap);
@@ -326,19 +327,23 @@ function HomePageContent() {
                     if (payload.isChatEnabled !== undefined) setIsChatEnabled(payload.isChatEnabled);
                     if (payload.fullscreenIndex !== undefined) setFullscreenIndex(payload.fullscreenIndex);
                     break;
+                 case 'reorder':
+                    if (payload.newOrder) setViewOrder(payload.newOrder);
+                    break;
+                 case 'toggleFullscreen':
+                    setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
+                    break;
                  case 'reload':
-                    handleReloadCamera(payload.index);
+                    if(payload.index !== undefined) handleReloadCamera(payload.index);
                     break;
-                case 'startView':
-                    setIsViewMode(true);
-                    break;
-                case 'disconnect':
+                 case 'disconnect':
+                    cleanupAbly();
                      break;
             }
         });
         
-        presence.subscribe('leave', () => {
-             // Handle controller leaving if needed, e.g., show a message
+        channel.presence.subscribe('leave', () => {
+             cleanupAbly();
         });
 
         setIsViewMode(true);
@@ -605,12 +610,8 @@ function HomePageContent() {
       ];
       
       const tcChaserEvents: Event[] = tcChaserData.map(event => {
-          const eventDate = new Date(event.event_time_and_day);
-          const zonedEventTime = toZonedTime(eventDate, timeZone);
-          const date = format(zonedEventTime, 'yyyy-MM-dd');
-      
           return {
-              id: `${event.event_title}-${date}---tc-chaser`,
+              id: `${event.event_title}-tc-chaser`,
               title: event.event_title,
               time: '--:--',
               options: tcChaserOptions,
@@ -618,7 +619,7 @@ function HomePageContent() {
               buttons: [],
               category: 'Motor Sports',
               language: '',
-              date: date,
+              date: event.event_time_and_day.split('T')[0],
               source: 'tc-chaser',
               image: event.cover_image,
               status: 'Desconocido',
@@ -690,16 +691,19 @@ function HomePageContent() {
         } catch(e) { console.error("Failed to parse schedules from localStorage", e); }
     }
     
-    if (isViewMode) {
-      const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
-      if (!hasVisited) {
-          setWelcomePopupOpen(true);
-          sessionStorage.setItem('hasVisitedViewPage', 'true');
-          setProgress(100);
+  }, []);
+
+  // Popup logic
+  useEffect(() => {
+      if (isViewMode && !remoteControlStarted) {
+        const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
+        if (!hasVisited) {
+            setWelcomePopupOpen(true);
+            sessionStorage.setItem('hasVisitedViewPage', 'true');
+            setProgress(100);
+        }
       }
-    }
-    
-  }, [isViewMode]);
+  }, [isViewMode, remoteControlStarted]);
 
   // Schedule activation checker
   useEffect(() => {
@@ -896,7 +900,12 @@ function HomePageContent() {
     const processedEvents = mergedEvents.map(e => {
         let currentStatus = e.status;
 
-        if (e.source !== 'tc-chaser' && e.status === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
+        if (e.source === 'tc-chaser') {
+            return { ...e, status: 'Desconocido' as const, time: '--:--' };
+        }
+
+
+        if (e.status === 'Desconocido' && e.time !== '--:--' && isValidTimeFormat(e.time)) {
              try {
                 const eventDateTimeStr = `${e.date}T${e.time}:00`;
                 const eventDate = new Date(eventDateTimeStr);
@@ -1251,16 +1260,8 @@ function HomePageContent() {
     });
   };
 
-  const handleMinimizeFromView = () => {
-    if (fullscreenIndex === null) return;
-    const { channel } = ablyRef.current;
-    if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
-        channel.publish('control-action', {
-            action: 'minimizeFromControlled',
-            payload: { sessionId: remoteSessionId }
-        });
-    }
-    setFullscreenIndex(null);
+  const handleToggleFullscreen = (index: number) => {
+    setFullscreenIndex(prevIndex => prevIndex === index ? null : index);
   };
 
 
@@ -1642,6 +1643,8 @@ function HomePageContent() {
                 onReload={handleReloadCamera}
                 onRemove={handleEventRemove}
                 onModify={openDialogForModification}
+                onToggleFullscreen={handleToggleFullscreen}
+                fullscreenIndex={fullscreenIndex}
                 isViewPage={true}
                 onAddEvent={() => {
                   setDialogContext('view');
@@ -1660,18 +1663,6 @@ function HomePageContent() {
                 isChatEnabled={isChatEnabled}
                 onIsChatEnabledChange={setIsChatEnabled}
             />
-
-            {fullscreenIndex !== null && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="bg-transparent hover:bg-accent/80 text-white h-10 w-10"
-                onClick={handleMinimizeFromView}
-                aria-label="Minimizar"
-              >
-                <Minimize className="h-5 w-5" />
-              </Button>
-            )}
 
             {isChatEnabled && (
               <Button 
@@ -2070,7 +2061,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                 >
                                   <RotateCw className={cn(isDataLoading && "animate-spin")} />
                                 </Button>
-                                 <Sheet open={homeSettingsOpen} onOpenChange={setHomeSettingsOpen}>
+                                 <Sheet>
                                     <SheetTrigger asChild>
                                       <Button variant="ghost" size="icon">
                                         <Settings />

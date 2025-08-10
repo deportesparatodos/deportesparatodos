@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Maximize, Minimize, Settings, Play } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -16,10 +16,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from './ui/dialog';
-import { ScrollArea } from './ui/scroll-area';
-import { Separator } from './ui/separator';
 
 export interface EventListManagementProps {
   order: number[];
@@ -35,7 +31,7 @@ export interface EventListManagementProps {
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
-  onPlayClick?: (index: number) => void;
+  onStartControlledSession?: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
@@ -43,8 +39,6 @@ export interface EventListManagementProps {
   onRestoreGridSettings: () => void;
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
-  onOpenChat?: () => void;
-  onStartControlledSession?: () => void;
   categories: string[];
 }
 
@@ -58,7 +52,7 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
-}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onRestoreGridSettings' | 'onStartControlledSession' | 'categories'>) {
+}: Pick<EventListManagementProps, 'order' | 'onOrderChange' | 'eventDetails' | 'onReload' | 'onRemove' | 'onModify' | 'isViewPage' | 'onToggleFullscreen' | 'fullscreenIndex'>) {
     
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];
@@ -165,64 +159,6 @@ export function EventList({
   );
 }
 
-// --- Client-side component to build the webcal:// link ---
-const CalendarLink = ({ category, children }: { category?: string; children: React.ReactNode }) => {
-  const [href, setHref] = useState('');
-
-  useEffect(() => {
-    // This runs only on the client
-    const protocol = 'webcal://';
-    const host = window.location.host;
-    const path = category 
-      ? `/api/calendar?category=${encodeURIComponent(category)}`
-      : '/api/calendar';
-    
-    // Replace http/https from host if it's there from some SSR frameworks
-    const cleanHost = host.replace(/^https?:\/\//, '');
-
-    setHref(`${protocol}${cleanHost}${path}`);
-  }, [category]);
-
-  if (!href) {
-    // Render a disabled or placeholder button on the server or before hydration
-    return (
-        <Button variant="secondary" className="w-full justify-start gap-2" disabled>
-            {children}
-        </Button>
-    );
-  }
-
-  return (
-    <a href={href} className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
-        {children}
-    </a>
-  );
-};
-
-const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
-  return (
-    <DialogContent>
-        <DialogHeader>
-            <DialogTitle>Suscripción a Calendario</DialogTitle>
-            <DialogDescription>
-                Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
-            </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="h-72">
-            <div className="p-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <CalendarLink>
-                    Todos los Eventos
-                </CalendarLink>
-                {categories.filter(c => c.toLowerCase() !== '24/7').map(category => (
-                    <CalendarLink key={category} category={category}>
-                        {category}
-                    </CalendarLink>
-                ))}
-            </div>
-        </ScrollArea>
-    </DialogContent>
-  );
-};
 
 function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) {
   const { 
@@ -230,8 +166,6 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
     borderColor, onBorderColorChange,
     onRestoreGridSettings,
     isChatEnabled, onIsChatEnabledChange,
-    onNotificationManager,
-    categories
   } = eventProps;
 
   const GridPreview = () => (

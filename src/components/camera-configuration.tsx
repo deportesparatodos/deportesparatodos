@@ -3,10 +3,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings, Volume2, VolumeX } from 'lucide-react';
-import { Separator } from './ui/separator';
+import { Settings } from 'lucide-react';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
 import { ScrollArea } from './ui/scroll-area';
@@ -19,6 +18,8 @@ interface CameraConfigurationProps {
   onReload: (index: number) => void;
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
+  onToggleFullscreen: (index: number) => void;
+  fullscreenIndex: number | null;
   isViewPage: boolean;
   onAddEvent: () => void;
   onSchedule: () => void;
@@ -42,6 +43,8 @@ export function CameraConfigurationComponent({
   onReload, 
   onRemove,
   onModify,
+  onToggleFullscreen,
+  fullscreenIndex,
   isViewPage,
   onAddEvent,
   onSchedule,
@@ -87,6 +90,8 @@ export function CameraConfigurationComponent({
                     remoteSessionId={remoteSessionId}
                     remoteControlMode={remoteControlMode}
                     onStartControlledSession={onStartControlledSession}
+                    onToggleFullscreen={onToggleFullscreen}
+                    fullscreenIndex={fullscreenIndex}
                     gridGap={gridGap}
                     onGridGapChange={onGridGapChange}
                     borderColor={borderColor}

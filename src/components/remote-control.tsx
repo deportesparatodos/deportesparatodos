@@ -183,6 +183,7 @@ export function RemoteControlView({
         }
     }, [remoteState, onSessionEnd]);
 
+    // Connect to Ably and sync state
     useEffect(() => {
       let presence: Ably.Types.RealtimePresencePromise | undefined;
       let channel: Ably.Types.RealtimeChannelPromise | undefined;
@@ -203,14 +204,11 @@ export function RemoteControlView({
             if (isLoading) {
               throw new Error("La conexión ha tardado demasiado. Verifica el código.");
             }
-          }, 10000); // 10 second timeout
+          }, 10000);
 
           channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
-            
-            if (payload.sessionId !== initialRemoteSessionId && action !== 'controlledViewClosed') return;
-
-            if (action === 'initialState') {
+            if (action === 'initialState' && payload.sessionId === initialRemoteSessionId) {
               clearTimeout(connectionTimeout);
               setRemoteState(payload);
               setIsLoading(false);
@@ -221,13 +219,12 @@ export function RemoteControlView({
           });
           
           await channel.whenState('attached');
-          
           channel.publish('control-action', { action: 'requestInitialState', payload: { sessionId: initialRemoteSessionId }});
 
         } catch (error: any) {
            console.error("Error connecting as controller:", error);
            clearTimeout(connectionTimeout);
-           toast({ variant: 'destructive', title: 'Error de Conexión', description: error.message || 'No se pudo conectar. Verifica el código o que la vista esté activa.' });
+           toast({ variant: 'destructive', title: 'Error de Conexión', description: error.message || 'No se pudo conectar.' });
            handleStopAndPersist();
         }
       };
@@ -245,36 +242,23 @@ export function RemoteControlView({
         if (currentClient) currentClient.close();
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialRemoteSessionId, initAbly, toast]);
+    }, [initialRemoteSessionId, initAbly]);
 
 
-    const updateRemoteState = useCallback((newState: Partial<RemoteControlViewState>) => {
+    const publishAction = useCallback((action: string, payload: object) => {
         const { channel } = ablyRef.current;
-        if (!remoteState || !channel || !initialRemoteSessionId) return;
-
-        const updatedState = { ...remoteState, ...newState, sessionId: initialRemoteSessionId };
-        
-        // Optimistically update local state for a snappier UI
-        setRemoteState(updatedState as RemoteControlViewState);
-        
-        // Publish the full new state
-        channel.publish('control-action', { action: 'updateState', payload: updatedState});
-
-    }, [ablyRef, remoteState, initialRemoteSessionId]);
-    
-
+        if (!channel || !initialRemoteSessionId) return;
+        channel.publish('control-action', {
+            action,
+            payload: { ...payload, sessionId: initialRemoteSessionId }
+        });
+    }, [ablyRef, initialRemoteSessionId]);
 
     const handleEventsChange = (newEvents: (Event|null)[]) => {
       if (!remoteState) return;
-      const newActiveIndexes = newEvents.map((e,i) => e ? i : -1).filter(i => i !== -1);
-      const oldActiveIndexes = remoteState.viewOrder.filter(i => newActiveIndexes.includes(i));
-      const fullOrder = Array.from({ length: 9 }, (_, i) => i);
-      const finalNewOrder = [...oldActiveIndexes, ...fullOrder.filter(i => !oldActiveIndexes.includes(i))];
-
-      updateRemoteState({ 
-          selectedEvents: newEvents, 
-          viewOrder: finalNewOrder,
-      });
+      const updatedState = { ...remoteState, selectedEvents: newEvents };
+      setRemoteState(updatedState);
+      publishAction('updateState', updatedState);
     }
 
     const handleRemove = (index: number) => {
@@ -287,35 +271,40 @@ export function RemoteControlView({
     const handleToggleFullscreen = (index: number) => {
         if (!remoteState) return;
         const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
-        updateRemoteState({ fullscreenIndex: newFullscreenIndex });
+        setRemoteState(s => s ? { ...s, fullscreenIndex: newFullscreenIndex } : null);
+        publishAction('toggleFullscreen', { index });
     };
     
     const handleReload = (index: number) => {
-        const { channel } = ablyRef.current;
-        if (channel && initialRemoteSessionId) {
-            channel.publish('control-action', {
-                action: 'reload',
-                payload: { index, sessionId: initialRemoteSessionId }
-            });
-        }
+        publishAction('reload', { index });
     };
 
     const handleOrderChange = (newOrder: number[]) => {
       if (!remoteState) return;
-      const fullNewOrder = [...newOrder, ...remoteState.viewOrder.filter(i => !newOrder.includes(i))];
-      updateRemoteState({ viewOrder: fullNewOrder });
+       const fullNewOrder = [...newOrder];
+        const presentIndexes = new Set(newOrder);
+        for(let i=0; i<9; i++) {
+          if(!presentIndexes.has(i)) {
+            fullNewOrder.push(i);
+          }
+        }
+      setRemoteState(s => s ? { ...s, viewOrder: fullNewOrder } : null);
+      publishAction('reorder', { newOrder: fullNewOrder });
     };
   
     const handleGridGapChange = (value: number) => {
-        updateRemoteState({ gridGap: value });
+        setRemoteState(s => s ? { ...s, gridGap: value } : null);
+        publishAction('updateState', { gridGap: value });
     };
 
     const handleBorderColorChange = (value: string) => {
-        updateRemoteState({ borderColor: value });
+        setRemoteState(s => s ? { ...s, borderColor: value } : null);
+        publishAction('updateState', { borderColor: value });
     };
 
     const handleIsChatEnabledChange = (value: boolean) => {
-        updateRemoteState({ isChatEnabled: value });
+        setRemoteState(s => s ? { ...s, isChatEnabled: value } : null);
+        publishAction('updateState', { isChatEnabled: value });
     };
 
     const handleAddEvent = (event: Event, option: string) => {
@@ -378,9 +367,7 @@ export function RemoteControlView({
         );
     }
     
-    // This should not be reached if !remoteState, but as a fallback:
     if (!remoteState) return null;
-
 
   return (
     <>
@@ -416,7 +403,6 @@ export function RemoteControlView({
                 onRestoreGridSettings={() => {}}
                 isChatEnabled={remoteState.isChatEnabled}
                 onIsChatEnabledChange={handleIsChatEnabledChange}
-                onOpenChat={() => setIsRemoteChatOpen(true)}
                 categories={[]}
              />
         </div>
