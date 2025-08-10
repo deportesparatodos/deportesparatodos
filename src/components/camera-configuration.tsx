@@ -99,6 +99,7 @@ export function CameraConfigurationComponent({
                   onRestoreGridSettings={onRestoreGridSettings}
                   isChatEnabled={isChatEnabled}
                   onIsChatEnabledChange={onIsChatEnabledChange}
+                  categories={[]}
               />
           </ScrollArea>
            <SheetFooter className="p-4 border-t border-border flex-shrink-0">
