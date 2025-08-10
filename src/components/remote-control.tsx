@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
@@ -174,7 +172,6 @@ export function RemoteControlView({
 
     const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
     const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
-    const lastRemoteUpdate = useRef<string | null>(null);
     
     const handleStopAndPersist = useCallback(() => {
         if (remoteState) {
@@ -197,8 +194,8 @@ export function RemoteControlView({
           const client = await initAbly('controlling');
           channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
           ablyRef.current.channel = channel;
-          presence = channel.presence;
           
+          presence = channel.presence;
           await presence.enter();
 
           connectionTimeout = setTimeout(() => {
@@ -209,19 +206,16 @@ export function RemoteControlView({
 
           channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
-            if (payload.sessionId !== initialRemoteSessionId) return;
             
-            const payloadString = JSON.stringify(payload);
+            if (payload.sessionId !== initialRemoteSessionId && action !== 'controlledViewClosed') return;
 
             if (action === 'initialState') {
               clearTimeout(connectionTimeout);
               setRemoteState(payload);
-              lastRemoteUpdate.current = payloadString;
               setIsLoading(false);
             }
-             if (action === 'updateState' && payloadString !== lastRemoteUpdate.current) {
+             if (action === 'updateState') {
                 setRemoteState(prevState => prevState ? {...prevState, ...payload} : payload);
-                lastRemoteUpdate.current = payloadString;
              }
              if (action === 'controlledViewClosed') {
                 setIsSessionEnded(true);
@@ -262,12 +256,8 @@ export function RemoteControlView({
 
         const updatedState = { ...remoteState, ...newState, sessionId: initialRemoteSessionId };
         
-        const updatedStateString = JSON.stringify(updatedState);
-        
-        if (updatedStateString !== lastRemoteUpdate.current) {
-            setRemoteState(updatedState as RemoteControlViewState);
-            channel.publish('control-action', { action: 'updateState', payload: updatedState});
-        }
+        setRemoteState(updatedState as RemoteControlViewState);
+        channel.publish('control-action', { action: 'updateState', payload: updatedState});
 
     }, [ablyRef, remoteState, initialRemoteSessionId]);
     
@@ -294,19 +284,9 @@ export function RemoteControlView({
     };
     
     const handleToggleFullscreen = (index: number) => {
-      const { channel } = ablyRef.current;
-      if (!remoteState || !channel || !initialRemoteSessionId) return;
-      
-      const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
-      
-      // Update local state immediately for responsiveness
-      setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: newFullscreenIndex } : null);
-      
-      // Publish action
-      channel.publish('control-action', {
-        action: 'toggleFullscreen',
-        payload: { index, sessionId: initialRemoteSessionId }
-      });
+        if (!remoteState) return;
+        const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
+        updateRemoteState({ fullscreenIndex: newFullscreenIndex });
     };
     
     const handleReload = (index: number) => {
@@ -320,18 +300,9 @@ export function RemoteControlView({
     };
 
     const handleOrderChange = (newOrder: number[]) => {
-      const { channel } = ablyRef.current;
-      if (!remoteState || !channel || !initialRemoteSessionId) return;
-      
+      if (!remoteState) return;
       const fullNewOrder = [...newOrder, ...remoteState.viewOrder.filter(i => !newOrder.includes(i))];
-
-      // Update local state immediately for responsiveness
-      setRemoteState(prevState => prevState ? { ...prevState, viewOrder: fullNewOrder } : null);
-
-      channel.publish('control-action', {
-        action: 'reorder',
-        payload: { newOrder: fullNewOrder, sessionId: initialRemoteSessionId }
-      });
+      updateRemoteState({ viewOrder: fullNewOrder });
     };
   
     const handleGridGapChange = (value: number) => {
