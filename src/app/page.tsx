@@ -780,13 +780,21 @@ function HomePageContent() {
     if (isViewMode) {
       selectedEvents.forEach((event, index) => {
         const iframe = iframeRefs.current[index];
-        if (iframe && typeof event?.isMuted === 'boolean') {
-          // @ts-ignore - The 'muted' property does exist on HTMLIFrameElement in some contexts or can be handled by the loaded content
-          iframe.muted = event.isMuted;
+        if (iframe && event) {
+          // The "Reload Trick" for muting
+          // A muted event will have its src set to about:blank
+          // An unmuted event will have its src set to the actual stream URL
+          const targetSrc = event.isMuted 
+            ? 'about:blank' 
+            : `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
+
+          if (iframe.src !== targetSrc) {
+            iframe.src = targetSrc;
+          }
         }
       });
     }
-  }, [selectedEvents, isViewMode]);
+  }, [selectedEvents, isViewMode, reloadCounters]);
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -1758,8 +1766,6 @@ function HomePageContent() {
                                     loading="eager"
                                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                     allowFullScreen
-                                    // @ts-ignore
-                                    muted={event.isMuted}
                                 />
                             </div>
                         );
@@ -1793,8 +1799,6 @@ function HomePageContent() {
                                 loading="eager"
                                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                                 allowFullScreen
-                                // @ts-ignore
-                                muted={event.isMuted}
                             />
                         </div>
                     );
