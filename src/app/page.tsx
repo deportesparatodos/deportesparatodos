@@ -1744,41 +1744,33 @@ function HomePageContent() {
             >
             {Array.from({ length: 9 }).map((_, windowSlotIndex) => {
                 const event = selectedEvents[windowSlotIndex];
-                if (!event) {
-                    // Render a stable placeholder for empty slots to preserve DOM structure
-                    return <div key={`placeholder-${windowSlotIndex}`} className="hidden" />;
-                }
-                
-                const isFullscreen = fullscreenIndex === windowSlotIndex;
                 const orderedIndex = viewOrder.indexOf(windowSlotIndex);
-                
-                // Construct the iframe source once
-                const iframeSrc = event.selectedOption
-                    ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowSlotIndex] || 0}`
-                    : 'about:blank';
-                
+
                 return (
                     <div
                         key={`window-stable-${windowSlotIndex}`}
                         className={cn(
                             "overflow-hidden bg-black relative",
-                            fullscreenIndex !== null && !isFullscreen && "hidden", // Hide if another is fullscreen
-                            isFullscreen && 'absolute inset-0 z-20', // Style for fullscreen window
-                            !isFullscreen && getItemClasses(orderedIndex, numCameras) // Apply grid classes only if not fullscreen
+                            fullscreenIndex !== null && fullscreenIndex !== windowSlotIndex && "hidden", // Hide if another is fullscreen
+                            fullscreenIndex === windowSlotIndex && 'absolute inset-0 z-20', // Style for fullscreen window
+                            !event && "hidden", // Hide if no event is selected for this slot
+                            fullscreenIndex === null && getItemClasses(orderedIndex, numCameras)
                         )}
                         style={{
                             order: orderedIndex,
                         }}
                     >
+                      {event && (
                         <iframe
                             ref={el => (iframeRefs.current[windowSlotIndex] = el)}
-                            src={iframeSrc}
+                            src={event.selectedOption ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowSlotIndex] || 0}`: 'about:blank'}
                             title={`Stream ${windowSlotIndex + 1}`}
                             className="w-full h-full border-0"
                             loading="eager"
                             allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                             allowFullScreen
                         />
+                      )}
                     </div>
                 );
             })}

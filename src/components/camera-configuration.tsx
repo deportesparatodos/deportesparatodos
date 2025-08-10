@@ -33,7 +33,6 @@ interface CameraConfigurationProps {
   onRestoreGridSettings: () => void;
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
-  onToggleMute: (index: number) => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -57,7 +56,6 @@ export function CameraConfigurationComponent({
   onRestoreGridSettings,
   isChatEnabled,
   onIsChatEnabledChange,
-  onToggleMute,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -96,7 +94,6 @@ export function CameraConfigurationComponent({
                     onRestoreGridSettings={onRestoreGridSettings}
                     isChatEnabled={isChatEnabled}
                     onIsChatEnabledChange={onIsChatEnabledChange}
-                    onToggleMute={onToggleMute}
                     categories={[]}
                 />
               </div>

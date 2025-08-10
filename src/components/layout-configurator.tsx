@@ -45,7 +45,6 @@ export interface EventListManagementProps {
   onIsChatEnabledChange: (value: boolean) => void;
   onOpenChat?: () => void;
   onStartControlledSession?: () => void;
-  onToggleMute: (index: number) => void;
   categories: string[];
 }
 
@@ -59,7 +58,7 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
-}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onRestoreGridSettings' | 'onStartControlledSession' | 'onToggleMute' | 'categories'>) {
+}: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onRestoreGridSettings' | 'onStartControlledSession' | 'categories'>) {
     
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...order];

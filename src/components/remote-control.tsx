@@ -263,10 +263,11 @@ export function RemoteControlView({
         const updatedState = { ...remoteState, ...newState, sessionId: initialRemoteSessionId };
         
         const updatedStateString = JSON.stringify(updatedState);
-        lastRemoteUpdate.current = updatedStateString;
-
-        setRemoteState(updatedState as RemoteControlViewState);
-        channel.publish('control-action', { action: 'updateState', payload: updatedState});
+        
+        if (updatedStateString !== lastRemoteUpdate.current) {
+            setRemoteState(updatedState as RemoteControlViewState);
+            channel.publish('control-action', { action: 'updateState', payload: updatedState});
+        }
 
     }, [ablyRef, remoteState, initialRemoteSessionId]);
     
@@ -425,7 +426,6 @@ export function RemoteControlView({
                 isChatEnabled={remoteState.isChatEnabled}
                 onIsChatEnabledChange={handleIsChatEnabledChange}
                 onOpenChat={() => setIsRemoteChatOpen(true)}
-                onToggleMute={() => {}}
                 categories={[]}
              />
         </div>
