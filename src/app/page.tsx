@@ -304,7 +304,7 @@ function HomePageContent() {
         
         setIsViewMode(true);
         setCodePopupOpen(true);
-        setRemoteControlStarted(true); // Set this only when the process is complete
+        setRemoteControlStarted(true);
 
         channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
@@ -326,7 +326,7 @@ function HomePageContent() {
                  case 'reload':
                     if(payload.index !== undefined) handleReloadCamera(payload.index);
                     break;
-                 case 'updateState': // Full state update for add/remove
+                 case 'updateState':
                     if (payload.selectedEvents) setSelectedEvents(payload.selectedEvents);
                     if (payload.viewOrder) setViewOrder(payload.viewOrder);
                     if (payload.gridGap !== undefined) setGridGap(payload.gridGap);
@@ -756,14 +756,16 @@ function HomePageContent() {
           
           let currentSrc = 'about:blank';
           try {
-            // iframe.src can be null or empty string initially, or about:blank
             if (iframe.src && iframe.src !== 'about:blank') {
               const url = new URL(iframe.src);
+              const targetUrl = new URL(event.selectedOption);
+              if (url.origin === targetUrl.origin && url.pathname === targetUrl.pathname) {
+                 return; // Don't reload if base URL is the same
+              }
               url.searchParams.delete('reload');
               currentSrc = url.toString();
             }
           } catch(e) {
-             // If iframe.src is not a valid URL, it might just be the base part
              currentSrc = iframe.src.split('?')[0];
           }
 
@@ -1309,32 +1311,33 @@ function HomePageContent() {
   };
 
   const handleAddEventSelect = (event: Event, option: string) => {
-    const newSelectedEvents = [...selectedEvents];
-    const eventWithSelection = { ...event, selectedOption: option };
+    setSelectedEvents(currentSelectedEvents => {
+        const newSelectedEvents = [...currentSelectedEvents];
+        const eventWithSelection = { ...event, selectedOption: option };
 
-    const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
+        const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
-    if (existingIndex !== -1) {
-        // Event is already in the selection, just update its option
-        newSelectedEvents[existingIndex] = eventWithSelection;
-    } else {
-        // Event is new, find an empty slot
-        const emptyIndex = newSelectedEvents.findIndex(e => e === null);
-        if (emptyIndex !== -1) {
-            newSelectedEvents[emptyIndex] = eventWithSelection;
+        if (existingIndex !== -1) {
+            // Event is already in the selection, just update its option
+            newSelectedEvents[existingIndex] = eventWithSelection;
         } else {
-            toast({
-                variant: 'destructive',
-                title: 'Selección Completa',
-                description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
-            });
-            return;
+            // Event is new, find an empty slot
+            const emptyIndex = newSelectedEvents.findIndex(e => e === null);
+            if (emptyIndex !== -1) {
+                newSelectedEvents[emptyIndex] = eventWithSelection;
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Selección Completa',
+                    description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
+                });
+                return currentSelectedEvents; // Return original state if full
+            }
         }
-    }
-    
-    setSelectedEvents(newSelectedEvents);
+        return newSelectedEvents;
+    });
     setAddEventsDialogOpen(false);
-  };
+};
   
   const getItemClasses = (orderedIndex: number, count: number) => {
     if (isMobile) return '';
@@ -2387,3 +2390,6 @@ export default function Page() {
 
 
 
+
+
+    

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -384,3 +383,5 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
   return <HomePageMenu eventProps={props} />;
 }
+
+    
