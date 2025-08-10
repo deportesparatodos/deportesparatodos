@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -294,9 +293,9 @@ function HomePageContent() {
 
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
-    setRemoteControlStarted(true);
-
+    
     try {
+        setRemoteControlStarted(true); // Signal that a remote session is being initiated
         const client = await initAbly('controlled');
         const newCode = Math.floor(1000 + Math.random() * 9000).toString();
         setRemoteSessionId(newCode);
@@ -306,6 +305,8 @@ function HomePageContent() {
         
         await channel.presence.enter();
         setRemoteControlMode('controlled');
+        setIsViewMode(true);
+        setCodePopupOpen(true);
 
         channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
@@ -319,15 +320,7 @@ function HomePageContent() {
                     };
                     channel.publish('control-action', { action: 'initialState', payload: currentState });
                     break;
-                case 'updateState': // Full state update
-                    if (payload.selectedEvents) setSelectedEvents(payload.selectedEvents);
-                    if (payload.viewOrder) setViewOrder(payload.viewOrder);
-                    if (payload.gridGap !== undefined) setGridGap(payload.gridGap);
-                    if (payload.borderColor) setBorderColor(payload.borderColor);
-                    if (payload.isChatEnabled !== undefined) setIsChatEnabled(payload.isChatEnabled);
-                    if (payload.fullscreenIndex !== undefined) setFullscreenIndex(payload.fullscreenIndex);
-                    break;
-                 case 'reorder':
+                case 'reorder':
                     if (payload.newOrder) setViewOrder(payload.newOrder);
                     break;
                  case 'toggleFullscreen':
@@ -335,6 +328,14 @@ function HomePageContent() {
                     break;
                  case 'reload':
                     if(payload.index !== undefined) handleReloadCamera(payload.index);
+                    break;
+                 case 'updateState': // Full state update for add/remove
+                    if (payload.selectedEvents) setSelectedEvents(payload.selectedEvents);
+                    if (payload.viewOrder) setViewOrder(payload.viewOrder);
+                    if (payload.gridGap !== undefined) setGridGap(payload.gridGap);
+                    if (payload.borderColor) setBorderColor(payload.borderColor);
+                    if (payload.isChatEnabled !== undefined) setIsChatEnabled(payload.isChatEnabled);
+                    if (payload.fullscreenIndex !== undefined) setFullscreenIndex(payload.fullscreenIndex);
                     break;
                  case 'disconnect':
                     cleanupAbly();
@@ -345,9 +346,6 @@ function HomePageContent() {
         channel.presence.subscribe('leave', () => {
              cleanupAbly();
         });
-
-        setIsViewMode(true);
-        setCodePopupOpen(true);
 
     } catch (error) {
         console.error("Failed to start controlled session:", error);
@@ -695,14 +693,14 @@ function HomePageContent() {
 
   // Popup logic
   useEffect(() => {
-      if (isViewMode && !remoteControlStarted) {
-        const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
-        if (!hasVisited) {
-            setWelcomePopupOpen(true);
-            sessionStorage.setItem('hasVisitedViewPage', 'true');
-            setProgress(100);
-        }
+    if (isViewMode && !remoteControlStarted) {
+      const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
+      if (!hasVisited) {
+        setWelcomePopupOpen(true);
+        sessionStorage.setItem('hasVisitedViewPage', 'true');
+        setProgress(100);
       }
+    }
   }, [isViewMode, remoteControlStarted]);
 
   // Schedule activation checker
@@ -2360,3 +2358,5 @@ export default function Page() {
   );
 }
 
+
+    
