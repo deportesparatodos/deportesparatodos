@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -486,7 +487,7 @@ function HomePageContent() {
           return acc;
       }, {});
 
-      const initialEvents: Event[] = combinedData.map((match: StreamedMatch) => {
+      const initialEvents: Event[] = combinedData.map((match: StreamedMatch, index: number) => {
         const eventDate = new Date(match.date);
         const zonedEventTime = toZonedTime(eventDate, timeZone);
         const time = format(zonedEventTime, 'HH:mm');
@@ -506,7 +507,7 @@ function HomePageContent() {
 
 
         return {
-          id: `${match.title}-${date}-${time}-streamed.pk`,
+          id: `${match.title}-${date}-${time}-${index}-streamed.pk`,
           title: match.title,
           time,
           options: [], // Options will be fetched on demand
@@ -521,7 +522,7 @@ function HomePageContent() {
         };
       });
 
-      const streamTpEvents: Event[] = streamTpData.map(event => {
+      const streamTpEvents: Event[] = streamTpData.map((event, index) => {
           let status: Event['status'] = 'Desconocido';
           if (event.status.toLowerCase() === 'en vivo') {
               status = 'En Vivo';
@@ -548,7 +549,7 @@ function HomePageContent() {
           const date = format(toZonedTime(new Date(), timeZone), 'yyyy-MM-dd');
           
           return {
-              id: `${event.title}-${date}-${eventTime}-streamtpglobal`,
+              id: `${event.title}-${date}-${eventTime}-${index}-streamtpglobal`,
               title: event.title,
               time: eventTime,
               options: [{ url: event.link, label: optionLabel.toUpperCase(), hd: false, language: '' }],
@@ -563,7 +564,7 @@ function HomePageContent() {
           };
       });
 
-      const agendaEvents: Event[] = agendaData.map((event: AgendaEvent): Event => {
+      const agendaEvents: Event[] = agendaData.map((event: AgendaEvent, index: number): Event => {
           const streamOptions: StreamOption[] = event.options.map((optionUrl, index) => ({
             url: optionUrl,
             label: event.buttons[index] || `STREAM ${index + 1}`,
@@ -572,7 +573,7 @@ function HomePageContent() {
           }));
 
           return {
-            id: `${event.title}-${event.date}---agenda`,
+            id: `${event.title}-${event.date}-${index}-agenda`,
             title: event.title,
             time: '--:--',
             options: streamOptions,
@@ -2115,8 +2116,8 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                             />
                                           </div>
                                         </ScrollArea>
-                                        <SheetFooter className="p-4 border-t border-border flex-shrink-0">
-                                            <div className="flex flex-col space-y-2">
+                                        <SheetFooter className="p-4 border-t border-border flex-shrink-0 flex-col space-y-2">
+                                            
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button variant="outline" className="w-full justify-start gap-2">
@@ -2284,7 +2285,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                     </DialogModalFooter>
                                                 </DialogContent>
                                           </Dialog>
-                                          </div>
+                                          
                                         </SheetFooter>
                                   </SheetContent>
                                   </Sheet>

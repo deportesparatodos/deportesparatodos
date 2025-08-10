@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -243,7 +244,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         <TabsContent value="eventos" className="flex-grow mt-4 h-0">
                             <ScrollArea className="h-full pr-4 -mr-4">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {sortedAndFilteredEvents.map((event, index) => (
+                                    {sortedAndFilteredEvents.map((event) => (
                                         <EventCard
                                             key={event.id}
                                             event={event}
