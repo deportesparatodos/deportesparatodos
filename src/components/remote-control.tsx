@@ -294,9 +294,19 @@ export function RemoteControlView({
     };
     
     const handleToggleFullscreen = (index: number) => {
-        if (!remoteState) return;
-        const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
-        updateRemoteState({ fullscreenIndex: newFullscreenIndex });
+      const { channel } = ablyRef.current;
+      if (!remoteState || !channel || !initialRemoteSessionId) return;
+      
+      const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
+      
+      // Update local state immediately for responsiveness
+      setRemoteState(prevState => prevState ? { ...prevState, fullscreenIndex: newFullscreenIndex } : null);
+      
+      // Publish action
+      channel.publish('control-action', {
+        action: 'toggleFullscreen',
+        payload: { index, sessionId: initialRemoteSessionId }
+      });
     };
     
     const handleReload = (index: number) => {
@@ -310,9 +320,18 @@ export function RemoteControlView({
     };
 
     const handleOrderChange = (newOrder: number[]) => {
-      if (!remoteState) return;
+      const { channel } = ablyRef.current;
+      if (!remoteState || !channel || !initialRemoteSessionId) return;
+      
       const fullNewOrder = [...newOrder, ...remoteState.viewOrder.filter(i => !newOrder.includes(i))];
-      updateRemoteState({ viewOrder: fullNewOrder });
+
+      // Update local state immediately for responsiveness
+      setRemoteState(prevState => prevState ? { ...prevState, viewOrder: fullNewOrder } : null);
+
+      channel.publish('control-action', {
+        action: 'reorder',
+        payload: { newOrder: fullNewOrder, sessionId: initialRemoteSessionId }
+      });
     };
   
     const handleGridGapChange = (value: number) => {
