@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize, FileText, AlertCircle, BookOpen, Mail, CalendarDays, Settings } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize, FileText, AlertCircle, BookOpen, Mail, CalendarDays, Settings, Volume2, VolumeX } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -32,7 +32,6 @@ export interface EventListManagementProps {
   onAddEvent?: () => void;
   onSchedule?: () => void;
   onNotificationManager?: () => void;
-  onToggleMute?: (index: number) => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
@@ -57,7 +56,6 @@ export function EventList({
   onRemove,
   onModify,
   isViewPage,
-  onToggleMute,
   onToggleFullscreen,
   fullscreenIndex,
 }: Omit<EventListManagementProps, 'onAddEvent' | 'onSchedule' | 'onNotificationManager' | 'remoteControlMode' | 'onPlayClick' | 'gridGap' | 'onGridGapChange' | 'borderColor' | 'onBorderColorChange' | 'isChatEnabled' | 'onIsChatEnabledChange' | 'onRestoreGridSettings' | 'onStartControlledSession' | 'categories'>) {

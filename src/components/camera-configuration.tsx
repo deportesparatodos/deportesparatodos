@@ -5,10 +5,11 @@
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings } from 'lucide-react';
+import { Settings, Volume2, VolumeX } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
+import { ScrollArea } from './ui/scroll-area';
 
 
 interface CameraConfigurationProps {
@@ -32,7 +33,6 @@ interface CameraConfigurationProps {
   onRestoreGridSettings: () => void;
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
-  onToggleMute: (index: number) => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -56,7 +56,6 @@ export function CameraConfigurationComponent({
   onRestoreGridSettings,
   isChatEnabled,
   onIsChatEnabledChange,
-  onToggleMute
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -72,32 +71,32 @@ export function CameraConfigurationComponent({
           <SheetHeader className="p-6 pb-0 text-center flex-shrink-0">
             <SheetTitle className="text-center break-words whitespace-pre-wrap">Configuración de la Vista</SheetTitle>
           </SheetHeader>
-          <Separator className="my-4 flex-shrink-0" />
-          <ScrollArea className="flex-grow h-0 px-6">
-              <LayoutConfigurator
-                  order={order}
-                  onOrderChange={onOrderChange}
-                  eventDetails={eventDetails}
-                  onReload={onReload}
-                  onRemove={onRemove}
-                  onModify={onModify}
-                  isViewPage={isViewPage}
-                  onAddEvent={onAddEvent}
-                  onSchedule={onSchedule}
-                  onNotificationManager={onNotification}
-                  remoteSessionId={remoteSessionId}
-                  remoteControlMode={remoteControlMode}
-                  onStartControlledSession={onStartControlledSession}
-                  gridGap={gridGap}
-                  onGridGapChange={onGridGapChange}
-                  borderColor={borderColor}
-                  onBorderColorChange={onBorderColorChange}
-                  onRestoreGridSettings={onRestoreGridSettings}
-                  isChatEnabled={isChatEnabled}
-                  onIsChatEnabledChange={onIsChatEnabledChange}
-                  categories={[]}
-                  onToggleMute={onToggleMute}
-              />
+          <ScrollArea className="flex-grow h-0">
+              <div className='p-6'>
+                <LayoutConfigurator
+                    order={order}
+                    onOrderChange={onOrderChange}
+                    eventDetails={eventDetails}
+                    onReload={onReload}
+                    onRemove={onRemove}
+                    onModify={onModify}
+                    isViewPage={isViewPage}
+                    onAddEvent={onAddEvent}
+                    onSchedule={onSchedule}
+                    onNotificationManager={onNotification}
+                    remoteSessionId={remoteSessionId}
+                    remoteControlMode={remoteControlMode}
+                    onStartControlledSession={onStartControlledSession}
+                    gridGap={gridGap}
+                    onGridGapChange={onGridGapChange}
+                    borderColor={borderColor}
+                    onBorderColorChange={onBorderColorChange}
+                    onRestoreGridSettings={onRestoreGridSettings}
+                    isChatEnabled={isChatEnabled}
+                    onIsChatEnabledChange={onIsChatEnabledChange}
+                    categories={[]}
+                />
+              </div>
           </ScrollArea>
         </SheetContent>
       </Sheet>

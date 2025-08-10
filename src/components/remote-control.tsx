@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw, Volume2, VolumeX } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
