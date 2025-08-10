@@ -788,14 +788,7 @@ function HomePageContent() {
         selectedEvents.forEach((event, index) => {
             if (iframeRefs.current[index] && event) {
                 const iframe = iframeRefs.current[index]!;
-                const isMuted = event.isMuted ?? false; // Default to not muted
-                const targetSrc = isMuted 
-                    ? 'about:blank' 
-                    : `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
-
-                if (iframe.getAttribute('src') !== targetSrc) {
-                    iframe.src = targetSrc;
-                }
+                iframe.src = `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
             }
         });
     }
@@ -1393,17 +1386,6 @@ function HomePageContent() {
     setIsSessionEnded(false);
   };
   
-  const handleToggleMute = (index: number) => {
-    setSelectedEvents(prevEvents => {
-      const newEvents = [...prevEvents];
-      if (newEvents[index]) {
-        // Here we just toggle the state. The useEffect will handle the iframe source.
-        newEvents[index] = { ...newEvents[index]!, isMuted: !newEvents[index]!.isMuted };
-      }
-      return newEvents;
-    });
-  };
-
   if (remoteControlMode === 'controlling') {
     return (
       <Suspense fallback={<div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
@@ -1702,6 +1684,7 @@ function HomePageContent() {
                 onRestoreGridSettings={handleRestoreGridSettings}
                 isChatEnabled={isChatEnabled}
                 onIsChatEnabledChange={setIsChatEnabled}
+                onToggleMute={() => {}}
             />
 
             {fullscreenIndex !== null && (
@@ -2062,16 +2045,18 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
         <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
             <header className="sticky top-0 z-30 flex h-header-height w-full shrink-0 items-center border-b border-border bg-background/80 backdrop-blur-sm px-4">
                 <div className={cn("flex items-center", isSearchOpen && 'hidden sm:flex')}>
-                    <Link href="/" className="shrink-0 mr-4" onClick={handleBackToHome}>
-                        <Image
-                            src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
-                            alt="Deportes Para Todos Logo"
-                            width={150}
-                            height={37.5}
-                            priority
-                            className='w-auto h-auto max-h-[40px] max-w-[150px]'
-                        />
-                    </Link>
+                    {currentView === 'home' && (
+                        <Link href="/" className="shrink-0 mr-4" onClick={handleBackToHome}>
+                            <Image
+                                src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
+                                alt="Deportes Para Todos Logo"
+                                width={150}
+                                height={37.5}
+                                priority
+                                className='w-auto h-auto max-h-[40px] max-w-[150px]'
+                            />
+                        </Link>
+                    )}
                     {currentView !== 'home' && (
                         <div className="flex items-center gap-1 min-w-0">
                             <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0 -ml-2'>

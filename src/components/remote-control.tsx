@@ -425,6 +425,7 @@ export function RemoteControlView({
                 isChatEnabled={remoteState.isChatEnabled}
                 onIsChatEnabledChange={handleIsChatEnabledChange}
                 onOpenChat={() => setIsRemoteChatOpen(true)}
+                onToggleMute={() => {}}
                 categories={[]}
              />
         </div>
