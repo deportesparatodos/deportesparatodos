@@ -1,18 +1,9 @@
 
 import type {Metadata} from 'next';
-import { Geist, Geist_Mono } from 'next/font/google'; // Corrected import
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster"; // Added Toaster
-
-const geistSans = Geist({ // Corrected usage
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({ // Corrected usage
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+import { Toaster } from "@/components/ui/toaster"; 
 
 export const metadata: Metadata = {
   title: 'DEPORTES PARA TODOS', // Updated title
@@ -28,7 +19,7 @@ export default function RootLayout({
     <html lang="es" className="dark">
       <head>
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`} suppressHydrationWarning={true}>
         {children}
         <Toaster />
       </body>
