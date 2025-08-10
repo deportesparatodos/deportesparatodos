@@ -261,7 +261,6 @@ function HomePageContent() {
   const ablyRef = useRef<{ client: Ably.Realtime | null; channel: Ably.Types.RealtimeChannelPromise | null }>({ client: null, channel: null });
   const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
   const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
-  const lastRemoteUpdate = useRef<string | null>(null);
 
   // Notification states
   const { toast } = useToast();
@@ -288,28 +287,6 @@ function HomePageContent() {
     ablyRef.current.client = client;
     return client;
   }, []);
-  
-  // Effect to publish state changes when in controlled mode
-  useEffect(() => {
-      const { channel } = ablyRef.current;
-      if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
-          const currentState = {
-              selectedEvents,
-              viewOrder,
-              gridGap,
-              borderColor,
-              isChatEnabled,
-              fullscreenIndex,
-              sessionId: remoteSessionId,
-          };
-          const currentStateString = JSON.stringify(currentState);
-
-          if (currentStateString !== lastRemoteUpdate.current) {
-              channel.publish('control-action', { action: 'updateState', payload: currentState });
-          }
-      }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode, remoteSessionId]);
-
 
   const handleStartControlledSession = useCallback(async () => {
     if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
@@ -339,13 +316,13 @@ function HomePageContent() {
                     channel.publish('control-action', { action: 'initialState', payload: currentState });
                     break;
                 case 'updateState':
-                    lastRemoteUpdate.current = JSON.stringify(payload);
-                    setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
-                    setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
-                    setGridGap(payload.gridGap ?? 0);
-                    setBorderColor(payload.borderColor ?? '#000000');
-                    setIsChatEnabled(payload.isChatEnabled ?? true);
-                    setFullscreenIndex(payload.fullscreenIndex ?? null);
+                    // Apply state changes from controller
+                    if (payload.selectedEvents) setSelectedEvents(payload.selectedEvents);
+                    if (payload.viewOrder) setViewOrder(payload.viewOrder);
+                    if (payload.gridGap !== undefined) setGridGap(payload.gridGap);
+                    if (payload.borderColor) setBorderColor(payload.borderColor);
+                    if (payload.isChatEnabled !== undefined) setIsChatEnabled(payload.isChatEnabled);
+                    if (payload.fullscreenIndex !== undefined) setFullscreenIndex(payload.fullscreenIndex);
                     break;
                  case 'reload':
                     handleReloadCamera(payload.index);

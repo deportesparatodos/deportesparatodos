@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
@@ -214,9 +215,6 @@ export function RemoteControlView({
               setRemoteState(payload);
               setIsLoading(false);
             }
-             if (action === 'updateState') {
-                setRemoteState(prevState => prevState ? {...prevState, ...payload} : payload);
-             }
              if (action === 'controlledViewClosed') {
                 setIsSessionEnded(true);
              }
@@ -256,7 +254,10 @@ export function RemoteControlView({
 
         const updatedState = { ...remoteState, ...newState, sessionId: initialRemoteSessionId };
         
+        // Optimistically update local state for a snappier UI
         setRemoteState(updatedState as RemoteControlViewState);
+        
+        // Publish the full new state
         channel.publish('control-action', { action: 'updateState', payload: updatedState});
 
     }, [ablyRef, remoteState, initialRemoteSessionId]);
