@@ -59,7 +59,6 @@ import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RemoteControlDialog, RemoteControlView, type RemoteControlViewState } from '@/components/remote-control';
-import Ably from 'ably';
 import { AddEventsDialog } from '@/components/add-events-dialog';
 import { Separator } from '@/components/ui/separator';
 
@@ -302,9 +301,10 @@ function HomePageContent() {
         ablyRef.current.channel = channel;
         
         await channel.presence.enter();
-        setRemoteControlStarted(true); // Set this only when the process is complete
+        
         setIsViewMode(true);
         setCodePopupOpen(true);
+        setRemoteControlStarted(true); // Set this only when the process is complete
 
         channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
@@ -2079,7 +2079,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                         <Settings />
                                       </Button>
                                     </SheetTrigger>
-                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                     <SheetContent hideClose={true} side="left" className="w-full sm:max-w-md flex flex-col p-0">
                                        <SheetHeader className="p-4 flex-row justify-between items-center border-b">
                                            <SheetTitle>Configuración</SheetTitle>
                                             <SheetClose asChild>
@@ -2384,5 +2384,6 @@ export default function Page() {
 
 
     
+
 
 
