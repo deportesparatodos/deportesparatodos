@@ -781,7 +781,13 @@ function HomePageContent() {
       selectedEvents.forEach((event, index) => {
         const iframe = iframeRefs.current[index];
         if (iframe && event) {
-          iframe.src = `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
+          const isMuted = event.isMuted;
+          const currentSrc = iframe.getAttribute('src');
+          const targetSrc = isMuted ? 'about:blank' : `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
+
+          if (currentSrc !== targetSrc) {
+            iframe.src = targetSrc;
+          }
         }
       });
     }
