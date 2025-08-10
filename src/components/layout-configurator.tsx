@@ -2,13 +2,13 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize, FileText, AlertCircle, BookOpen, Mail, CalendarDays } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, RefreshCcw, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Play, Maximize, Minimize, FileText, AlertCircle, BookOpen, Mail, CalendarDays, Settings } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -524,7 +524,7 @@ function ViewPageMenu({
   };
 
   return (
-      <Accordion type="multiple" defaultValue={['item-3']} className="w-full space-y-4 py-1">
+      <Accordion type="single" collapsible defaultValue="item-3" className="w-full space-y-4 py-1">
           {eventProps.remoteControlMode !== 'controlling' && (
               <AccordionItem value="remote-control" className="border rounded-lg px-4">
                   <AccordionTrigger>Control Remoto</AccordionTrigger>
