@@ -51,7 +51,7 @@ import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPas
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationManager } from '@/components/notification-manager';
@@ -306,7 +306,6 @@ function HomePageContent() {
           };
           const currentStateString = JSON.stringify(currentState);
 
-          // Only publish if the state has changed from the last received remote update
           if (currentStateString !== lastRemoteUpdate.current) {
               channel.publish('control-action', { action: 'updateState', payload: currentState });
           }
@@ -782,13 +781,21 @@ function HomePageContent() {
     }
   }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
 
-  // Mute/unmute iframe effect
+  // URL reload effect
   useEffect(() => {
     if (isViewMode) {
         selectedEvents.forEach((event, index) => {
-            if (iframeRefs.current[index] && event) {
-                const iframe = iframeRefs.current[index]!;
-                iframe.src = `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
+            const iframe = iframeRefs.current[index];
+            if (iframe && event) {
+                const currentSrc = new URL(iframe.src);
+                const targetSrc = new URL(event.selectedOption || 'about:blank', window.location.origin);
+                const currentReload = currentSrc.searchParams.get('reload') || '0';
+                const newReload = (reloadCounters[index] || 0).toString();
+
+                if (targetSrc.href !== currentSrc.href.split('?')[0] || newReload !== currentReload) {
+                    const finalSrc = `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${newReload}`;
+                    iframe.src = finalSrc;
+                }
             }
         });
     }
@@ -1684,7 +1691,6 @@ function HomePageContent() {
                 onRestoreGridSettings={handleRestoreGridSettings}
                 isChatEnabled={isChatEnabled}
                 onIsChatEnabledChange={setIsChatEnabled}
-                onToggleMute={() => {}}
             />
 
             {fullscreenIndex !== null && (
@@ -1736,61 +1742,47 @@ function HomePageContent() {
                     display: 'grid',
                 }}
             >
-                {viewOrder.map((originalIndex, orderedIndex) => {
-                    const event = selectedEvents[originalIndex];
-                    if (!event) return null;
-
-                    const isFullscreen = fullscreenIndex === originalIndex;
-                    
-                    if (fullscreenIndex !== null && !isFullscreen) {
-                        return (
-                            <div key={`window-stable-${originalIndex}`} className="hidden">
-                                <iframe
-                                    ref={el => (iframeRefs.current[originalIndex] = el)}
-                                    src={`${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[originalIndex] || 0}`}
-                                    title={`Stream ${originalIndex + 1}`}
-                                    className="w-full h-full border-0"
-                                    loading="eager"
-                                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                                    allowFullScreen
-                                />
-                            </div>
-                        );
-                    }
-                    
-                    let iframeSrc = event.selectedOption
-                        ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&amp;' : '?'}reload=${reloadCounters[originalIndex] || 0}`
-                        : '';
-                    
-                    if (iframeSrc.includes("youtube-nocookie.com")) {
-                        iframeSrc += `&amp;autoplay=1`;
-                    }
-                    
-                    return (
-                        <div 
-                           key={`window-stable-${originalIndex}`} 
-                           className={cn(
-                                "overflow-hidden bg-black relative",
-                                isFullscreen && 'absolute inset-0 z-20',
-                                getItemClasses(orderedIndex, selectedEventsCount)
-                            )}
-                           style={{
-                             order: orderedIndex
-                           }}
-                        >
-                           <iframe
-                                ref={el => (iframeRefs.current[originalIndex] = el)}
-                                src={iframeSrc}
-                                title={`Stream ${originalIndex + 1}`}
-                                className="w-full h-full border-0"
-                                loading="eager"
-                                allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                                allowFullScreen
-                            />
-                        </div>
-                    );
-                })}
-            </main>
+            {Array.from({ length: 9 }).map((_, windowSlotIndex) => {
+                const event = selectedEvents[windowSlotIndex];
+                if (!event) {
+                    // Render a stable placeholder for empty slots to preserve DOM structure
+                    return <div key={`placeholder-${windowSlotIndex}`} className="hidden" />;
+                }
+                
+                const isFullscreen = fullscreenIndex === windowSlotIndex;
+                const orderedIndex = viewOrder.indexOf(windowSlotIndex);
+                
+                // Construct the iframe source once
+                const iframeSrc = event.selectedOption
+                    ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowSlotIndex] || 0}`
+                    : 'about:blank';
+                
+                return (
+                    <div
+                        key={`window-stable-${windowSlotIndex}`}
+                        className={cn(
+                            "overflow-hidden bg-black relative",
+                            fullscreenIndex !== null && !isFullscreen && "hidden", // Hide if another is fullscreen
+                            isFullscreen && 'absolute inset-0 z-20', // Style for fullscreen window
+                            !isFullscreen && getItemClasses(orderedIndex, numCameras) // Apply grid classes only if not fullscreen
+                        )}
+                        style={{
+                            order: orderedIndex,
+                        }}
+                    >
+                        <iframe
+                            ref={el => (iframeRefs.current[windowSlotIndex] = el)}
+                            src={iframeSrc}
+                            title={`Stream ${windowSlotIndex + 1}`}
+                            className="w-full h-full border-0"
+                            loading="eager"
+                            allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                            allowFullScreen
+                        />
+                    </div>
+                );
+            })}
+          </main>
         </div>
         
         {/* Chat Sidebar for Desktop */}
