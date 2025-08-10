@@ -182,6 +182,15 @@ export function RemoteControlView({
            onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null});
         }
     }, [remoteState, onSessionEnd]);
+    
+    const publishAction = useCallback((action: string, payload: object) => {
+        const { channel } = ablyRef.current;
+        if (!channel || !initialRemoteSessionId) return;
+        channel.publish('control-action', {
+            action,
+            payload: { ...payload, sessionId: initialRemoteSessionId }
+        });
+    }, [ablyRef, initialRemoteSessionId]);
 
     // Connect to Ably and sync state
     useEffect(() => {
@@ -219,7 +228,7 @@ export function RemoteControlView({
           });
           
           await channel.whenState('attached');
-          channel.publish('control-action', { action: 'requestInitialState', payload: { sessionId: initialRemoteSessionId }});
+          publishAction('requestInitialState', {});
 
         } catch (error: any) {
            console.error("Error connecting as controller:", error);
@@ -243,22 +252,18 @@ export function RemoteControlView({
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialRemoteSessionId, initAbly]);
-
-
-    const publishAction = useCallback((action: string, payload: object) => {
-        const { channel } = ablyRef.current;
-        if (!channel || !initialRemoteSessionId) return;
-        channel.publish('control-action', {
-            action,
-            payload: { ...payload, sessionId: initialRemoteSessionId }
-        });
-    }, [ablyRef, initialRemoteSessionId]);
-
+    
+    const updateAndPublish = (newState: Partial<RemoteControlViewState>) => {
+      setRemoteState(prevState => {
+        if (!prevState) return null;
+        const updatedState = {...prevState, ...newState};
+        publishAction('updateState', updatedState);
+        return updatedState;
+      })
+    }
+    
     const handleEventsChange = (newEvents: (Event|null)[]) => {
-      if (!remoteState) return;
-      const updatedState = { ...remoteState, selectedEvents: newEvents };
-      setRemoteState(updatedState);
-      publishAction('updateState', updatedState);
+      updateAndPublish({ selectedEvents: newEvents });
     }
 
     const handleRemove = (index: number) => {
@@ -271,8 +276,7 @@ export function RemoteControlView({
     const handleToggleFullscreen = (index: number) => {
         if (!remoteState) return;
         const newFullscreenIndex = remoteState.fullscreenIndex === index ? null : index;
-        setRemoteState(s => s ? { ...s, fullscreenIndex: newFullscreenIndex } : null);
-        publishAction('toggleFullscreen', { index });
+        updateAndPublish({ fullscreenIndex: newFullscreenIndex });
     };
     
     const handleReload = (index: number) => {
@@ -281,30 +285,23 @@ export function RemoteControlView({
 
     const handleOrderChange = (newOrder: number[]) => {
       if (!remoteState) return;
-       const fullNewOrder = [...newOrder];
-        const presentIndexes = new Set(newOrder);
-        for(let i=0; i<9; i++) {
-          if(!presentIndexes.has(i)) {
-            fullNewOrder.push(i);
-          }
-        }
-      setRemoteState(s => s ? { ...s, viewOrder: fullNewOrder } : null);
-      publishAction('reorder', { newOrder: fullNewOrder });
+      const fullOrder = Array.from({length: 9}, (_, i) => i);
+      const activeNewOrder = newOrder.filter(i => remoteState.selectedEvents[i] !== null);
+      
+      const finalOrder = [...activeNewOrder, ...fullOrder.filter(i => !activeNewOrder.includes(i))];
+      updateAndPublish({ viewOrder: finalOrder });
     };
   
     const handleGridGapChange = (value: number) => {
-        setRemoteState(s => s ? { ...s, gridGap: value } : null);
-        publishAction('updateState', { gridGap: value });
+        updateAndPublish({ gridGap: value });
     };
 
     const handleBorderColorChange = (value: string) => {
-        setRemoteState(s => s ? { ...s, borderColor: value } : null);
-        publishAction('updateState', { borderColor: value });
+        updateAndPublish({ borderColor: value });
     };
 
     const handleIsChatEnabledChange = (value: boolean) => {
-        setRemoteState(s => s ? { ...s, isChatEnabled: value } : null);
-        publishAction('updateState', { isChatEnabled: value });
+        updateAndPublish({ isChatEnabled: value });
     };
 
     const handleAddEvent = (event: Event, option: string) => {

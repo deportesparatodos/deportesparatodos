@@ -61,6 +61,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RemoteControlDialog, RemoteControlView, type RemoteControlViewState } from '@/components/remote-control';
 import { AddEventsDialog } from '@/components/add-events-dialog';
 import { Separator } from '@/components/ui/separator';
+import Ably from 'ably';
 
 
 interface StreamedMatch {
@@ -291,66 +292,6 @@ function HomePageContent() {
     return client;
   }, []);
 
-  const handleStartControlledSession = useCallback(async () => {
-    try {
-        const client = await initAbly('controlled');
-        const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-        setRemoteSessionId(newCode);
-
-        const channel = client.channels.get(`remote-control:${newCode}`);
-        ablyRef.current.channel = channel;
-        
-        await channel.presence.enter();
-        
-        setIsViewMode(true);
-        setCodePopupOpen(true);
-        setRemoteControlStarted(true);
-
-        channel.subscribe('control-action', (message: Ably.Types.Message) => {
-            const { action, payload } = message.data;
-
-            switch (action) {
-                case 'requestInitialState':
-                    const currentState = {
-                        selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex,
-                        sessionId: newCode
-                    };
-                    channel.publish('control-action', { action: 'initialState', payload: currentState });
-                    break;
-                case 'reorder':
-                    setViewOrder(payload.newOrder);
-                    break;
-                 case 'toggleFullscreen':
-                    setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
-                    break;
-                 case 'reload':
-                    if(payload.index !== undefined) handleReloadCamera(payload.index);
-                    break;
-                 case 'updateState':
-                    if (payload.selectedEvents) setSelectedEvents(payload.selectedEvents);
-                    if (payload.viewOrder) setViewOrder(payload.viewOrder);
-                    if (payload.gridGap !== undefined) setGridGap(payload.gridGap);
-                    if (payload.borderColor) setBorderColor(payload.borderColor);
-                    if (payload.isChatEnabled !== undefined) setIsChatEnabled(payload.isChatEnabled);
-                    if (payload.fullscreenIndex !== undefined) setFullscreenIndex(payload.fullscreenIndex);
-                    break;
-                 case 'disconnect':
-                    cleanupAbly();
-                     break;
-            }
-        });
-        
-        channel.presence.subscribe('leave', () => {
-             cleanupAbly();
-        });
-
-    } catch (error) {
-        console.error("Failed to start controlled session:", error);
-        toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
-        cleanupAbly();
-    }
-  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex]);
-  
   const handleActivateControlledMode = async () => {
     if (selectedEvents.filter(Boolean).length === 0) {
       toast({
@@ -360,8 +301,70 @@ function HomePageContent() {
       });
       return;
     }
-    await handleStartControlledSession();
+    setRemoteControlStarted(true);
+    setIsViewMode(true);
   };
+  
+  // Effect to manage the Ably connection for a controlled device
+  useEffect(() => {
+    if (isViewMode && remoteControlStarted && remoteControlMode !== 'controlling') {
+      let isMounted = true;
+      const startControlledSession = async () => {
+        try {
+          const client = await initAbly('controlled');
+          if (!isMounted) {
+            client.close();
+            return;
+          }
+          const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+          setRemoteSessionId(newCode);
+
+          const channel = client.channels.get(`remote-control:${newCode}`);
+          ablyRef.current.channel = channel;
+
+          await channel.presence.enter();
+          setCodePopupOpen(true);
+
+          channel.subscribe('control-action', (message: Ably.Types.Message) => {
+            const { action, payload } = message.data;
+            switch (action) {
+              case 'requestInitialState':
+                const currentState = {
+                  selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, sessionId: newCode
+                };
+                channel.publish('control-action', { action: 'initialState', payload: currentState });
+                break;
+              case 'updateState':
+                 setSelectedEvents(payload.selectedEvents);
+                 setViewOrder(payload.viewOrder);
+                 setGridGap(payload.gridGap);
+                 setBorderColor(payload.borderColor);
+                 setIsChatEnabled(payload.isChatEnabled);
+                 setFullscreenIndex(payload.fullscreenIndex);
+                break;
+              case 'reorder': setViewOrder(payload.newOrder); break;
+              case 'toggleFullscreen': setFullscreenIndex(prev => prev === payload.index ? null : payload.index); break;
+              case 'reload': if (payload.index !== undefined) handleReloadCamera(payload.index); break;
+              case 'disconnect': cleanupAbly(); break;
+            }
+          });
+          channel.presence.subscribe('leave', () => { cleanupAbly(); });
+
+        } catch (error) {
+          console.error("Failed to start controlled session:", error);
+          if (isMounted) {
+            toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
+            cleanupAbly();
+          }
+        }
+      };
+
+      startControlledSession();
+      
+      return () => { isMounted = false; cleanupAbly(); };
+    }
+  }, [isViewMode, remoteControlStarted]);
+
 
   const handleStopView = useCallback(() => {
     const { channel } = ablyRef.current;
@@ -752,28 +755,30 @@ function HomePageContent() {
       selectedEvents.forEach((event, index) => {
         const iframe = iframeRefs.current[index];
         if (iframe && event?.selectedOption) {
-          const newSrc = `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
-          
-          let currentSrc = 'about:blank';
-          try {
-            if (iframe.src && iframe.src !== 'about:blank') {
-              const url = new URL(iframe.src);
-              const targetUrl = new URL(event.selectedOption);
-              if (url.origin === targetUrl.origin && url.pathname === targetUrl.pathname) {
-                 return; // Don't reload if base URL is the same
-              }
-              url.searchParams.delete('reload');
-              currentSrc = url.toString();
-            }
-          } catch(e) {
-             currentSrc = iframe.src.split('?')[0];
-          }
+            const newSrc = `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
 
-          const targetSrc = event.selectedOption;
-  
-          if (currentSrc !== targetSrc) {
+            let currentSrc = 'about:blank';
+            try {
+                if (iframe.src && iframe.src !== 'about:blank') {
+                    const url = new URL(iframe.src);
+                    const targetUrl = new URL(event.selectedOption);
+                    url.searchParams.delete('reload');
+                    const cleanCurrentSrc = `${url.origin}${url.pathname}`;
+                    const cleanTargetSrc = `${targetUrl.origin}${targetUrl.pathname}`;
+
+                    if (cleanCurrentSrc === cleanTargetSrc) {
+                        return; // Don't reload if base URL is the same
+                    }
+                }
+            } catch(e) {
+                // Handle cases where iframe.src is not a full URL, e.g., 'about:blank'
+                currentSrc = iframe.src.split('?')[0];
+                const targetSrc = event.selectedOption.split('?')[0];
+                if(currentSrc === targetSrc) return;
+            }
+
+            // If we reach here, it means a reload is necessary
             iframe.src = newSrc;
-          }
         }
       });
     }
@@ -1318,10 +1323,8 @@ function HomePageContent() {
         const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
         if (existingIndex !== -1) {
-            // Event is already in the selection, just update its option
             newSelectedEvents[existingIndex] = eventWithSelection;
         } else {
-            // Event is new, find an empty slot
             const emptyIndex = newSelectedEvents.findIndex(e => e === null);
             if (emptyIndex !== -1) {
                 newSelectedEvents[emptyIndex] = eventWithSelection;
@@ -1331,7 +1334,7 @@ function HomePageContent() {
                     title: 'Selección Completa',
                     description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
                 });
-                return currentSelectedEvents; // Return original state if full
+                return currentSelectedEvents;
             }
         }
         return newSelectedEvents;
@@ -1401,10 +1404,10 @@ function HomePageContent() {
   }
 
   if (isViewMode) {
-     const numCameras = selectedEventsCount;
+     const numCameras = selectedEvents.filter(Boolean).length;
      const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
      
-     if (numCameras === 0 && remoteControlMode === 'controlled') {
+     if (numCameras === 0 && remoteControlStarted) {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
                 <div className="text-center space-y-4">
@@ -2384,12 +2387,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-
-    
-
-
-
-
-
-    
