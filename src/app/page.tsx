@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays, VolumeX, Volume2 } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -22,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import { 
     Dialog,
@@ -29,7 +30,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-    DialogFooter,
+    DialogFooter as DialogModalFooter,
     DialogClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
@@ -234,7 +235,6 @@ function HomePageContent() {
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-  const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [currentView, setCurrentView] = useState<string>('home');
@@ -782,12 +782,11 @@ function HomePageContent() {
         const iframe = iframeRefs.current[index];
         if (iframe && event) {
           const isMuted = event.isMuted;
-          const currentSrc = iframe.getAttribute('src');
           const targetSrc = isMuted ? 'about:blank' : `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
 
-          if (currentSrc !== targetSrc) {
-            iframe.src = targetSrc;
-          }
+            if (iframe.getAttribute('src') !== targetSrc) {
+                iframe.src = targetSrc;
+            }
         }
       });
     }
@@ -1100,7 +1099,7 @@ function HomePageContent() {
 
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
-    const eventWithSelection = { ...event, selectedOption: optionUrl };
+    const eventWithSelection = { ...event, selectedOption: optionUrl, isMuted: false };
 
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
@@ -1291,7 +1290,7 @@ function HomePageContent() {
 
   const handleModifyEventSelect = (event: Event, option: string) => {
       const newSelectedEvents = [...selectedEvents];
-      const eventWithSelection = { ...event, selectedOption: option };
+      const eventWithSelection = { ...event, selectedOption: option, isMuted: false };
       
       let targetIndex = -1;
       // This function can be called from the main page config or the view page config
@@ -1314,7 +1313,7 @@ function HomePageContent() {
   
   const handleAddEventToSchedule = (event: Event, option: string) => {
     const newFutureSelection = [...futureSelection];
-    const eventWithSelection = { ...event, selectedOption: option };
+    const eventWithSelection = { ...event, selectedOption: option, isMuted: false };
     const emptyIndex = newFutureSelection.findIndex(e => e === null);
     if (emptyIndex !== -1) {
         newFutureSelection[emptyIndex] = eventWithSelection;
@@ -1328,7 +1327,7 @@ function HomePageContent() {
 
   const handleAddEventSelect = (event: Event, option: string) => {
     const newSelectedEvents = [...selectedEvents];
-    const eventWithSelection = { ...event, selectedOption: option };
+    const eventWithSelection = { ...event, selectedOption: option, isMuted: false };
 
     const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
@@ -1382,6 +1381,16 @@ function HomePageContent() {
     setFullscreenIndex(finalState.fullscreenIndex);
     cleanupAbly();
     setIsSessionEnded(false);
+  };
+  
+  const handleToggleMute = (index: number) => {
+    setSelectedEvents(prevEvents => {
+      const newEvents = [...prevEvents];
+      if (newEvents[index]) {
+        newEvents[index] = { ...newEvents[index]!, isMuted: !newEvents[index]!.isMuted };
+      }
+      return newEvents;
+    });
   };
 
   if (remoteControlMode === 'controlling') {
@@ -1545,7 +1554,7 @@ function HomePageContent() {
                       </DialogDescription>
                   </Alert>
               </div>
-               <DialogFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
+               <DialogModalFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
                   <Dialog open={tutorialDialogOpen} onOpenChange={setTutorialDialogOpen}>
                     <DialogTrigger asChild>
                        <Button variant="outline" className="gap-2">
@@ -1598,9 +1607,9 @@ function HomePageContent() {
                                 </ul>
                             </div>
                         </ScrollArea>
-                        <DialogFooter>
+                        <DialogModalFooter>
                             <DialogClose asChild><Button>Entendido</Button></DialogClose>
-                        </DialogFooter>
+                        </DialogModalFooter>
                     </DialogContent>
                   </Dialog>
                   <Dialog open={errorsDialogOpen} onOpenChange={setErrorsDialogOpen}>
@@ -1636,12 +1645,12 @@ function HomePageContent() {
                                     <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender".</p>
                               </div>
                           </ScrollArea>
-                          <DialogFooter>
+                          <DialogModalFooter>
                               <DialogClose asChild><Button>Cerrar</Button></DialogClose>
-                          </DialogFooter>
+                          </DialogModalFooter>
                       </DialogContent>
                   </Dialog>
-               </DialogFooter>
+               </DialogModalFooter>
           </DialogContent>
         </Dialog>
 
@@ -1682,6 +1691,7 @@ function HomePageContent() {
                 onRestoreGridSettings={handleRestoreGridSettings}
                 isChatEnabled={isChatEnabled}
                 onIsChatEnabledChange={setIsChatEnabled}
+                onToggleMute={handleToggleMute}
             />
 
             {fullscreenIndex !== null && (
@@ -2042,20 +2052,17 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
         <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
             <header className="sticky top-0 z-30 flex h-header-height w-full shrink-0 items-center border-b border-border bg-background/80 backdrop-blur-sm px-4">
                 <div className={cn("flex items-center", isSearchOpen && 'hidden sm:flex')}>
-                    {currentView === 'home' ? (
-                        <>
-                             <Link href="/" className="shrink-0 mr-4" onClick={handleBackToHome}>
-                                <Image
-                                    src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
-                                    alt="Deportes Para Todos Logo"
-                                    width={150}
-                                    height={37.5}
-                                    priority
-                                    className='w-auto h-auto max-h-[40px] max-w-[150px]'
-                                />
-                            </Link>
-                        </>
-                    ) : (
+                    <Link href="/" className="shrink-0 mr-4" onClick={handleBackToHome}>
+                        <Image
+                            src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
+                            alt="Deportes Para Todos Logo"
+                            width={150}
+                            height={37.5}
+                            priority
+                            className='w-auto h-auto max-h-[40px] max-w-[150px]'
+                        />
+                    </Link>
+                    {currentView !== 'home' && (
                         <div className="flex items-center gap-1 min-w-0">
                             <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0 -ml-2'>
                                 <ArrowLeft />
@@ -2124,10 +2131,9 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                     </SheetTrigger>
                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
                                        <SheetHeader className="p-6 pb-0 text-center flex-shrink-0">
-                                          <SheetTitle>Configuración y Eventos</SheetTitle>
+                                          <SheetTitle>Configuración y Ayuda</SheetTitle>
                                        </SheetHeader>
-                                        <Separator className="my-4 flex-shrink-0" />
-                                        <ScrollArea className="flex-grow h-0 px-6">
+                                        <ScrollArea className="flex-grow h-0 px-6 mt-4">
                                             <LayoutConfigurator
                                                 isViewPage={false}
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
@@ -2143,10 +2149,104 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 onRestoreGridSettings={handleRestoreGridSettings}
                                                 isChatEnabled={isChatEnabled}
                                                 onIsChatEnabledChange={setIsChatEnabled}
-                                                onNotificationManager={() => setNotificationManagerOpen(true)}
                                                 categories={categories}
                                             />
                                         </ScrollArea>
+                                        <SheetFooter className="p-4 border-t border-border flex-shrink-0">
+                                            <div className="space-y-2 w-full">
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="outline" className="w-full justify-start gap-2">
+                                                            <BookOpen />
+                                                            Tutorial
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="max-w-2xl">
+                                                        <DialogHeader>
+                                                            <DialogTitle>Tutorial de Uso</DialogTitle>
+                                                        </DialogHeader>
+                                                        <ScrollArea className="h-96 pr-6">
+                                                          {/* Tutorial Content Here */}
+                                                        </ScrollArea>
+                                                        <DialogModalFooter>
+                                                            <DialogClose asChild><Button>Entendido</Button></DialogClose>
+                                                        </DialogModalFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="outline" className="w-full justify-start gap-2">
+                                                            <AlertCircle />
+                                                            Errores y Soluciones
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                     <DialogContent className="max-w-2xl">
+                                                        <DialogHeader>
+                                                            <DialogTitle>Solución de Errores Comunes</DialogTitle>
+                                                        </DialogHeader>
+                                                        <ScrollArea className="h-96 pr-6">
+                                                            {/* Error Content Here */}
+                                                        </ScrollArea>
+                                                        <DialogModalFooter>
+                                                            <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                                                        </DialogModalFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                                <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setNotificationManagerOpen(true)}>
+                                                    <BellRing />
+                                                    Notificaciones
+                                                </Button>
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="outline" className="w-full justify-start gap-2">
+                                                            <CalendarDays />
+                                                            Añadir a Calendario
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <CalendarDialogContent categories={categories} />
+                                                </Dialog>
+                                                <Dialog>
+                                                  <DialogTrigger asChild>
+                                                      <Button variant="outline" className="w-full justify-start gap-2">
+                                                          <Mail />
+                                                          Contacto
+                                                      </Button>
+                                                  </DialogTrigger>
+                                                  <DialogContent className="max-w-md">
+                                                      <DialogHeader>
+                                                          <DialogTitle>Contacto</DialogTitle>
+                                                      </DialogHeader>
+                                                      <div className="text-sm text-muted-foreground py-4">
+                                                          <p>¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales a deportesparatodosvercel@gmail.com.</p>
+                                                      </div>
+                                                      <DialogModalFooter>
+                                                          <DialogClose asChild>
+                                                              <Button variant={'outline'}>Cerrar</Button>
+                                                          </DialogClose>
+                                                      </DialogModalFooter>
+                                                  </DialogContent>
+                                              </Dialog>
+                                                <Dialog>
+                                                  <DialogTrigger asChild>
+                                                      <Button variant="outline" className="w-full justify-start gap-2">
+                                                          <FileText />
+                                                          Aviso Legal
+                                                      </Button>
+                                                  </DialogTrigger>
+                                                  <DialogContent className="max-w-2xl">
+                                                        <DialogHeader>
+                                                            <DialogTitle>Descargo de Responsabilidad – Derechos de Autor</DialogTitle>
+                                                        </DialogHeader>
+                                                        <ScrollArea className="h-96 pr-6">
+                                                          {/* Legal Content Here */}
+                                                        </ScrollArea>
+                                                        <DialogModalFooter>
+                                                            <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                                                        </DialogModalFooter>
+                                                    </DialogContent>
+                                              </Dialog>
+                                            </div>
+                                        </SheetFooter>
                                     </SheetContent>
                                   </Sheet>
 
