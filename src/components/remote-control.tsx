@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw, Volume2, VolumeX } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -174,6 +174,7 @@ export function RemoteControlView({
 
     const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
     const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
+    const lastRemoteUpdate = useRef<string | null>(null);
     
     const handleStopAndPersist = useCallback(() => {
         if (remoteState) {
@@ -208,14 +209,19 @@ export function RemoteControlView({
 
           channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
+            if (payload.sessionId !== initialRemoteSessionId) return;
             
-            if (action === 'initialState' && payload.sessionId === initialRemoteSessionId) {
+            const payloadString = JSON.stringify(payload);
+
+            if (action === 'initialState') {
               clearTimeout(connectionTimeout);
               setRemoteState(payload);
+              lastRemoteUpdate.current = payloadString;
               setIsLoading(false);
             }
-             if (action === 'updateState' && payload.sessionId === initialRemoteSessionId) {
+             if (action === 'updateState' && payloadString !== lastRemoteUpdate.current) {
                 setRemoteState(prevState => prevState ? {...prevState, ...payload} : payload);
+                lastRemoteUpdate.current = payloadString;
              }
              if (action === 'controlledViewClosed') {
                 setIsSessionEnded(true);
@@ -256,6 +262,9 @@ export function RemoteControlView({
 
         const updatedState = { ...remoteState, ...newState, sessionId: initialRemoteSessionId };
         
+        const updatedStateString = JSON.stringify(updatedState);
+        lastRemoteUpdate.current = updatedStateString;
+
         setRemoteState(updatedState as RemoteControlViewState);
         channel.publish('control-action', { action: 'updateState', payload: updatedState});
 
@@ -416,6 +425,7 @@ export function RemoteControlView({
                 isChatEnabled={remoteState.isChatEnabled}
                 onIsChatEnabledChange={handleIsChatEnabledChange}
                 onOpenChat={() => setIsRemoteChatOpen(true)}
+                categories={[]}
              />
         </div>
         

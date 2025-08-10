@@ -263,6 +263,7 @@ function HomePageContent() {
   const ablyRef = useRef<{ client: Ably.Realtime | null; channel: Ably.Types.RealtimeChannelPromise | null }>({ client: null, channel: null });
   const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
   const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
+  const lastRemoteUpdate = useRef<string | null>(null);
 
   // Notification states
   const { toast } = useToast();
@@ -292,19 +293,24 @@ function HomePageContent() {
   
   // Effect to publish state changes when in controlled mode
   useEffect(() => {
-    const { channel } = ablyRef.current;
-    if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
-        const currentState = {
-            selectedEvents,
-            viewOrder,
-            gridGap,
-            borderColor,
-            isChatEnabled,
-            fullscreenIndex,
-            sessionId: remoteSessionId,
-        };
-        channel.publish('control-action', { action: 'updateState', payload: currentState });
-    }
+      const { channel } = ablyRef.current;
+      if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
+          const currentState = {
+              selectedEvents,
+              viewOrder,
+              gridGap,
+              borderColor,
+              isChatEnabled,
+              fullscreenIndex,
+              sessionId: remoteSessionId,
+          };
+          const currentStateString = JSON.stringify(currentState);
+
+          // Only publish if the state has changed from the last received remote update
+          if (currentStateString !== lastRemoteUpdate.current) {
+              channel.publish('control-action', { action: 'updateState', payload: currentState });
+          }
+      }
   }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode, remoteSessionId]);
 
 
@@ -336,6 +342,7 @@ function HomePageContent() {
                     channel.publish('control-action', { action: 'initialState', payload: currentState });
                     break;
                 case 'updateState':
+                    lastRemoteUpdate.current = JSON.stringify(payload);
                     setSelectedEvents(payload.selectedEvents || Array(9).fill(null));
                     setViewOrder(payload.viewOrder || Array.from({ length: 9 }, (_, i) => i));
                     setGridGap(payload.gridGap ?? 0);
@@ -1102,7 +1109,7 @@ function HomePageContent() {
 
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
-    const eventWithSelection = { ...event, selectedOption: optionUrl, isMuted: false };
+    const eventWithSelection = { ...event, selectedOption: optionUrl };
 
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
@@ -1293,7 +1300,7 @@ function HomePageContent() {
 
   const handleModifyEventSelect = (event: Event, option: string) => {
       const newSelectedEvents = [...selectedEvents];
-      const eventWithSelection = { ...event, selectedOption: option, isMuted: newSelectedEvents[modifyEvent!.index]?.isMuted };
+      const eventWithSelection = { ...event, selectedOption: option };
       
       let targetIndex = -1;
       // This function can be called from the main page config or the view page config
@@ -1316,7 +1323,7 @@ function HomePageContent() {
   
   const handleAddEventToSchedule = (event: Event, option: string) => {
     const newFutureSelection = [...futureSelection];
-    const eventWithSelection = { ...event, selectedOption: option, isMuted: false };
+    const eventWithSelection = { ...event, selectedOption: option };
     const emptyIndex = newFutureSelection.findIndex(e => e === null);
     if (emptyIndex !== -1) {
         newFutureSelection[emptyIndex] = eventWithSelection;
@@ -1330,7 +1337,7 @@ function HomePageContent() {
 
   const handleAddEventSelect = (event: Event, option: string) => {
     const newSelectedEvents = [...selectedEvents];
-    const eventWithSelection = { ...event, selectedOption: option, isMuted: false };
+    const eventWithSelection = { ...event, selectedOption: option };
 
     const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
