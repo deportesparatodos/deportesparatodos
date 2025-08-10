@@ -292,10 +292,7 @@ function HomePageContent() {
   }, []);
 
   const handleStartControlledSession = useCallback(async () => {
-    if (remoteControlMode === 'controlled' && ablyRef.current.channel) return;
-    
     try {
-        setRemoteControlStarted(true); // Signal that a remote session is being initiated
         const client = await initAbly('controlled');
         const newCode = Math.floor(1000 + Math.random() * 9000).toString();
         setRemoteSessionId(newCode);
@@ -304,13 +301,13 @@ function HomePageContent() {
         ablyRef.current.channel = channel;
         
         await channel.presence.enter();
+        setRemoteControlStarted(true);
         setRemoteControlMode('controlled');
         setIsViewMode(true);
         setCodePopupOpen(true);
 
         channel.subscribe('control-action', (message: Ably.Types.Message) => {
             const { action, payload } = message.data;
-            if (!payload || payload.sessionId !== newCode) return;
 
             switch (action) {
                 case 'requestInitialState':
@@ -321,7 +318,7 @@ function HomePageContent() {
                     channel.publish('control-action', { action: 'initialState', payload: currentState });
                     break;
                 case 'reorder':
-                    if (payload.newOrder) setViewOrder(payload.newOrder);
+                    setViewOrder(payload.newOrder);
                     break;
                  case 'toggleFullscreen':
                     setFullscreenIndex(prev => prev === payload.index ? null : payload.index);
@@ -352,7 +349,7 @@ function HomePageContent() {
         toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
         cleanupAbly();
     }
-  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode]);
+  }, [initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex]);
   
   const handleActivateControlledMode = async () => {
     if (selectedEvents.filter(Boolean).length === 0) {
@@ -752,20 +749,31 @@ function HomePageContent() {
   // URL reload effect
   useEffect(() => {
     if (isViewMode) {
-        selectedEvents.forEach((event, index) => {
-            const iframe = iframeRefs.current[index];
-            if (iframe && event) {
-                const currentSrc = new URL(iframe.src);
-                const targetSrc = new URL(event.selectedOption || 'about:blank', window.location.origin);
-                const currentReload = currentSrc.searchParams.get('reload') || '0';
-                const newReload = (reloadCounters[index] || 0).toString();
-
-                if (targetSrc.href !== currentSrc.href.split('?')[0] || newReload !== currentReload) {
-                    const finalSrc = `${event.selectedOption}${event.selectedOption && event.selectedOption.includes('?') ? '&' : '?'}reload=${newReload}`;
-                    iframe.src = finalSrc;
-                }
+      selectedEvents.forEach((event, index) => {
+        const iframe = iframeRefs.current[index];
+        if (iframe && event?.selectedOption) {
+          const newSrc = `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
+          
+          let currentSrc = 'about:blank';
+          try {
+            // iframe.src can be null or empty string initially, or about:blank
+            if (iframe.src && iframe.src !== 'about:blank') {
+              const url = new URL(iframe.src);
+              url.searchParams.delete('reload');
+              currentSrc = url.toString();
             }
-        });
+          } catch(e) {
+             // If iframe.src is not a valid URL, it might just be the base part
+             currentSrc = iframe.src.split('?')[0];
+          }
+
+          const targetSrc = event.selectedOption;
+  
+          if (currentSrc !== targetSrc) {
+            iframe.src = newSrc;
+          }
+        }
+      });
     }
   }, [selectedEvents, isViewMode, reloadCounters]);
 
