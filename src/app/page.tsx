@@ -2074,8 +2074,11 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                       </Button>
                                     </SheetTrigger>
                                      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
+                                       <SheetHeader className="p-6 pb-4 flex-shrink-0 text-center">
+                                           <SheetTitle>Configuración</SheetTitle>
+                                       </SheetHeader>
                                         <ScrollArea className="flex-grow h-0">
-                                          <div className="p-6">
+                                          <div className="p-6 pt-0">
                                             <LayoutConfigurator
                                                 isViewPage={false}
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
