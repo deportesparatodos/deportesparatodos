@@ -44,6 +44,7 @@ export interface EventListManagementProps {
   onOpenTutorial: () => void;
   onOpenErrors: () => void;
   onOpenCalendar: () => void;
+  isSheet?: boolean;
 }
 
 export function EventList({
@@ -171,12 +172,32 @@ export function LayoutConfigurator(props: EventListManagementProps) {
     onRestoreGridSettings,
     isChatEnabled, onIsChatEnabledChange,
     remoteControlMode, remoteSessionId, onActivateControlledMode,
-    onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar
+    onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
+    isSheet
   } = props;
+  
+  if (isSheet) {
+    return (
+        <div className="space-y-2 mt-4">
+          <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
+            <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
+          </Button>
+          <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
+            <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
+          </Button>
+          <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
+            <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
+          </Button>
+          <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
+            <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
+          </Button>
+        </div>
+    );
+  }
 
   return (
     <>
-        <Accordion type="multiple" className="w-full space-y-4" defaultValue={['item-events']}>
+        <Accordion type="single" collapsible className="w-full space-y-4">
             <AccordionItem value="item-events" className="border rounded-lg px-4">
                 <AccordionTrigger>Eventos/Canales Seleccionados ({(props.order || []).length})</AccordionTrigger>
                 <AccordionContent className="pt-2 pb-4">
@@ -281,20 +302,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 </AccordionContent>
             </AccordionItem>
         </Accordion>
-        <div className="mt-6 pt-6 border-t border-border space-y-2">
-            <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
-                <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
-            </Button>
-            <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
-                <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
-            </Button>
-            <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
-                <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
-            </Button>
-            <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
-                <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
-            </Button>
-        </div>
     </>
   );
 }

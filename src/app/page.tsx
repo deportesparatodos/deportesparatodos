@@ -2028,42 +2028,69 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                       </Button>
                                     </SheetTrigger>
                                      <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
-                                       <SheetHeader className="p-4 border-b flex-row justify-center items-center relative">
-                                           <SheetTitle className="text-center flex-grow">Configuración</SheetTitle>
-                                           <SheetClose asChild>
-                                             <Button variant="ghost" size="icon" className="h-7 w-7 absolute right-2 top-1/2 -translate-y-1/2">
-                                                 <X className="h-5 w-5" />
-                                             </Button>
-                                           </SheetClose>
-                                       </SheetHeader>
+                                        <SheetHeader className="p-4 border-b flex-row justify-center items-center relative">
+                                            <SheetTitle className="text-center flex-grow">Configuración</SheetTitle>
+                                            <SheetClose asChild>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 absolute right-2 top-1/2 -translate-y-1/2">
+                                                    <X className="h-5 w-5" />
+                                                </Button>
+                                            </SheetClose>
+                                        </SheetHeader>
                                         <ScrollArea className="flex-grow h-0">
-                                          <div className="p-6 pt-4">
-                                            <LayoutConfigurator
-                                                isViewPage={false}
-                                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                                onOrderChange={handleOrderChange}
-                                                eventDetails={selectedEvents}
-                                                onRemove={handleEventRemove}
-                                                onModify={openDialogForModification}
-                                                onAddEvent={() => setAddEventsDialogOpen(true)}
-                                                gridGap={gridGap}
-                                                onGridGapChange={setGridGap}
-                                                borderColor={borderColor}
-                                                onBorderColorChange={setBorderColor}
-                                                onRestoreGridSettings={handleRestoreGridSettings}
-                                                isChatEnabled={isChatEnabled}
-                                                onIsChatEnabledChange={setIsChatEnabled}
-                                                categories={categories}
-                                                remoteControlMode={remoteControlMode}
-                                                remoteSessionId={remoteSessionId}
-                                                onActivateControlledMode={handleActivateControlledMode}
-                                                onOpenTutorial={() => setIsTutorialOpen(true)}
-                                                onOpenErrors={() => setIsErrorsOpen(true)}
-                                                onNotificationManager={() => setNotificationManagerOpen(true)}
-                                                onOpenCalendar={() => setCalendarOpen(true)}
-                                            />
-                                          </div>
+                                            <div className="p-6 pt-4">
+                                                <LayoutConfigurator
+                                                    isViewPage={false}
+                                                    order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                                    onOrderChange={handleOrderChange}
+                                                    eventDetails={selectedEvents}
+                                                    onRemove={handleEventRemove}
+                                                    onModify={openDialogForModification}
+                                                    onAddEvent={() => setAddEventsDialogOpen(true)}
+                                                    gridGap={gridGap}
+                                                    onGridGapChange={setGridGap}
+                                                    borderColor={borderColor}
+                                                    onBorderColorChange={setBorderColor}
+                                                    onRestoreGridSettings={handleRestoreGridSettings}
+                                                    isChatEnabled={isChatEnabled}
+                                                    onIsChatEnabledChange={setIsChatEnabled}
+                                                    categories={categories}
+                                                    remoteControlMode={remoteControlMode}
+                                                    remoteSessionId={remoteSessionId}
+                                                    onActivateControlledMode={handleActivateControlledMode}
+                                                    onOpenTutorial={() => setIsTutorialOpen(true)}
+                                                    onOpenErrors={() => setIsErrorsOpen(true)}
+                                                    onNotificationManager={() => setNotificationManagerOpen(true)}
+                                                    onOpenCalendar={() => setCalendarOpen(true)}
+                                                    isSheet={false} 
+                                                />
+                                            </div>
                                         </ScrollArea>
+                                        <SheetFooter className="p-4 pt-0 mt-auto border-t">
+                                          <LayoutConfigurator
+                                            order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                            onOrderChange={handleOrderChange}
+                                            eventDetails={selectedEvents}
+                                            onRemove={handleEventRemove}
+                                            onModify={openDialogForModification}
+                                            isViewPage={false}
+                                            remoteControlMode={remoteControlMode}
+                                            remoteSessionId={remoteSessionId}
+                                            onActivateControlledMode={handleActivateControlledMode}
+                                            gridGap={gridGap}
+                                            onGridGapChange={setGridGap}
+                                            borderColor={borderColor}
+                                            onBorderColorChange={setBorderColor}
+                                            onRestoreGridSettings={handleRestoreGridSettings}
+                                            isChatEnabled={isChatEnabled}
+                                            onIsChatEnabledChange={setIsChatEnabled}
+                                            categories={categories}
+                                            onOpenTutorial={() => setIsTutorialOpen(true)}
+                                            onOpenErrors={() => setIsErrorsOpen(true)}
+                                            onNotificationManager={() => setNotificationManagerOpen(true)}
+                                            onOpenCalendar={() => setCalendarOpen(true)}
+                                            isSheet={true}
+                                          />
+                                        </SheetFooter>
                                   </SheetContent>
                                   </Sheet>
 

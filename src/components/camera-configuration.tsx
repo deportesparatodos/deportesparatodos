@@ -3,12 +3,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Settings, X } from 'lucide-react';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
 import { ScrollArea } from './ui/scroll-area';
+import { Separator } from './ui/separator';
 
 interface CameraConfigurationProps {
   order: number[];
@@ -115,9 +116,35 @@ export function CameraConfigurationComponent({
                     onOpenTutorial={onOpenTutorial}
                     onOpenErrors={onOpenErrors}
                     onOpenCalendar={onOpenCalendar}
+                    isSheet={false} 
                 />
               </div>
           </ScrollArea>
+           <SheetFooter className="p-4 pt-0 mt-auto border-t">
+              <LayoutConfigurator
+                order={order}
+                onOrderChange={onOrderChange}
+                eventDetails={eventDetails}
+                onRemove={onRemove}
+                onModify={onModify}
+                isViewPage={isViewPage}
+                remoteControlMode="inactive"
+                onActivateControlledMode={()=>{}}
+                gridGap={0}
+                onGridGapChange={()=>{}}
+                borderColor=''
+                onBorderColorChange={()=>{}}
+                onRestoreGridSettings={()=>{}}
+                isChatEnabled={false}
+                onIsChatEnabledChange={()=>{}}
+                categories={categories}
+                onOpenTutorial={onOpenTutorial}
+                onOpenErrors={onOpenErrors}
+                onOpenCalendar={onOpenCalendar}
+                onNotificationManager={onNotification}
+                isSheet={true}
+              />
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </>
