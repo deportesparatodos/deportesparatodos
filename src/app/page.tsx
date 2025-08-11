@@ -60,6 +60,7 @@ import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RemoteControlManager } from '@/components/remote-control';
+import { AddEventsDialog } from '@/components/add-events-dialog';
 
 
 interface StreamedMatch {
