@@ -1018,7 +1018,9 @@ function HomePageContent() {
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
 
   const handleStartView = () => {
-    if (remoteControlMode === 'controlling' || selectedEventsCount === 0) return;
+    if (selectedEventsCount === 0) return;
+    setRemoteControlMode('inactive'); 
+    setRemoteSessionId(null);
     setIsViewMode(true);
   };
   
@@ -1273,7 +1275,10 @@ const handleRemoveEventFromDialog = (event: Event) => {
             <RemoteControlManager 
                 mode="controlling"
                 initialRemoteSessionId={remoteSessionId}
-                onSessionEnd={() => setRemoteControlMode('inactive')}
+                onSessionEnd={() => {
+                  setRemoteControlMode('inactive');
+                  setIsSessionEnded(true);
+                }}
                 allEvents={events}
                 allChannels={channels}
                 updateAllEvents={setEvents}
@@ -1320,39 +1325,41 @@ const handleRemoveEventFromDialog = (event: Event) => {
     
     return (
       <div className="flex h-screen w-screen bg-background text-foreground group">
-        <RemoteControlManager
-            mode="controlled"
-            viewState={{
-                selectedEvents,
-                viewOrder,
-                gridGap,
-                borderColor,
-                isChatEnabled,
-                fullscreenIndex,
-                schedules
-            }}
-            setViewState={(newState) => {
-                setSelectedEvents(newState.selectedEvents);
-                setViewOrder(newState.viewOrder);
-                setGridGap(newState.gridGap);
-                setBorderColor(newState.borderColor);
-                setIsChatEnabled(newState.isChatEnabled);
-                setFullscreenIndex(newState.fullscreenIndex);
-                setSchedules(newState.schedules);
-            }}
-            onSessionStart={(id) => {
-                setRemoteControlMode('controlled');
-                setRemoteSessionId(id);
-                setCodePopupOpen(true);
-            }}
-            onSessionEnd={() => {
-                setRemoteControlMode('inactive');
-                setRemoteSessionId(null);
-                setCodePopupOpen(false);
-            }}
-            onReload={handleReloadCamera}
-            onToggleFullscreen={handleToggleFullscreen}
-        />
+        {remoteControlMode === 'controlled' && (
+           <RemoteControlManager
+              mode="controlled"
+              viewState={{
+                  selectedEvents,
+                  viewOrder,
+                  gridGap,
+                  borderColor,
+                  isChatEnabled,
+                  fullscreenIndex,
+                  schedules
+              }}
+              setViewState={(newState) => {
+                  setSelectedEvents(newState.selectedEvents);
+                  setViewOrder(newState.viewOrder);
+                  setGridGap(newState.gridGap);
+                  setBorderColor(newState.borderColor);
+                  setIsChatEnabled(newState.isChatEnabled);
+                  setFullscreenIndex(newState.fullscreenIndex);
+                  setSchedules(newState.schedules);
+              }}
+              onSessionStart={(id) => {
+                  setRemoteControlMode('controlled');
+                  setRemoteSessionId(id);
+                  setCodePopupOpen(true);
+              }}
+              onSessionEnd={() => {
+                  setRemoteControlMode('inactive');
+                  setRemoteSessionId(null);
+                  setCodePopupOpen(false);
+              }}
+              onReload={handleReloadCamera}
+              onToggleFullscreen={handleToggleFullscreen}
+          />
+        )}
          <Dialog open={codePopupOpen} onOpenChange={setCodePopupOpen}>
             <DialogContent>
                 <DialogHeader>
@@ -1982,7 +1989,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                         </Button>
                                     </DialogTrigger>
                                     <RemoteControlManager 
-                                        mode="inactive"
+                                        mode={remoteControlMode}
                                         onModeChange={setRemoteControlMode}
                                         onStartControlling={(code) => {
                                             setRemoteSessionId(code);
@@ -1992,6 +1999,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                             setIsViewMode(true);
                                             setRemoteControlMode('controlled');
                                         }}
+                                        remoteSessionId={remoteSessionId}
                                     />
                                 </Dialog>
 

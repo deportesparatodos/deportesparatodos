@@ -46,13 +46,13 @@ const initialRemoteState: RemoteControlViewState = {
 };
 
 type RemoteControlManagerProps = 
-  | {
+  | ({
       mode: 'inactive';
       onModeChange: (mode: 'controlling' | 'controlled') => void;
       onStartControlling: (code: string) => void;
       onActivateControlledMode: () => void;
       remoteSessionId: string | null;
-    }
+    } & { [key: string]: any; })
   | {
       mode: 'controlling';
       initialRemoteSessionId: string | null;
@@ -354,7 +354,9 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
           onGridGapChange={(value) => updateAndPublish({ gridGap: value })}
           borderColor={remoteState.borderColor}
           onBorderColorChange={(value) => updateAndPublish({ borderColor: value })}
-          onRestoreGridSettings={() => updateAndPublish({ gridGap: 0, borderColor: '#000000'})}
+          onRestoreGridSettings={() => {
+              updateAndPublish({ gridGap: 0, borderColor: '#000000'})
+          }}
           isChatEnabled={remoteState.isChatEnabled}
           onIsChatEnabledChange={(value) => updateAndPublish({ isChatEnabled: value })}
           categories={[]}
@@ -374,7 +376,11 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
                     setModifyEvent(null);
                 }}
                 isModification={true}
-                onRemove={()=>{}}
+                onRemove={(eventToRemove) => {
+                    const newEvents = remoteState.selectedEvents.map(se => se?.id === (eventToRemove as unknown as Event).id ? null : se);
+                    updateAndPublish({ selectedEvents: newEvents });
+                    setModifyEvent(null);
+                }}
                 isLoading={false}
                 setIsLoading={()=>{}}
                 setEventForDialog={()=>{}}
