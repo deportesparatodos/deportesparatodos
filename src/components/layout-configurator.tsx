@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -76,7 +74,7 @@ export function EventList({
   
   return (
     <div className="space-y-4">
-        {order.map((originalIndex, currentIndex) => {
+        {Array.isArray(order) && order.map((originalIndex, currentIndex) => {
             const event = Array.isArray(eventDetails) && eventDetails[originalIndex] ? eventDetails[originalIndex] : null;
             if (!event) return null;
 

@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
@@ -163,6 +161,18 @@ export interface RemoteControlViewState {
   schedules: Schedule[];
 }
 
+const initialRemoteState: RemoteControlViewState = {
+  sessionId: '',
+  selectedEvents: Array(9).fill(null),
+  viewOrder: Array.from({ length: 9 }, (_, i) => i),
+  gridGap: 0,
+  borderColor: '#000000',
+  isChatEnabled: true,
+  fullscreenIndex: null,
+  schedules: [],
+};
+
+
 // --- View for the "Controlling" device (e.g., phone) ---
 export function RemoteControlView({
   ablyRef,
@@ -185,7 +195,7 @@ export function RemoteControlView({
   isSessionEnded: boolean;
   setIsSessionEnded: (isEnded: boolean) => void;
 }) {
-    const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
+    const [remoteState, setRemoteState] = useState<RemoteControlViewState>(initialRemoteState);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -205,7 +215,7 @@ export function RemoteControlView({
             onSessionEnd(remoteState);
         } else {
            // Fallback if remoteState is null for some reason
-           onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null, schedules: []});
+           onSessionEnd(initialRemoteState);
         }
     }, [remoteState, onSessionEnd]);
     
@@ -281,7 +291,6 @@ export function RemoteControlView({
     
     const updateAndPublish = (newState: Partial<RemoteControlViewState>) => {
       setRemoteState(prevState => {
-        if (!prevState) return null;
         const updatedState = {...prevState, ...newState};
         publishAction('updateState', updatedState);
         return updatedState;
@@ -383,7 +392,7 @@ export function RemoteControlView({
         )
     }
     
-    if (!remoteState && !isLoading) {
+    if (!remoteState?.sessionId && !isLoading) {
         return (
             <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center text-center p-4">
                  <X className="h-10 w-10 text-destructive mb-4" />
@@ -398,8 +407,6 @@ export function RemoteControlView({
         );
     }
     
-    if (!remoteState) return null;
-
   return (
     <>
       <div className="fixed inset-0 bg-background z-50 flex flex-col">
