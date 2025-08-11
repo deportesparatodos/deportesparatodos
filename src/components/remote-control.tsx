@@ -25,7 +25,7 @@ import type { Event } from './event-carousel';
 import type { Channel } from './channel-list';
 import type { Schedule } from './schedule-manager';
 
-interface ViewState {
+interface RemoteControlViewState {
   selectedEvents: (Event | null)[];
   viewOrder: number[];
   gridGap: number;
@@ -35,7 +35,7 @@ interface ViewState {
   schedules: Schedule[];
 }
 
-const initialViewState: ViewState = {
+const initialRemoteState: RemoteControlViewState = {
   selectedEvents: Array(9).fill(null),
   viewOrder: Array.from({ length: 9 }, (_, i) => i),
   gridGap: 0,
@@ -51,6 +51,7 @@ type RemoteControlManagerProps =
       onModeChange: (mode: 'controlling' | 'controlled') => void;
       onStartControlling: (code: string) => void;
       onActivateControlledMode: () => void;
+      remoteSessionId: string | null;
     }
   | {
       mode: 'controlling';
@@ -62,8 +63,8 @@ type RemoteControlManagerProps =
     }
   | {
       mode: 'controlled';
-      viewState: ViewState;
-      setViewState: (newState: ViewState) => void;
+      viewState: RemoteControlViewState;
+      setViewState: (newState: RemoteControlViewState) => void;
       onSessionStart: (sessionId: string) => void;
       onSessionEnd: () => void;
       onReload: (index: number) => void;
@@ -99,7 +100,7 @@ export function RemoteControlManager(props: RemoteControlManagerProps) {
   return null;
 }
 
-function InactiveView({ onActivateControlledMode, onStartControlling }: Extract<RemoteControlManagerProps, { mode: 'inactive' }>) {
+function InactiveView({ onActivateControlledMode, onStartControlling, remoteSessionId }: Extract<RemoteControlManagerProps, { mode: 'inactive' }>) {
   const [dialogView, setDialogView] = useState<'main' | 'controlling'>('main');
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -127,8 +128,21 @@ function InactiveView({ onActivateControlledMode, onStartControlling }: Extract<
 
       {dialogView === 'main' && (
         <div className="space-y-4 py-4">
-          <Button onClick={onActivateControlledMode} size="lg" className="w-full">Ser Controlado</Button>
-          <Button onClick={() => setDialogView('controlling')} variant="outline" size="lg" className="w-full">Controlar Otro Dispositivo</Button>
+          {remoteSessionId ? (
+              <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">Sesión de control activa. Código:</p>
+                  <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-3xl font-bold tracking-widest text-primary">
+                          {remoteSessionId}
+                      </p>
+                  </div>
+              </div>
+          ) : (
+            <>
+              <Button onClick={onActivateControlledMode} size="lg" className="w-full">Ser Controlado</Button>
+              <Button onClick={() => setDialogView('controlling')} variant="outline" size="lg" className="w-full">Controlar Otro Dispositivo</Button>
+            </>
+          )}
         </div>
       )}
       
@@ -210,7 +224,7 @@ function ControlledView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContro
 
 
 function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteControlManagerProps, { mode: 'controlling' }> & { ablyRef: any, cleanupAbly: () => void }) {
-  const [remoteState, setRemoteState] = useState<ViewState | null>(null);
+  const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
   const [addEventsOpen, setAddEventsOpen] = useState(false);
@@ -219,7 +233,7 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
   const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
   const { toast } = useToast();
 
-  const publishAction = useCallback((action: string, payload: object) => {
+  const publishAction = useCallback((action: string, payload: any) => {
     const { channel } = ablyRef.current;
     if (channel) {
       channel.publish('control-action', { action, payload });
@@ -259,7 +273,8 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
                     setIsLoading(false);
                 }
             });
-
+            
+            await channel.presence.enter();
             await channel.whenState('attached');
             publishAction('requestInitialState', {});
 
@@ -281,9 +296,9 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.initialRemoteSessionId]);
 
-  const updateAndPublish = (newState: Partial<ViewState>) => {
+  const updateAndPublish = (newState: Partial<RemoteControlViewState>) => {
     setRemoteState(prevState => {
-      const updatedState = { ...(prevState || initialViewState), ...newState };
+      const updatedState = { ...(prevState || initialRemoteState), ...newState };
       publishAction('updateState', updatedState);
       return updatedState;
     });
@@ -309,7 +324,16 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
         <LayoutConfigurator
           remoteControlMode="controlling"
           order={remoteState.viewOrder.filter(i => remoteState.selectedEvents[i] !== null)}
-          onOrderChange={(newOrder) => updateAndPublish({ viewOrder: newOrder })}
+          onOrderChange={(newOrder) => {
+              const fullOrder = [...newOrder];
+              const presentIndexes = new Set(newOrder);
+              for (let i = 0; i < 9; i++) {
+                if (!presentIndexes.has(i)) {
+                  fullOrder.push(i);
+                }
+              }
+              updateAndPublish({ viewOrder: fullOrder });
+          }}
           eventDetails={remoteState.selectedEvents}
           onRemove={(index) => {
               const newEvents = [...remoteState.selectedEvents];
@@ -318,7 +342,10 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
           }}
           onReload={(index) => publishAction('reload', { index })}
           onModify={(event, index) => setModifyEvent({ event, index })}
-          onToggleFullscreen={(index) => publishAction('toggleFullscreen', {index})}
+          onToggleFullscreen={(index) => {
+              const newIndex = remoteState.fullscreenIndex === index ? null : index;
+              updateAndPublish({ fullscreenIndex: newIndex });
+          }}
           fullscreenIndex={remoteState.fullscreenIndex}
           isViewPage={true}
           onAddEvent={() => setAddEventsOpen(true)}
@@ -369,7 +396,10 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
             }
             setAddEventsOpen(false);
         }}
-        onRemove={() => {}}
+        onRemove={(event) => {
+             const newEvents = remoteState.selectedEvents.map(se => se?.id === event.id ? null : se);
+             updateAndPublish({ selectedEvents: newEvents });
+        }}
         selectedEvents={remoteState.selectedEvents}
         allEvents={props.allEvents}
         allChannels={props.allChannels}

@@ -56,18 +56,14 @@ export function EventList({
   fullscreenIndex,
 }: Pick<EventListManagementProps, 'order' | 'onOrderChange' | 'eventDetails' | 'onReload' | 'onRemove' | 'onModify' | 'isViewPage' | 'onToggleFullscreen' | 'fullscreenIndex'>) {
     
-  // Defensive check to ensure `order` is a valid array
   const validOrder = Array.isArray(order) ? order : [];
   
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
     const newOrder = [...validOrder];
-    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    
-    if (targetIndex >= 0 && targetIndex < newOrder.length) {
-      const itemToMove = newOrder.splice(currentIndex, 1)[0];
-      newOrder.splice(targetIndex, 0, itemToMove);
-      onOrderChange(newOrder);
-    }
+    const itemToMove = newOrder.splice(currentIndex, 1)[0];
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    newOrder.splice(newIndex, 0, itemToMove);
+    onOrderChange(newOrder);
   };
   
   const activeEventsCount = validOrder.length;
