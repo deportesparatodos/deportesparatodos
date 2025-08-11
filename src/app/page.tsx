@@ -1915,7 +1915,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 pt-4">
                     {mobileSortedEvents.map((event, index) => (
                         <EventCard
-                            key={`mobile-event-${event.id}`}
+                            key={`mobile-event-${event.id}-${index}`}
                             event={event}
                             selection={getEventSelection(event)}
                             onClick={() => openDialogForEvent(event)}
@@ -1995,7 +1995,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
               } else {
                  return (
                     <EventCard
-                      key={`search-event-${(item as Event).id}`}
+                      key={`search-event-${(item as Event).id}-${index}`}
                       event={item as Event}
                       selection={getEventSelection(item as Event)}
                       onClick={() => openDialogForEvent(item as Event)}

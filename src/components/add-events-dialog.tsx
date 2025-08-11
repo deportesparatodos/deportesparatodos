@@ -247,9 +247,9 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
                         <TabsContent value="eventos" className="flex-grow mt-4 h-0">
                             <ScrollArea className="h-full pr-4 -mr-4">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {sortedAndFilteredEvents.map((event) => (
+                                    {sortedAndFilteredEvents.map((event, index) => (
                                         <EventCard
-                                            key={`${event.id}-${event.source}`}
+                                            key={`${event.id}-${event.source}-${index}`}
                                             event={event}
                                             selection={getEventSelection(event)}
                                             onClick={() => openSubDialogForEvent(event)}

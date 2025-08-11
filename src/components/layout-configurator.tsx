@@ -67,7 +67,7 @@ export function EventList({
       onOrderChange(validOrder);
     }
   };
-
+  
   const activeEventsCount = Array.isArray(order) ? order.length : 0;
 
   if (activeEventsCount === 0) {
@@ -246,7 +246,7 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
         </AccordionItem>
 
       <AccordionItem value="item-3" className="border rounded-lg px-4">
-        <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+        <AccordionTrigger>Eventos/Canales Seleccionados ({(eventProps.order || []).length})</AccordionTrigger>
         <AccordionContent className="pt-2 pb-4">
            {eventProps.remoteControlMode === 'controlled' ? (
                 <div className="relative p-4 rounded-lg bg-muted/50">

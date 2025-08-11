@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw, AlertCircle } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw, AlertCircle, CalendarClock } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -185,9 +185,7 @@ export function RemoteControlView({
   isSessionEnded: boolean;
   setIsSessionEnded: (isEnded: boolean) => void;
 }) {
-    const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>({
-      sessionId: '', selectedEvents: Array(9).fill(null), viewOrder: Array.from({length: 9}, (_,i)=>i), gridGap: 0, borderColor: '#000000', isChatEnabled: false, fullscreenIndex: null, schedules: []
-    });
+    const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
