@@ -310,7 +310,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
           </ScrollArea>
         </div>
         <div className="p-4 mt-auto border-t">
-            <Separator className='mb-4' />
             <div className="space-y-2">
                 <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
                     <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
@@ -343,34 +342,32 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                     <DialogTitle>Tutorial de Uso</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="h-96 pr-6">
-                    <div className="text-sm text-muted-foreground space-y-4">
+                   <div className="text-sm text-muted-foreground space-y-4">
                         <h3 className="font-bold text-foreground mt-4">¡Bienvenido a Deportes para Todos!</h3>
-                        <p>Esta guía te ayudará a sacar el máximo provecho de todas las funciones. El objetivo de esta plataforma es simple: permitirte ver múltiples eventos deportivos o canales de televisión al mismo tiempo, en una sola pantalla, sin complicaciones.</p>
+                        <p>Esta plataforma te permite ver múltiples eventos deportivos o canales de televisión al mismo tiempo, en una sola pantalla. A continuación, te explicamos cómo funciona.</p>
 
-                        <h3 className="font-bold text-foreground mt-4">Paso 1: Explorar y Seleccionar Eventos</h3>
-                        <p>Al entrar, verás varias listas de eventos: "En Vivo", "Próximos", "Canales 24/7", etc. Simplemente haz clic en la tarjeta del evento o canal que te interese. Al hacerlo, se abrirá un menú con las diferentes opciones de transmisión disponibles para ese evento.</p>
-                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Play className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
-                        <p>Puedes seguir añadiendo eventos o canales hasta un máximo de 9. Verás una marca de verificación verde sobre las tarjetas de los eventos que ya has seleccionado.</p>
+                        <h3 className="font-bold text-foreground mt-4">Paso 1: Explorar y Seleccionar Contenido</h3>
+                        <p>En la página principal, encontrarás diferentes categorías: "En Vivo", "Próximos", "Canales", etc. Navega por estas secciones y haz clic en la tarjeta del evento o canal que te interese. Al hacer clic, aparecerá un menú con una o varias opciones de transmisión (a veces llamadas "fuentes" o "links").</p>
+                        <p>Elige una de las opciones. Una vez seleccionada, el evento se añadirá a tu parrilla de visualización. Un pequeño número en el botón verde de "Play" (<Play className="inline-block h-4 w-4" />) te indicará cuántos eventos has seleccionado. Puedes añadir hasta 9.</p>
 
-                        <h3 className="font-bold text-foreground mt-4">Paso 2: Configurar tu Selección</h3>
-                        <p>Antes de empezar a ver, puedes personalizar tu vista. Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) para abrir el panel de configuración. Aquí encontrarás varias opciones:</p>
+                        <h3 className="font-bold text-foreground mt-4">Paso 2: Configurar tu Vista Previa</h3>
+                        <p>Antes de iniciar la transmisión, puedes personalizar cómo se verán tus selecciones. Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) para abrir el panel de configuración. Aquí podrás:</p>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Eventos/Canales Seleccionados:</strong> En este desplegable, verás la lista de todo lo que has añadido. Puedes usar las flechas (<ArrowUp className="inline-block h-4 w-4" /> <ArrowDown className="inline-block h-4 w-4" />) para reordenar las ventanas, el lápiz (<Pencil className="inline-block h-4 w-4" />) para cambiar la opción de transmisión, o el bote de basura (<Trash2 className="inline-block h-4 w-4" />) para eliminar un evento de tu selección.</li>
-                            <li><strong>Diseño de Cuadrícula:</strong> Ajusta el espaciado entre las ventanas y cambia el color del borde para una mejor visualización.</li>
-                            <li><strong>Funciones Adicionales:</strong> Aquí puedes activar o desactivar el chat en vivo que aparecerá en la pantalla de transmisión.</li>
+                            <li><strong>Gestionar tu Selección:</strong> En el desplegable "Eventos/Canales", puedes reordenar las ventanas con las flechas, cambiar la fuente de transmisión con el lápiz, o eliminar un evento con el bote de basura.</li>
+                            <li><strong>Ajustar el Diseño:</strong> Modifica el espaciado entre las ventanas y el color del borde para una mejor organización visual.</li>
+                            <li><strong>Activar el Chat:</strong> Habilita o deshabilita el chat en vivo, que aparecerá en la pantalla de transmisión.</li>
                         </ul>
 
-                        <h3 className="font-bold text-foreground mt-4">Paso 3: Iniciar la Vista de Transmisión</h3>
-                        <p>Cuando tu selección esté lista y configurada a tu gusto, presiona el botón verde de "Play" (<Play className="inline-block h-4 w-4" />). La aplicación pasará a modo de pantalla completa y organizará todas tus selecciones en una cuadrícula para que puedas verlas simultáneamente.</p>
-                        <p>Dentro de la vista de transmisión, puedes seguir accediendo al menú de configuración (<Settings className="inline-block h-4 w-4" />) para hacer ajustes en tiempo real, como recargar una ventana específica (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
-
+                        <h3 className="font-bold text-foreground mt-4">Paso 3: Iniciar la Transmisión</h3>
+                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Play className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
+                        
                         <h3 className="font-bold text-foreground mt-4">Funciones Avanzadas</h3>
                         <ul className="list-disc pl-5 space-y-2">
-                            <li><strong>Control Remoto (<Airplay className="inline-block h-4 w-4" />):</strong> Permite que otro dispositivo (como tu móvil) controle lo que se ve en la pantalla principal (como tu TV). En la pantalla que quieres controlar, abre el menú de configuración y haz clic en "Activar Control Remoto". En el dispositivo que usarás como control, introduce el código que aparece.</li>
-                            <li><strong>Programar Selección (<CalendarDays className="inline-block h-4 w-4" />):</strong> ¿Quieres que una selección específica de partidos de fútbol se active automáticamente el sábado a las 15:00? Con esta función, puedes guardar tu selección actual y programarla para que se cargue a una fecha y hora determinadas.</li>
-                            <li><strong>Notificaciones por Correo (<Mail className="inline-block h-4 w-4" />):</strong> Suscríbete para recibir un correo diario con la lista de eventos disponibles, ya sea de todas las categorías o solo de las que te interesan.</li>
+                            <li><strong>Control Remoto (<Airplay className="inline-block h-4 w-4" />):</strong> Te permite usar un dispositivo (como tu móvil) para controlar lo que se ve en otro (como tu TV). En la pantalla que quieres controlar, abre el menú y pulsa "Activar Control Remoto" para generar un código. En el dispositivo que usarás como control, introduce ese código.</li>
+                            <li><strong>Programar Selección (<CalendarDays className="inline-block h-4 w-4" />):</strong> Guarda una selección de eventos y prográmala para que se cargue automáticamente en una fecha y hora específicas. Ideal para no perderte los partidos del fin de semana.</li>
+                            <li><strong>Notificaciones y Calendario (<Mail className="inline-block h-4 w-4" />, <CalendarDays className="inline-block h-4 w-4"/>):</strong> Suscríbete para recibir correos con la agenda diaria o para añadir los eventos directamente a tu calendario personal.</li>
                         </ul>
-                        <p className="pt-2">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
+                        <p className="pt-2">¡Eso es todo! Explora las opciones y disfruta del deporte a tu manera.</p>
                     </div>
                 </ScrollArea>
                 <DialogFooter>
@@ -385,7 +382,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                     <DialogTitle>Solución de Errores Comunes</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="h-96 pr-6">
-                    <div className="text-sm text-muted-foreground space-y-4">
+                     <div className="text-sm text-muted-foreground space-y-4">
                         <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
                         
                         <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
@@ -440,11 +437,59 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 </DialogHeader>
                 <ScrollArea className="h-96 pr-6">
                     <div className="text-sm text-muted-foreground space-y-4">
-                        <p><strong>Deportes para Todos</strong> es una plataforma que funciona como un motor de búsqueda y agregador de contenido multimedia. No alojamos, distribuimos ni transmitimos ningún tipo de material audiovisual por cuenta propia.</p>
-                        <p>Nuestro servicio se limita a recopilar y organizar enlaces a transmisiones que están disponibles públicamente en Internet, facilitando a los usuarios el acceso a dicho contenido a través de reproductores de video incrustados (iframes) que provienen de fuentes de terceros.</p>
-                        <p>No tenemos control ni responsabilidad sobre la legalidad, calidad, disponibilidad o contenido de las transmisiones de terceros. Los derechos de autor y de transmisión de todo el contenido pertenecen a sus respectivos propietarios y/o difusores. Esta plataforma no se atribuye la propiedad ni los derechos de ninguno de los eventos o canales mostrados.</p>
-                        <p>Los logos y marcas comerciales que aparecen en este sitio son propiedad de sus respectivos dueños y se utilizan únicamente con fines identificativos y de referencia, amparados por el derecho de cita.</p>
-                        <p>Al utilizar nuestra plataforma, el usuario entiende y acepta que está accediendo a contenido proporcionado por terceros y que <strong>Deportes para Todos</strong> actúa únicamente como un intermediario tecnológico. Cualquier reclamo relacionado con los derechos de autor debe dirigirse a los proveedores de contenido originales que alojan las transmisiones.</p>
+                        <h3 className="font-bold text-foreground">Descargo de Responsabilidad – Derechos de Autor</h3>
+                        <p>DEPORTES PARA TODOS es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.</p>
+                        <p>No participamos en la creación, alteración ni distribución de dichas señales, y no somos responsables de la legalidad de los contenidos a los que se accede a través de estos terceros. Cualquier infracción potencial corresponde a dichos proveedores externos.</p>
+                        
+                        <h3 className="font-bold text-foreground">Sobre la legalidad y responsabilidad de terceros</h3>
+                        <p>Existen antecedentes de sitios sancionados por alojar y retransmitir directamente contenido con derechos de autor. En contraste, DEPORTES PARA TODOS no aloja señales ni transmite contenido, y se limita exclusivamente a insertar enlaces públicos de terceros mediante código iframe. No participamos en la obtención ni distribución del contenido audiovisual y no tenemos control sobre su disponibilidad o legalidad.</p>
+
+                        <h3 className="font-bold text-foreground">Uso de marcas y logos</h3>
+                        <p>Todas las marcas, nombres comerciales, logotipos o imágenes presentes en el sitio son propiedad de sus respectivos dueños. En DEPORTES PARA TODOS se utilizan exclusivamente con fines informativos o ilustrativos, respetando el derecho de cita previsto por el Artículo 32 de la Ley 11.723 de Propiedad Intelectual de Argentina.</p>
+
+                        <h3 className="font-bold text-foreground">Legislación aplicable</h3>
+                        <p>Este sitio opera bajo las leyes de la República Argentina. El mero hecho de insertar un iframe público no configura, por sí solo, un delito conforme al derecho argentino, siempre que no se participe en la obtención o manipulación del contenido protegido.</p>
+
+                        <h3 className="font-bold text-foreground">Uso personal y responsabilidad del usuario</h3>
+                        <p>El acceso a esta página se realiza bajo responsabilidad del usuario. Si en tu país este tipo de contenido se encuentra restringido, es tu obligación cumplir con las leyes locales. No nos responsabilizamos por el uso indebido o ilegal de los enlaces por parte de los visitantes.</p>
+                        
+                        <h3 className="font-bold text-foreground">Sobre el uso de subdominios</h3>
+                        <p>DEPORTES PARA TODOS utiliza subdominios como gh.deportesparatodos.tv con fines exclusivamente organizativos y técnicos, para centralizar y facilitar el acceso a iframes de terceros. Estos subdominios no almacenan, manipulan ni retransmiten contenido audiovisual, sino que actúan como una ventana hacia los streams originales disponibles públicamente en sitios como streamtp3.com, la12hd.com y otros. En ningún caso se modifica la fuente original ni se interviene en el contenido emitido por dichos terceros.</p>
+
+                        <h3 className="font-bold text-foreground">Sobre la experiencia del usuario</h3>
+                        <p>DEPORTES PARA TODOS puede aplicar medidas para mejorar la experiencia de navegación, como la reducción de anuncios emergentes o contenido intrusivo de terceros. Estas medidas no interfieren con el contenido audiovisual transmitido dentro de los reproductores embebidos, ni modifican las señales originales. Cualquier bloqueo se limita a elementos externos ajenos a la emisión en sí.</p>
+
+                        <h3 className="font-bold text-foreground">Monetización, publicidad y patrocinadores</h3>
+                        <p>DEPORTES PARA TODOS puede exhibir anuncios publicitarios proporcionados por plataformas de monetización de terceros (como Monetag) y/o incluir contenido patrocinado de empresas vinculadas al sector iGaming (casas de apuestas, juegos online y plataformas similares).</p>
+                        <p>Estos ingresos publicitarios permiten el mantenimiento del sitio, pero no están directamente vinculados al contenido embebido ni implican relación comercial con las plataformas desde las cuales se obtiene dicho contenido.</p>
+                        <p>DEPORTES PARA TODOS no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.</p>
+                        <p>Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.</p>
+                        <p>Nos reservamos el derecho de incluir o remover campañas publicitarias en cualquier momento, y recomendamos a los usuarios consultar la política de privacidad de cada plataforma externa a la que accedan desde este sitio.</p>
+
+                        <h3 className="font-bold text-foreground">Relación con los dueños del contenido</h3>
+                        <p>DEPORTES PARA TODOS no tiene relación alguna con los titulares de los derechos de las transmisiones embebidas, ni con las plataformas que los alojan. Todo el contenido audiovisual visualizado mediante iframes es responsabilidad exclusiva del sitio externo que lo provee.</p>
+
+                        <h3 className="font-bold text-foreground">Mecanismos de seguridad</h3>
+                        <p>No se utilizan mecanismos técnicos para eludir bloqueos, restricciones regionales (geobloqueos) ni sistemas de autenticación de las plataformas externas.</p>
+
+                        <h3 className="font-bold text-foreground">Cookies y datos del usuario</h3>
+                        <p>Este sitio puede utilizar cookies de terceros para ofrecer una mejor experiencia de usuario, realizar estadísticas anónimas de uso o mostrar anuncios relevantes. Al navegar por DEPORTES PARA TODOS usted acepta este uso de cookies. Recomendamos consultar las políticas de privacidad de los servicios externos vinculados a este sitio.</p>
+                        <p>El contenido patrocinado relacionado con plataformas de iGaming está destinado únicamente a usuarios mayores de 18 años. DEPORTES PARA TODOS no se responsabiliza por el acceso a dichas plataformas por parte de menores de edad.</p>
+                        <p>This Site is affiliated with Monumetric (dba for The Blogger Network, LLC) for the purposes of placing advertising on the Site, and Monumetric will collect and use certain data for advertising purposes. To learn more about Monumetric’s data usage, click here: <a href="https://www.monumetric.com/publisher-advertising-privacy-policy/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Publisher Advertising Privacy</a></p>
+
+                        <h3 className="font-bold text-foreground">Notificaciones de derechos de autor</h3>
+                        <p>Si usted es titular de derechos o su representante y considera que un contenido embebido desde una fuente externa infringe sus derechos, puede enviarnos una notificación formal. Aunque no estamos sujetos a la legislación DMCA de EE.UU., colaboramos voluntariamente con cualquier requerimiento legítimo bajo dicho marco.</p>
+                        <p>Por favor incluya en su notificación:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
+                          <li>(b) Identificación clara del contenido presuntamente infringido.</li>
+                          <li>(c) Enlace directo al contenido incrustado en DEPORTES PARA TODOS.</li>
+                          <li>(d) Datos de contacto válidos (correo electrónico).</li>
+                          <li>(e) Una declaración de buena fe indicando que el uso no está autorizado por usted, su agente o la ley.</li>
+                          <li>(f) Una declaración de veracidad de la información, bajo pena de perjurio.</li>
+                        </ul>
+                        <p>Una vez recibida y analizada la notificación, procederemos a desactivar el enlace correspondiente si así corresponde. También podremos notificar al proveedor del iframe, si fuera posible.</p>
+                        <p>Al utilizar este sitio web, usted declara haber leído, comprendido y aceptado este descargo de responsabilidad en su totalidad.</p>
                     </div>
                 </ScrollArea>
                 <DialogFooter>
