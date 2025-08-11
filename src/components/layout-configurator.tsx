@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Maximize, Minimize, Settings, Play } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Maximize, Minimize, Settings, Play, AlertCircle } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -15,7 +16,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { AlertCircle } from 'lucide-react';
 
 export interface EventListManagementProps {
   order: number[];
@@ -55,18 +55,21 @@ export function EventList({
   fullscreenIndex,
 }: Pick<EventListManagementProps, 'order' | 'onOrderChange' | 'eventDetails' | 'onReload' | 'onRemove' | 'onModify' | 'isViewPage' | 'onToggleFullscreen' | 'fullscreenIndex'>) {
     
+  // Defensive check to ensure `order` is a valid array
+  const validOrder = Array.isArray(order) ? order : [];
+  
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
-    const validOrder = Array.isArray(order) ? [...order] : [];
+    const newOrder = [...validOrder];
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     
-    if (targetIndex >= 0 && targetIndex < validOrder.length) {
-      const itemToMove = validOrder.splice(currentIndex, 1)[0];
-      validOrder.splice(targetIndex, 0, itemToMove);
-      onOrderChange(validOrder);
+    if (targetIndex >= 0 && targetIndex < newOrder.length) {
+      const itemToMove = newOrder.splice(currentIndex, 1)[0];
+      newOrder.splice(targetIndex, 0, itemToMove);
+      onOrderChange(newOrder);
     }
   };
   
-  const activeEventsCount = Array.isArray(order) ? order.length : 0;
+  const activeEventsCount = validOrder.length;
 
   if (activeEventsCount === 0) {
       return <p className="text-muted-foreground text-center py-8">No hay eventos seleccionados.</p>
@@ -74,7 +77,7 @@ export function EventList({
   
   return (
     <div className="space-y-4">
-        {Array.isArray(order) && order.map((originalIndex, currentIndex) => {
+        {validOrder.map((originalIndex, currentIndex) => {
             const event = Array.isArray(eventDetails) && eventDetails[originalIndex] ? eventDetails[originalIndex] : null;
             if (!event) return null;
 

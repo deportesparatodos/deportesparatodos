@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
@@ -321,7 +322,9 @@ export function RemoteControlView({
     const handleOrderChange = (newOrder: number[]) => {
       if (!remoteState) return;
       const fullOrderReference = Array.from({ length: 9 }, (_, i) => i);
-      const activeNewOrder = newOrder.filter(i => remoteState.selectedEvents[i] !== null);
+      
+      const validNewOrder = Array.isArray(newOrder) ? newOrder : [];
+      const activeNewOrder = validNewOrder.filter(i => remoteState.selectedEvents[i] !== null);
       
       const finalOrder = [...activeNewOrder, ...fullOrderReference.filter(i => !activeNewOrder.includes(i))];
       updateAndPublish({ viewOrder: finalOrder });

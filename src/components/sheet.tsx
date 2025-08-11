@@ -99,7 +99,7 @@ const SheetFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-col-reverse sm:space-y-2 sm:space-y-reverse",
+      "flex flex-col-reverse sm:flex-col-reverse space-y-2 space-y-reverse",
       className
     )}
     {...props}
@@ -143,5 +143,3 @@ export {
   SheetTitle,
   SheetDescription,
 }
-
-    

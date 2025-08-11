@@ -364,7 +364,7 @@ function HomePageContent() {
       
       return () => { isMounted = false; cleanupAbly(); };
     }
-  }, [isViewMode, remoteControlStarted]);
+  }, [isViewMode, remoteControlStarted, initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode]);
 
 
   const handleStopView = useCallback(() => {
