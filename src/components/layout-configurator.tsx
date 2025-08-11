@@ -326,13 +326,13 @@ function ViewPageMenu({
               <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
               <AccordionContent className="pt-2 pb-4">
                    {eventProps.remoteControlMode === 'controlled' ? (
-                       <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500'>
-                          <AlertCircle className="h-4 w-4 !text-yellow-500" />
-                          <AlertTitle className="font-bold">Control Remoto Activo</AlertTitle>
-                          <AlertDescription className="text-yellow-500/80">
-                             Para hacer cambios, utilice el dispositivo controlador. Si usted no conectó nada, recargue la página.
-                          </AlertDescription>
-                       </Alert>
+                        <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
+                            <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
+                            <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
+                            <AlertDescription className="text-yellow-500/80 text-center">
+                                Parece que hay un control remoto conectado. Para hacer cambios, hágalos desde el control remoto. Si usted no conectó nada, recargue la página.
+                            </AlertDescription>
+                        </Alert>
                    ) : (
                        <>
                            <EventList {...eventProps} />
