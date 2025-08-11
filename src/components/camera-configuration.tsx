@@ -3,13 +3,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings, X, BookOpen, AlertCircle, Mail, FileText, BellRing, CalendarDays } from 'lucide-react';
+import { Settings, X } from 'lucide-react';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
 import { ScrollArea } from './ui/scroll-area';
-
 
 interface CameraConfigurationProps {
   order: number[];
@@ -34,6 +33,10 @@ interface CameraConfigurationProps {
   onRestoreGridSettings: () => void;
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
+  categories: string[];
+  onOpenTutorial: () => void;
+  onOpenErrors: () => void;
+  onOpenCalendar: () => void;
 }
 
 export function CameraConfigurationComponent({ 
@@ -59,6 +62,10 @@ export function CameraConfigurationComponent({
   onRestoreGridSettings,
   isChatEnabled,
   onIsChatEnabledChange,
+  categories,
+  onOpenTutorial,
+  onOpenErrors,
+  onOpenCalendar,
 }: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -70,11 +77,11 @@ export function CameraConfigurationComponent({
             <Settings className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-          <SheetHeader className="p-4 border-b flex-row justify-between items-center">
-            <SheetTitle>Configuración</SheetTitle>
+        <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
+          <SheetHeader className="p-4 border-b flex-row justify-center items-center relative">
+            <SheetTitle className="text-center flex-grow">Configuración</SheetTitle>
             <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
+                <Button variant="ghost" size="icon" className="h-7 w-7 absolute right-2 top-1/2 -translate-y-1/2">
                     <X className="h-5 w-5" />
                 </Button>
             </SheetClose>
@@ -104,7 +111,10 @@ export function CameraConfigurationComponent({
                     onRestoreGridSettings={onRestoreGridSettings}
                     isChatEnabled={isChatEnabled}
                     onIsChatEnabledChange={onIsChatEnabledChange}
-                    categories={[]}
+                    categories={categories}
+                    onOpenTutorial={onOpenTutorial}
+                    onOpenErrors={onOpenErrors}
+                    onOpenCalendar={onOpenCalendar}
                 />
               </div>
           </ScrollArea>

@@ -244,6 +244,7 @@ function HomePageContent() {
   const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
@@ -1614,6 +1615,10 @@ const handleRemoveEventFromDialog = (event: Event) => {
                 onRestoreGridSettings={handleRestoreGridSettings}
                 isChatEnabled={isChatEnabled}
                 onIsChatEnabledChange={setIsChatEnabled}
+                categories={categories}
+                onOpenTutorial={() => setIsTutorialOpen(true)}
+                onOpenErrors={() => setIsErrorsOpen(true)}
+                onOpenCalendar={() => setCalendarOpen(true)}
             />
 
             {isChatEnabled && (
@@ -2022,9 +2027,14 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                         <Settings />
                                       </Button>
                                     </SheetTrigger>
-                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                       <SheetHeader className="p-4 border-b">
-                                           <SheetTitle>Configuración</SheetTitle>
+                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
+                                       <SheetHeader className="p-4 border-b flex-row justify-center items-center relative">
+                                           <SheetTitle className="text-center flex-grow">Configuración</SheetTitle>
+                                           <SheetClose asChild>
+                                             <Button variant="ghost" size="icon" className="h-7 w-7 absolute right-2 top-1/2 -translate-y-1/2">
+                                                 <X className="h-5 w-5" />
+                                             </Button>
+                                           </SheetClose>
                                        </SheetHeader>
                                         <ScrollArea className="flex-grow h-0">
                                           <div className="p-6 pt-4">
@@ -2047,6 +2057,10 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 remoteControlMode={remoteControlMode}
                                                 remoteSessionId={remoteSessionId}
                                                 onActivateControlledMode={handleActivateControlledMode}
+                                                onOpenTutorial={() => setIsTutorialOpen(true)}
+                                                onOpenErrors={() => setIsErrorsOpen(true)}
+                                                onNotificationManager={() => setNotificationManagerOpen(true)}
+                                                onOpenCalendar={() => setCalendarOpen(true)}
                                             />
                                           </div>
                                         </ScrollArea>
@@ -2077,6 +2091,9 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
             </main>
         </div>
         
+        <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+           <CalendarDialogContent categories={categories} />
+        </Dialog>
         <NotificationManager
             open={notificationManagerOpen}
             onOpenChange={setNotificationManagerOpen}
