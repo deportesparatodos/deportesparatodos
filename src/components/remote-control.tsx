@@ -47,12 +47,13 @@ const initialRemoteState: RemoteControlViewState = {
 
 type RemoteControlManagerProps = 
   | ({
-      mode: 'inactive';
-      onModeChange: (mode: 'controlling' | 'controlled') => void;
+      mode: 'inactive' | 'controlled';
       onStartControlling: (code: string) => void;
       onActivateControlledMode: () => void;
       remoteSessionId: string | null;
-    } & { [key: string]: any; })
+      // Below are props for when it's just a dialog trigger, not a full view
+      [key: string]: any;
+    })
   | {
       mode: 'controlling';
       initialRemoteSessionId: string | null;
@@ -224,7 +225,7 @@ function ControlledView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContro
 
 
 function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteControlManagerProps, { mode: 'controlling' }> & { ablyRef: any, cleanupAbly: () => void }) {
-  const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
+  const [remoteState, setRemoteState] = useState<RemoteControlViewState>(initialRemoteState);
   const [isLoading, setIsLoading] = useState(true);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
   const [addEventsOpen, setAddEventsOpen] = useState(false);
@@ -346,10 +347,10 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
               const newIndex = remoteState.fullscreenIndex === index ? null : index;
               updateAndPublish({ fullscreenIndex: newIndex });
           }}
+          onSchedule={() => setScheduleManagerOpen(true)}
           fullscreenIndex={remoteState.fullscreenIndex}
           isViewPage={true}
           onAddEvent={() => setAddEventsOpen(true)}
-          onSchedule={() => setScheduleManagerOpen(true)}
           gridGap={remoteState.gridGap}
           onGridGapChange={(value) => updateAndPublish({ gridGap: value })}
           borderColor={remoteState.borderColor}
@@ -360,6 +361,7 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
           isChatEnabled={remoteState.isChatEnabled}
           onIsChatEnabledChange={(value) => updateAndPublish({ isChatEnabled: value })}
           categories={[]}
+          onActivateControlledMode={() => {}}
         />
       </div>
 

@@ -3,9 +3,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings } from 'lucide-react';
+import { Settings, X, BookOpen, AlertCircle, Mail, FileText, BellRing, CalendarDays } from 'lucide-react';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
 import { ScrollArea } from './ui/scroll-area';
@@ -26,6 +26,7 @@ interface CameraConfigurationProps {
   onNotification: () => void;
   remoteSessionId: string | null;
   remoteControlMode: 'inactive' | 'controlling' | 'controlled';
+  onActivateControlledMode: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
@@ -50,6 +51,7 @@ export function CameraConfigurationComponent({
   onNotification,
   remoteSessionId,
   remoteControlMode,
+  onActivateControlledMode,
   gridGap,
   onGridGapChange,
   borderColor,
@@ -69,11 +71,16 @@ export function CameraConfigurationComponent({
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-          <SheetHeader className="p-6 pb-0 text-center flex-shrink-0">
-            <SheetTitle className="text-center break-words whitespace-pre-wrap">Configuración de la Vista</SheetTitle>
+          <SheetHeader className="p-4 border-b flex-row justify-between items-center">
+            <SheetTitle>Configuración</SheetTitle>
+            <SheetClose asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <X className="h-5 w-5" />
+                </Button>
+            </SheetClose>
           </SheetHeader>
           <ScrollArea className="flex-grow h-0">
-              <div className='p-6'>
+              <div className='p-6 pt-4'>
                 <LayoutConfigurator
                     order={order}
                     onOrderChange={onOrderChange}
@@ -87,6 +94,7 @@ export function CameraConfigurationComponent({
                     onNotificationManager={onNotification}
                     remoteSessionId={remoteSessionId}
                     remoteControlMode={remoteControlMode}
+                    onActivateControlledMode={onActivateControlledMode}
                     onToggleFullscreen={onToggleFullscreen}
                     fullscreenIndex={fullscreenIndex}
                     gridGap={gridGap}
