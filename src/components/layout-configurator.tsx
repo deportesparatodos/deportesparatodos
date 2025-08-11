@@ -248,13 +248,30 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
       <AccordionItem value="item-3" className="border rounded-lg px-4">
         <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
         <AccordionContent className="pt-2 pb-4">
-          <EventList {...eventProps} />
-           {eventProps.onAddEvent && (
-            <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
-                <Plus className="mr-2 h-4 w-4" />
-                Añadir Evento/Canal
-            </Button>
-           )}
+           {eventProps.remoteControlMode === 'controlled' ? (
+                <div className="relative p-4 rounded-lg bg-muted/50">
+                    <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex items-center justify-center p-4 text-center">
+                        <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500'>
+                            <AlertCircle className="h-4 w-4 !text-yellow-500" />
+                            <AlertTitle className="font-bold">Control Remoto Activo</AlertTitle>
+                            <AlertDescription className="text-yellow-500/80">
+                                Para hacer cambios, utilice el dispositivo controlador. Si usted no conectó nada, recargue la página.
+                            </AlertDescription>
+                        </Alert>
+                    </div>
+                    <EventList {...eventProps} />
+                </div>
+            ) : (
+                 <>
+                    <EventList {...eventProps} />
+                    {eventProps.onAddEvent && (
+                        <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Añadir Evento/Canal
+                        </Button>
+                    )}
+                 </>
+            )}
         </AccordionContent>
       </AccordionItem>
     </Accordion>
@@ -282,7 +299,7 @@ function ViewPageMenu({
                       {eventProps.remoteControlMode === 'controlled' && eventProps.remoteSessionId ? (
                           <>
                               <p className="text-sm text-muted-foreground mb-2">
-                                  Sesión de control activa. Introduce este código en el otro dispositivo:
+                                  Sesión de control activa. Usa este código en el otro dispositivo:
                               </p>
                               <div className="p-3 bg-muted rounded-lg">
                                   <p className="text-3xl font-bold tracking-widest text-primary">
@@ -305,7 +322,7 @@ function ViewPageMenu({
               </AccordionItem>
           )}
 
-          <AccordionItem value="item-3" className="border rounded-lg px-4" disabled={eventProps.remoteControlMode === 'controlled'}>
+          <AccordionItem value="item-3" className="border rounded-lg px-4">
               <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
               <AccordionContent className="pt-2 pb-4">
                    {eventProps.remoteControlMode === 'controlled' ? (
@@ -403,3 +420,5 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
   return <HomePageMenu eventProps={props} />;
 }
+
+    

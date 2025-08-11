@@ -41,7 +41,7 @@ export function RemoteControlDialog({
   isViewMode: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [view, setView] = useState<'main' | 'controlling'>('main');
+  const [view, setView] = useState<'main' | 'controlling' | 'activeSession'>('main');
   const [isLoading, setIsLoading] = useState(false);
   const [code, setCode] = useState('');
   const { toast } = useToast();
@@ -68,21 +68,17 @@ export function RemoteControlDialog({
 
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen && remoteSessionId) {
+        setView('activeSession');
+    } else if (!isOpen) {
       setTimeout(() => {
         setView('main');
         setCode('');
         setIsLoading(false);
       }, 200);
     }
-  }, [isOpen]);
-  
-  // Show active session code directly if already controlled
-  useEffect(() => {
-    if (isOpen && remoteSessionId) {
-      setView('controlling');
-    }
   }, [isOpen, remoteSessionId]);
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -94,19 +90,18 @@ export function RemoteControlDialog({
       <DialogContent>
         <DialogHeader>
            <DialogTitle>
-            {view === 'main' ? 'Control Remoto' : remoteSessionId ? 'Sesión Activa' : 'Controlar Dispositivo'}
+             {view === 'main' && 'Control Remoto'}
+             {view === 'controlling' && 'Controlar Dispositivo'}
+             {view === 'activeSession' && 'Sesión de Control Activa'}
           </DialogTitle>
            <DialogDescription>
-            {view === 'main'
-              ? 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'
-              : remoteSessionId
-              ? 'Este es el código de tu sesión de control activa.'
-              : 'Introduce el código de 4 dígitos que aparece en el otro dispositivo.'
-            }
+             {view === 'main' && 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'}
+             {view === 'controlling' && 'Introduce el código de 4 dígitos que aparece en el otro dispositivo.'}
+             {view === 'activeSession' && 'Este dispositivo está siendo controlado. Usa este código en el dispositivo controlador.'}
           </DialogDescription>
         </DialogHeader>
 
-        {view === 'main' && !remoteSessionId && (
+        {view === 'main' && (
           <div className="space-y-4 py-4">
               <Button onClick={handleActivateControlled} size="lg" className="w-full">
                 Ser Controlado
@@ -119,13 +114,6 @@ export function RemoteControlDialog({
         
         {view === 'controlling' && (
            <div className="grid gap-4 py-4">
-            {remoteSessionId ? (
-                 <div className="p-4 bg-muted rounded-lg text-center">
-                    <p className="text-4xl font-bold tracking-widest text-primary">
-                        {remoteSessionId}
-                    </p>
-                </div>
-            ) : (
                 <Input
                     placeholder="Introduce el código de 4 dígitos"
                     value={code}
@@ -133,17 +121,24 @@ export function RemoteControlDialog({
                     maxLength={4}
                     className="text-center text-2xl h-14 tracking-widest font-mono"
                 />
-            )}
-            {!remoteSessionId && (
                  <Button onClick={handleStartControllingSession} disabled={isLoading} size="lg" className="w-full">
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Conectar
                 </Button>
-            )}
           </div>
         )}
 
-        {view !== 'main' && !remoteSessionId && (
+        {view === 'activeSession' && remoteSessionId && (
+            <div className="py-4">
+                 <div className="p-4 bg-muted rounded-lg text-center">
+                    <p className="text-4xl font-bold tracking-widest text-primary">
+                        {remoteSessionId}
+                    </p>
+                </div>
+            </div>
+        )}
+
+        {view === 'controlling' && (
           <DialogFooter>
             <Button variant="outline" size="sm" className="w-full" onClick={() => setView('main')}>
               Volver
@@ -498,3 +493,5 @@ export function RemoteControlView({
     </>
   );
 }
+
+    
