@@ -1490,44 +1490,21 @@ const handleRemoveEventFromDialog = (event: Event) => {
                         </DialogHeader>
                         <ScrollArea className="h-96 pr-6">
                            <div className="text-sm text-muted-foreground space-y-4">
-                               <p>¡Bienvenido a <strong>Deportes para Todos</strong>! Esta guía detallada te enseñará a usar la plataforma como un experto para que no te pierdas ni un segundo de tus eventos deportivos favoritos.</p>
+                                <p><strong>¡Bienvenido a Deportes para Todos!</strong> Aquí puedes ver múltiples eventos deportivos a la vez. Sigue estos simples pasos para empezar:</p>
                                 
-                                <h3 className="font-bold text-foreground mt-6">1. Entendiendo la Pantalla Principal</h3>
-                                <p>La página de inicio es tu centro de comando. Aquí encontrarás todo el contenido organizado para un acceso rápido y sencillo.</p>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li><strong>Barra Superior:</strong> Aquí se encuentra el logo, la barra de búsqueda (icono de lupa) y los botones de configuración y de inicio de transmisión.</li>
-                                    <li><strong>Categorías:</strong> Un carrusel horizontal que te permite filtrar el contenido. Puedes deslizarte para ver categorías como "En Vivo", "Fútbol", etc. Al hacer clic en una, la página mostrará solo el contenido de esa categoría.</li>
-                                    <li><strong>Carruseles de Eventos/Canales:</strong> (En vista de escritorio) El contenido está agrupado en filas por estado: "En Vivo", "Próximos", "Canales 24/7", etc. Puedes deslizar cada carrusel para explorar los eventos.</li>
-                                    <li><strong>Tarjetas de Eventos/Canales:</strong> Cada tarjeta representa un partido, carrera o canal. Muestra información clave como el nombre del evento, la hora y un indicador de estado (ej: "En Vivo" en rojo, "Próximo" en gris").</li>
-                                </ul>
+                                <h3 className="font-bold text-foreground mt-4">1. Elige tus Eventos</h3>
+                                <p>En la pantalla principal, haz clic en las tarjetas de los partidos o canales que quieras ver. Se abrirá una ventana para que elijas una opción de transmisión.</p>
+                                
+                                <h3 className="font-bold text-foreground mt-4">2. Configura tu Vista</h3>
+                                <p>Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) en la esquina superior derecha. Se abrirá un panel donde podrás ver tu selección, reordenar las ventanas o eliminarlas.</p>
+                                
+                                <h3 className="font-bold text-foreground mt-4">3. Inicia la Transmisión</h3>
+                                <p>Una vez que estés listo, presiona el botón de "Play" (<Play className="inline-block h-4 w-4" />). Tu pantalla se dividirá para mostrar todos los eventos que elegiste.</p>
 
-                                <h3 className="font-bold text-foreground mt-6">2. Cómo Seleccionar un Evento para Ver</h3>
-                                <p>Este es el paso fundamental para construir tu vista múltiple.</p>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li><strong>Haz clic en una Tarjeta:</strong> Cuando encuentres un evento o canal que te interese, simplemente haz clic en su tarjeta.</li>
-                                    <li><strong>Elige una Opción de Transmisión:</strong> Se abrirá una ventana emergente (diálogo) con uno o más botones. Cada botón representa una fuente o calidad de transmisión diferente (ej: "Opción 1", "Opción 2"). <br/>
-                                    <span className="text-xs italic"><strong>Consejo:</strong> Si una opción no funciona, puedes volver a esta ventana y probar otra.</span></li>
-                                    <li><strong>Asignación Automática a Ventana:</strong> Al seleccionar una opción, el evento se asigna automáticamente a la primera "ventana" de visualización disponible (tienes hasta 9). Verás que la tarjeta del evento en la página principal ahora muestra un número, indicando en qué ventana se verá.</li>
-                                </ul>
-
-                                <h3 className="font-bold text-foreground mt-6">3. Gestiona tu Selección Personalizada</h3>
-                                <p>Una vez que has elegido uno o más eventos, puedes gestionarlos desde el panel de configuración.</p>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li><strong>Botón de Configuración (icono de engranaje <Settings className="inline-block h-4 w-4" />):</strong> Ubicado en la esquina superior derecha, este botón abre un panel donde puedes ver y administrar todos los eventos que has seleccionado.</li>
-                                    <li><strong>Dentro del Panel:</strong> Cada evento seleccionado aparece en una lista. Aquí puedes:
-                                        <ul className="list-disc pl-6 mt-1">
-                                            <li><strong>Reordenar:</strong> Usa las flechas hacia arriba y abajo para cambiar la posición de los eventos en la cuadrícula de visualización.</li>
-                                            <li><strong>Modificar:</strong> Haz clic en el icono del lápiz (<Pencil className="inline-block h-4 w-4" />) para volver a abrir el diálogo de opciones y cambiar la fuente de transmisión sin tener que eliminar el evento.</li>
-                                            <li><strong>Eliminar:</strong> Haz clic en el icono de la papelera (<Trash2 className="inline-block h-4 w-4" />) para quitar un evento de tu selección y liberar esa ventana.</li>
-                                        </ul>
-                                    </li>
-                                </ul>
-
-                                <h3 className="font-bold text-foreground mt-6">4. ¡A Disfrutar! Iniciar la Vista Múltiple</h3>
-                                <ul className="list-disc pl-5 space-y-2">
-                                    <li><strong>Botón de "Play" (<Play className="inline-block h-4 w-4" />):</strong> Este es el botón más importante. Una vez que hayas seleccionado al menos un evento, este botón (ubicado en la esquina superior derecha) se activará. Haz clic en él para ir a la pantalla de visualización.</li>
-                                    <li><strong>La Magia de la Cuadrícula Dinámica:</strong> La pantalla de visualización se dividirá automáticamente para mostrar todos los eventos que seleccionaste. La cuadrícula se adapta de forma inteligente: si eliges 2 eventos, verás 2 ventanas; si eliges 4, verás una cuadrícula de 2x2, y así hasta 9.</li>
-                                </ul>
+                                <h3 className="font-bold text-foreground mt-4">4. Control Remoto y Programación</h3>
+                                <p>Puedes controlar la vista desde otro dispositivo activando el <strong>Control Remoto</strong> en el menú de configuración. También puedes <strong>Programar</strong> una selección de eventos para que se active a una hora específica.</p>
+                                
+                                <p className="pt-2">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
                             </div>
                         </ScrollArea>
                         <DialogModalFooter>
@@ -2028,7 +2005,10 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                         <Settings />
                                       </Button>
                                     </SheetTrigger>
-                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
+                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                         <SheetHeader className="sr-only">
+                                          <SheetTitle>Panel de Configuración</SheetTitle>
+                                        </SheetHeader>
                                           <LayoutConfigurator
                                             order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                             onOrderChange={handleOrderChange}
