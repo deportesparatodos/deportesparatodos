@@ -146,8 +146,8 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     variant="destructive"
                     className="w-full"
                     onClick={() => {
-                    onRemove();
-                    onOpenChange(false);
+                        onRemove();
+                        onOpenChange(false);
                     }}
                 >
                     <Trash2 className="mr-2 h-4 w-4" />

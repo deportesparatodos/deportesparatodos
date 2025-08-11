@@ -293,7 +293,7 @@ function HomePageContent() {
     return client;
   }, []);
 
-  const handleActivateControlledMode = async () => {
+  const handleStartControlledSession = async () => {
     if (selectedEvents.filter(Boolean).length === 0) {
       toast({
           variant: 'destructive',
@@ -1317,15 +1317,17 @@ function HomePageContent() {
   };
 
   const handleAddEventSelect = (event: Event, option: string) => {
+    const eventWithSelection = { ...event, selectedOption: option };
+
     setSelectedEvents(currentSelectedEvents => {
         const newSelectedEvents = [...currentSelectedEvents];
-        const eventWithSelection = { ...event, selectedOption: option };
-
         const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
         if (existingIndex !== -1) {
+            // Modify existing event
             newSelectedEvents[existingIndex] = eventWithSelection;
         } else {
+            // Add new event to the first empty slot
             const emptyIndex = newSelectedEvents.findIndex(e => e === null);
             if (emptyIndex !== -1) {
                 newSelectedEvents[emptyIndex] = eventWithSelection;
@@ -1335,12 +1337,20 @@ function HomePageContent() {
                     title: 'Selección Completa',
                     description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
                 });
-                return currentSelectedEvents;
+                return currentSelectedEvents; // Return original state if full
             }
         }
         return newSelectedEvents;
     });
+
     setAddEventsDialogOpen(false);
+};
+
+const handleRemoveEventFromDialog = (event: Event) => {
+    setSelectedEvents(currentSelectedEvents => {
+        return currentSelectedEvents.map(se => se?.id === event.id ? null : se);
+    });
+    setAddEventsDialogOpen(false); // Close the AddEventsDialog
 };
   
   const getItemClasses = (orderedIndex: number, count: number) => {
@@ -1484,6 +1494,7 @@ function HomePageContent() {
               }
             }}
             onSelect={handleSelectForCurrentDialog}
+            onRemove={handleRemoveEventFromDialog}
             selectedEvents={dialogContext === 'schedule' ? futureSelection : selectedEvents}
             allEvents={events} 
             allChannels={channels}
@@ -1673,7 +1684,7 @@ function HomePageContent() {
                 onNotification={() => setNotificationManagerOpen(true)}
                 remoteSessionId={remoteSessionId}
                 remoteControlMode={remoteControlMode}
-                onStartControlledSession={handleActivateControlledMode}
+                onStartControlledSession={handleStartControlledSession}
                 gridGap={gridGap}
                 onGridGapChange={setGridGap}
                 borderColor={borderColor}
@@ -2067,7 +2078,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                       setRemoteSessionId(code);
                                       setRemoteControlMode('controlling');
                                   }}
-                                  onActivateControlledMode={handleActivateControlledMode}
+                                  onActivateControlledMode={handleStartControlledSession}
                                   isViewMode={isViewMode}
                                 />
 
@@ -2086,7 +2097,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                         <Settings />
                                       </Button>
                                     </SheetTrigger>
-                                     <SheetContent hideClose={true} side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
                                        <SheetHeader className="p-4 flex-row justify-between items-center border-b">
                                            <SheetTitle>Configuración</SheetTitle>
                                             <SheetClose asChild>
@@ -2368,6 +2379,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
             open={addEventsDialogOpen}
             onOpenChange={setAddEventsDialogOpen}
             onSelect={handleSelectForCurrentDialog}
+            onRemove={handleRemoveEventFromDialog}
             selectedEvents={selectedEvents}
             allEvents={events} 
             allChannels={channels}

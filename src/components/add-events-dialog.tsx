@@ -23,7 +23,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { parse, isValid, isBefore } from 'date-fns';
 
-export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents, isFullScreen, setIsFullScreen }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void, isFullScreen: boolean, setIsFullScreen: (isFullScreen: boolean) => void }) {
+export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents, isFullScreen, setIsFullScreen }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, onRemove: (event: Event) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void, isFullScreen: boolean, setIsFullScreen: (isFullScreen: boolean) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
     
@@ -31,7 +31,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
     const [isSubDialogLoading, setIsSubDialogLoading] = useState(false);
     const [isModification, setIsModification] = useState(false);
-    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if (!open) {
@@ -59,6 +58,11 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         onSelect(event, option);
         setSubDialogOpen(false);
     };
+
+    const handleSubDialogRemove = (event: Event) => {
+        onRemove(event);
+        setSubDialogOpen(false);
+    };
     
     const openSubDialogForEvent = async (event: Event) => {
         const selection = getEventSelection(event);
@@ -72,7 +76,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         setSubDialogOpen(true);
 
         setIsModification(selection.isSelected);
-        setModificationIndex(selection.isSelected ? selectedEvents.findIndex(se => se?.id === event.id) : selectedEvents.findIndex(e => e === null));
         
         if (event.source === 'streamed.pk' && event.options.length === 0) {
             try {
@@ -246,7 +249,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                     {sortedAndFilteredEvents.map((event) => (
                                         <EventCard
-                                            key={event.id}
+                                            key={`${event.id}-${event.source}`}
                                             event={event}
                                             selection={getEventSelection(event)}
                                             onClick={() => openSubDialogForEvent(event)}
@@ -309,7 +312,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
                         event={dialogEvent}
                         onSelect={handleSubDialogSelect}
                         isModification={isModification}
-                        onRemove={() => { /* Remove logic can be added here if needed */ setSubDialogOpen(false); }}
+                        onRemove={() => handleSubDialogRemove(dialogEvent)}
                         isLoading={isSubDialogLoading}
                         setIsLoading={setIsSubDialogLoading}
                         setEventForDialog={setDialogEvent}
@@ -319,5 +322,3 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, selectedEvents, 
         </Dialog>
     );
 }
-
-    
