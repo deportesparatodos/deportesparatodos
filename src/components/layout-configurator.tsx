@@ -15,6 +15,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export interface EventListManagementProps {
   order: number[];
@@ -29,6 +31,7 @@ export interface EventListManagementProps {
   onNotificationManager?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
+  remoteSessionId: string | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
   onStartControlledSession?: () => void;
   gridGap: number;
@@ -278,7 +281,7 @@ function ViewPageMenu({
                       {eventProps.remoteControlMode === 'controlled' && eventProps.remoteSessionId ? (
                           <>
                               <p className="text-sm text-muted-foreground mb-2">
-                                  Introduce este código en el dispositivo de control:
+                                  Sesión de control activa. Introduce este código en el otro dispositivo:
                               </p>
                               <div className="p-3 bg-muted rounded-lg">
                                   <p className="text-3xl font-bold tracking-widest text-primary">
@@ -301,22 +304,34 @@ function ViewPageMenu({
               </AccordionItem>
           )}
 
-          <AccordionItem value="item-3" className="border rounded-lg px-4">
+          <AccordionItem value="item-3" className="border rounded-lg px-4" disabled={eventProps.remoteControlMode === 'controlled'}>
               <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
               <AccordionContent className="pt-2 pb-4">
-                   <EventList {...eventProps} />
-                   {eventProps.onAddEvent && (
-                      <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Añadir Evento/Canal
-                      </Button>
-                  )}
-                  {eventProps.onSchedule && (
-                      <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={eventProps.onSchedule}>
-                          <CalendarClock className="mr-2 h-4 w-4" />
-                          Programar Selección
-                      </Button>
-                  )}
+                   {eventProps.remoteControlMode === 'controlled' ? (
+                       <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500'>
+                          <AlertCircle className="h-4 w-4 !text-yellow-500" />
+                          <AlertTitle className="font-bold">Control Remoto Activo</AlertTitle>
+                          <AlertDescription className="text-yellow-500/80">
+                            Para hacer cambios, utilice el dispositivo controlador. Si usted no conectó nada, recargue la página.
+                          </AlertDescription>
+                       </Alert>
+                   ) : (
+                       <>
+                           <EventList {...eventProps} />
+                           {eventProps.onAddEvent && (
+                              <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Añadir Evento/Canal
+                              </Button>
+                          )}
+                          {eventProps.onSchedule && (
+                              <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={eventProps.onSchedule}>
+                                  <CalendarClock className="mr-2 h-4 w-4" />
+                                  Programar Selección
+                              </Button>
+                          )}
+                       </>
+                   )}
               </AccordionContent>
           </AccordionItem>
           <AccordionItem value="item-1" className="border rounded-lg px-4">
@@ -329,6 +344,7 @@ function ViewPageMenu({
                         onValueChange={(value) => eventProps.onGridGapChange(value[0])}
                         max={32}
                         step={1}
+                        disabled={eventProps.remoteControlMode === 'controlled'}
                     />
                 </div>
                 <div className="space-y-3">
@@ -339,6 +355,7 @@ function ViewPageMenu({
                             value={eventProps.borderColor}
                             onChange={(e) => eventProps.onBorderColorChange(e.target.value)}
                             className="w-12 h-10 p-1"
+                            disabled={eventProps.remoteControlMode === 'controlled'}
                         />
                         <Input
                             type="text"
@@ -346,10 +363,11 @@ function ViewPageMenu({
                             onChange={(e) => eventProps.onBorderColorChange(e.target.value)}
                             placeholder="#000000"
                             className="flex-grow"
+                            disabled={eventProps.remoteControlMode === 'controlled'}
                         />
                     </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={eventProps.onRestoreGridSettings} className="w-full">
+                <Button variant="outline" size="sm" onClick={eventProps.onRestoreGridSettings} className="w-full" disabled={eventProps.remoteControlMode === 'controlled'}>
                     Restaurar
                 </Button>
             </AccordionContent>
@@ -366,6 +384,7 @@ function ViewPageMenu({
                         id="chat-switch"
                         checked={eventProps.isChatEnabled}
                         onCheckedChange={eventProps.onIsChatEnabledChange}
+                        disabled={eventProps.remoteControlMode === 'controlled'}
                     />
                 </div>
             </AccordionContent>
@@ -383,5 +402,3 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
   return <HomePageMenu eventProps={props} />;
 }
-
-    
