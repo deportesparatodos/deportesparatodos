@@ -59,10 +59,7 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RemoteControlDialog, RemoteControlView, type RemoteControlViewState } from '@/components/remote-control';
-import { AddEventsDialog } from '@/components/add-events-dialog';
-import { Separator } from '@/components/ui/separator';
-import Ably from 'ably';
+import { RemoteControlManager } from '@/components/remote-control';
 
 
 interface StreamedMatch {
@@ -260,125 +257,8 @@ function HomePageContent() {
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
 
   // --- Remote Control States ---
-  const ablyRef = useRef<{ client: Ably.Realtime | null; channel: Ably.Types.RealtimeChannelPromise | null }>({ client: null, channel: null });
-  const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
   const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
-  const [remoteControlStarted, setRemoteControlStarted] = useState(false);
-
-
-  // Notification states
-  const { toast } = useToast();
-  
-  const cleanupAbly = useCallback(() => {
-    const { client, channel } = ablyRef.current;
-    if (channel) {
-      channel.detach();
-    }
-    if (client && (client.connection.state === 'connected' || client.connection.state === 'connecting')) {
-      client.close();
-    }
-    ablyRef.current = { client: null, channel: null };
-    setRemoteSessionId(null);
-    setRemoteControlMode('inactive');
-    setRemoteControlStarted(false);
-  }, []);
-
-  const initAbly = useCallback(async (clientIdSuffix: string) => {
-    if (ablyRef.current.client) {
-      await ablyRef.current.client.connection.close();
-    }
-    const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=${clientIdSuffix}-${Date.now()}` });
-    await client.connection.once('connected');
-    ablyRef.current.client = client;
-    return client;
-  }, []);
-
-  const handleStartControlledSession = async () => {
-    if (selectedEvents.filter(Boolean).length === 0) {
-      toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Debes seleccionar al menos un evento para iniciar el modo de control.',
-      });
-      return;
-    }
-    setRemoteControlStarted(true);
-    setIsViewMode(true);
-  };
-  
-  // Effect to manage the Ably connection for a controlled device
-  useEffect(() => {
-    if (isViewMode && remoteControlStarted && remoteControlMode !== 'controlling') {
-      let isMounted = true;
-      const startControlledSession = async () => {
-        try {
-          const client = await initAbly('controlled');
-          if (!isMounted) {
-            client.close();
-            return;
-          }
-          const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-          setRemoteSessionId(newCode);
-
-          const channel = client.channels.get(`remote-control:${newCode}`);
-          ablyRef.current.channel = channel;
-
-          await channel.presence.enter();
-          setCodePopupOpen(true);
-
-          channel.subscribe('control-action', (message: Ably.Types.Message) => {
-            const { action, payload } = message.data;
-            switch (action) {
-              case 'requestInitialState':
-                const currentState = {
-                  selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, sessionId: newCode
-                };
-                channel.publish('control-action', { action: 'initialState', payload: currentState });
-                break;
-              case 'updateState':
-                 setSelectedEvents(payload.selectedEvents);
-                 setViewOrder(payload.viewOrder);
-                 setGridGap(payload.gridGap);
-                 setBorderColor(payload.borderColor);
-                 setIsChatEnabled(payload.isChatEnabled);
-                 setFullscreenIndex(payload.fullscreenIndex);
-                break;
-              case 'reorder': setViewOrder(payload.newOrder); break;
-              case 'toggleFullscreen': setFullscreenIndex(prev => prev === payload.index ? null : payload.index); break;
-              case 'reload': if (payload.index !== undefined) handleReloadCamera(payload.index); break;
-              case 'disconnect': cleanupAbly(); break;
-            }
-          });
-          channel.presence.subscribe('leave', () => { cleanupAbly(); });
-
-        } catch (error) {
-          console.error("Failed to start controlled session:", error);
-          if (isMounted) {
-            toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar el modo controlado.' });
-            cleanupAbly();
-          }
-        }
-      };
-
-      startControlledSession();
-      
-      return () => { isMounted = false; cleanupAbly(); };
-    }
-  }, [isViewMode, remoteControlStarted, initAbly, cleanupAbly, toast, selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, fullscreenIndex, remoteControlMode]);
-
-
-  const handleStopView = useCallback(() => {
-    const { channel } = ablyRef.current;
-    if (remoteControlMode === 'controlled' && channel && remoteSessionId) {
-        channel.publish('control-action', { action: 'controlledViewClosed', payload: { sessionId: remoteSessionId } });
-    }
-    setIsViewMode(false);
-    setFullscreenIndex(null);
-    if (remoteControlMode === 'controlled' || remoteControlMode === 'controlling') {
-      cleanupAbly();
-    }
-  }, [remoteControlMode, cleanupAbly, remoteSessionId]);
-
+  const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -694,7 +574,7 @@ function HomePageContent() {
 
   // Popup logic
   useEffect(() => {
-    if (isViewMode && !remoteControlStarted) {
+    if (isViewMode && remoteControlMode === 'inactive') {
       const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
       if (!hasVisited) {
         setWelcomePopupOpen(true);
@@ -702,7 +582,7 @@ function HomePageContent() {
         setProgress(100);
       }
     }
-  }, [isViewMode, remoteControlStarted]);
+  }, [isViewMode, remoteControlMode]);
 
   // Schedule activation checker
   useEffect(() => {
@@ -1140,8 +1020,13 @@ function HomePageContent() {
     if (remoteControlMode === 'controlling' || selectedEventsCount === 0) return;
     setIsViewMode(true);
   };
-
   
+  const handleStopView = useCallback(() => {
+    setIsViewMode(false);
+    setFullscreenIndex(null);
+    setRemoteControlMode('inactive');
+    setRemoteSessionId(null);
+  }, []);
 
   const openDialogForEvent = (event: Event) => {
     const selection = getEventSelection(event);
@@ -1378,36 +1263,22 @@ const handleRemoveEventFromDialog = (event: Event) => {
     }
   };
 
-  const handleEndRemoteSession = (finalState: RemoteControlViewState) => {
-    setSelectedEvents(finalState.selectedEvents);
-    setViewOrder(finalState.viewOrder);
-    setGridGap(finalState.gridGap);
-    setBorderColor(finalState.borderColor);
-    setIsChatEnabled(finalState.isChatEnabled);
-    setFullscreenIndex(finalState.fullscreenIndex);
-    cleanupAbly();
-    setIsSessionEnded(false);
-  };
-  
   if (remoteControlMode === 'controlling') {
     return (
-      <Suspense fallback={<div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
+        <Suspense fallback={<div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin" />
             <p className="mt-4 text-muted-foreground">Cargando modo de control...</p>
         </div>}>
-        <RemoteControlView 
-            ablyRef={ablyRef}
-            initAbly={initAbly}
-            onSessionEnd={handleEndRemoteSession}
-            allEvents={events}
-            allChannels={channels}
-            updateAllEvents={setEvents}
-            initialRemoteSessionId={remoteSessionId}
-            isSessionEnded={isSessionEnded}
-            setIsSessionEnded={setIsSessionEnded}
-        />
-      </Suspense>
-    )
+            <RemoteControlManager 
+                mode="controlling"
+                initialRemoteSessionId={remoteSessionId}
+                onSessionEnd={() => setRemoteControlMode('inactive')}
+                allEvents={events}
+                allChannels={channels}
+                updateAllEvents={setEvents}
+            />
+        </Suspense>
+    );
   }
 
   if (!isInitialLoadDone) {
@@ -1418,7 +1289,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
      const numCameras = selectedEvents.filter(Boolean).length;
      const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
      
-     if (numCameras === 0 && remoteControlStarted) {
+     if (numCameras === 0 && remoteControlMode === 'controlled') {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
                 <div className="text-center space-y-4">
@@ -1448,6 +1319,39 @@ const handleRemoveEventFromDialog = (event: Event) => {
     
     return (
       <div className="flex h-screen w-screen bg-background text-foreground group">
+        <RemoteControlManager
+            mode="controlled"
+            viewState={{
+                selectedEvents,
+                viewOrder,
+                gridGap,
+                borderColor,
+                isChatEnabled,
+                fullscreenIndex,
+                schedules
+            }}
+            setViewState={(newState) => {
+                setSelectedEvents(newState.selectedEvents);
+                setViewOrder(newState.viewOrder);
+                setGridGap(newState.gridGap);
+                setBorderColor(newState.borderColor);
+                setIsChatEnabled(newState.isChatEnabled);
+                setFullscreenIndex(newState.fullscreenIndex);
+                setSchedules(newState.schedules);
+            }}
+            onSessionStart={(id) => {
+                setRemoteControlMode('controlled');
+                setRemoteSessionId(id);
+                setCodePopupOpen(true);
+            }}
+            onSessionEnd={() => {
+                setRemoteControlMode('inactive');
+                setRemoteSessionId(null);
+                setCodePopupOpen(false);
+            }}
+            onReload={handleReloadCamera}
+            onToggleFullscreen={handleToggleFullscreen}
+        />
          <Dialog open={codePopupOpen} onOpenChange={setCodePopupOpen}>
             <DialogContent>
                 <DialogHeader>
@@ -1684,7 +1588,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
                 onNotification={() => setNotificationManagerOpen(true)}
                 remoteSessionId={remoteSessionId}
                 remoteControlMode={remoteControlMode}
-                onStartControlledSession={handleStartControlledSession}
                 gridGap={gridGap}
                 onGridGapChange={setGridGap}
                 borderColor={borderColor}
@@ -2071,16 +1974,25 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                         
                         {!isSearchOpen && (
                              <>
-                                <RemoteControlDialog 
-                                  remoteSessionId={remoteSessionId}
-                                  setRemoteControlMode={setRemoteControlMode}
-                                  onStartControlling={(code) => {
-                                      setRemoteSessionId(code);
-                                      setRemoteControlMode('controlling');
-                                  }}
-                                  onActivateControlledMode={handleStartControlledSession}
-                                  isViewMode={isViewMode}
-                                />
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <Airplay />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <RemoteControlManager 
+                                        mode="inactive"
+                                        onModeChange={setRemoteControlMode}
+                                        onStartControlling={(code) => {
+                                            setRemoteSessionId(code);
+                                            setRemoteControlMode('controlling');
+                                        }}
+                                        onActivateControlledMode={() => {
+                                            setIsViewMode(true);
+                                            setRemoteControlMode('controlled');
+                                        }}
+                                    />
+                                </Dialog>
 
                                 <Button
                                   variant="ghost"
@@ -2097,7 +2009,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                         <Settings />
                                       </Button>
                                     </SheetTrigger>
-                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
+                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
                                        <SheetHeader className="p-4 flex-row justify-between items-center border-b">
                                            <SheetTitle>Configuración</SheetTitle>
                                             <SheetClose asChild>

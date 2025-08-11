@@ -26,7 +26,6 @@ interface CameraConfigurationProps {
   onNotification: () => void;
   remoteSessionId: string | null;
   remoteControlMode: 'inactive' | 'controlling' | 'controlled';
-  onStartControlledSession: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
@@ -51,7 +50,6 @@ export function CameraConfigurationComponent({
   onNotification,
   remoteSessionId,
   remoteControlMode,
-  onStartControlledSession,
   gridGap,
   onGridGapChange,
   borderColor,
@@ -89,7 +87,6 @@ export function CameraConfigurationComponent({
                     onNotificationManager={onNotification}
                     remoteSessionId={remoteSessionId}
                     remoteControlMode={remoteControlMode}
-                    onStartControlledSession={onStartControlledSession}
                     onToggleFullscreen={onToggleFullscreen}
                     fullscreenIndex={fullscreenIndex}
                     gridGap={gridGap}

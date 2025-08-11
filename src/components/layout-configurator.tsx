@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, CalendarClock, BellRing, MessageSquare, Airplay, Loader2, Maximize, Minimize, Settings, Play, AlertCircle } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, CalendarClock, BellRing, MessageSquare, Loader2, Maximize, Minimize, Settings, Play, AlertCircle } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -31,7 +32,7 @@ export interface EventListManagementProps {
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   remoteSessionId?: string | null;
-  remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
+  remoteControlMode: 'inactive' | 'controlling' | 'controlled';
   onStartControlledSession?: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
@@ -249,29 +250,12 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
       <AccordionItem value="item-3" className="border rounded-lg px-4">
         <AccordionTrigger>Eventos/Canales Seleccionados ({(eventProps.order || []).length})</AccordionTrigger>
         <AccordionContent className="pt-2 pb-4">
-           {eventProps.remoteControlMode === 'controlled' ? (
-                <div className="relative p-4 rounded-lg bg-muted/50">
-                    <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex items-center justify-center p-4 text-center">
-                        <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500'>
-                            <AlertCircle className="h-4 w-4 !text-yellow-500" />
-                            <AlertTitle className="font-bold">Control Remoto Activo</AlertTitle>
-                            <AlertDescription className="text-yellow-500/80">
-                                Para hacer cambios, utilice el dispositivo controlador. Si usted no conectó nada, recargue la página.
-                            </AlertDescription>
-                        </Alert>
-                    </div>
-                    <EventList {...eventProps} />
-                </div>
-            ) : (
-                 <>
-                    <EventList {...eventProps} />
-                    {eventProps.onAddEvent && (
-                        <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Añadir Evento/Canal
-                        </Button>
-                    )}
-                 </>
+            <EventList {...eventProps} />
+            {eventProps.onAddEvent && (
+                <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Añadir Evento/Canal
+                </Button>
             )}
         </AccordionContent>
       </AccordionItem>
@@ -282,133 +266,111 @@ function HomePageMenu({ eventProps }: { eventProps: EventListManagementProps }) 
 function ViewPageMenu({
   eventProps,
 }: {eventProps: EventListManagementProps}) {
-  const [isStartingRemote, setIsStartingRemote] = useState(false);
-
-  const handleStartRemote = () => {
-    if (eventProps.onStartControlledSession) {
-      setIsStartingRemote(true);
-      eventProps.onStartControlledSession();
-    }
-  };
 
   return (
       <Accordion type="single" collapsible defaultValue="item-3" className="w-full space-y-4 py-1">
-          {eventProps.remoteControlMode !== 'controlling' && (
-              <AccordionItem value="remote-control" className="border rounded-lg px-4">
-                  <AccordionTrigger>Control Remoto</AccordionTrigger>
-                  <AccordionContent className="pt-4 pb-4 text-center">
-                      {eventProps.remoteControlMode === 'controlled' && eventProps.remoteSessionId ? (
-                          <>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                  Sesión de control activa. Usa este código en el otro dispositivo:
-                              </p>
-                              <div className="p-3 bg-muted rounded-lg">
-                                  <p className="text-3xl font-bold tracking-widest text-primary">
-                                      {eventProps.remoteSessionId}
-                                  </p>
-                              </div>
-                          </>
-                      ) : (
-                          <>
-                              <p className="text-sm text-muted-foreground mb-3">
-                                  Activa el modo controlado para manejar esta pantalla desde otro dispositivo.
-                              </p>
-                              <Button className='w-full' onClick={handleStartRemote} disabled={isStartingRemote}>
-                                  {isStartingRemote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                  Activar Control Remoto
-                              </Button>
-                          </>
-                      )}
-                  </AccordionContent>
-              </AccordionItem>
-          )}
-
-          <AccordionItem value="item-3" className="border rounded-lg px-4">
-              <AccordionTrigger>Eventos/Canales Seleccionados ({Array.isArray(eventProps.order) ? eventProps.order.length : 0})</AccordionTrigger>
-              <AccordionContent className="pt-2 pb-4">
-                   {eventProps.remoteControlMode === 'controlled' ? (
-                        <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
-                            <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
-                            <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
-                            <AlertDescription className="text-yellow-500/80 text-center">
-                                Parece que hay un control remoto conectado. Para hacer cambios, hágalos desde el control remoto. Si usted no conectó nada, recargue la página.
-                            </AlertDescription>
-                        </Alert>
-                   ) : (
-                       <>
-                           <EventList {...eventProps} />
-                           {eventProps.onAddEvent && (
-                              <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Añadir Evento/Canal
-                              </Button>
-                          )}
-                          {eventProps.onSchedule && (
-                              <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={eventProps.onSchedule}>
-                                  <CalendarClock className="mr-2 h-4 w-4" />
-                                  Programar Selección
-                              </Button>
-                          )}
-                       </>
-                   )}
-              </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-1" className="border rounded-lg px-4">
-            <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
-            <AccordionContent className="pt-4 pb-4 space-y-6">
-                <div className="space-y-3">
-                    <Label>Espaciado entre ventanas ({eventProps.gridGap}px)</Label>
-                    <Slider
-                        value={[eventProps.gridGap]}
-                        onValueChange={(value) => eventProps.onGridGapChange(value[0])}
-                        max={32}
-                        step={1}
-                        disabled={eventProps.remoteControlMode === 'controlled'}
-                    />
-                </div>
-                <div className="space-y-3">
-                    <Label>Color de Borde</Label>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            type="color"
-                            value={eventProps.borderColor}
-                            onChange={(e) => eventProps.onBorderColorChange(e.target.value)}
-                            className="w-12 h-10 p-1"
-                            disabled={eventProps.remoteControlMode === 'controlled'}
-                        />
-                        <Input
-                            type="text"
-                            value={eventProps.borderColor}
-                            onChange={(e) => eventProps.onBorderColorChange(e.target.value)}
-                            placeholder="#000000"
-                            className="flex-grow"
-                            disabled={eventProps.remoteControlMode === 'controlled'}
-                        />
+        {eventProps.remoteControlMode === 'controlled' && (
+            <AccordionItem value="remote-control-status" className="border rounded-lg px-4">
+                <AccordionTrigger>Estado del Control Remoto</AccordionTrigger>
+                <AccordionContent className="pt-4 pb-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-2">
+                        Esta pantalla está siendo controlada. Código de sesión:
+                    </p>
+                    <div className="p-3 bg-muted rounded-lg">
+                        <p className="text-3xl font-bold tracking-widest text-primary">
+                            {eventProps.remoteSessionId}
+                        </p>
                     </div>
-                </div>
-                <Button variant="outline" size="sm" onClick={eventProps.onRestoreGridSettings} className="w-full" disabled={eventProps.remoteControlMode === 'controlled'}>
-                    Restaurar
-                </Button>
+                </AccordionContent>
+            </AccordionItem>
+        )}
+
+        <AccordionItem value="item-3" className="border rounded-lg px-4">
+            <AccordionTrigger>Eventos/Canales Seleccionados ({(Array.isArray(eventProps.order) ? eventProps.order.length : 0)})</AccordionTrigger>
+            <AccordionContent className="pt-2 pb-4">
+                 {eventProps.remoteControlMode === 'controlled' ? (
+                      <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
+                          <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
+                          <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
+                          <AlertDescription className="text-yellow-500/80 text-center">
+                              Para hacer cambios, use el dispositivo controlador. Si no conectó nada, recargue la página.
+                          </AlertDescription>
+                      </Alert>
+                 ) : (
+                     <>
+                         <EventList {...eventProps} />
+                         {eventProps.onAddEvent && (
+                            <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={eventProps.onAddEvent}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Añadir Evento/Canal
+                            </Button>
+                        )}
+                        {eventProps.onSchedule && (
+                            <Button variant="outline" className="w-full mt-2 flex-shrink-0" onClick={eventProps.onSchedule}>
+                                <CalendarClock className="mr-2 h-4 w-4" />
+                                Programar Selección
+                            </Button>
+                        )}
+                     </>
+                 )}
             </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="item-2" className="border rounded-lg px-4">
-            <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-            <AccordionContent className="pt-4 pb-4">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="chat-switch" className="flex flex-col gap-1">
-                        <span>Activar Chat en Vivo</span>
-                        <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
-                    </Label>
-                    <Switch
-                        id="chat-switch"
-                        checked={eventProps.isChatEnabled}
-                        onCheckedChange={eventProps.onIsChatEnabledChange}
-                        disabled={eventProps.remoteControlMode === 'controlled'}
-                    />
-                </div>
-            </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        <AccordionItem value="item-1" className="border rounded-lg px-4">
+          <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
+          <AccordionContent className="pt-4 pb-4 space-y-6">
+              <div className="space-y-3">
+                  <Label>Espaciado entre ventanas ({eventProps.gridGap}px)</Label>
+                  <Slider
+                      value={[eventProps.gridGap]}
+                      onValueChange={(value) => eventProps.onGridGapChange(value[0])}
+                      max={32}
+                      step={1}
+                      disabled={eventProps.remoteControlMode === 'controlled'}
+                  />
+              </div>
+              <div className="space-y-3">
+                  <Label>Color de Borde</Label>
+                  <div className="flex items-center gap-2">
+                      <Input
+                          type="color"
+                          value={eventProps.borderColor}
+                          onChange={(e) => eventProps.onBorderColorChange(e.target.value)}
+                          className="w-12 h-10 p-1"
+                          disabled={eventProps.remoteControlMode === 'controlled'}
+                      />
+                      <Input
+                          type="text"
+                          value={eventProps.borderColor}
+                          onChange={(e) => eventProps.onBorderColorChange(e.target.value)}
+                          placeholder="#000000"
+                          className="flex-grow"
+                          disabled={eventProps.remoteControlMode === 'controlled'}
+                      />
+                  </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={eventProps.onRestoreGridSettings} className="w-full" disabled={eventProps.remoteControlMode === 'controlled'}>
+                  Restaurar
+              </Button>
+          </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="item-2" className="border rounded-lg px-4">
+          <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
+          <AccordionContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                  <Label htmlFor="chat-switch" className="flex flex-col gap-1">
+                      <span>Activar Chat en Vivo</span>
+                      <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
+                  </Label>
+                  <Switch
+                      id="chat-switch"
+                      checked={eventProps.isChatEnabled}
+                      onCheckedChange={eventProps.onIsChatEnabledChange}
+                      disabled={eventProps.remoteControlMode === 'controlled'}
+                  />
+              </div>
+          </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
 
@@ -421,5 +383,3 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
   return <HomePageMenu eventProps={props} />;
 }
-
-    
