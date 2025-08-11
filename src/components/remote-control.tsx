@@ -186,7 +186,7 @@ export function RemoteControlView({
   setIsSessionEnded: (isEnded: boolean) => void;
 }) {
     const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>({
-      sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '#000000', isChatEnabled: false, fullscreenIndex: null, schedules: []
+      sessionId: '', selectedEvents: Array(9).fill(null), viewOrder: Array.from({length: 9}, (_,i)=>i), gridGap: 0, borderColor: '#000000', isChatEnabled: false, fullscreenIndex: null, schedules: []
     });
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
@@ -313,10 +313,10 @@ export function RemoteControlView({
 
     const handleOrderChange = (newOrder: number[]) => {
       if (!remoteState) return;
-      const fullOrder = Array.from({length: 9}, (_, i) => i);
+      const fullOrderReference = Array.from({ length: 9 }, (_, i) => i);
       const activeNewOrder = newOrder.filter(i => remoteState.selectedEvents[i] !== null);
       
-      const finalOrder = [...activeNewOrder, ...fullOrder.filter(i => !activeNewOrder.includes(i))];
+      const finalOrder = [...activeNewOrder, ...fullOrderReference.filter(i => !activeNewOrder.includes(i))];
       updateAndPublish({ viewOrder: finalOrder });
     };
   

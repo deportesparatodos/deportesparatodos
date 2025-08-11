@@ -58,17 +58,17 @@ export function EventList({
 }: Pick<EventListManagementProps, 'order' | 'onOrderChange' | 'eventDetails' | 'onReload' | 'onRemove' | 'onModify' | 'isViewPage' | 'onToggleFullscreen' | 'fullscreenIndex'>) {
     
   const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
-    const newOrder = [...order];
+    const validOrder = Array.isArray(order) ? [...order] : [];
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     
-    if (targetIndex >= 0 && targetIndex < newOrder.length) {
-      const itemToMove = newOrder.splice(currentIndex, 1)[0];
-      newOrder.splice(targetIndex, 0, itemToMove);
-      onOrderChange(newOrder);
+    if (targetIndex >= 0 && targetIndex < validOrder.length) {
+      const itemToMove = validOrder.splice(currentIndex, 1)[0];
+      validOrder.splice(targetIndex, 0, itemToMove);
+      onOrderChange(validOrder);
     }
   };
 
-  const activeEventsCount = order.length;
+  const activeEventsCount = Array.isArray(order) ? order.length : 0;
 
   if (activeEventsCount === 0) {
       return <p className="text-muted-foreground text-center py-8">No hay eventos seleccionados.</p>
@@ -77,7 +77,7 @@ export function EventList({
   return (
     <div className="space-y-4">
         {order.map((originalIndex, currentIndex) => {
-            const event = eventDetails[originalIndex];
+            const event = Array.isArray(eventDetails) && eventDetails[originalIndex] ? eventDetails[originalIndex] : null;
             if (!event) return null;
 
             const isFullscreen = fullscreenIndex === originalIndex;
@@ -323,7 +323,7 @@ function ViewPageMenu({
           )}
 
           <AccordionItem value="item-3" className="border rounded-lg px-4">
-              <AccordionTrigger>Eventos/Canales Seleccionados ({eventProps.order.length})</AccordionTrigger>
+              <AccordionTrigger>Eventos/Canales Seleccionados ({Array.isArray(eventProps.order) ? eventProps.order.length : 0})</AccordionTrigger>
               <AccordionContent className="pt-2 pb-4">
                    {eventProps.remoteControlMode === 'controlled' ? (
                         <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
