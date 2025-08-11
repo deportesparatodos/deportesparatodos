@@ -1,15 +1,12 @@
 
-
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Settings, X } from 'lucide-react';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
-import { ScrollArea } from './ui/scroll-area';
-import { Separator } from './ui/separator';
 
 interface CameraConfigurationProps {
   order: number[];
@@ -40,34 +37,7 @@ interface CameraConfigurationProps {
   onOpenCalendar: () => void;
 }
 
-export function CameraConfigurationComponent({ 
-  order, 
-  onOrderChange, 
-  eventDetails, 
-  onReload, 
-  onRemove,
-  onModify,
-  onToggleFullscreen,
-  fullscreenIndex,
-  isViewPage,
-  onAddEvent,
-  onSchedule,
-  onNotification,
-  remoteSessionId,
-  remoteControlMode,
-  onActivateControlledMode,
-  gridGap,
-  onGridGapChange,
-  borderColor,
-  onBorderColorChange,
-  onRestoreGridSettings,
-  isChatEnabled,
-  onIsChatEnabledChange,
-  categories,
-  onOpenTutorial,
-  onOpenErrors,
-  onOpenCalendar,
-}: CameraConfigurationProps) {
+export function CameraConfigurationComponent(props: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
@@ -87,38 +57,7 @@ export function CameraConfigurationComponent({
                 </Button>
             </SheetClose>
           </SheetHeader>
-          <ScrollArea className="flex-grow h-0">
-              <div className='p-6 pt-4'>
-                <LayoutConfigurator
-                    order={order}
-                    onOrderChange={onOrderChange}
-                    eventDetails={eventDetails}
-                    onReload={onReload}
-                    onRemove={onRemove}
-                    onModify={onModify}
-                    isViewPage={isViewPage}
-                    onAddEvent={onAddEvent}
-                    onSchedule={onSchedule}
-                    onNotificationManager={onNotification}
-                    remoteSessionId={remoteSessionId}
-                    remoteControlMode={remoteControlMode}
-                    onActivateControlledMode={onActivateControlledMode}
-                    onToggleFullscreen={onToggleFullscreen}
-                    fullscreenIndex={fullscreenIndex}
-                    gridGap={gridGap}
-                    onGridGapChange={onGridGapChange}
-                    borderColor={borderColor}
-                    onBorderColorChange={onBorderColorChange}
-                    onRestoreGridSettings={onRestoreGridSettings}
-                    isChatEnabled={isChatEnabled}
-                    onIsChatEnabledChange={onIsChatEnabledChange}
-                    categories={categories}
-                    onOpenTutorial={onOpenTutorial}
-                    onOpenErrors={onOpenErrors}
-                    onOpenCalendar={onOpenCalendar}
-                />
-              </div>
-          </ScrollArea>
+          <LayoutConfigurator {...props} />
         </SheetContent>
       </Sheet>
     </>

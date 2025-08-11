@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -100,7 +99,7 @@ const SheetFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse",
+      "flex flex-col",
       className
     )}
     {...props}

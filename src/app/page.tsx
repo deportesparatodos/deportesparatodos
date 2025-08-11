@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1020,7 +1019,7 @@ function HomePageContent() {
 
   const handleStartView = () => {
     if (selectedEventsCount === 0) return;
-    setRemoteControlMode('inactive'); 
+    setRemoteControlMode('inactive');
     setRemoteSessionId(null);
     setIsViewMode(true);
   };
@@ -2036,43 +2035,15 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                                 </Button>
                                             </SheetClose>
                                         </SheetHeader>
-                                        <ScrollArea className="flex-grow h-0">
-                                            <div className="p-6 pt-4">
-                                                <LayoutConfigurator
-                                                    isViewPage={false}
-                                                    order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                                    onOrderChange={handleOrderChange}
-                                                    eventDetails={selectedEvents}
-                                                    onRemove={handleEventRemove}
-                                                    onModify={openDialogForModification}
-                                                    onAddEvent={() => setAddEventsDialogOpen(true)}
-                                                    gridGap={gridGap}
-                                                    onGridGapChange={setGridGap}
-                                                    borderColor={borderColor}
-                                                    onBorderColorChange={setBorderColor}
-                                                    onRestoreGridSettings={handleRestoreGridSettings}
-                                                    isChatEnabled={isChatEnabled}
-                                                    onIsChatEnabledChange={setIsChatEnabled}
-                                                    categories={categories}
-                                                    remoteControlMode={remoteControlMode}
-                                                    remoteSessionId={remoteSessionId}
-                                                    onActivateControlledMode={handleActivateControlledMode}
-                                                    onOpenTutorial={() => setIsTutorialOpen(true)}
-                                                    onOpenErrors={() => setIsErrorsOpen(true)}
-                                                    onNotificationManager={() => setNotificationManagerOpen(true)}
-                                                    onOpenCalendar={() => setCalendarOpen(true)}
-                                                    isSheet={false} 
-                                                />
-                                            </div>
-                                        </ScrollArea>
-                                        <SheetFooter className="p-4 pt-0 mt-auto border-t">
-                                          <LayoutConfigurator
+                                        <LayoutConfigurator
                                             order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                             onOrderChange={handleOrderChange}
                                             eventDetails={selectedEvents}
                                             onRemove={handleEventRemove}
                                             onModify={openDialogForModification}
                                             isViewPage={false}
+                                            onAddEvent={() => setAddEventsDialogOpen(true)}
+                                            onSchedule={() => setScheduleManagerOpen(true)}
                                             remoteControlMode={remoteControlMode}
                                             remoteSessionId={remoteSessionId}
                                             onActivateControlledMode={handleActivateControlledMode}
@@ -2088,9 +2059,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                             onOpenErrors={() => setIsErrorsOpen(true)}
                                             onNotificationManager={() => setNotificationManagerOpen(true)}
                                             onOpenCalendar={() => setCalendarOpen(true)}
-                                            isSheet={true}
                                           />
-                                        </SheetFooter>
                                   </SheetContent>
                                   </Sheet>
 

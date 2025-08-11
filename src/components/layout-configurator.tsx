@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -28,6 +27,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
+import { Separator } from './ui/separator';
 
 export interface EventListManagementProps {
   order: number[];
@@ -188,137 +188,149 @@ export function LayoutConfigurator(props: EventListManagementProps) {
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isLegalOpen, setIsLegalOpen] = useState(false);
 
+    const accordionContent = (
+      <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="">
+          <AccordionItem value="item-events" className="border rounded-lg px-4">
+              <AccordionTrigger>Eventos/Canales Seleccionados ({(props.order || []).length})</AccordionTrigger>
+              <AccordionContent className="pt-2 pb-4">
+                  {props.remoteControlMode === 'controlled' ? (
+                      <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
+                          <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
+                          <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
+                          <AlertDescription className="text-yellow-500/80 text-center">
+                              Para hacer cambios, use el dispositivo controlador. Si no conectó nada, recargue la página.
+                          </AlertDescription>
+                      </Alert>
+                  ) : (
+                      <>
+                          <EventList {...props} />
+                          {props.onAddEvent && (
+                              <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={props.onAddEvent}>
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Añadir Evento/Canal
+                              </Button>
+                          )}
+                      </>
+                  )}
+              </AccordionContent>
+          </AccordionItem>
+          
+          <AccordionItem value="remote-control" className="border rounded-lg px-4">
+              <AccordionTrigger>Control Remoto</AccordionTrigger>
+              <AccordionContent className="pt-4 pb-4 text-center">
+                  {remoteControlMode === 'controlled' ? (
+                        <div className="text-center space-y-2">
+                          <p className="text-sm text-muted-foreground mb-2">
+                          Sesión de control remoto activa. Código:
+                          </p>
+                          <div className="p-3 bg-muted rounded-lg">
+                          <p className="text-3xl font-bold tracking-widest text-primary">
+                              {remoteSessionId || '----'}
+                          </p>
+                          </div>
+                      </div>
+                      ) : (
+                      <Button onClick={onActivateControlledMode} className="w-full">
+                          <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
+                      </Button>
+                  )}
+              </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="item-grid" className="border rounded-lg px-4">
+              <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
+              <AccordionContent className="pt-4 pb-4 space-y-6">
+                  <div className="space-y-3">
+                      <Label>Espaciado entre ventanas ({gridGap}px)</Label>
+                      <Slider
+                          value={[gridGap]}
+                          onValueChange={(value) => onGridGapChange(value[0])}
+                          max={32}
+                          step={1}
+                          disabled={remoteControlMode === 'controlled'}
+                      />
+                  </div>
+                  <div className="space-y-3">
+                      <Label>Color de Borde</Label>
+                      <div className="flex items-center gap-2">
+                          <Input
+                              type="color"
+                              value={borderColor}
+                              onChange={(e) => onBorderColorChange(e.target.value)}
+                              className="w-12 h-10 p-1"
+                              disabled={remoteControlMode === 'controlled'}
+                          />
+                          <Input
+                              type="text"
+                              value={borderColor}
+                              onChange={(e) => onBorderColorChange(e.target.value)}
+                              placeholder="#000000"
+                              className="flex-grow"
+                              disabled={remoteControlMode === 'controlled'}
+                          />
+                      </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full" disabled={remoteControlMode === 'controlled'}>
+                      Restaurar
+                  </Button>
+              </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="item-features" className="border rounded-lg px-4">
+              <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
+              <AccordionContent className="pt-4 pb-4">
+                  <div className="flex items-center justify-between">
+                      <Label htmlFor="chat-switch" className="flex flex-col gap-1">
+                          <span>Activar Chat en Vivo</span>
+                          <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
+                      </Label>
+                      <Switch
+                          id="chat-switch"
+                          checked={isChatEnabled}
+                          onCheckedChange={onIsChatEnabledChange}
+                          disabled={remoteControlMode === 'controlled'}
+                      />
+                  </div>
+              </AccordionContent>
+          </AccordionItem>
+      </Accordion>
+    );
+
+    const helpButtons = (
+      <div className="space-y-2">
+          <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
+              <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
+          </Button>
+          <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
+              <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
+          </Button>
+          <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
+              <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
+          </Button>
+          <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
+              <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
+          </Button>
+          <Button variant="outline" className="w-full justify-start" onClick={() => setIsContactOpen(true)}>
+              <Mail className="mr-2 h-4 w-4" /> Contacto
+          </Button>
+          <Button variant="outline" className="w-full justify-start" onClick={() => setIsLegalOpen(true)}>
+              <FileText className="mr-2 h-4 w-4" /> Aviso Legal
+          </Button>
+      </div>
+    );
+
     return (
         <>
-            <Accordion type="single" collapsible className="w-full" defaultValue="">
-                <AccordionItem value="item-events" className="border rounded-lg px-4">
-                    <AccordionTrigger>Eventos/Canales Seleccionados ({(props.order || []).length})</AccordionTrigger>
-                    <AccordionContent className="pt-2 pb-4">
-                        {props.remoteControlMode === 'controlled' ? (
-                            <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
-                                <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
-                                <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
-                                <AlertDescription className="text-yellow-500/80 text-center">
-                                    Para hacer cambios, use el dispositivo controlador. Si no conectó nada, recargue la página.
-                                </AlertDescription>
-                            </Alert>
-                        ) : (
-                            <>
-                                <EventList {...props} />
-                                {props.onAddEvent && (
-                                    <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={props.onAddEvent}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Añadir Evento/Canal
-                                    </Button>
-                                )}
-                            </>
-                        )}
-                    </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="remote-control" className="border rounded-lg px-4">
-                    <AccordionTrigger>Control Remoto</AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-4 text-center">
-                        {remoteControlMode === 'controlled' ? (
-                             <div className="text-center space-y-2">
-                                <p className="text-sm text-muted-foreground mb-2">
-                                Sesión de control remoto activa. Código:
-                                </p>
-                                <div className="p-3 bg-muted rounded-lg">
-                                <p className="text-3xl font-bold tracking-widest text-primary">
-                                    {remoteSessionId || '----'}
-                                </p>
-                                </div>
-                            </div>
-                            ) : (
-                            <Button onClick={onActivateControlledMode} className="w-full">
-                                <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
-                            </Button>
-                        )}
-                    </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="item-grid" className="border rounded-lg px-4">
-                    <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-4 space-y-6">
-                        <div className="space-y-3">
-                            <Label>Espaciado entre ventanas ({gridGap}px)</Label>
-                            <Slider
-                                value={[gridGap]}
-                                onValueChange={(value) => onGridGapChange(value[0])}
-                                max={32}
-                                step={1}
-                                disabled={remoteControlMode === 'controlled'}
-                            />
-                        </div>
-                        <div className="space-y-3">
-                            <Label>Color de Borde</Label>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    type="color"
-                                    value={borderColor}
-                                    onChange={(e) => onBorderColorChange(e.target.value)}
-                                    className="w-12 h-10 p-1"
-                                    disabled={remoteControlMode === 'controlled'}
-                                />
-                                <Input
-                                    type="text"
-                                    value={borderColor}
-                                    onChange={(e) => onBorderColorChange(e.target.value)}
-                                    placeholder="#000000"
-                                    className="flex-grow"
-                                    disabled={remoteControlMode === 'controlled'}
-                                />
-                            </div>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full" disabled={remoteControlMode === 'controlled'}>
-                            Restaurar
-                        </Button>
-                    </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="item-features" className="border rounded-lg px-4">
-                    <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-4">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="chat-switch" className="flex flex-col gap-1">
-                                <span>Activar Chat en Vivo</span>
-                                <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
-                            </Label>
-                            <Switch
-                                id="chat-switch"
-                                checked={isChatEnabled}
-                                onCheckedChange={onIsChatEnabledChange}
-                                disabled={remoteControlMode === 'controlled'}
-                            />
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
-            
-            {/* Help Buttons Section */}
-            <div className="space-y-2 mt-4">
-                <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
-                    <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
-                    <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
-                    <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
-                    <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => setIsContactOpen(true)}>
-                    <Mail className="mr-2 h-4 w-4" /> Contacto
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => setIsLegalOpen(true)}>
-                    <FileText className="mr-2 h-4 w-4" /> Aviso Legal
-                </Button>
+            <ScrollArea className="flex-grow h-0">
+                <div className='p-6 pt-4'>
+                    {accordionContent}
+                </div>
+            </ScrollArea>
+            <div className="p-4 pt-0 mt-auto border-t">
+                <Separator className="mb-4" />
+                {helpButtons}
             </div>
             
-            {/* Contact Dialog */}
             <Dialog open={isContactOpen} onOpenChange={setIsContactOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -335,7 +347,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 </DialogContent>
             </Dialog>
 
-            {/* Legal Notice Dialog */}
             <Dialog open={isLegalOpen} onOpenChange={setIsLegalOpen}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
@@ -358,4 +369,3 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         </>
     );
 }
-
