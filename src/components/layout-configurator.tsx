@@ -420,5 +420,3 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
   return <HomePageMenu eventProps={props} />;
 }
-
-    

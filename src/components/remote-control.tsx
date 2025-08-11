@@ -25,6 +25,8 @@ import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from './event-selection-dialog';
 import { AddEventsDialog } from './add-events-dialog';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { ScheduleManager, type Schedule } from './schedule-manager';
+
 
 // --- Main Dialog to start a remote session ---
 export function RemoteControlDialog({
@@ -158,6 +160,7 @@ export interface RemoteControlViewState {
   borderColor: string;
   isChatEnabled: boolean;
   fullscreenIndex: number | null;
+  schedules: Schedule[];
 }
 
 // --- View for the "Controlling" device (e.g., phone) ---
@@ -184,6 +187,7 @@ export function RemoteControlView({
 }) {
     const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
     const [addEventsOpen, setAddEventsOpen] = useState(false);
+    const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isRemoteChatOpen, setIsRemoteChatOpen] = useState(false);
     const { toast } = useToast();
@@ -191,13 +195,17 @@ export function RemoteControlView({
 
     const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
     const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
+
+    // Schedule-related states for the controlled view
+    const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
+    const [futureOrder, setFutureOrder] = useState<number[]>([]);
     
     const handleStopAndPersist = useCallback(() => {
         if (remoteState) {
             onSessionEnd(remoteState);
         } else {
            // Fallback if remoteState is null for some reason
-           onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null});
+           onSessionEnd({sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '', isChatEnabled: false, fullscreenIndex: null, schedules: []});
         }
     }, [remoteState, onSessionEnd]);
     
@@ -325,6 +333,10 @@ export function RemoteControlView({
     const handleIsChatEnabledChange = (value: boolean) => {
         updateAndPublish({ isChatEnabled: value });
     };
+    
+    const handleSchedulesChange = (newSchedules: Schedule[]) => {
+        updateAndPublish({ schedules: newSchedules });
+    };
 
     const handleAddEvent = (event: Event, option: string) => {
         if (!remoteState) return;
@@ -415,6 +427,7 @@ export function RemoteControlView({
                 fullscreenIndex={remoteState.fullscreenIndex}
                 isViewPage={true}
                 onAddEvent={() => setAddEventsOpen(true)}
+                onSchedule={() => setScheduleManagerOpen(true)}
                 gridGap={remoteState.gridGap}
                 onGridGapChange={handleGridGapChange}
                 borderColor={remoteState.borderColor}
@@ -460,6 +473,24 @@ export function RemoteControlView({
           isFullScreen={isFullScreen}
           setIsFullScreen={setIsFullScreen}
         />
+         <ScheduleManager 
+          open={scheduleManagerOpen}
+          onOpenChange={setScheduleManagerOpen}
+          currentSelection={futureSelection}
+          currentOrder={futureOrder}
+          schedules={remoteState.schedules}
+          onSchedulesChange={handleSchedulesChange}
+          onModifyEventInView={handleModifyEvent}
+          isLoading={false}
+          onAddEvent={() => {
+            // Future feature: Allow adding events to a schedule from remote
+            toast({ title: 'Info', description: 'Función no disponible en control remoto por ahora.' });
+          }}
+          setFutureSelection={setFutureSelection}
+          setFutureOrder={setFutureOrder}
+          initialSelection={remoteState.selectedEvents}
+          initialOrder={remoteState.viewOrder}
+        />
       </div>
        <Dialog open={isRemoteChatOpen} onOpenChange={setIsRemoteChatOpen}>
             <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
@@ -493,5 +524,3 @@ export function RemoteControlView({
     </>
   );
 }
-
-    
