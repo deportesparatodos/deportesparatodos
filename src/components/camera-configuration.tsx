@@ -116,35 +116,9 @@ export function CameraConfigurationComponent({
                     onOpenTutorial={onOpenTutorial}
                     onOpenErrors={onOpenErrors}
                     onOpenCalendar={onOpenCalendar}
-                    isSheet={false} 
                 />
               </div>
           </ScrollArea>
-           <SheetFooter className="p-4 pt-0 mt-auto border-t">
-              <LayoutConfigurator
-                order={order}
-                onOrderChange={onOrderChange}
-                eventDetails={eventDetails}
-                onRemove={onRemove}
-                onModify={onModify}
-                isViewPage={isViewPage}
-                remoteControlMode="inactive"
-                onActivateControlledMode={()=>{}}
-                gridGap={0}
-                onGridGapChange={()=>{}}
-                borderColor=''
-                onBorderColorChange={()=>{}}
-                onRestoreGridSettings={()=>{}}
-                isChatEnabled={false}
-                onIsChatEnabledChange={()=>{}}
-                categories={categories}
-                onOpenTutorial={onOpenTutorial}
-                onOpenErrors={onOpenErrors}
-                onOpenCalendar={onOpenCalendar}
-                onNotificationManager={onNotification}
-                isSheet={true}
-              />
-          </SheetFooter>
         </SheetContent>
       </Sheet>
     </>
