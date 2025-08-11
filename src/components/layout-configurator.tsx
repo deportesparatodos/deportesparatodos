@@ -186,13 +186,15 @@ export function LayoutConfigurator(props: EventListManagementProps) {
     
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isLegalOpen, setIsLegalOpen] = useState(false);
+    
+    const order = props.order || [];
 
     return (
         <>
             <div className="p-4 border-b flex-shrink-0 flex items-center justify-center relative">
                 <h2 className="text-lg font-semibold text-center">Configuración</h2>
                  <DialogClose asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 absolute right-2 top-1/2 -translate-y-1/2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 absolute right-2 top-1/2 -translate-y-1/2">
                         <X className="h-5 w-5" />
                     </Button>
                 </DialogClose>
@@ -201,7 +203,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 <div className='p-4 space-y-4'>
                     <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="">
                         <AccordionItem value="item-events" className="border rounded-lg px-4">
-                            <AccordionTrigger>Eventos/Canales Seleccionados ({(props.order || []).length})</AccordionTrigger>
+                            <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
                             <AccordionContent className="pt-2 pb-4">
                                 {props.remoteControlMode === 'controlled' ? (
                                     <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
@@ -224,7 +226,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                 )}
                             </AccordionContent>
                         </AccordionItem>
-                        
+
                         <AccordionItem value="remote-control" className="border rounded-lg px-4">
                             <AccordionTrigger>Control Remoto</AccordionTrigger>
                             <AccordionContent className="pt-4 pb-4 text-center">
@@ -239,7 +241,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                         </p>
                                         </div>
                                     </div>
-                                    ) : (
+                                ) : (
                                     <Button onClick={onActivateControlledMode} className="w-full">
                                         <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
                                     </Button>
@@ -369,3 +371,5 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         </>
     );
 }
+
+    
