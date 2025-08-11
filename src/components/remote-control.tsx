@@ -185,7 +185,9 @@ export function RemoteControlView({
   isSessionEnded: boolean;
   setIsSessionEnded: (isEnded: boolean) => void;
 }) {
-    const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
+    const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>({
+      sessionId: '', selectedEvents: [], viewOrder: [], gridGap: 0, borderColor: '#000000', isChatEnabled: false, fullscreenIndex: null, schedules: []
+    });
     const [addEventsOpen, setAddEventsOpen] = useState(false);
     const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -453,7 +455,7 @@ export function RemoteControlView({
                 event={modifyEvent.event}
                 onSelect={handleModifyEventSelect}
                 isModification={true}
-                onRemove={() => {}} // Remove is handled by main remote view
+                onRemove={()=>{}} // Remove is handled by main remote view
                 isLoading={false}
                 setIsLoading={() => {}}
                 setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}
