@@ -339,7 +339,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         <DialogTitle>Contacto</DialogTitle>
                     </DialogHeader>
                     <div className="text-sm text-muted-foreground">
-                       <p>Si tienes alguna pregunta, sugerencia o problema técnico, no dudes en contactarnos a través de nuestro correo electrónico: <a href="mailto:deportesparatodosvercek@gmail.com" className="text-primary underline">deportesparatodosvercek@gmail.com</a>. Haremos todo lo posible por responderte a la brevedad.</p>
+                        <p>Si tienes alguna pregunta, sugerencia o problema técnico, no dudes en contactarnos a través de nuestro correo electrónico: <a href="mailto:deportesparatodosvercek@gmail.com" className="text-primary underline">deportesparatodosvercek@gmail.com</a>. Haremos todo lo posible por responderte a la brevedad.</p>
                     </div>
                     <DialogFooter>
                         <DialogClose asChild><Button>Cerrar</Button></DialogClose>
