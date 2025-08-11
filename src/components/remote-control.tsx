@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
@@ -14,7 +15,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw } from 'lucide-react';
+import { Loader2, X, Airplay, MessageSquare, Play, Pencil, Maximize, Minimize, RotateCw, AlertCircle } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +24,7 @@ import type Ably from 'ably';
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from './event-selection-dialog';
 import { AddEventsDialog } from './add-events-dialog';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 // --- Main Dialog to start a remote session ---
 export function RemoteControlDialog({
@@ -74,6 +76,13 @@ export function RemoteControlDialog({
       }, 200);
     }
   }, [isOpen]);
+  
+  // Show active session code directly if already controlled
+  useEffect(() => {
+    if (isOpen && remoteSessionId) {
+      setView('controlling');
+    }
+  }, [isOpen, remoteSessionId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -84,16 +93,20 @@ export function RemoteControlDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Control Remoto</DialogTitle>
+           <DialogTitle>
+            {view === 'main' ? 'Control Remoto' : remoteSessionId ? 'Sesión Activa' : 'Controlar Dispositivo'}
+          </DialogTitle>
            <DialogDescription>
             {view === 'main'
               ? 'Controla la aplicación desde otro dispositivo o permite que este dispositivo sea controlado.'
+              : remoteSessionId
+              ? 'Este es el código de tu sesión de control activa.'
               : 'Introduce el código de 4 dígitos que aparece en el otro dispositivo.'
             }
           </DialogDescription>
         </DialogHeader>
 
-        {view === 'main' && (
+        {view === 'main' && !remoteSessionId && (
           <div className="space-y-4 py-4">
               <Button onClick={handleActivateControlled} size="lg" className="w-full">
                 Ser Controlado
@@ -105,22 +118,32 @@ export function RemoteControlDialog({
         )}
         
         {view === 'controlling' && (
-          <div className="grid gap-4 py-4">
-            <Input
-              placeholder="Introduce el código de 4 dígitos"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              maxLength={4}
-              className="text-center text-2xl h-14 tracking-widest font-mono"
-            />
-            <Button onClick={handleStartControllingSession} disabled={isLoading} size="lg" className="w-full">
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Conectar
-            </Button>
+           <div className="grid gap-4 py-4">
+            {remoteSessionId ? (
+                 <div className="p-4 bg-muted rounded-lg text-center">
+                    <p className="text-4xl font-bold tracking-widest text-primary">
+                        {remoteSessionId}
+                    </p>
+                </div>
+            ) : (
+                <Input
+                    placeholder="Introduce el código de 4 dígitos"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    maxLength={4}
+                    className="text-center text-2xl h-14 tracking-widest font-mono"
+                />
+            )}
+            {!remoteSessionId && (
+                 <Button onClick={handleStartControllingSession} disabled={isLoading} size="lg" className="w-full">
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Conectar
+                </Button>
+            )}
           </div>
         )}
 
-        {view !== 'main' && (
+        {view !== 'main' && !remoteSessionId && (
           <DialogFooter>
             <Button variant="outline" size="sm" className="w-full" onClick={() => setView('main')}>
               Volver
@@ -299,6 +322,10 @@ export function RemoteControlView({
     const handleBorderColorChange = (value: string) => {
         updateAndPublish({ borderColor: value });
     };
+    
+    const handleRestoreGridSettings = () => {
+        updateAndPublish({ gridGap: 0, borderColor: '#000000' });
+    };
 
     const handleIsChatEnabledChange = (value: boolean) => {
         updateAndPublish({ isChatEnabled: value });
@@ -397,7 +424,7 @@ export function RemoteControlView({
                 onGridGapChange={handleGridGapChange}
                 borderColor={remoteState.borderColor}
                 onBorderColorChange={handleBorderColorChange}
-                onRestoreGridSettings={() => {}}
+                onRestoreGridSettings={handleRestoreGridSettings}
                 isChatEnabled={remoteState.isChatEnabled}
                 onIsChatEnabledChange={handleIsChatEnabledChange}
                 categories={[]}
@@ -429,6 +456,7 @@ export function RemoteControlView({
           open={addEventsOpen}
           onOpenChange={setAddEventsOpen}
           onSelect={handleAddEvent}
+          onRemove={()=>{}}
           selectedEvents={remoteState.selectedEvents}
           allEvents={allEvents}
           allChannels={allChannels}

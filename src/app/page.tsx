@@ -608,9 +608,9 @@ function HomePageContent() {
           { url: 'https://motorplay.tv/ar', label: 'OPCION DE PAGO', hd: true, language: '' },
       ];
       
-      const tcChaserEvents: Event[] = tcChaserData.map(event => {
+      const tcChaserEvents: Event[] = tcChaserData.map((event, index) => {
           return {
-              id: `${event.event_title}-tc-chaser`,
+              id: `${event.event_title}-tc-chaser-${index}`,
               title: event.event_title,
               time: '--:--',
               options: tcChaserOptions,
@@ -2097,7 +2097,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                         <Settings />
                                       </Button>
                                     </SheetTrigger>
-                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
                                        <SheetHeader className="p-4 flex-row justify-between items-center border-b">
                                            <SheetTitle>Configuración</SheetTitle>
                                             <SheetClose asChild>
@@ -2340,7 +2340,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 isModification={isModification}
                 onRemove={() => {
                   if(modificationIndex !== null) {
-                    handleEventRemove(modificationIndex)
+                    handleRemoveEventFromDialog(dialogEvent)
                   }
                   setDialogOpen(false)
                 }}
@@ -2366,7 +2366,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                 isModification={true}
                 onRemove={() => { 
                     if(modifyEvent){
-                      handleEventRemove(modifyEvent.index)
+                      handleRemoveEventFromDialog(modifyEvent.event)
                     } 
                     setModifyEventDialogOpen(false)
                 }}

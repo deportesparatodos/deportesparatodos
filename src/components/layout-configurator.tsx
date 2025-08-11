@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -31,7 +32,7 @@ export interface EventListManagementProps {
   onNotificationManager?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
-  remoteSessionId: string | null;
+  remoteSessionId?: string | null;
   remoteControlMode?: 'inactive' | 'controlling' | 'controlled';
   onStartControlledSession?: () => void;
   gridGap: number;
@@ -312,7 +313,7 @@ function ViewPageMenu({
                           <AlertCircle className="h-4 w-4 !text-yellow-500" />
                           <AlertTitle className="font-bold">Control Remoto Activo</AlertTitle>
                           <AlertDescription className="text-yellow-500/80">
-                            Para hacer cambios, utilice el dispositivo controlador. Si usted no conectó nada, recargue la página.
+                             Para hacer cambios, utilice el dispositivo controlador. Si usted no conectó nada, recargue la página.
                           </AlertDescription>
                        </Alert>
                    ) : (
