@@ -346,11 +346,12 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         <h3 className="font-bold text-foreground mt-4">¡Bienvenido a Deportes para Todos!</h3>
                         <p>Esta plataforma te permite ver múltiples eventos deportivos o canales de televisión al mismo tiempo, en una sola pantalla. A continuación, te explicamos cómo funciona.</p>
 
-                        <h3 className="font-bold text-foreground mt-4">Paso 1: Explorar y Seleccionar Contenido</h3>
-                        <p>En la página principal, encontrarás diferentes categorías: "En Vivo", "Próximos", "Canales", etc. Navega por estas secciones y haz clic en la tarjeta del evento o canal que te interese. Al hacer clic, aparecerá un menú con una o varias opciones de transmisión (a veces llamadas "fuentes" o "links").</p>
-                        <p>Elige una de las opciones. Una vez seleccionada, el evento se añadirá a tu parrilla de visualización. Un pequeño número en el botón verde de "Play" (<Play className="inline-block h-4 w-4" />) te indicará cuántos eventos has seleccionado. Puedes añadir hasta 9.</p>
+                        <h3 className="font-bold text-foreground mt-4">Paso 1: Explorar y Seleccionar Eventos</h3>
+                        <p>Al entrar, verás varias listas de eventos: "En Vivo", "Próximos", "Canales 24/7", etc. Simplemente haz clic en la tarjeta del evento o canal que te interese. Al hacerlo, se abrirá un menú con las diferentes opciones de transmisión disponibles para ese evento.</p>
+                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Play className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
+                        <p>Puedes seguir añadiendo eventos o canales hasta un máximo de 9. Verás una marca de verificación verde sobre las tarjetas de los eventos que ya has seleccionado.</p>
 
-                        <h3 className="font-bold text-foreground mt-4">Paso 2: Configurar tu Vista Previa</h3>
+                        <h3 className="font-bold text-foreground mt-4">Paso 2: Configurar tu Selección</h3>
                         <p>Antes de iniciar la transmisión, puedes personalizar cómo se verán tus selecciones. Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) para abrir el panel de configuración. Aquí podrás:</p>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Gestionar tu Selección:</strong> En el desplegable "Eventos/Canales", puedes reordenar las ventanas con las flechas, cambiar la fuente de transmisión con el lápiz, o eliminar un evento con el bote de basura.</li>

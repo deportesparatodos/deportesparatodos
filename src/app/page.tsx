@@ -1307,7 +1307,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
      const numCameras = selectedEvents.filter(Boolean).length;
      const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
      
-     if (numCameras === 0 && remoteControlMode === 'controlled') {
+    if (remoteControlMode === 'controlled' && numCameras === 0) {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
                 <div className="text-center space-y-4">
@@ -2010,8 +2010,8 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                       </Button>
                                     </SheetTrigger>
                                      <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                         <SheetHeader className="sr-only">
-                                          <SheetTitle>Panel de Configuración</SheetTitle>
+                                         <SheetHeader className="p-4 border-b">
+                                          <SheetTitle className="text-center sr-only">Configuración</SheetTitle>
                                         </SheetHeader>
                                           <LayoutConfigurator
                                             order={viewOrder.filter(i => selectedEvents[i] !== null)}
