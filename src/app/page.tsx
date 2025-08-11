@@ -1027,9 +1027,11 @@ function HomePageContent() {
   const handleStopView = useCallback(() => {
     setIsViewMode(false);
     setFullscreenIndex(null);
-    setRemoteControlMode('inactive');
-    setRemoteSessionId(null);
-  }, []);
+    if (remoteControlMode === 'controlled') {
+        setRemoteControlMode('inactive');
+        setRemoteSessionId(null);
+    }
+  }, [remoteControlMode]);
 
   const openDialogForEvent = (event: Event) => {
     const selection = getEventSelection(event);
@@ -2027,15 +2029,7 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                       </Button>
                                     </SheetTrigger>
                                      <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
-                                        <SheetHeader className="p-4 border-b flex-row justify-center items-center relative">
-                                            <SheetTitle className="text-center flex-grow">Configuración</SheetTitle>
-                                            <SheetClose asChild>
-                                                <Button variant="ghost" size="icon" className="h-7 w-7 absolute right-2 top-1/2 -translate-y-1/2">
-                                                    <X className="h-5 w-5" />
-                                                </Button>
-                                            </SheetClose>
-                                        </SheetHeader>
-                                        <LayoutConfigurator
+                                          <LayoutConfigurator
                                             order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                             onOrderChange={handleOrderChange}
                                             eventDetails={selectedEvents}
