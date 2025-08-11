@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, Play } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -55,6 +55,10 @@ export interface EventListManagementProps {
   onOpenTutorial: () => void;
   onOpenErrors: () => void;
   onOpenCalendar: () => void;
+  isTutorialOpen: boolean;
+  onIsTutorialOpenChange: (open: boolean) => void;
+  isErrorsOpen: boolean;
+  onIsErrorsOpenChange: (open: boolean) => void;
 }
 
 export function EventList({
@@ -190,14 +194,9 @@ export function LayoutConfigurator(props: EventListManagementProps) {
     const order = props.order || [];
 
     return (
-      <>
+      <div className="flex flex-col h-full">
         <div className="p-4 border-b flex-shrink-0 flex items-center justify-center relative">
             <h2 className="text-lg font-semibold text-center">Configuración</h2>
-            <DialogClose asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 absolute right-2 top-1/2 -translate-y-1/2">
-                    <X className="h-5 w-5" />
-                </Button>
-            </DialogClose>
         </div>
         <div className="flex-grow h-0">
           <ScrollArea className="h-full">
@@ -453,6 +452,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-      </>
+      </div>
     );
 }
