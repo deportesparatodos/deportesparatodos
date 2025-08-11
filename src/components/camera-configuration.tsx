@@ -2,9 +2,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Settings, X } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Event } from '@/components/event-carousel';
 
@@ -35,6 +35,10 @@ interface CameraConfigurationProps {
   onOpenTutorial: () => void;
   onOpenErrors: () => void;
   onOpenCalendar: () => void;
+  isTutorialOpen: boolean;
+  onIsTutorialOpenChange: (open: boolean) => void;
+  isErrorsOpen: boolean;
+  onIsErrorsOpenChange: (open: boolean) => void;
 }
 
 export function CameraConfigurationComponent(props: CameraConfigurationProps) {
@@ -48,7 +52,7 @@ export function CameraConfigurationComponent(props: CameraConfigurationProps) {
             <Settings className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
+        <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
           <LayoutConfigurator {...props} onNotificationManager={props.onNotification} />
         </SheetContent>
       </Sheet>

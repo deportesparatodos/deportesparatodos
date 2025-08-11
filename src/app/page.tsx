@@ -1527,7 +1527,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
                                     <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
                                     <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (<a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">1.1.1.1</a>) o Google (8.8.8.8) puede saltarse estas restricciones.</p>
+                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de <a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">Cloudflare (1.1.1.1)</a> o Google (8.8.8.8) puede saltarse estas restricciones.</p>
                                     <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                                     <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
                                     <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
@@ -1597,6 +1597,10 @@ const handleRemoveEventFromDialog = (event: Event) => {
                 onOpenTutorial={() => setIsTutorialOpen(true)}
                 onOpenErrors={() => setIsErrorsOpen(true)}
                 onOpenCalendar={() => setCalendarOpen(true)}
+                isTutorialOpen={isTutorialOpen}
+                onIsTutorialOpenChange={setIsTutorialOpen}
+                isErrorsOpen={isErrorsOpen}
+                onIsErrorsOpenChange={setIsErrorsOpen}
             />
 
             {isChatEnabled && (
@@ -2033,6 +2037,10 @@ const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
                                             onOpenErrors={() => setIsErrorsOpen(true)}
                                             onNotificationManager={() => setNotificationManagerOpen(true)}
                                             onOpenCalendar={() => setCalendarOpen(true)}
+                                            isTutorialOpen={isTutorialOpen}
+                                            onIsTutorialOpenChange={setIsTutorialOpen}
+                                            isErrorsOpen={isErrorsOpen}
+                                            onIsErrorsOpenChange={setIsErrorsOpen}
                                           />
                                   </SheetContent>
                                   </Sheet>
