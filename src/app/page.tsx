@@ -1302,6 +1302,65 @@ const handleRemoveEventFromDialog = (event: Event) => {
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
+  
+  // --- Client-side component to build the webcal:// link ---
+  const CalendarLink = ({ category, children }: { category?: string; children: React.ReactNode }) => {
+    const [href, setHref] = useState('');
+  
+    useEffect(() => {
+      // This runs only on the client
+      const protocol = 'webcal://';
+      const host = window.location.host;
+      const path = category 
+        ? `/api/calendar?category=${encodeURIComponent(category)}`
+        : '/api/calendar';
+      
+      // Replace http/https from host if it's there from some SSR frameworks
+      const cleanHost = host.replace(/^https?:\/\//, '');
+  
+      setHref(`${protocol}${cleanHost}${path}`);
+    }, [category]);
+  
+    if (!href) {
+      // Render a disabled or placeholder button on the server or before hydration
+      return (
+          <Button variant="secondary" className="w-full justify-start gap-2" disabled>
+              {children}
+          </Button>
+      );
+    }
+  
+    return (
+      <a href={href} className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
+          {children}
+      </a>
+    );
+  };
+  
+  const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
+    return (
+      <DialogContent>
+          <DialogHeader>
+              <DialogTitle>Suscripción a Calendario</DialogTitle>
+              <DialogDescription>
+                  Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
+              </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-72">
+              <div className="p-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <CalendarLink>
+                      Todos los Eventos
+                  </CalendarLink>
+                  {categories.filter(c => c.toLowerCase() !== '24/7').map(category => (
+                      <CalendarLink key={category} category={category}>
+                          {category}
+                      </CalendarLink>
+                  ))}
+              </div>
+          </ScrollArea>
+      </DialogContent>
+    );
+  };
 
   if (isViewMode) {
      const numCameras = selectedEvents.filter(Boolean).length;
@@ -1450,6 +1509,9 @@ const handleRemoveEventFromDialog = (event: Event) => {
           onOpenChange={setNotificationManagerOpen}
           allCategories={categories}
         />
+        <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+           <CalendarDialogContent categories={categories} />
+        </Dialog>
         <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
            <DialogContent className="sm:max-w-md p-0" hideClose={true}>
               <DialogHeader className="sr-only">
@@ -1714,66 +1776,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
       </div>
     );
   }
-
-  // --- Client-side component to build the webcal:// link ---
-const CalendarLink = ({ category, children }: { category?: string; children: React.ReactNode }) => {
-  const [href, setHref] = useState('');
-
-  useEffect(() => {
-    // This runs only on the client
-    const protocol = 'webcal://';
-    const host = window.location.host;
-    const path = category 
-      ? `/api/calendar?category=${encodeURIComponent(category)}`
-      : '/api/calendar';
-    
-    // Replace http/https from host if it's there from some SSR frameworks
-    const cleanHost = host.replace(/^https?:\/\//, '');
-
-    setHref(`${protocol}${cleanHost}${path}`);
-  }, [category]);
-
-  if (!href) {
-    // Render a disabled or placeholder button on the server or before hydration
-    return (
-        <Button variant="secondary" className="w-full justify-start gap-2" disabled>
-            {children}
-        </Button>
-    );
-  }
-
-  return (
-    <a href={href} className={cn(buttonVariants({ variant: "secondary" }), "w-full justify-start gap-2")}>
-        {children}
-    </a>
-  );
-};
-
-const CalendarDialogContent = ({ categories }: { categories: string[] }) => {
-  return (
-    <DialogContent>
-        <DialogHeader>
-            <DialogTitle>Suscripción a Calendario</DialogTitle>
-            <DialogDescription>
-                Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
-            </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="h-72">
-            <div className="p-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <CalendarLink>
-                    Todos los Eventos
-                </CalendarLink>
-                {categories.filter(c => c.toLowerCase() !== '24/7').map(category => (
-                    <CalendarLink key={category} category={category}>
-                        {category}
-                    </CalendarLink>
-                ))}
-            </div>
-        </ScrollArea>
-    </DialogContent>
-  );
-};
-
 
   // --- HOME VIEW (DEFAULT) ---
   const renderContent = () => {
