@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Settings } from 'lucide-react';
 import { LayoutConfigurator } from './layout-configurator';
@@ -53,6 +53,9 @@ export function CameraConfigurationComponent(props: CameraConfigurationProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+           <SheetHeader className="sr-only">
+              <SheetTitle>Configuración</SheetTitle>
+            </SheetHeader>
           <LayoutConfigurator {...props} onNotificationManager={props.onNotification} />
         </SheetContent>
       </Sheet>
