@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, Play } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -224,8 +224,8 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                               Añadir Evento/Canal
                                           </Button>
                                       )}
-                                      {props.onSchedule && (
-                                        <Button variant="outline" className="w-full justify-start" onClick={props.onSchedule}>
+                                     {props.onSchedule && (
+                                        <Button variant="outline" className="w-full" onClick={props.onSchedule}>
                                             <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                         </Button>
                                       )}
@@ -358,7 +358,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
                         <h3 className="font-bold text-foreground mt-4">Paso 1: Explorar y Seleccionar Eventos</h3>
                         <p>Al entrar, verás varias listas de eventos: "En Vivo", "Próximos", "Canales 24/7", etc. Simplemente haz clic en la tarjeta del evento o canal que te interese. Al hacerlo, se abrirá un menú con las diferentes opciones de transmisión disponibles para ese evento.</p>
-                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Settings className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
+                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Play className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
                         <p>Puedes seguir añadiendo eventos o canales hasta un máximo de 9. Verás una marca de verificación verde sobre las tarjetas de los eventos que ya has seleccionado.</p>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 2: Configurar tu Selección</h3>
@@ -370,7 +370,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         </ul>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 3: Iniciar la Transmisión</h3>
-                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Settings className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
+                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Play className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
                         
                         <h3 className="font-bold text-foreground mt-4">Funciones Avanzadas</h3>
                         <ul className="list-disc pl-5 space-y-2">
@@ -448,7 +448,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 </DialogHeader>
                 <ScrollArea className="h-96 pr-6">
                     <div className="text-sm text-muted-foreground space-y-4">
-                    <h3 className="font-bold text-foreground">Descargo de Responsabilidad – Derechos de Autor</h3>
+                        <h3 className="font-bold text-foreground">Descargo de Responsabilidad – Derechos de Autor</h3>
                         <p>DEPORTES PARA TODOS es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.</p>
                         <p>No participamos en la creación, alteración ni distribución de dichas señales, y no somos responsables de la legalidad de los contenidos a los que se accede a través de estos terceros. Cualquier infracción potencial corresponde a dichos proveedores externos.</p>
                         
@@ -476,7 +476,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         <p>DEPORTES PARA TODOS no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.</p>
                         <p>Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.</p>
                         <p>Nos reservamos el derecho de incluir o remover campañas publicitarias en cualquier momento, y recomendamos a los usuarios consultar la política de privacidad de cada plataforma externa a la que accedan desde este sitio.</p>
-
+                        
                         <h3 className="font-bold text-foreground">Relación con los dueños del contenido</h3>
                         <p>DEPORTES PARA TODOS no tiene relación alguna con los titulares de los derechos de las transmisiones embebidas, ni con las plataformas que los alojan. Todo el contenido audiovisual visualizado mediante iframes es responsabilidad exclusiva del sitio externo que lo provee.</p>
 
@@ -500,6 +500,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                           <li>(f) Una declaración de veracidad de la información, bajo pena de perjurio.</li>
                         </ul>
                         <p>Una vez recibida y analizada la notificación, procederemos a desactivar el enlace correspondiente si así corresponde. También podremos notificar al proveedor del iframe, si fuera posible.</p>
+
                         <p>Al utilizar este sitio web, usted declara haber leído, comprendido y aceptado este descargo de responsabilidad en su totalidad.</p>
                     </div>
                 </ScrollArea>
