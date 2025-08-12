@@ -28,6 +28,7 @@ import {
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
+import { SheetTitle } from './ui/sheet';
 
 export interface EventListManagementProps {
   order: number[];
@@ -188,7 +189,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         isChatEnabled, onIsChatEnabledChange,
         remoteControlMode, remoteSessionId, onActivateControlledMode,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        showTopSeparator, onSchedule, isViewPage
+        isViewPage, onSchedule
     } = props;
     
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -198,7 +199,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full">
-        {showTopSeparator && <Separator className="w-full flex-shrink-0" />}
+        <SheetTitle className="sr-only">Configuración</SheetTitle>
         <div className="p-4 flex-shrink-0">
           <h2 className="text-lg font-semibold text-center">Configuración</h2>
         </div>
@@ -228,7 +229,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                               Añadir Evento/Canal
                                           </Button>
                                       )}
-                                     {(isViewPage || remoteControlMode === 'controlling') && onSchedule && (
+                                      {(isViewPage || remoteControlMode === 'controlling') && onSchedule && (
                                         <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                             <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                         </Button>
