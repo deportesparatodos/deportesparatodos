@@ -188,7 +188,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         isChatEnabled, onIsChatEnabledChange,
         remoteControlMode, remoteSessionId, onActivateControlledMode,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        showTopSeparator, onSchedule
+        showTopSeparator, onSchedule, isViewPage
     } = props;
     
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -198,6 +198,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full">
+        {showTopSeparator && <Separator className="w-full flex-shrink-0" />}
         <div className="p-4 flex-shrink-0">
           <h2 className="text-lg font-semibold text-center">Configuración</h2>
         </div>
@@ -227,8 +228,8 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                               Añadir Evento/Canal
                                           </Button>
                                       )}
-                                     {props.onSchedule && (
-                                        <Button variant="outline" className="w-full justify-center" onClick={props.onSchedule}>
+                                     {(isViewPage || remoteControlMode === 'controlling') && onSchedule && (
+                                        <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                             <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                         </Button>
                                       )}

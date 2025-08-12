@@ -54,9 +54,6 @@ export function CameraConfigurationComponent(props: CameraConfigurationProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-           <SheetHeader className="p-4 border-b">
-              <SheetTitle className="sr-only">Configuración</SheetTitle>
-            </SheetHeader>
           <LayoutConfigurator {...props} onNotificationManager={props.onNotification} />
         </SheetContent>
       </Sheet>
