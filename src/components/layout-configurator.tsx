@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, Play } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -27,7 +27,6 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-import { ScheduleManager } from './schedule-manager';
 
 export interface EventListManagementProps {
   order: number[];
@@ -203,10 +202,10 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
         <ScrollArea className="flex-grow h-0">
           <div className='p-4 space-y-4'>
-              <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="">
+              <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="item-events">
                   <AccordionItem value="item-events" className="border rounded-lg px-4">
                       <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
-                      <AccordionContent className="pt-2 pb-4">
+                      <AccordionContent className="pt-2 pb-4 space-y-2">
                           {props.remoteControlMode === 'controlled' ? (
                               <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
                                   <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
@@ -218,12 +217,19 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                           ) : (
                               <>
                                   <EventList {...props} />
-                                  {props.onAddEvent && (
-                                      <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={props.onAddEvent}>
-                                          <Plus className="mr-2 h-4 w-4" />
-                                          Añadir Evento/Canal
-                                      </Button>
-                                  )}
+                                  <div className="space-y-2 pt-2">
+                                      {props.onAddEvent && (
+                                          <Button variant="outline" className="w-full flex-shrink-0" onClick={props.onAddEvent}>
+                                              <Plus className="mr-2 h-4 w-4" />
+                                              Añadir Evento/Canal
+                                          </Button>
+                                      )}
+                                      {props.onSchedule && (
+                                        <Button variant="outline" className="w-full justify-start" onClick={props.onSchedule}>
+                                            <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                                        </Button>
+                                      )}
+                                  </div>
                               </>
                           )}
                       </AccordionContent>
@@ -315,11 +321,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         </ScrollArea>
         <div className="p-4 mt-auto border-t">
             <div className="space-y-2">
-                {props.onSchedule && (
-                  <Button variant="outline" className="w-full justify-start" onClick={props.onSchedule}>
-                      <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                  </Button>
-                )}
                 <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
                     <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
                 </Button>
@@ -352,12 +353,12 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 </DialogHeader>
                 <ScrollArea className="h-96 pr-6">
                    <div className="text-sm text-muted-foreground space-y-4">
-                        <h3 className="font-bold text-foreground mt-4">¡Bienvenido a Deportes para Todos!</h3>
+                        <h3 className="font-bold text-foreground mt-4">¡Bienvenido a DEPORTES PARA TODOS!</h3>
                         <p>Esta plataforma te permite ver múltiples eventos deportivos o canales de televisión al mismo tiempo, en una sola pantalla. A continuación, te explicamos cómo funciona.</p>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 1: Explorar y Seleccionar Eventos</h3>
                         <p>Al entrar, verás varias listas de eventos: "En Vivo", "Próximos", "Canales 24/7", etc. Simplemente haz clic en la tarjeta del evento o canal que te interese. Al hacerlo, se abrirá un menú con las diferentes opciones de transmisión disponibles para ese evento.</p>
-                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Play className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
+                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Settings className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
                         <p>Puedes seguir añadiendo eventos o canales hasta un máximo de 9. Verás una marca de verificación verde sobre las tarjetas de los eventos que ya has seleccionado.</p>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 2: Configurar tu Selección</h3>
@@ -369,7 +370,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         </ul>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 3: Iniciar la Transmisión</h3>
-                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Play className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
+                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Settings className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
                         
                         <h3 className="font-bold text-foreground mt-4">Funciones Avanzadas</h3>
                         <ul className="list-disc pl-5 space-y-2">
@@ -447,7 +448,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 </DialogHeader>
                 <ScrollArea className="h-96 pr-6">
                     <div className="text-sm text-muted-foreground space-y-4">
-                        <h3 className="font-bold text-foreground">Descargo de Responsabilidad – Derechos de Autor</h3>
+                    <h3 className="font-bold text-foreground">Descargo de Responsabilidad – Derechos de Autor</h3>
                         <p>DEPORTES PARA TODOS es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.</p>
                         <p>No participamos en la creación, alteración ni distribución de dichas señales, y no somos responsables de la legalidad de los contenidos a los que se accede a través de estos terceros. Cualquier infracción potencial corresponde a dichos proveedores externos.</p>
                         
