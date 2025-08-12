@@ -28,7 +28,7 @@ import {
     Dialog,
     DialogContent,
     DialogHeader,
-    DialogTitle,
+    DialogTitle as DialogModalTitle,
     DialogDescription,
     DialogFooter as DialogModalFooter,
     DialogClose as DialogModalClose,
@@ -1341,7 +1341,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
     return (
       <DialogContent>
           <DialogHeader>
-              <DialogTitle>Suscripción a Calendario</DialogTitle>
+              <DialogModalTitle>Suscripción a Calendario</DialogModalTitle>
               <DialogDescription>
                   Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
               </DialogDescription>
@@ -1435,7 +1435,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
          <Dialog open={codePopupOpen} onOpenChange={setCodePopupOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Código de Control Remoto</DialogTitle>
+                    <DialogModalTitle>Código de Control Remoto</DialogModalTitle>
                     <DialogDescription>
                         Introduce este código en el dispositivo que quieres usar como control.
                     </DialogDescription>
@@ -1513,7 +1513,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
         <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
            <DialogContent className="sm:max-w-md p-0" hideClose={true}>
               <DialogHeader className="sr-only">
-                  <DialogTitle>Bienvenida</DialogTitle>
+                  <DialogModalTitle>Bienvenida</DialogModalTitle>
               </DialogHeader>
                <DialogModalClose asChild>
                 <Button variant="ghost" className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10" onClick={() => setWelcomePopupOpen(false)}>
@@ -1546,7 +1546,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                         <DialogHeader>
-                            <DialogTitle>Tutorial de Uso</DialogTitle>
+                            <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
                         </DialogHeader>
                         <ScrollArea className="h-96 pr-6">
                            <div className="text-sm text-muted-foreground space-y-4">
@@ -1580,7 +1580,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
                       </DialogTrigger>
                        <DialogContent className="max-w-2xl">
                           <DialogHeader>
-                              <DialogTitle>Solución de Errores Comunes</DialogTitle>
+                              <DialogModalTitle>Solución de Errores Comunes</DialogModalTitle>
                           </DialogHeader>
                           <ScrollArea className="h-96 pr-6">
                               <div className="text-sm text-muted-foreground space-y-4">
@@ -1761,7 +1761,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
           <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
             <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
               <DialogHeader className="p-4 border-b">
-                  <DialogTitle>Chat en Vivo</DialogTitle>
+                  <DialogModalTitle>Chat en Vivo</DialogModalTitle>
                   <DialogDescription className="sr-only">Contenedor del chat en vivo de Minnit.</DialogDescription>
               </DialogHeader>
               <iframe
@@ -2015,6 +2015,9 @@ const handleRemoveEventFromDialog = (event: Event) => {
                                       </Button>
                                     </SheetTrigger>
                                      <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                          <SheetHeader className="p-0 m-0 h-0">
+                                            <SheetTitle className="sr-only">Configuración</SheetTitle>
+                                          </SheetHeader>
                                           <LayoutConfigurator
                                             order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                             onOrderChange={handleOrderChange}
