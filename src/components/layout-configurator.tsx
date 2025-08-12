@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
+import { cn } from '@/lib/utils';
 
 export interface EventListManagementProps {
   order: number[];
@@ -225,7 +226,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                           </Button>
                                       )}
                                      {props.onSchedule && (
-                                        <Button variant="outline" className="w-full" onClick={props.onSchedule}>
+                                        <Button variant="outline" className="w-full justify-center" onClick={props.onSchedule}>
                                             <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                         </Button>
                                       )}
