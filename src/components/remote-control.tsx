@@ -341,13 +341,13 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
               newEvents[index] = null;
               updateAndPublish({ selectedEvents: newEvents });
           }}
+          onSchedule={() => setScheduleManagerOpen(true)}
           onReload={(index) => publishAction('reload', { index })}
           onModify={(event, index) => setModifyEvent({ event, index })}
           onToggleFullscreen={(index) => {
               const newIndex = remoteState.fullscreenIndex === index ? null : index;
               updateAndPublish({ fullscreenIndex: newIndex });
           }}
-          onSchedule={() => setScheduleManagerOpen(true)}
           fullscreenIndex={remoteState.fullscreenIndex}
           isViewPage={true}
           onAddEvent={() => setAddEventsOpen(true)}

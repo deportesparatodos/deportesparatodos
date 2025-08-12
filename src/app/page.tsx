@@ -1396,9 +1396,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
     
     return (
       <>
-        <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
-          <CalendarDialogContent categories={categories} />
-        </Dialog>
         <div className="flex h-screen w-screen bg-background text-foreground group">
           {remoteControlMode === 'controlled' && (
              <RemoteControlManager
@@ -1775,6 +1772,9 @@ const handleRemoveEventFromDialog = (event: Event) => {
             </Dialog>
           )}
         </div>
+        <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <CalendarDialogContent categories={categories} />
+        </Dialog>
       </>
     );
   }
@@ -2014,8 +2014,8 @@ const handleRemoveEventFromDialog = (event: Event) => {
                                       </Button>
                                     </SheetTrigger>
                                      <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                         <SheetHeader className="p-4 border-b sr-only">
-                                          <SheetTitle>Configuración</SheetTitle>
+                                         <SheetHeader className="p-4 border-b">
+                                          <SheetTitle className="sr-only">Configuración</SheetTitle>
                                         </SheetHeader>
                                           <LayoutConfigurator
                                             order={viewOrder.filter(i => selectedEvents[i] !== null)}

@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, Play } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
+import { ScheduleManager } from './schedule-manager';
 
 export interface EventListManagementProps {
   order: number[];
@@ -195,6 +196,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full">
+         <div className="p-4 flex-shrink-0">
+          <h2 className="text-lg font-semibold text-center">Configuración</h2>
+        </div>
+        <Separator className="w-full flex-shrink-0" />
+
         <ScrollArea className="flex-grow h-0">
           <div className='p-4 space-y-4'>
               <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="">
@@ -222,7 +228,8 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                           )}
                       </AccordionContent>
                   </AccordionItem>
-
+                  
+                 {props.remoteControlMode !== 'controlling' && (
                   <AccordionItem value="remote-control" className="border rounded-lg px-4">
                       <AccordionTrigger>Control Remoto</AccordionTrigger>
                       <AccordionContent className="pt-4 pb-4 text-center">
@@ -244,6 +251,8 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                           )}
                       </AccordionContent>
                   </AccordionItem>
+                  )}
+
 
                   <AccordionItem value="item-grid" className="border rounded-lg px-4">
                       <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
@@ -348,7 +357,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
                         <h3 className="font-bold text-foreground mt-4">Paso 1: Explorar y Seleccionar Eventos</h3>
                         <p>Al entrar, verás varias listas de eventos: "En Vivo", "Próximos", "Canales 24/7", etc. Simplemente haz clic en la tarjeta del evento o canal que te interese. Al hacerlo, se abrirá un menú con las diferentes opciones de transmisión disponibles para ese evento.</p>
-                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Settings className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
+                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Play className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
                         <p>Puedes seguir añadiendo eventos o canales hasta un máximo de 9. Verás una marca de verificación verde sobre las tarjetas de los eventos que ya has seleccionado.</p>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 2: Configurar tu Selección</h3>
@@ -360,7 +369,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         </ul>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 3: Iniciar la Transmisión</h3>
-                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Settings className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
+                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Play className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
                         
                         <h3 className="font-bold text-foreground mt-4">Funciones Avanzadas</h3>
                         <ul className="list-disc pl-5 space-y-2">
@@ -480,6 +489,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
                         <h3 className="font-bold text-foreground">Notificaciones de derechos de autor</h3>
                         <p>Si usted es titular de derechos o su representante y considera que un contenido embebido desde una fuente externa infringe sus derechos, puede enviarnos una notificación formal. Aunque no estamos sujetos a la legislación DMCA de EE.UU., colaboramos voluntariamente con cualquier requerimiento legítimo bajo dicho marco.</p>
+                        <p>Por favor incluya en su notificación:</p>
                         <ul className="list-disc pl-5 space-y-1">
                           <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
                           <li>(b) Identificación clara del contenido presuntamente infringido.</li>
