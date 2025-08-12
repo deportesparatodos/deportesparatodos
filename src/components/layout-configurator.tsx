@@ -60,6 +60,7 @@ export interface EventListManagementProps {
   onIsTutorialOpenChange: (open: boolean) => void;
   isErrorsOpen: boolean;
   onIsErrorsOpenChange: (open: boolean) => void;
+  showTopSeparator?: boolean;
 }
 
 export function EventList({
@@ -186,7 +187,8 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         remoteControlMode, remoteSessionId, onActivateControlledMode,
-        onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar
+        onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
+        showTopSeparator, onSchedule
     } = props;
     
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -196,6 +198,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full">
+         {showTopSeparator && <Separator className="w-full flex-shrink-0" />}
          <div className="p-4 flex-shrink-0">
           <h2 className="text-lg font-semibold text-center">Configuración</h2>
         </div>
@@ -206,7 +209,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
               <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="item-events">
                   <AccordionItem value="item-events" className="border rounded-lg px-4">
                       <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
-                      <AccordionContent className="pt-2 pb-4 space-y-2">
+                      <AccordionContent className="pt-2 pb-4 space-y-4">
                           {props.remoteControlMode === 'controlled' ? (
                               <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
                                   <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
