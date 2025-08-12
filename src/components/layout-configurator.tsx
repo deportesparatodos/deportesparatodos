@@ -198,8 +198,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full">
-         {showTopSeparator && <Separator className="w-full flex-shrink-0" />}
-         <div className="p-4 flex-shrink-0">
+        <div className="p-4 flex-shrink-0">
           <h2 className="text-lg font-semibold text-center">Configuración</h2>
         </div>
         <Separator className="w-full flex-shrink-0" />

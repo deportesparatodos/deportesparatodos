@@ -1773,9 +1773,9 @@ const handleRemoveEventFromDialog = (event: Event) => {
           </Dialog>
         )}
       </div>
-       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
-          <CalendarDialogContent categories={categories} />
-        </Dialog>
+      <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+        <CalendarDialogContent categories={categories} />
+      </Dialog>
       </>
     );
   }
@@ -2015,9 +2015,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
                                       </Button>
                                     </SheetTrigger>
                                      <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                         <SheetHeader className="p-4 border-b">
-                                          <SheetTitle className="sr-only">Configuración</SheetTitle>
-                                        </SheetHeader>
                                           <LayoutConfigurator
                                             order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                             onOrderChange={handleOrderChange}
