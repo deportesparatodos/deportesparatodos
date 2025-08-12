@@ -1608,7 +1608,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
                               </div>
                           </ScrollArea>
                           <DialogModalFooter>
-                              <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
+                              <DialogClose asChild><Button>Cerrar</Button></DialogClose>
                           </DialogModalFooter>
                       </DialogContent>
                   </Dialog>
@@ -1645,6 +1645,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
                 }}
                 onSchedule={() => setScheduleManagerOpen(true)}
                 onNotification={() => setNotificationManagerOpen(true)}
+                onOpenCalendar={() => setCalendarOpen(true)}
                 remoteSessionId={remoteSessionId}
                 remoteControlMode={remoteControlMode}
                 onActivateControlledMode={handleActivateControlledMode}
@@ -1658,7 +1659,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
                 categories={categories}
                 onOpenTutorial={() => setIsTutorialOpen(true)}
                 onOpenErrors={() => setIsErrorsOpen(true)}
-                onOpenCalendar={() => setCalendarOpen(true)}
                 isTutorialOpen={isTutorialOpen}
                 onIsTutorialOpenChange={setIsTutorialOpen}
                 isErrorsOpen={isErrorsOpen}
@@ -2013,7 +2013,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
                                     </SheetTrigger>
                                      <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
                                          <SheetHeader className="p-4 border-b">
-                                          <SheetTitle className="text-center sr-only">Configuración</SheetTitle>
+                                          <SheetTitle className="text-center">Configuración</SheetTitle>
                                         </SheetHeader>
                                           <LayoutConfigurator
                                             order={viewOrder.filter(i => selectedEvents[i] !== null)}

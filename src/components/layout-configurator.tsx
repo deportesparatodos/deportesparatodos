@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, Play } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -195,122 +195,122 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full">
-        <div className="p-4 border-b flex-shrink-0 flex items-center justify-center relative">
-            <h2 className="text-lg font-semibold text-center">Configuración</h2>
-        </div>
-        <div className="flex-grow h-0">
-          <ScrollArea className="h-full">
-            <div className='p-4 space-y-4'>
-                <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="">
-                    <AccordionItem value="item-events" className="border rounded-lg px-4">
-                        <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
-                        <AccordionContent className="pt-2 pb-4">
-                            {props.remoteControlMode === 'controlled' ? (
-                                <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
-                                    <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
-                                    <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
-                                    <AlertDescription className="text-yellow-500/80 text-center">
-                                        Para hacer cambios, use el dispositivo controlador. Si no conectó nada, recargue la página.
-                                    </AlertDescription>
-                                </Alert>
-                            ) : (
-                                <>
-                                    <EventList {...props} />
-                                    {props.onAddEvent && (
-                                        <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={props.onAddEvent}>
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Añadir Evento/Canal
-                                        </Button>
-                                    )}
-                                </>
-                            )}
-                        </AccordionContent>
-                    </AccordionItem>
+        <ScrollArea className="flex-grow h-0">
+          <div className='p-4 space-y-4'>
+              <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="">
+                  <AccordionItem value="item-events" className="border rounded-lg px-4">
+                      <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
+                      <AccordionContent className="pt-2 pb-4">
+                          {props.remoteControlMode === 'controlled' ? (
+                              <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
+                                  <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
+                                  <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
+                                  <AlertDescription className="text-yellow-500/80 text-center">
+                                      Para hacer cambios, use el dispositivo controlador. Si no conectó nada, recargue la página.
+                                  </AlertDescription>
+                              </Alert>
+                          ) : (
+                              <>
+                                  <EventList {...props} />
+                                  {props.onAddEvent && (
+                                      <Button variant="outline" className="w-full mt-4 flex-shrink-0" onClick={props.onAddEvent}>
+                                          <Plus className="mr-2 h-4 w-4" />
+                                          Añadir Evento/Canal
+                                      </Button>
+                                  )}
+                              </>
+                          )}
+                      </AccordionContent>
+                  </AccordionItem>
 
-                    <AccordionItem value="remote-control" className="border rounded-lg px-4">
-                        <AccordionTrigger>Control Remoto</AccordionTrigger>
-                        <AccordionContent className="pt-4 pb-4 text-center">
-                            {remoteControlMode === 'controlled' ? (
-                                    <div className="text-center space-y-2">
-                                    <p className="text-sm text-muted-foreground mb-2">
-                                    Sesión de control remoto activa. Código:
-                                    </p>
-                                    <div className="p-3 bg-muted rounded-lg">
-                                    <p className="text-3xl font-bold tracking-widest text-primary">
-                                        {remoteSessionId || '----'}
-                                    </p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <Button onClick={onActivateControlledMode} className="w-full">
-                                    <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
-                                </Button>
-                            )}
-                        </AccordionContent>
-                    </AccordionItem>
+                  <AccordionItem value="remote-control" className="border rounded-lg px-4">
+                      <AccordionTrigger>Control Remoto</AccordionTrigger>
+                      <AccordionContent className="pt-4 pb-4 text-center">
+                          {remoteControlMode === 'controlled' ? (
+                                  <div className="text-center space-y-2">
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                  Sesión de control remoto activa. Código:
+                                  </p>
+                                  <div className="p-3 bg-muted rounded-lg">
+                                  <p className="text-3xl font-bold tracking-widest text-primary">
+                                      {remoteSessionId || '----'}
+                                  </p>
+                                  </div>
+                              </div>
+                          ) : (
+                              <Button onClick={onActivateControlledMode} className="w-full">
+                                  <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
+                              </Button>
+                          )}
+                      </AccordionContent>
+                  </AccordionItem>
 
-                    <AccordionItem value="item-grid" className="border rounded-lg px-4">
-                        <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
-                        <AccordionContent className="pt-4 pb-4 space-y-6">
-                            <div className="space-y-3">
-                                <Label>Espaciado entre ventanas ({gridGap}px)</Label>
-                                <Slider
-                                    value={[gridGap]}
-                                    onValueChange={(value) => onGridGapChange(value[0])}
-                                    max={32}
-                                    step={1}
-                                    disabled={remoteControlMode === 'controlled'}
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                <Label>Color de Borde</Label>
-                                <div className="flex items-center gap-2">
-                                    <Input
-                                        type="color"
-                                        value={borderColor}
-                                        onChange={(e) => onBorderColorChange(e.target.value)}
-                                        className="w-12 h-10 p-1"
-                                        disabled={remoteControlMode === 'controlled'}
-                                    />
-                                    <Input
-                                        type="text"
-                                        value={borderColor}
-                                        onChange={(e) => onBorderColorChange(e.target.value)}
-                                        placeholder="#000000"
-                                        className="flex-grow"
-                                        disabled={remoteControlMode === 'controlled'}
-                                    />
-                                </div>
-                            </div>
-                            <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full" disabled={remoteControlMode === 'controlled'}>
-                                Restaurar
-                            </Button>
-                        </AccordionContent>
-                    </AccordionItem>
+                  <AccordionItem value="item-grid" className="border rounded-lg px-4">
+                      <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
+                      <AccordionContent className="pt-4 pb-4 space-y-6">
+                          <div className="space-y-3">
+                              <Label>Espaciado entre ventanas ({gridGap}px)</Label>
+                              <Slider
+                                  value={[gridGap]}
+                                  onValueChange={(value) => onGridGapChange(value[0])}
+                                  max={32}
+                                  step={1}
+                                  disabled={remoteControlMode === 'controlled'}
+                              />
+                          </div>
+                          <div className="space-y-3">
+                              <Label>Color de Borde</Label>
+                              <div className="flex items-center gap-2">
+                                  <Input
+                                      type="color"
+                                      value={borderColor}
+                                      onChange={(e) => onBorderColorChange(e.target.value)}
+                                      className="w-12 h-10 p-1"
+                                      disabled={remoteControlMode === 'controlled'}
+                                  />
+                                  <Input
+                                      type="text"
+                                      value={borderColor}
+                                      onChange={(e) => onBorderColorChange(e.target.value)}
+                                      placeholder="#000000"
+                                      className="flex-grow"
+                                      disabled={remoteControlMode === 'controlled'}
+                                  />
+                              </div>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full" disabled={remoteControlMode === 'controlled'}>
+                              Restaurar
+                          </Button>
+                      </AccordionContent>
+                  </AccordionItem>
 
-                    <AccordionItem value="item-features" className="border rounded-lg px-4">
-                        <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-                        <AccordionContent className="pt-4 pb-4">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="chat-switch" className="flex flex-col gap-1">
-                                    <span>Activar Chat en Vivo</span>
-                                    <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
-                                </Label>
-                                <Switch
-                                    id="chat-switch"
-                                    checked={isChatEnabled}
-                                    onCheckedChange={onIsChatEnabledChange}
-                                    disabled={remoteControlMode === 'controlled'}
-                                />
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </div>
-          </ScrollArea>
-        </div>
+                  <AccordionItem value="item-features" className="border rounded-lg px-4">
+                      <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
+                      <AccordionContent className="pt-4 pb-4">
+                          <div className="flex items-center justify-between">
+                              <Label htmlFor="chat-switch" className="flex flex-col gap-1">
+                                  <span>Activar Chat en Vivo</span>
+                                  <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
+                              </Label>
+                              <Switch
+                                  id="chat-switch"
+                                  checked={isChatEnabled}
+                                  onCheckedChange={onIsChatEnabledChange}
+                                  disabled={remoteControlMode === 'controlled'}
+                              />
+                          </div>
+                      </AccordionContent>
+                  </AccordionItem>
+              </Accordion>
+          </div>
+        </ScrollArea>
         <div className="p-4 mt-auto border-t">
             <div className="space-y-2">
+                {props.onSchedule && (
+                  <Button variant="outline" className="w-full justify-start" onClick={props.onSchedule}>
+                      <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                  </Button>
+                )}
                 <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
                     <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
                 </Button>
@@ -348,7 +348,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
                         <h3 className="font-bold text-foreground mt-4">Paso 1: Explorar y Seleccionar Eventos</h3>
                         <p>Al entrar, verás varias listas de eventos: "En Vivo", "Próximos", "Canales 24/7", etc. Simplemente haz clic en la tarjeta del evento o canal que te interese. Al hacerlo, se abrirá un menú con las diferentes opciones de transmisión disponibles para ese evento.</p>
-                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Play className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
+                        <p>Selecciona una de las opciones de transmisión. Una vez que lo hagas, el evento se añadirá automáticamente a tu selección, que puedes ver representada por un número en el botón verde de "Play" (<Settings className="inline-block h-4 w-4" />) en la parte superior derecha.</p>
                         <p>Puedes seguir añadiendo eventos o canales hasta un máximo de 9. Verás una marca de verificación verde sobre las tarjetas de los eventos que ya has seleccionado.</p>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 2: Configurar tu Selección</h3>
@@ -360,12 +360,12 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         </ul>
 
                         <h3 className="font-bold text-foreground mt-4">Paso 3: Iniciar la Transmisión</h3>
-                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Play className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
+                        <p>Cuando estés listo, presiona el botón verde de "Play" (<Settings className="inline-block h-4 w-4" />). La aplicación organizará todas tus selecciones en una cuadrícula en la pantalla. Desde esta vista, puedes seguir accediendo al menú de configuración para hacer ajustes en tiempo real, como recargar una ventana que no carga (<RotateCw className="inline-block h-4 w-4" />) o poner una en pantalla completa (<Maximize className="inline-block h-4 w-4" />).</p>
                         
                         <h3 className="font-bold text-foreground mt-4">Funciones Avanzadas</h3>
                         <ul className="list-disc pl-5 space-y-2">
                             <li><strong>Control Remoto (<Airplay className="inline-block h-4 w-4" />):</strong> Te permite usar un dispositivo (como tu móvil) para controlar lo que se ve en otro (como tu TV). En la pantalla que quieres controlar, abre el menú y pulsa "Activar Control Remoto" para generar un código. En el dispositivo que usarás como control, introduce ese código.</li>
-                            <li><strong>Programar Selección (<CalendarDays className="inline-block h-4 w-4" />):</strong> Guarda una selección de eventos y prográmala para que se cargue automáticamente en una fecha y hora específicas. Ideal para no perderte los partidos del fin de semana.</li>
+                            <li><strong>Programar Selección (<CalendarDays className="inline-block h-4 w-4" />):</strong> Guarda una selección de eventos y prográmala para que se active automáticamente en una fecha y hora específicas. Ideal para no perderte los partidos del fin de semana.</li>
                             <li><strong>Notificaciones y Calendario (<Mail className="inline-block h-4 w-4" />, <CalendarDays className="inline-block h-4 w-4"/>):</strong> Suscríbete para recibir correos con la agenda diaria o para añadir los eventos directamente a tu calendario personal.</li>
                         </ul>
                         <p className="pt-2">¡Eso es todo! Explora las opciones y disfruta del deporte a tu manera.</p>
@@ -480,7 +480,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
                         <h3 className="font-bold text-foreground">Notificaciones de derechos de autor</h3>
                         <p>Si usted es titular de derechos o su representante y considera que un contenido embebido desde una fuente externa infringe sus derechos, puede enviarnos una notificación formal. Aunque no estamos sujetos a la legislación DMCA de EE.UU., colaboramos voluntariamente con cualquier requerimiento legítimo bajo dicho marco.</p>
-                        <p>Por favor incluya en su notificación:</p>
                         <ul className="list-disc pl-5 space-y-1">
                           <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
                           <li>(b) Identificación clara del contenido presuntamente infringido.</li>
@@ -494,7 +493,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                     </div>
                 </ScrollArea>
                 <DialogFooter>
-                    <DialogClose asChild><Button>Entendido</Button></DialogClose>
+                    <DialogClose asChild><Button>Cerrar</Button></DialogClose>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

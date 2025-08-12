@@ -15,7 +15,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { Input } from './ui/input';
-import { Loader2, X, Airplay } from 'lucide-react';
+import { Loader2, X, Airplay, CalendarDays } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LayoutConfigurator } from './layout-configurator';
 import { EventSelectionDialog } from './event-selection-dialog';
@@ -321,7 +321,7 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
         </Button>
       </header>
 
-      <div className="flex-grow overflow-y-auto p-4">
+      <div className="flex-grow overflow-y-auto">
         <LayoutConfigurator
           remoteControlMode="controlling"
           order={remoteState.viewOrder.filter(i => remoteState.selectedEvents[i] !== null)}
