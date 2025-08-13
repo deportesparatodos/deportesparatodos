@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -172,27 +173,25 @@ export function ScheduleManager({
 
   return (
     <>
-      {modifyEventForSchedule && (
-        <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {
-            if(!open) {
-                setModifyEventForSchedule(null)
-            }
-        }}>
-           <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} data-sub-dialog="true">
-              <EventSelectionDialog
-                isOpen={!!modifyEventForSchedule}
-                onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
-                event={modifyEventForSchedule.event}
-                onSelect={handleModifyEventForSchedule}
-                isModification={true}
-                onRemove={() => {}}
-                isLoading={false}
-                setIsLoading={() => {}}
-                setEventForDialog={() => {}}
-              />
-           </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {
+          if(!open) {
+              setModifyEventForSchedule(null)
+          }
+      }}>
+        {modifyEventForSchedule && (
+            <EventSelectionDialog
+              isOpen={!!modifyEventForSchedule}
+              onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
+              event={modifyEventForSchedule.event}
+              onSelect={handleModifyEventForSchedule}
+              isModification={true}
+              onRemove={() => {}}
+              isLoading={false}
+              setIsLoading={() => {}}
+              setEventForDialog={() => {}}
+            />
+        )}
+      </Dialog>
 
 
       <Dialog open={open} onOpenChange={onOpenChange}>
