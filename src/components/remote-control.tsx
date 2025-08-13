@@ -78,17 +78,15 @@ export function RemoteControlManager(props: RemoteControlManagerProps) {
   const ablyRef = useRef<{ client: Ably.Realtime | null; channel: Ably.Types.RealtimeChannelPromise | null }>({ client: null, channel: null });
 
   const cleanupAbly = useCallback(() => {
-    const { client, channel } = ablyRef.current;
+    const { client } = ablyRef.current;
     if (client && client.connection.state !== 'closed') {
-        channel?.presence.leave().catch(err => console.error("Error leaving presence:", err));
-        channel?.detach().catch(err => console.error("Error detaching channel:", err));
-        client.close();
+      client.close();
     }
     ablyRef.current = { client: null, channel: null };
   }, []);
-
+  
   useEffect(() => {
-    // Global cleanup on unmount
+    // Global cleanup on unmount for safety
     return () => cleanupAbly();
   }, [cleanupAbly]);
 
@@ -105,7 +103,7 @@ export function RemoteControlManager(props: RemoteControlManagerProps) {
 }
 
 
-// --- INACTIVE MODE COMPONENT ---
+// --- INACTIVE MODE VIEW ---
 
 function InactiveView({ onActivateControlledMode, onStartControlling }: Extract<RemoteControlManagerProps, { mode: 'inactive' }>) {
   const [dialogView, setDialogView] = useState<'main' | 'controlling'>('main');
@@ -163,20 +161,20 @@ function InactiveView({ onActivateControlledMode, onStartControlling }: Extract<
 }
 
 
-// --- CONTROLLED MODE (BACKGROUND) COMPONENT ---
+// --- CONTROLLED MODE (BACKGROUND) LOGIC ---
 
 function ControlledView({ viewState, setViewState, onSessionStart, onSessionEnd, onReload, onToggleFullscreen, ablyRef, cleanupAbly }: Extract<RemoteControlManagerProps, { mode: 'controlled' }> & { ablyRef: any, cleanupAbly: () => void }) {
+    
     useEffect(() => {
         let isMounted = true;
+
         const startSession = async () => {
             cleanupAbly(); // Ensure no old connections are lingering
+            
             const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=controlled-${Date.now()}` });
             
             client.connection.on('connected', () => {
-                if (!isMounted) {
-                    client.close();
-                    return;
-                }
+                if (!isMounted) { client.close(); return; }
 
                 const newCode = Math.floor(1000 + Math.random() * 9000).toString();
                 const channel = client.channels.get(`remote-control:${newCode}`);
@@ -188,35 +186,24 @@ function ControlledView({ viewState, setViewState, onSessionStart, onSessionEnd,
                     const { action, payload } = message.data;
                     if (action === 'requestInitialState') {
                         channel.publish('control-action', { action: 'initialState', payload: viewState });
-                    }
-                    if (action === 'updateState') {
+                    } else if (action === 'updateState') {
                         setViewState(payload);
-                    }
-                    if (action === 'reload') {
+                    } else if (action === 'reload') {
                         onReload(payload.index);
-                    }
-                    if (action === 'toggleFullscreen') {
+                    } else if (action === 'toggleFullscreen') {
                         onToggleFullscreen(payload.index);
                     }
                 });
 
                 channel.presence.subscribe('leave', () => {
-                    if(isMounted) {
-                        onSessionEnd();
-                    }
+                    if (isMounted) onSessionEnd();
                 });
             });
 
-             client.connection.on('closed', () => {
-                if(isMounted) {
-                    onSessionEnd();
-                }
-            });
+             client.connection.on('closed', () => { if (isMounted) onSessionEnd(); });
              client.connection.on('failed', (error: Ably.Types.ErrorInfo) => {
                 console.error("Ably connection failed:", error);
-                if (isMounted) {
-                    onSessionEnd();
-                }
+                if (isMounted) onSessionEnd();
             });
         };
 
@@ -224,34 +211,34 @@ function ControlledView({ viewState, setViewState, onSessionStart, onSessionEnd,
 
         return () => {
             isMounted = false;
-            onSessionEnd();
             cleanupAbly();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return null; // This component has no UI, it only manages the connection
+     // Propagate local state changes back to controller
+    useEffect(() => {
+        const { channel } = ablyRef.current;
+        if(channel && channel.state === 'attached') {
+            channel.publish('control-action', { action: 'initialState', payload: viewState });
+        }
+    }, [viewState, ablyRef]);
+
+    return null; // This component has no UI
 }
 
-// --- CONTROLLING MODE COMPONENT ---
+
+// --- CONTROLLING MODE VIEW ---
 
 function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allChannels, updateAllEvents, ablyRef, cleanupAbly }: Extract<RemoteControlManagerProps, { mode: 'controlling' }> & { ablyRef: any, cleanupAbly: () => void }) {
   const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [dialogs, setDialogs] = useState({
-      addEvents: false,
-      schedule: false,
-      modifyEvent: null as { event: Event, index: number } | null,
-      sessionEnded: false,
-      isContactOpen: false,
-      isLegalOpen: false,
-      isTutorialOpen: false,
-      isErrorsOpen: false,
-      notificationManager: false,
-      calendar: false,
-  });
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const { toast } = useToast();
+
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [addEventsOpen, setAddEventsOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
 
   const publishAction = useCallback((action: string, payload: any) => {
     const { channel } = ablyRef.current;
@@ -272,62 +259,43 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
             return;
         }
 
-        try {
-            const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=controlling-${Date.now()}` });
-            client.connection.on('connected', async () => {
-                if (!isMounted) { client.close(); return; }
+        const client = new Ably.Realtime({ authUrl: `/api/ably?clientId=controlling-${Date.now()}` });
+        
+        client.connection.on('connected', async () => {
+            if (!isMounted) { client.close(); return; }
 
-                const channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
-                ablyRef.current = { client, channel };
+            const channel = client.channels.get(`remote-control:${initialRemoteSessionId}`);
+            ablyRef.current = { client, channel };
 
-                connectionTimeout = setTimeout(() => {
-                    if (isLoading) {
-                        toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo conectar. Verifica el código e inténtalo de nuevo.' });
-                        onSessionEnd();
-                    }
-                }, 10000);
+            connectionTimeout = setTimeout(() => {
+                if (isLoading) {
+                    toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo conectar. Verifica el código e inténtalo de nuevo.' });
+                    onSessionEnd();
+                }
+            }, 10000);
 
-                channel.subscribe('control-action', (message: Ably.Types.Message) => {
-                    if (message.data.action === 'initialState') {
-                        clearTimeout(connectionTimeout);
+            channel.subscribe('control-action', (message: Ably.Types.Message) => {
+                if (message.data.action === 'initialState') {
+                    clearTimeout(connectionTimeout);
+                    if (isMounted) {
                         setRemoteState(message.data.payload);
                         setIsLoading(false);
                     }
-                });
-
-                await channel.presence.enter();
-                publishAction('requestInitialState', {});
-            });
-
-             client.connection.on('closed', () => {
-                if (isMounted) {
-                    setDialogs(d => ({ ...d, sessionEnded: true }));
-                }
-            });
-            client.connection.on('failed', (error: Ably.Types.ErrorInfo) => {
-                console.error("Ably connection failed:", error);
-                toast({ variant: 'destructive', title: 'Error de Conexión', description: 'La conexión falló.' });
-                if (isMounted) {
-                    onSessionEnd();
                 }
             });
 
-        } catch (error) {
-            console.error(error);
-            clearTimeout(connectionTimeout);
-            toast({ variant: 'destructive', title: 'Error de Conexión', description: 'No se pudo iniciar la conexión con Ably.' });
-            onSessionEnd();
-        }
+            await channel.presence.enter();
+            publishAction('requestInitialState', {});
+        });
+
+        client.connection.on('closed', () => { if (isMounted) setSessionEnded(true); });
+        client.connection.on('failed', () => { if (isMounted) setSessionEnded(true); });
     };
     
     connectAndSync();
 
-    return () => {
-        isMounted = false;
-        clearTimeout(connectionTimeout);
-        cleanupAbly();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { isMounted = false; clearTimeout(connectionTimeout); cleanupAbly(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialRemoteSessionId]);
 
   const updateAndPublish = (newState: Partial<RemoteControlViewState>) => {
@@ -338,19 +306,23 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
     });
   };
 
-  if (isLoading) return <div className="fixed inset-0 bg-background/80 z-50 flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>;
+  if (isLoading) {
+    return <div className="fixed inset-0 bg-background/80 z-50 flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>;
+  }
   
-  if (!remoteState) return (
-      <div className="fixed inset-0 bg-background z-50 p-4 text-center flex flex-col justify-center items-center">
-        <p className='text-destructive'>No se pudo cargar el estado remoto.</p>
-        <Button onClick={onSessionEnd} className='mt-4'>Cerrar</Button>
-      </div>
-  );
+  if (!remoteState) {
+      return (
+          <div className="fixed inset-0 bg-background z-50 p-4 text-center flex flex-col justify-center items-center">
+              <p className='text-destructive'>No se pudo cargar el estado remoto.</p>
+              <Button onClick={onSessionEnd} className='mt-4'>Cerrar</Button>
+          </div>
+      );
+  }
 
   return (
     <>
       <div className="fixed inset-0 bg-background z-50 flex flex-col">
-        <header className="p-4 border-b border-border flex justify-between items-center">
+        <header className="p-4 border-b border-border flex justify-between items-center flex-shrink-0">
           <div>
             <h1 className="text-lg font-bold">Control Remoto</h1>
             <p className="text-sm text-muted-foreground">Sesión: {initialRemoteSessionId}</p>
@@ -360,8 +332,7 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
           </Button>
         </header>
 
-        <div className="flex-grow overflow-y-auto">
-          <LayoutConfigurator
+        <LayoutConfigurator
             remoteControlMode="controlling"
             order={remoteState.viewOrder.filter(i => remoteState.selectedEvents[i] !== null)}
             onOrderChange={(newOrder) => {
@@ -381,14 +352,14 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
                 updateAndPublish({ selectedEvents: newEvents });
             }}
             onReload={(index) => publishAction('reload', { index })}
-            onModify={(event, index) => setDialogs(d => ({ ...d, modifyEvent: { event, index } }))}
+            onModify={(event, index) => setModifyEvent({ event, index })}
             onToggleFullscreen={(index) => {
                 const newIndex = remoteState.fullscreenIndex === index ? null : index;
-                updateAndPublish({ fullscreenIndex: newIndex });
+                publishAction('toggleFullscreen', { index: newIndex });
             }}
             fullscreenIndex={remoteState.fullscreenIndex}
             isViewPage={true}
-            onAddEvent={() => setDialogs(d => ({ ...d, addEvents: true }))}
+            onAddEvent={() => setAddEventsOpen(true)}
             gridGap={remoteState.gridGap}
             onGridGapChange={(value) => updateAndPublish({ gridGap: value })}
             borderColor={remoteState.borderColor}
@@ -398,59 +369,48 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
             onIsChatEnabledChange={(value) => updateAndPublish({ isChatEnabled: value })}
             categories={[]}
             onActivateControlledMode={() => {}}
-            onSchedule={() => setDialogs(d => ({...d, schedule: true}))}
-            onOpenCalendar={() => setDialogs(d => ({ ...d, calendar: true}))}
-            onIsErrorsOpenChange={(open) => setDialogs(d => ({...d, isErrorsOpen: open}))} isErrorsOpen={dialogs.isErrorsOpen}
-            onIsTutorialOpenChange={(open) => setDialogs(d => ({...d, isTutorialOpen: open}))} isTutorialOpen={dialogs.isTutorialOpen}
-            onOpenErrors={() => setDialogs(d => ({...d, isErrorsOpen: true}))} 
-            onOpenTutorial={() => setDialogs(d => ({...d, isTutorialOpen: true}))}
-            onNotificationManager={() => setDialogs(d => ({...d, notificationManager: true}))}
+            onSchedule={() => setScheduleOpen(true)}
+            onOpenCalendar={()=>{}} onOpenErrors={()=>{}} onOpenTutorial={()=>{}}
+            isErrorsOpen={false} isTutorialOpen={false}
+            onIsErrorsOpenChange={()=>{}} onIsTutorialOpenChange={()=>{}}
+            onNotificationManager={()=>{}}
           />
-        </div>
       </div>
-      
-      {/* --- DIALOGS --- */}
-      <Dialog open={dialogs.sessionEnded} onOpenChange={() => { setDialogs(d => ({ ...d, sessionEnded: false })); onSessionEnd(); }}>
+
+      <Dialog open={sessionEnded} onOpenChange={() => { setSessionEnded(false); onSessionEnd(); }}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Sesión Terminada</DialogTitle>
-            <DialogDescription>La conexión con el otro dispositivo ha finalizado.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose asChild><Button onClick={onSessionEnd}>Cerrar</Button></DialogClose>
-          </DialogFooter>
+          <DialogHeader><DialogTitle>Sesión Terminada</DialogTitle><DialogDescription>La conexión con el otro dispositivo ha finalizado.</DialogDescription></DialogHeader>
+          <DialogFooter><DialogClose asChild><Button onClick={onSessionEnd}>Cerrar</Button></DialogClose></DialogFooter>
         </DialogContent>
       </Dialog>
       
-      <Dialog open={!!dialogs.modifyEvent} onOpenChange={(open) => !open && setDialogs(d => ({ ...d, modifyEvent: null }))}>
-        {dialogs.modifyEvent && (
-          <EventSelectionDialog
-              isOpen={!!dialogs.modifyEvent}
-              onOpenChange={() => setDialogs(d => ({ ...d, modifyEvent: null }))}
-              event={dialogs.modifyEvent.event}
-              onSelect={(event, option) => {
-                  const newEvents = [...remoteState.selectedEvents];
-                  newEvents[dialogs.modifyEvent!.index] = { ...event, selectedOption: option };
-                  updateAndPublish({ selectedEvents: newEvents });
-                  setDialogs(d => ({...d, modifyEvent: null}));
-              }}
-              isModification={true}
-              onRemove={() => {
-                  const newEvents = [...remoteState.selectedEvents];
-                  newEvents[dialogs.modifyEvent!.index] = null;
-                  updateAndPublish({ selectedEvents: newEvents });
-                  setDialogs(d => ({...d, modifyEvent: null}));
-              }}
-              isLoading={false}
-              setIsLoading={()=>{}}
-              setEventForDialog={()=>{}}
-          />
+       <Dialog open={!!modifyEvent} onOpenChange={(open) => !open && setModifyEvent(null)}>
+        {modifyEvent && (
+            <EventSelectionDialog
+                isOpen={!!modifyEvent}
+                onOpenChange={() => setModifyEvent(null)}
+                event={modifyEvent.event}
+                onSelect={(event, option) => {
+                    const newEvents = [...remoteState.selectedEvents];
+                    newEvents[modifyEvent.index] = { ...event, selectedOption: option };
+                    updateAndPublish({ selectedEvents: newEvents });
+                    setModifyEvent(null);
+                }}
+                isModification={true}
+                onRemove={() => {
+                    const newEvents = [...remoteState.selectedEvents];
+                    newEvents[modifyEvent.index] = null;
+                    updateAndPublish({ selectedEvents: newEvents });
+                    setModifyEvent(null);
+                }}
+                isLoading={false} setIsLoading={()=>{}} setEventForDialog={()=>{}}
+            />
         )}
       </Dialog>
-      
+
       <AddEventsDialog
-        open={dialogs.addEvents}
-        onOpenChange={(open) => setDialogs(d => ({...d, addEvents: open}))}
+        open={addEventsOpen}
+        onOpenChange={setAddEventsOpen}
         onSelect={(event, option) => {
             const newEvents = [...remoteState.selectedEvents];
             const emptyIndex = newEvents.findIndex(e => e === null);
@@ -460,7 +420,7 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
             } else {
                 toast({ title: "Máximo alcanzado", description: "No se pueden añadir más de 9 eventos."});
             }
-            setDialogs(d => ({...d, addEvents: false}));
+            setAddEventsOpen(false);
         }}
         onRemove={(event) => {
              const newEvents = remoteState.selectedEvents.map(se => se?.id === event.id ? null : se);
@@ -469,22 +429,22 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
         selectedEvents={remoteState.selectedEvents}
         allEvents={allEvents}
         allChannels={allChannels}
-        onFetchEvents={async () => {}} // No fetch needed in remote
+        onFetchEvents={async () => {}} 
         updateAllEvents={updateAllEvents}
-        isFullScreen={isFullScreen}
-        setIsFullScreen={setIsFullScreen}
+        isFullScreen={false}
+        setIsFullScreen={() => {}}
       />
       
       <ScheduleManager 
-        open={dialogs.schedule}
-        onOpenChange={(open) => setDialogs(d => ({...d, schedule: open}))}
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
         currentSelection={remoteState.selectedEvents}
         currentOrder={remoteState.viewOrder}
         schedules={remoteState.schedules}
         onSchedulesChange={(newSchedules) => updateAndPublish({ schedules: newSchedules })}
-        onModifyEventInView={(event, index) => setDialogs(d => ({...d, modifyEvent: {event, index}}))}
+        onModifyEventInView={(event, index) => setModifyEvent({event, index})}
         isLoading={false}
-        onAddEvent={() => setDialogs(d => ({...d, addEvents: true, schedule: false}))}
+        onAddEvent={() => { setScheduleOpen(false); setAddEventsOpen(true); }}
         initialSelection={remoteState.selectedEvents}
         initialOrder={remoteState.viewOrder}
         setFutureSelection={(s) => updateAndPublish({ selectedEvents: s})}
