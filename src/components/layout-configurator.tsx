@@ -61,7 +61,6 @@ export interface EventListManagementProps {
   onIsTutorialOpenChange: (open: boolean) => void;
   isErrorsOpen: boolean;
   onIsErrorsOpenChange: (open: boolean) => void;
-  showTopSeparator?: boolean;
 }
 
 export function EventList({
@@ -216,7 +215,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
                                   <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
                                   <AlertDescription className="text-yellow-500/80 text-center">
-                                      Para hacer cambios, use el dispositivo controlador. Si no conectó nada, recargue la página.
+                                      Para hacer cambios, use el dispositivo controlador.
                                   </AlertDescription>
                               </Alert>
                           ) : (
@@ -480,7 +479,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         <p>Estos ingresos publicitarios permiten el mantenimiento del sitio, pero no están directamente vinculados al contenido embebido ni implican relación comercial con las plataformas desde las cuales se obtiene dicho contenido.</p>
                         <p>DEPORTES PARA TODOS no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.</p>
                         <p>Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.</p>
-                        <p>Nos reservamos el derecho de incluir o remover campañas publicitarias en cualquier momento, y recomendamos a los usuarios consultar la política de privacidad de cada plataforma externa a la que accedan desde este sitio.</p>
                         
                         <h3 className="font-bold text-foreground">Relación con los dueños del contenido</h3>
                         <p>DEPORTES PARA TODOS no tiene relación alguna con los titulares de los derechos de las transmisiones embebidas, ni con las plataformas que los alojan. Todo el contenido audiovisual visualizado mediante iframes es responsabilidad exclusiva del sitio externo que lo provee.</p>
