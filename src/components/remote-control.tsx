@@ -79,10 +79,9 @@ export function RemoteControlManager(props: RemoteControlManagerProps) {
 
   const cleanupAbly = useCallback(() => {
     const { client, channel } = ablyRef.current;
-    if (channel) {
-        channel.detach().catch(err => console.error("Error detaching channel:", err));
-    }
     if (client && client.connection.state !== 'closed') {
+        channel?.presence.leave().catch(err => console.error("Error leaving presence:", err));
+        channel?.detach().catch(err => console.error("Error detaching channel:", err));
         client.close();
     }
     ablyRef.current = { client: null, channel: null };
@@ -213,6 +212,12 @@ function ControlledView({ viewState, setViewState, onSessionStart, onSessionEnd,
                     onSessionEnd();
                 }
             });
+             client.connection.on('failed', (error: Ably.Types.ErrorInfo) => {
+                console.error("Ably connection failed:", error);
+                if (isMounted) {
+                    onSessionEnd();
+                }
+            });
         };
 
         startSession();
@@ -233,12 +238,17 @@ function ControlledView({ viewState, setViewState, onSessionStart, onSessionEnd,
 function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allChannels, updateAllEvents, ablyRef, cleanupAbly }: Extract<RemoteControlManagerProps, { mode: 'controlling' }> & { ablyRef: any, cleanupAbly: () => void }) {
   const [remoteState, setRemoteState] = useState<RemoteControlViewState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSessionEnded, setIsSessionEnded] = useState(false);
   const [dialogs, setDialogs] = useState({
       addEvents: false,
       schedule: false,
       modifyEvent: null as { event: Event, index: number } | null,
       sessionEnded: false,
+      isContactOpen: false,
+      isLegalOpen: false,
+      isTutorialOpen: false,
+      isErrorsOpen: false,
+      notificationManager: false,
+      calendar: false,
   });
   const [isFullScreen, setIsFullScreen] = useState(false);
   const { toast } = useToast();
@@ -291,7 +301,14 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
 
              client.connection.on('closed', () => {
                 if (isMounted) {
-                    setIsSessionEnded(true);
+                    setDialogs(d => ({ ...d, sessionEnded: true }));
+                }
+            });
+            client.connection.on('failed', (error: Ably.Types.ErrorInfo) => {
+                console.error("Ably connection failed:", error);
+                toast({ variant: 'destructive', title: 'Error de Conexión', description: 'La conexión falló.' });
+                if (isMounted) {
+                    onSessionEnd();
                 }
             });
 
@@ -382,17 +399,18 @@ function ControllingView({ initialRemoteSessionId, onSessionEnd, allEvents, allC
             categories={[]}
             onActivateControlledMode={() => {}}
             onSchedule={() => setDialogs(d => ({...d, schedule: true}))}
-            onOpenCalendar={() => {}}
-            onIsErrorsOpenChange={() => {}} isErrorsOpen={false}
-            onIsTutorialOpenChange={() => {}} isTutorialOpen={false}
-            onOpenErrors={() => {}} onOpenTutorial={() => {}}
-            onNotificationManager={() => {}}
+            onOpenCalendar={() => setDialogs(d => ({ ...d, calendar: true}))}
+            onIsErrorsOpenChange={(open) => setDialogs(d => ({...d, isErrorsOpen: open}))} isErrorsOpen={dialogs.isErrorsOpen}
+            onIsTutorialOpenChange={(open) => setDialogs(d => ({...d, isTutorialOpen: open}))} isTutorialOpen={dialogs.isTutorialOpen}
+            onOpenErrors={() => setDialogs(d => ({...d, isErrorsOpen: true}))} 
+            onOpenTutorial={() => setDialogs(d => ({...d, isTutorialOpen: true}))}
+            onNotificationManager={() => setDialogs(d => ({...d, notificationManager: true}))}
           />
         </div>
       </div>
       
       {/* --- DIALOGS --- */}
-      <Dialog open={isSessionEnded} onOpenChange={onSessionEnd}>
+      <Dialog open={dialogs.sessionEnded} onOpenChange={() => { setDialogs(d => ({ ...d, sessionEnded: false })); onSessionEnd(); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Sesión Terminada</DialogTitle>
