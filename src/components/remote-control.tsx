@@ -79,8 +79,12 @@ export function RemoteControlManager(props: RemoteControlManagerProps) {
 
   const cleanupAbly = useCallback(() => {
     const { client, channel } = ablyRef.current;
-    if (channel) channel.detach();
-    if (client && client.connection.state === 'connected') client.close();
+    if (channel) {
+        channel.detach();
+    }
+    if (client && client.connection.state !== 'closed') {
+        client.close();
+    }
     ablyRef.current = { client: null, channel: null };
   }, []);
 
@@ -244,6 +248,9 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
   useEffect(() => {
     let isMounted = true;
     let connectionTimeout: NodeJS.Timeout;
+    
+    // Clean up any previous connection before starting a new one
+    cleanupAbly();
 
     const connectAndSync = async () => {
         if (!props.initialRemoteSessionId) {
@@ -341,7 +348,6 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
               newEvents[index] = null;
               updateAndPublish({ selectedEvents: newEvents });
           }}
-          onSchedule={() => setScheduleManagerOpen(true)}
           onReload={(index) => publishAction('reload', { index })}
           onModify={(event, index) => setModifyEvent({ event, index })}
           onToggleFullscreen={(index) => {
@@ -362,32 +368,31 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
           onIsChatEnabledChange={(value) => updateAndPublish({ isChatEnabled: value })}
           categories={[]}
           onActivateControlledMode={() => {}}
+          onSchedule={() => setScheduleManagerOpen(true)}
         />
       </div>
 
       {modifyEvent && (
-        <Dialog open={!!modifyEvent} onOpenChange={() => setModifyEvent(null)}>
-            <EventSelectionDialog
-                isOpen={!!modifyEvent}
-                onOpenChange={() => setModifyEvent(null)}
-                event={modifyEvent.event}
-                onSelect={(event, option) => {
-                    const newEvents = [...remoteState.selectedEvents];
-                    newEvents[modifyEvent.index] = { ...event, selectedOption: option };
-                    updateAndPublish({ selectedEvents: newEvents });
-                    setModifyEvent(null);
-                }}
-                isModification={true}
-                onRemove={(eventToRemove) => {
-                    const newEvents = remoteState.selectedEvents.map(se => se?.id === (eventToRemove as unknown as Event).id ? null : se);
-                    updateAndPublish({ selectedEvents: newEvents });
-                    setModifyEvent(null);
-                }}
-                isLoading={false}
-                setIsLoading={()=>{}}
-                setEventForDialog={()=>{}}
-            />
-        </Dialog>
+        <EventSelectionDialog
+            isOpen={!!modifyEvent}
+            onOpenChange={() => setModifyEvent(null)}
+            event={modifyEvent.event}
+            onSelect={(event, option) => {
+                const newEvents = [...remoteState.selectedEvents];
+                newEvents[modifyEvent.index] = { ...event, selectedOption: option };
+                updateAndPublish({ selectedEvents: newEvents });
+                setModifyEvent(null);
+            }}
+            isModification={true}
+            onRemove={(eventToRemove) => {
+                const newEvents = remoteState.selectedEvents.map(se => se?.id === (eventToRemove as unknown as Event).id ? null : se);
+                updateAndPublish({ selectedEvents: newEvents });
+                setModifyEvent(null);
+            }}
+            isLoading={false}
+            setIsLoading={()=>{}}
+            setEventForDialog={()=>{}}
+        />
       )}
 
       <AddEventsDialog
@@ -447,3 +452,4 @@ function ControllingView({ ablyRef, cleanupAbly, ...props }: Extract<RemoteContr
     </div>
   );
 }
+
