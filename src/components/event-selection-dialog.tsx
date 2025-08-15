@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import Image from 'next/image';
 import {
   Dialog,
@@ -31,7 +31,8 @@ interface EventSelectionDialogProps {
   onRemove: () => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  setEventForDialog: (event: Event) => void;
+  setEventForDialog: (event: Event | null) => void;
+  updateEventsList: (updateFn: (prevEvents: Event[]) => Event[]) => void;
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
@@ -42,10 +43,53 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   onOpenChange,
   event,
   onSelect,
-  isLoading,
   isModification,
   onRemove,
+  updateEventsList,
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && event && event.source === 'streamed.pk' && event.options.length === 0) {
+      const fetchStreamOptions = async () => {
+        setIsLoading(true);
+        try {
+          const sourcePromises = event.sources.map(async (source) => {
+            try {
+              const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+              if (response.ok) {
+                const streams: any[] = await response.json();
+                if (Array.isArray(streams)) {
+                  return streams.map(stream => ({
+                    url: stream.embedUrl,
+                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                    hd: stream.hd,
+                    language: stream.language,
+                  }));
+                }
+              }
+            } catch (e) {
+              console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
+            }
+            return [];
+          });
+          const results = await Promise.all(sourcePromises);
+          const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
+          
+          // Update the event in the dialog with the fetched options
+          updateEventsList(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, options: streamOptions } : e));
+          
+        } catch (error) {
+          console.error(`Failed to fetch streams for ${event.title}`, error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchStreamOptions();
+    }
+  }, [isOpen, event, updateEventsList]);
+
+
   if (!event) return null;
 
   const isLive = event.status?.toLowerCase() === 'en vivo';

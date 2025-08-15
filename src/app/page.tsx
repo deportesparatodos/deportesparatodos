@@ -59,7 +59,6 @@ import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RemoteControlManager } from '@/components/remote-control';
-import { AddEventsDialog } from '@/components/add-events-dialog';
 
 
 interface StreamedMatch {
@@ -271,7 +270,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   const [currentView, setCurrentView] = useState<string>('home');
   
   // Dialog/Popup states
-  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -645,10 +643,10 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   }, [isInitialLoadDone, fetchEvents, isRemoteControlling]);
   
   useEffect(() => {
-    if (addEventsDialogOpen && !isRemoteControlling) {
-      fetchEvents(false, true);
+    if (dialogOpen && !isRemoteControlling) {
+      // Logic inside EventSelectionDialog now
     }
-  }, [addEventsDialogOpen, fetchEvents, isRemoteControlling]);
+  }, [dialogOpen, fetchEvents, isRemoteControlling]);
 
   useEffect(() => {
     if (isInitialLoadDone && !isRemoteControlling) {
@@ -1101,53 +1099,8 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
         setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     
-    setIsOptionsLoading(true);
     setDialogEvent(eventForDialog);
     setDialogOpen(true);
-    
-    // Fetch options if they are missing
-    if (event.source === 'streamed.pk' && event.options.length === 0) {
-        const fetchStreamOptions = async () => {
-            try {
-                const sourcePromises = event.sources.map(async (source) => {
-                    try {
-                        const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                        if (response.ok) {
-                            const streams: any[] = await response.json();
-                            if (Array.isArray(streams)) {
-                                return streams.map(stream => ({
-                                    url: stream.embedUrl,
-                                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                                    hd: stream.hd,
-                                    language: stream.language,
-                                }));
-                            }
-                        }
-                    } catch (e) {
-                        console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
-                    }
-                    return [];
-                });
-                const results = await Promise.all(sourcePromises);
-                const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
-                
-                // Update the event in the dialog with the fetched options
-                setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: streamOptions } : null);
-                
-                // Also update the main events array to cache the options
-                setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, options: streamOptions } : e));
-                
-            } catch (error) {
-                console.error(`Failed to fetch streams for ${event.title}`, error);
-                setDialogEvent(prevEvent => prevEvent ? { ...prevEvent, options: [] } : null);
-            } finally {
-                setIsOptionsLoading(false);
-            }
-        };
-        fetchStreamOptions();
-    } else {
-        setIsOptionsLoading(false); // No fetching needed, options already exist
-    }
   };
 
 
@@ -1177,7 +1130,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
 
     setDialogEvent(channelAsEvent);
     setDialogOpen(true);
-    setIsOptionsLoading(false); // Channels don't need to load options
 
     if (selection.isSelected) {
         setIsModification(true);
@@ -1433,43 +1385,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
                 </div>
             </DialogContent>
         </Dialog>
-        <AddEventsDialog 
-            open={addEventsDialogOpen}
-            onOpenChange={(open) => {
-              if (!open) {
-                setAddEventsDialogOpen(false);
-                if (dialogContext === 'schedule') {
-                  setScheduleManagerOpen(true);
-                }
-              } else {
-                setDialogContext('view');
-                setAddEventsDialogOpen(true);
-              }
-            }}
-            onSelect={(event, option) => {
-                if (dialogContext === 'schedule') {
-                    const newFutureSelection = [...futureSelection];
-                    const eventWithSelection = { ...event, selectedOption: option };
-                    const emptyIndex = newFutureSelection.findIndex(e => e === null);
-                    if (emptyIndex !== -1) {
-                        newFutureSelection[emptyIndex] = eventWithSelection;
-                        setFutureSelection(newFutureSelection);
-                    } else {
-                        alert("No hay espacios disponibles en la programación.");
-                    }
-                    setAddEventsDialogOpen(false);
-                    setScheduleManagerOpen(true);
-                } else {
-                    handleEventSelect(event, option);
-                }
-            }}
-            onRemove={handleRemoveEventFromDialog}
-            selectedEvents={dialogContext === 'schedule' ? futureSelection : selectedEvents}
-            allEvents={events} 
-            allChannels={channels}
-            onFetchEvents={() => fetchEvents(true, true)}
-            updateAllEvents={setEvents}
-        />
         <ScheduleManager 
           open={scheduleManagerOpen}
           onOpenChange={setScheduleManagerOpen}
@@ -1481,7 +1396,7 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
           isLoading={isAddEventsLoading}
           onAddEvent={() => {
             setDialogContext('schedule');
-            setAddEventsDialogOpen(true);
+            setDialogOpen(true);
           }}
           setFutureSelection={setFutureSelection}
           setFutureOrder={setFutureOrder}
@@ -1622,7 +1537,7 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
                 isViewPage={true}
                 onAddEvent={() => {
                   setDialogContext('view');
-                  setAddEventsDialogOpen(true);
+                  setDialogOpen(true);
                 }}
                 onSchedule={() => setScheduleManagerOpen(true)}
                 onNotification={() => setNotificationManagerOpen(true)}
@@ -2007,7 +1922,7 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
                                             onRemove={handleEventRemove}
                                             onModify={openDialogForModification}
                                             isViewPage={false}
-                                            onAddEvent={() => setAddEventsDialogOpen(true)}
+                                            onAddEvent={() => setDialogOpen(true)}
                                             remoteControlMode={remoteControlMode}
                                             remoteSessionId={remoteSessionId}
                                             onActivateControlledMode={handleActivateControlledMode}
@@ -2075,20 +1990,9 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={setDialogEvent}
+                updateEventsList={setEvents}
             />
         )}
-        
-        <AddEventsDialog 
-            open={addEventsDialogOpen}
-            onOpenChange={setAddEventsDialogOpen}
-            onSelect={(event, option) => handleEventSelect(event, option)}
-            onRemove={handleRemoveEventFromDialog}
-            selectedEvents={selectedEvents}
-            allEvents={events} 
-            allChannels={channels}
-            onFetchEvents={() => fetchEvents(true, true)}
-            updateAllEvents={setEvents}
-        />
     </div>
   );
 }
