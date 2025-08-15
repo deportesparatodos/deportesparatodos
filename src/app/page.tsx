@@ -202,14 +202,46 @@ const normalizeCategory = (category: string): string => {
     return category;
 };
 
-function HomePageContent() {
+interface HomePageContentProps {
+  isRemoteControlling?: boolean;
+  remoteState?: any;
+  onRemoteStateChange?: (newState: any) => void;
+  onRemoteReload?: (index: number) => void;
+  onRemoteToggleFullscreen?: (index: number) => void;
+  allEvents?: Event[];
+  allChannels?: Channel[];
+}
+
+
+export function HomePageContent({ isRemoteControlling = false, remoteState, onRemoteStateChange, onRemoteReload, onRemoteToggleFullscreen, allEvents: remoteAllEvents, allChannels: remoteAllChannels }: HomePageContentProps) {
   const isMobile = useIsMobile();
-  const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
-  const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
-  const [gridGap, setGridGap] = useState<number>(0);
-  const [borderColor, setBorderColor] = useState<string>('#000000');
-  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  // If we are in remote controlling mode, use the state from props
+  const [localSelectedEvents, setLocalSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
+  const [localViewOrder, setLocalViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
+  const [localGridGap, setLocalGridGap] = useState<number>(0);
+  const [localBorderColor, setLocalBorderColor] = useState<string>('#000000');
+  const [localIsChatEnabled, setLocalIsChatEnabled] = useState<boolean>(true);
+  const [localSchedules, setLocalSchedules] = useState<Schedule[]>([]);
+
+  const selectedEvents = isRemoteControlling ? remoteState.selectedEvents : localSelectedEvents;
+  const setSelectedEvents = isRemoteControlling ? (value: any) => onRemoteStateChange!({ selectedEvents: typeof value === 'function' ? value(remoteState.selectedEvents) : value }) : setLocalSelectedEvents;
+  
+  const viewOrder = isRemoteControlling ? remoteState.viewOrder : localViewOrder;
+  const setViewOrder = isRemoteControlling ? (value: any) => onRemoteStateChange!({ viewOrder: typeof value === 'function' ? value(remoteState.viewOrder) : value }) : setLocalViewOrder;
+
+  const gridGap = isRemoteControlling ? remoteState.gridGap : localGridGap;
+  const setGridGap = isRemoteControlling ? (value: any) => onRemoteStateChange!({ gridGap: value }) : setLocalGridGap;
+  
+  const borderColor = isRemoteControlling ? remoteState.borderColor : localBorderColor;
+  const setBorderColor = isRemoteControlling ? (value: any) => onRemoteStateChange!({ borderColor: value }) : setLocalBorderColor;
+
+  const isChatEnabled = isRemoteControlling ? remoteState.isChatEnabled : localIsChatEnabled;
+  const setIsChatEnabled = isRemoteControlling ? (value: any) => onRemoteStateChange!({ isChatEnabled: value }) : setLocalIsChatEnabled;
+
+  const schedules = isRemoteControlling ? remoteState.schedules : localSchedules;
+  const setSchedules = isRemoteControlling ? (value: any) => onRemoteStateChange!({ schedules: typeof value === 'function' ? value(remoteState.schedules) : value }) : setLocalSchedules;
+
+
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // View mode state
@@ -224,9 +256,10 @@ function HomePageContent() {
   const [areControlsVisible, setAreControlsVisible] = useState(true);
 
   // Home mode state
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
+  const [events, setEvents] = useState<Event[]>(remoteAllEvents || []);
+  const [channels, setChannels] = useState<Channel[]>(remoteAllChannels || []);
+  const [isDataLoading, setIsDataLoading] = useState(!isRemoteControlling);
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(isRemoteControlling);
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -527,7 +560,7 @@ function HomePageContent() {
 
   // Load state from localStorage on initial mount
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isRemoteControlling) return;
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
     if (storedSelectedEvents) {
       try {
@@ -571,7 +604,7 @@ function HomePageContent() {
         } catch(e) { console.error("Failed to parse schedules from localStorage", e); }
     }
     
-  }, []);
+  }, [isRemoteControlling]);
 
   // Popup logic
   useEffect(() => {
@@ -609,19 +642,19 @@ function HomePageContent() {
 
 
   useEffect(() => {
-    if (!isInitialLoadDone) {
+    if (!isInitialLoadDone && !isRemoteControlling) {
       fetchEvents();
     }
-  }, [isInitialLoadDone, fetchEvents]);
+  }, [isInitialLoadDone, fetchEvents, isRemoteControlling]);
   
   useEffect(() => {
-    if (addEventsDialogOpen) {
+    if (addEventsDialogOpen && !isRemoteControlling) {
       fetchEvents(false, true);
     }
-  }, [addEventsDialogOpen, fetchEvents]);
+  }, [addEventsDialogOpen, fetchEvents, isRemoteControlling]);
 
   useEffect(() => {
-    if (isInitialLoadDone) {
+    if (isInitialLoadDone && !isRemoteControlling) {
         localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
         localStorage.setItem('viewOrder', JSON.stringify(viewOrder));
         localStorage.setItem('gridGap', gridGap.toString());
@@ -629,7 +662,7 @@ function HomePageContent() {
         localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
         localStorage.setItem('schedules', JSON.stringify(schedules));
     }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone, isRemoteControlling]); 
 
   // URL reload effect
   useEffect(() => {
@@ -735,6 +768,8 @@ function HomePageContent() {
     setBorderColor('#000000');
   };
 
+  const { toast } = useToast();
+  
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
@@ -1157,15 +1192,23 @@ function HomePageContent() {
 
   // View Mode specific handlers
   const handleReloadCamera = (index: number) => {
-    setReloadCounters(prevCounters => {
-      const newCounters = [...prevCounters];
-      newCounters[index] = (newCounters[index] || 0) + 1;
-      return newCounters;
-    });
+    if (isRemoteControlling && onRemoteReload) {
+        onRemoteReload(index);
+    } else {
+        setReloadCounters(prevCounters => {
+          const newCounters = [...prevCounters];
+          newCounters[index] = (newCounters[index] || 0) + 1;
+          return newCounters;
+        });
+    }
   };
 
   const handleToggleFullscreen = (index: number) => {
-    setFullscreenIndex(prevIndex => prevIndex === index ? null : index);
+    if (isRemoteControlling && onRemoteToggleFullscreen) {
+        onRemoteToggleFullscreen(index);
+    } else {
+        setFullscreenIndex(prevIndex => prevIndex === index ? null : index);
+    }
   };
 
 
@@ -1209,7 +1252,7 @@ function HomePageContent() {
   const handleAddEventSelect = (event: Event, option: string) => {
     const eventWithSelection = { ...event, selectedOption: option };
 
-    setSelectedEvents(currentSelectedEvents => {
+    setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
         const newSelectedEvents = [...currentSelectedEvents];
         const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
 
@@ -1237,7 +1280,7 @@ function HomePageContent() {
 };
 
 const handleRemoveEventFromDialog = (event: Event) => {
-    setSelectedEvents(currentSelectedEvents => {
+    setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
         return currentSelectedEvents.map(se => se?.id === event.id ? null : se);
     });
     setAddEventsDialogOpen(false); // Close the AddEventsDialog
@@ -1299,7 +1342,7 @@ const handleRemoveEventFromDialog = (event: Event) => {
     );
   }
 
-  if (!isInitialLoadDone) {
+  if (!isInitialLoadDone && !isRemoteControlling) {
     return <LoadingScreen />;
   }
   
@@ -2026,7 +2069,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
                                             onModify={openDialogForModification}
                                             isViewPage={false}
                                             onAddEvent={() => setAddEventsDialogOpen(true)}
-                                            onSchedule={() => setScheduleManagerOpen(true)}
                                             remoteControlMode={remoteControlMode}
                                             remoteSessionId={remoteSessionId}
                                             onActivateControlledMode={handleActivateControlledMode}
@@ -2152,3 +2194,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    
