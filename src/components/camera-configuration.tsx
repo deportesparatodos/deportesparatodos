@@ -21,9 +21,6 @@ interface CameraConfigurationProps {
   onAddEvent: () => void;
   onSchedule?: () => void;
   onNotification: () => void;
-  remoteSessionId: string | null;
-  remoteControlMode: 'inactive' | 'controlling' | 'controlled';
-  onActivateControlledMode: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;

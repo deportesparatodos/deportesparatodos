@@ -58,7 +58,6 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RemoteControlManager } from '@/components/remote-control';
 
 
 interface StreamedMatch {
@@ -201,45 +200,14 @@ const normalizeCategory = (category: string): string => {
     return category;
 };
 
-interface HomePageContentProps {
-  isRemoteControlling?: boolean;
-  remoteState?: any;
-  onRemoteStateChange?: (newState: any) => void;
-  onRemoteReload?: (index: number) => void;
-  onRemoteToggleFullscreen?: (index: number) => void;
-  allEvents?: Event[];
-  allChannels?: Channel[];
-}
-
-
-export function HomePageContent({ isRemoteControlling = false, remoteState, onRemoteStateChange, onRemoteReload, onRemoteToggleFullscreen, allEvents: remoteAllEvents, allChannels: remoteAllChannels }: HomePageContentProps) {
+export function HomePageContent() {
   const isMobile = useIsMobile();
-  // If we are in remote controlling mode, use the state from props
-  const [localSelectedEvents, setLocalSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
-  const [localViewOrder, setLocalViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
-  const [localGridGap, setLocalGridGap] = useState<number>(0);
-  const [localBorderColor, setLocalBorderColor] = useState<string>('#000000');
-  const [localIsChatEnabled, setLocalIsChatEnabled] = useState<boolean>(true);
-  const [localSchedules, setLocalSchedules] = useState<Schedule[]>([]);
-
-  const selectedEvents = isRemoteControlling ? remoteState.selectedEvents : localSelectedEvents;
-  const setSelectedEvents = isRemoteControlling ? (value: any) => onRemoteStateChange!({ selectedEvents: typeof value === 'function' ? value(remoteState.selectedEvents) : value }) : setLocalSelectedEvents;
-  
-  const viewOrder = isRemoteControlling ? remoteState.viewOrder : localViewOrder;
-  const setViewOrder = isRemoteControlling ? (value: any) => onRemoteStateChange!({ viewOrder: typeof value === 'function' ? value(remoteState.viewOrder) : value }) : setLocalViewOrder;
-
-  const gridGap = isRemoteControlling ? remoteState.gridGap : localGridGap;
-  const setGridGap = isRemoteControlling ? (value: any) => onRemoteStateChange!({ gridGap: value }) : setLocalGridGap;
-  
-  const borderColor = isRemoteControlling ? remoteState.borderColor : localBorderColor;
-  const setBorderColor = isRemoteControlling ? (value: any) => onRemoteStateChange!({ borderColor: value }) : setLocalBorderColor;
-
-  const isChatEnabled = isRemoteControlling ? remoteState.isChatEnabled : localIsChatEnabled;
-  const setIsChatEnabled = isRemoteControlling ? (value: any) => onRemoteStateChange!({ isChatEnabled: value }) : setLocalIsChatEnabled;
-
-  const schedules = isRemoteControlling ? remoteState.schedules : localSchedules;
-  const setSchedules = isRemoteControlling ? (value: any) => onRemoteStateChange!({ schedules: typeof value === 'function' ? value(remoteState.schedules) : value }) : setLocalSchedules;
-
+  const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
+  const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
+  const [gridGap, setGridGap] = useState<number>(0);
+  const [borderColor, setBorderColor] = useState<string>('#000000');
+  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
 
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
@@ -255,10 +223,10 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   const [areControlsVisible, setAreControlsVisible] = useState(true);
 
   // Home mode state
-  const [events, setEvents] = useState<Event[]>(remoteAllEvents || []);
-  const [channels, setChannels] = useState<Channel[]>(remoteAllChannels || []);
-  const [isDataLoading, setIsDataLoading] = useState(!isRemoteControlling);
-  const [isInitialLoadDone, setIsInitialLoadDone] = useState(isRemoteControlling);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -274,8 +242,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
-  const [isSessionEnded, setIsSessionEnded] = useState(false);
-  const [codePopupOpen, setCodePopupOpen] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
 
@@ -284,10 +250,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
-
-  // --- Remote Control States ---
-  const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlling' | 'controlled'>('inactive');
-  const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -555,7 +517,7 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
 
   // Load state from localStorage on initial mount
   useEffect(() => {
-    if (typeof window === 'undefined' || isRemoteControlling) return;
+    if (typeof window === 'undefined') return;
     const storedSelectedEvents = localStorage.getItem('selectedEvents');
     if (storedSelectedEvents) {
       try {
@@ -599,11 +561,11 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
         } catch(e) { console.error("Failed to parse schedules from localStorage", e); }
     }
     
-  }, [isRemoteControlling]);
+  }, []);
 
   // Popup logic
   useEffect(() => {
-    if (isViewMode && remoteControlMode === 'inactive') {
+    if (isViewMode) {
       const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
       if (!hasVisited) {
         setWelcomePopupOpen(true);
@@ -611,7 +573,7 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
         setProgress(100);
       }
     }
-  }, [isViewMode, remoteControlMode]);
+  }, [isViewMode]);
 
   // Schedule activation checker
   useEffect(() => {
@@ -637,19 +599,19 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
 
 
   useEffect(() => {
-    if (!isInitialLoadDone && !isRemoteControlling) {
+    if (!isInitialLoadDone) {
       fetchEvents();
     }
-  }, [isInitialLoadDone, fetchEvents, isRemoteControlling]);
+  }, [isInitialLoadDone, fetchEvents]);
   
   useEffect(() => {
-    if (dialogOpen && !isRemoteControlling) {
+    if (dialogOpen) {
       // Logic inside EventSelectionDialog now
     }
-  }, [dialogOpen, fetchEvents, isRemoteControlling]);
+  }, [dialogOpen, fetchEvents]);
 
   useEffect(() => {
-    if (isInitialLoadDone && !isRemoteControlling) {
+    if (isInitialLoadDone) {
         localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
         localStorage.setItem('viewOrder', JSON.stringify(viewOrder));
         localStorage.setItem('gridGap', gridGap.toString());
@@ -657,7 +619,7 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
         localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
         localStorage.setItem('schedules', JSON.stringify(schedules));
     }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone, isRemoteControlling]); 
+  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
 
   // URL reload effect
   useEffect(() => {
@@ -1053,7 +1015,7 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
     const newSelectedEvents = [...selectedEvents];
     newSelectedEvents[windowIndex] = null;
     setSelectedEvents(newSelectedEvents);
-  }, [selectedEvents]);
+  }, [selectedEvents, setSelectedEvents]);
   
   const getEventSelection = (event: Event) => {
     const selectionIndex = selectedEvents.findIndex(se => se?.id === event.id);
@@ -1067,19 +1029,13 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
 
   const handleStartView = () => {
     if (selectedEventsCount === 0) return;
-    setRemoteControlMode('inactive');
-    setRemoteSessionId(null);
     setIsViewMode(true);
   };
   
   const handleStopView = useCallback(() => {
     setIsViewMode(false);
     setFullscreenIndex(null);
-    if (remoteControlMode === 'controlled') {
-        setRemoteControlMode('inactive');
-        setRemoteSessionId(null);
-    }
-  }, [remoteControlMode]);
+  }, []);
 
   const openDialogForEvent = (event: Event, context: 'view' | 'schedule' = 'view') => {
     setDialogContext(context);
@@ -1160,23 +1116,15 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
 
   // View Mode specific handlers
   const handleReloadCamera = (index: number) => {
-    if (isRemoteControlling && onRemoteReload) {
-        onRemoteReload(index);
-    } else {
-        setReloadCounters(prevCounters => {
-          const newCounters = [...prevCounters];
-          newCounters[index] = (newCounters[index] || 0) + 1;
-          return newCounters;
-        });
-    }
+    setReloadCounters(prevCounters => {
+      const newCounters = [...prevCounters];
+      newCounters[index] = (newCounters[index] || 0) + 1;
+      return newCounters;
+    });
   };
 
   const handleToggleFullscreen = (index: number) => {
-    if (isRemoteControlling && onRemoteToggleFullscreen) {
-        onRemoteToggleFullscreen(index);
-    } else {
-        setFullscreenIndex(prevIndex => prevIndex === index ? null : index);
-    }
+    setFullscreenIndex(prevIndex => prevIndex === index ? null : index);
   };
 
 
@@ -1204,38 +1152,7 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
     return '';
  };
 
-  const handleActivateControlledMode = () => {
-    setRemoteControlMode('controlled');
-    setIsViewMode(true);
-  };
-  
-  const handleStartControlling = (code: string) => {
-    setRemoteSessionId(code);
-    setRemoteControlMode('controlling');
-  };
-
-  if (remoteControlMode === 'controlling') {
-    return (
-        <Suspense fallback={<div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center">
-            <Loader2 className="h-10 w-10 animate-spin" />
-            <p className="mt-4 text-muted-foreground">Cargando modo de control...</p>
-        </div>}>
-            <RemoteControlManager 
-                mode="controlling"
-                initialRemoteSessionId={remoteSessionId}
-                onSessionEnd={() => {
-                  setRemoteControlMode('inactive');
-                  setIsSessionEnded(true);
-                }}
-                allEvents={events}
-                allChannels={channels}
-                updateAllEvents={setEvents}
-            />
-        </Suspense>
-    );
-  }
-
-  if (!isInitialLoadDone && !isRemoteControlling) {
+  if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
   
@@ -1302,23 +1219,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
      const numCameras = selectedEvents.filter(Boolean).length;
      const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
      
-    if (remoteControlMode === 'controlled' && numCameras === 0) {
-        return (
-            <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
-                <div className="text-center space-y-4">
-                    <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
-                    <h1 className="text-2xl font-bold">Dispositivo bajo Control Remoto</h1>
-                    <p className="text-muted-foreground">
-                        Esperando comandos desde el dispositivo de control... <br/>
-                        Código de sesión: <span className="font-mono text-primary">{remoteSessionId}</span>
-                    </p>
-                    <Button variant="outline" onClick={handleStopView}>
-                        <X className="mr-2 h-4 w-4" /> Detener Control
-                    </Button>
-                </div>
-            </div>
-        );
-    }
     if (numCameras === 0) {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
@@ -1333,58 +1233,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
     return (
       <>
       <div className="flex h-screen w-screen bg-background text-foreground group">
-        {remoteControlMode === 'controlled' && (
-           <RemoteControlManager
-              mode="controlled"
-              viewState={{
-                  selectedEvents,
-                  viewOrder,
-                  gridGap,
-                  borderColor,
-                  isChatEnabled,
-                  fullscreenIndex,
-                  schedules
-              }}
-              setViewState={(newState) => {
-                  setSelectedEvents(newState.selectedEvents);
-                  setViewOrder(newState.viewOrder);
-                  setGridGap(newState.gridGap);
-                  setBorderColor(newState.borderColor);
-                  setIsChatEnabled(newState.isChatEnabled);
-                  setFullscreenIndex(newState.fullscreenIndex);
-                  setSchedules(newState.schedules);
-              }}
-              onSessionStart={(id) => {
-                  setRemoteControlMode('controlled');
-                  setRemoteSessionId(id);
-                  setCodePopupOpen(true);
-              }}
-              onSessionEnd={() => {
-                  setRemoteControlMode('inactive');
-                  setRemoteSessionId(null);
-                  setCodePopupOpen(false);
-              }}
-              onReload={handleReloadCamera}
-              onToggleFullscreen={handleToggleFullscreen}
-          />
-        )}
-         <Dialog open={codePopupOpen} onOpenChange={setCodePopupOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogModalTitle>Código de Control Remoto</DialogModalTitle>
-                    <DialogDescription>
-                        Introduce este código en el dispositivo que quieres usar como control.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="py-4 text-center">
-                    <div className="p-4 bg-muted rounded-lg">
-                        <p className="text-4xl font-bold tracking-widest text-primary">
-                            {remoteSessionId || <Loader2 className="h-10 w-10 animate-spin mx-auto" />}
-                        </p>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
         <ScheduleManager 
           open={scheduleManagerOpen}
           onOpenChange={setScheduleManagerOpen}
@@ -1542,9 +1390,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
                 onSchedule={() => setScheduleManagerOpen(true)}
                 onNotification={() => setNotificationManagerOpen(true)}
                 onOpenCalendar={() => setCalendarOpen(true)}
-                remoteSessionId={remoteSessionId}
-                remoteControlMode={remoteControlMode}
-                onActivateControlledMode={handleActivateControlledMode}
                 gridGap={gridGap}
                 onGridGapChange={setGridGap}
                 borderColor={borderColor}
@@ -1882,20 +1727,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
                         
                         {!isSearchOpen && (
                              <>
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <Airplay />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <RemoteControlManager 
-                                        mode={remoteControlMode}
-                                        onStartControlling={handleStartControlling}
-                                        onActivateControlledMode={handleActivateControlledMode}
-                                        remoteSessionId={remoteSessionId}
-                                    />
-                                </Dialog>
-
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -1923,9 +1754,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
                                             onModify={openDialogForModification}
                                             isViewPage={false}
                                             onAddEvent={() => setDialogOpen(true)}
-                                            remoteControlMode={remoteControlMode}
-                                            remoteSessionId={remoteSessionId}
-                                            onActivateControlledMode={handleActivateControlledMode}
                                             gridGap={gridGap}
                                             onGridGapChange={setGridGap}
                                             borderColor={borderColor}

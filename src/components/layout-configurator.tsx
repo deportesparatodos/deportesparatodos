@@ -43,9 +43,6 @@ export interface EventListManagementProps {
   onNotificationManager?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
-  remoteSessionId?: string | null;
-  remoteControlMode: 'inactive' | 'controlling' | 'controlled';
-  onActivateControlledMode: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
@@ -186,7 +183,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         borderColor, onBorderColorChange,
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
-        remoteControlMode, remoteSessionId, onActivateControlledMode,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
         isViewPage, onSchedule
     } = props;
@@ -210,59 +206,24 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                   <AccordionItem value="item-events" className="border rounded-lg px-4">
                       <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
                       <AccordionContent className="pt-2 pb-4 space-y-4">
-                          {props.remoteControlMode === 'controlled' ? (
-                              <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500 text-center'>
-                                  <AlertCircle className="h-4 w-4 !text-yellow-500 mx-auto mb-2" />
-                                  <AlertTitle className="font-bold text-center mb-1">Control Remoto Activo</AlertTitle>
-                                  <AlertDescription className="text-yellow-500/80 text-center">
-                                      Para hacer cambios, use el dispositivo controlador.
-                                  </AlertDescription>
-                              </Alert>
-                          ) : (
-                              <>
-                                  <EventList {...props} />
-                                  <div className="space-y-2 pt-2">
-                                      {props.onAddEvent && (
-                                          <Button variant="outline" className="w-full flex-shrink-0" onClick={props.onAddEvent}>
-                                              <Plus className="mr-2 h-4 w-4" />
-                                              Añadir Evento/Canal
-                                          </Button>
-                                      )}
-                                      {(isViewPage || remoteControlMode === 'controlling') && onSchedule && (
-                                        <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
-                                            <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                                        </Button>
-                                      )}
-                                  </div>
-                              </>
-                          )}
-                      </AccordionContent>
-                  </AccordionItem>
-                  
-                 {props.remoteControlMode !== 'controlling' && (
-                  <AccordionItem value="remote-control" className="border rounded-lg px-4">
-                      <AccordionTrigger>Control Remoto</AccordionTrigger>
-                      <AccordionContent className="pt-4 pb-4 text-center">
-                          {remoteControlMode === 'controlled' ? (
-                                  <div className="text-center space-y-2">
-                                  <p className="text-sm text-muted-foreground mb-2">
-                                  Sesión de control remoto activa. Código:
-                                  </p>
-                                  <div className="p-3 bg-muted rounded-lg">
-                                  <p className="text-3xl font-bold tracking-widest text-primary">
-                                      {remoteSessionId || '----'}
-                                  </p>
-                                  </div>
+                          <>
+                              <EventList {...props} />
+                              <div className="space-y-2 pt-2">
+                                  {props.onAddEvent && (
+                                      <Button variant="outline" className="w-full flex-shrink-0" onClick={props.onAddEvent}>
+                                          <Plus className="mr-2 h-4 w-4" />
+                                          Añadir Evento/Canal
+                                      </Button>
+                                  )}
+                                  {isViewPage && onSchedule && (
+                                    <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
+                                        <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                                    </Button>
+                                  )}
                               </div>
-                          ) : (
-                              <Button onClick={onActivateControlledMode} className="w-full">
-                                  <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
-                              </Button>
-                          )}
+                          </>
                       </AccordionContent>
                   </AccordionItem>
-                  )}
-
 
                   <AccordionItem value="item-grid" className="border rounded-lg px-4">
                       <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
@@ -274,7 +235,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onValueChange={(value) => onGridGapChange(value[0])}
                                   max={32}
                                   step={1}
-                                  disabled={remoteControlMode === 'controlled'}
                               />
                           </div>
                           <div className="space-y-3">
@@ -285,7 +245,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                       value={borderColor}
                                       onChange={(e) => onBorderColorChange(e.target.value)}
                                       className="w-12 h-10 p-1"
-                                      disabled={remoteControlMode === 'controlled'}
                                   />
                                   <Input
                                       type="text"
@@ -293,11 +252,10 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                       onChange={(e) => onBorderColorChange(e.target.value)}
                                       placeholder="#000000"
                                       className="flex-grow"
-                                      disabled={remoteControlMode === 'controlled'}
                                   />
                               </div>
                           </div>
-                          <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full" disabled={remoteControlMode === 'controlled'}>
+                          <Button variant="outline" size="sm" onClick={onRestoreGridSettings} className="w-full">
                               Restaurar
                           </Button>
                       </AccordionContent>
@@ -315,7 +273,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   id="chat-switch"
                                   checked={isChatEnabled}
                                   onCheckedChange={onIsChatEnabledChange}
-                                  disabled={remoteControlMode === 'controlled'}
                               />
                           </div>
                       </AccordionContent>
