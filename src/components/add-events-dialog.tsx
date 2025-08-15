@@ -26,7 +26,6 @@ import { parse, isValid, isBefore } from 'date-fns';
 export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, onRemove: (event: Event) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
-    const [isFullScreen, setIsFullScreen] = useState(false);
     
     const [subDialogOpen, setSubDialogOpen] = useState(false);
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -191,20 +190,12 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
         <Dialog open={open} onOpenChange={isOpen => { onOpenChange(isOpen); }}>
             <DialogContent 
                 hideClose={true}
-                className={cn(
-                    "flex flex-col p-4 transition-all duration-300",
-                    isFullScreen 
-                        ? "w-screen h-screen max-w-none rounded-none" 
-                        : "h-[90vh] sm:max-w-4xl"
-                )}
+                className="flex flex-col p-4 h-[90vh] sm:max-w-4xl"
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
                     <DialogTitle>Añadir Evento/Canal</DialogTitle>
                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
-                            {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); setIsFullScreen(false); }}>
+                        <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }}>
                            <X className="h-5 w-5" />
                         </Button>
                     </div>

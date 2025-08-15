@@ -278,7 +278,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const [isSessionEnded, setIsSessionEnded] = useState(false);
   const [codePopupOpen, setCodePopupOpen] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
@@ -1702,7 +1701,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
                 onIsTutorialOpenChange={setIsTutorialOpen}
                 isErrorsOpen={isErrorsOpen}
                 onIsErrorsOpenChange={setIsErrorsOpen}
-                showTopSeparator={true}
             />
 
             {isChatEnabled && (
