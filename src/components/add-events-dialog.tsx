@@ -23,9 +23,10 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { parse, isValid, isBefore } from 'date-fns';
 
-export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents, isFullScreen, setIsFullScreen }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, onRemove: (event: Event) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void, isFullScreen: boolean, setIsFullScreen: (isFullScreen: boolean) => void }) {
+export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, onRemove: (event: Event) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
     
     const [subDialogOpen, setSubDialogOpen] = useState(false);
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -35,9 +36,8 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
     useEffect(() => {
         if (!open) {
             setSearchTerm('');
-            setIsFullScreen(false); // Reset fullscreen state on close
         }
-    }, [open, setIsFullScreen]);
+    }, [open]);
 
     const handleForceFetch = async () => {
         setIsAddEventsLoading(true);

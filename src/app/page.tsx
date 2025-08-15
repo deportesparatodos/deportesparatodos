@@ -1527,8 +1527,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
             allChannels={channels}
             onFetchEvents={() => fetchEvents(true, true)}
             updateAllEvents={setEvents}
-            isFullScreen={isFullScreen}
-            setIsFullScreen={setIsFullScreen}
         />
         <ScheduleManager 
           open={scheduleManagerOpen}
@@ -2179,8 +2177,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
             allChannels={channels}
             onFetchEvents={() => fetchEvents(true, true)}
             updateAllEvents={setEvents}
-            isFullScreen={isFullScreen}
-            setIsFullScreen={setIsFullScreen}
         />
     </div>
   );
