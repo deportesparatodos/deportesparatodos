@@ -272,8 +272,6 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   
   // Dialog/Popup states
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
-  const [modifyEvent, setModifyEvent] = useState<{ event: Event, index: number } | null>(null);
-  const [modifyEventDialogOpen, setModifyEventDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -1015,6 +1013,20 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
 
+    if (dialogContext === 'schedule') {
+        const newFutureSelection = [...futureSelection];
+        const emptyIndex = newFutureSelection.findIndex(e => e === null);
+        if (emptyIndex !== -1) {
+            newFutureSelection[emptyIndex] = eventWithSelection;
+            setFutureSelection(newFutureSelection);
+        } else {
+            alert("No hay espacios disponibles en la programación.");
+        }
+        setDialogOpen(false);
+        setScheduleManagerOpen(true);
+        return;
+    }
+
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
     if (isModification && modificationIndex !== null) {
@@ -1027,7 +1039,11 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
         newSelectedEvents[targetIndex] = eventWithSelection;
         setSelectedEvents(newSelectedEvents);
     } else {
-        console.log("All selection slots are full.");
+        toast({
+            variant: 'destructive',
+            title: 'Selección Completa',
+            description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
+        });
     }
     
     setDialogOpen(false);
@@ -1067,19 +1083,21 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
     }
   }, [remoteControlMode]);
 
-  const openDialogForEvent = (event: Event) => {
+  const openDialogForEvent = (event: Event, context: 'view' | 'schedule' = 'view') => {
+    setDialogContext(context);
     const selection = getEventSelection(event);
     let eventForDialog = {...event};
     
-    if (selection.isSelected) {
-        setIsModification(true);
+    const isModifying = selection.isSelected;
+    setIsModification(isModifying);
+
+    if (isModifying) {
         const originalIndex = selectedEvents.findIndex(se => se?.id === event.id);
         setModificationIndex(originalIndex);
         if(selection.selectedOption) {
             eventForDialog.selectedOption = selection.selectedOption;
         }
     } else {
-        setIsModification(false);
         setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     
@@ -1174,9 +1192,8 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   const openDialogForModification = (event: Event, index: number) => {
     const currentEventState = selectedEvents[index];
     if (!currentEventState) return;
-    const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
-    setModifyEvent({ event: eventForModification, index });
-    setModifyEventDialogOpen(true); // Open the specific modification dialog
+
+    openDialogForEvent(event, 'view');
   };
 
   const handleViewChange = (view: string) => {
@@ -1211,78 +1228,11 @@ export function HomePageContent({ isRemoteControlling = false, remoteState, onRe
   };
 
 
-  const handleModifyEventSelect = (event: Event, option: string) => {
-      const newSelectedEvents = [...selectedEvents];
-      const eventWithSelection = { ...event, selectedOption: option };
-      
-      let targetIndex = -1;
-      // This function can be called from the main page config or the view page config
-      if (modifyEvent) {
-          targetIndex = modifyEvent.index;
-      }
-
-      if (targetIndex !== -1) {
-          newSelectedEvents[targetIndex] = eventWithSelection;
-          setSelectedEvents(newSelectedEvents);
-          if (isViewMode) {
-              handleReloadCamera(targetIndex);
-          }
-      }
-
-      // Close dialogs
-      setModifyEvent(null);
-      setModifyEventDialogOpen(false);
-  };
-  
-  const handleAddEventToSchedule = (event: Event, option: string) => {
-    const newFutureSelection = [...futureSelection];
-    const eventWithSelection = { ...event, selectedOption: option };
-    const emptyIndex = newFutureSelection.findIndex(e => e === null);
-    if (emptyIndex !== -1) {
-        newFutureSelection[emptyIndex] = eventWithSelection;
-        setFutureSelection(newFutureSelection);
-    } else {
-        alert("No hay espacios disponibles en la programación.");
-    }
-    setAddEventsDialogOpen(false);
-    setScheduleManagerOpen(true);
-  };
-
-  const handleAddEventSelect = (event: Event, option: string) => {
-    const eventWithSelection = { ...event, selectedOption: option };
-
-    setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
-        const newSelectedEvents = [...currentSelectedEvents];
-        const existingIndex = newSelectedEvents.findIndex(se => se?.id === event.id);
-
-        if (existingIndex !== -1) {
-            // Modify existing event
-            newSelectedEvents[existingIndex] = eventWithSelection;
-        } else {
-            // Add new event to the first empty slot
-            const emptyIndex = newSelectedEvents.findIndex(e => e === null);
-            if (emptyIndex !== -1) {
-                newSelectedEvents[emptyIndex] = eventWithSelection;
-            } else {
-                toast({
-                    variant: 'destructive',
-                    title: 'Selección Completa',
-                    description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
-                });
-                return currentSelectedEvents; // Return original state if full
-            }
-        }
-        return newSelectedEvents;
-    });
-
-    setAddEventsDialogOpen(false);
-};
-
-const handleRemoveEventFromDialog = (event: Event) => {
+  const handleRemoveEventFromDialog = (event: Event) => {
     setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
         return currentSelectedEvents.map(se => se?.id === event.id ? null : se);
     });
-    setAddEventsDialogOpen(false); // Close the AddEventsDialog
+    setDialogOpen(false);
 };
   
   const getItemClasses = (orderedIndex: number, count: number) => {
@@ -1301,14 +1251,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
     }
     return '';
  };
-
-  const handleSelectForCurrentDialog = (event: Event, option: string) => {
-    if (dialogContext === 'schedule') {
-        handleAddEventToSchedule(event, option);
-    } else {
-        handleAddEventSelect(event, option);
-    }
-  };
 
   const handleActivateControlledMode = () => {
     setRemoteControlMode('controlled');
@@ -1491,21 +1433,6 @@ const handleRemoveEventFromDialog = (event: Event) => {
                 </div>
             </DialogContent>
         </Dialog>
-        {modifyEvent && (
-             <Dialog open={modifyEventDialogOpen} onOpenChange={(open) => { if (!open) { setModifyEvent(null); setModifyEventDialogOpen(false); } else { setModifyEventDialogOpen(true); } }}>
-                <EventSelectionDialog
-                    isOpen={modifyEventDialogOpen}
-                    onOpenChange={(open) => { if (!open) { setModifyEvent(null); setModifyEventDialogOpen(false); } else { setModifyEventDialogOpen(true); } }}
-                    event={modifyEvent.event}
-                    onSelect={handleModifyEventSelect}
-                    isModification={true}
-                    onRemove={() => handleEventRemove(modifyEvent.index)}
-                    isLoading={isOptionsLoading}
-                    setIsLoading={setIsOptionsLoading}
-                    setEventForDialog={(event) => setModifyEvent(prev => prev ? {...prev, event} : null)}
-                />
-            </Dialog>
-        )}
         <AddEventsDialog 
             open={addEventsDialogOpen}
             onOpenChange={(open) => {
@@ -1515,11 +1442,27 @@ const handleRemoveEventFromDialog = (event: Event) => {
                   setScheduleManagerOpen(true);
                 }
               } else {
-                setDialogContext(isAddEventsLoading ? 'schedule' : 'view');
+                setDialogContext('view');
                 setAddEventsDialogOpen(true);
               }
             }}
-            onSelect={handleSelectForCurrentDialog}
+            onSelect={(event, option) => {
+                if (dialogContext === 'schedule') {
+                    const newFutureSelection = [...futureSelection];
+                    const eventWithSelection = { ...event, selectedOption: option };
+                    const emptyIndex = newFutureSelection.findIndex(e => e === null);
+                    if (emptyIndex !== -1) {
+                        newFutureSelection[emptyIndex] = eventWithSelection;
+                        setFutureSelection(newFutureSelection);
+                    } else {
+                        alert("No hay espacios disponibles en la programación.");
+                    }
+                    setAddEventsDialogOpen(false);
+                    setScheduleManagerOpen(true);
+                } else {
+                    handleEventSelect(event, option);
+                }
+            }}
             onRemove={handleRemoveEventFromDialog}
             selectedEvents={dialogContext === 'schedule' ? futureSelection : selectedEvents}
             allEvents={events} 
@@ -2128,47 +2071,17 @@ const handleRemoveEventFromDialog = (event: Event) => {
                 event={dialogEvent}
                 onSelect={handleEventSelect}
                 isModification={isModification}
-                onRemove={() => {
-                  if(modificationIndex !== null) {
-                    handleRemoveEventFromDialog(dialogEvent)
-                  }
-                  setDialogOpen(false)
-                }}
+                onRemove={() => handleRemoveEventFromDialog(dialogEvent)}
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={setDialogEvent}
             />
         )}
-
-        {modifyEvent && (
-            <EventSelectionDialog
-                isOpen={modifyEventDialogOpen}
-                onOpenChange={open => {
-                    if (!open) {
-                        setModifyEvent(null);
-                        setModifyEventDialogOpen(false);
-                    } else {
-                        setModifyEventDialogOpen(true);
-                    }
-                }}
-                event={modifyEvent.event}
-                onSelect={handleModifyEventSelect}
-                isModification={true}
-                onRemove={() => { 
-                    if(modifyEvent){
-                      handleRemoveEventFromDialog(modifyEvent.event)
-                    } 
-                    setModifyEventDialogOpen(false)
-                }}
-                isLoading={isOptionsLoading}
-                setIsLoading={setIsOptionsLoading}
-                setEventForDialog={event => setModifyEvent(prev => prev ? {...prev, event} : null)}
-            />
-        )}
+        
         <AddEventsDialog 
             open={addEventsDialogOpen}
             onOpenChange={setAddEventsDialogOpen}
-            onSelect={handleSelectForCurrentDialog}
+            onSelect={(event, option) => handleEventSelect(event, option)}
             onRemove={handleRemoveEventFromDialog}
             selectedEvents={selectedEvents}
             allEvents={events} 
@@ -2188,5 +2101,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    
