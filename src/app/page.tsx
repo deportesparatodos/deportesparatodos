@@ -58,6 +58,7 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RemoteControlManager } from '@/components/remote-control';
 
 
 interface StreamedMatch {
@@ -244,6 +245,7 @@ export function HomePageContent() {
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
+  const [isRemoteControlOpen, setIsRemoteControlOpen] = useState(false);
 
 
   // Schedule related states
@@ -1404,6 +1406,7 @@ export function HomePageContent() {
                 onIsTutorialOpenChange={setIsTutorialOpen}
                 isErrorsOpen={isErrorsOpen}
                 onIsErrorsOpenChange={setIsErrorsOpen}
+                onRemoteControl={() => setIsRemoteControlOpen(true)}
             />
 
             {isChatEnabled && (
@@ -1770,6 +1773,7 @@ export function HomePageContent() {
                                             onIsTutorialOpenChange={setIsTutorialOpen}
                                             isErrorsOpen={isErrorsOpen}
                                             onIsErrorsOpenChange={setIsErrorsOpen}
+                                            onRemoteControl={() => setIsRemoteControlOpen(true)}
                                           />
                                   </SheetContent>
                                   </Sheet>
@@ -1821,6 +1825,35 @@ export function HomePageContent() {
                 updateEventsList={setEvents}
             />
         )}
+        <RemoteControlManager
+            open={isRemoteControlOpen}
+            onOpenChange={setIsRemoteControlOpen}
+            appState={{
+                selectedEvents,
+                viewOrder,
+                gridGap,
+                borderColor,
+                isChatEnabled,
+                schedules,
+            }}
+            setAppState={({
+                selectedEvents: newSelectedEvents,
+                viewOrder: newViewOrder,
+                gridGap: newGridGap,
+                borderColor: newBorderColor,
+                isChatEnabled: newIsChatEnabled,
+                schedules: newSchedules,
+            }) => {
+                if (newSelectedEvents) setSelectedEvents(newSelectedEvents);
+                if (newViewOrder) setViewOrder(newViewOrder);
+                if (newGridGap) setGridGap(newGridGap);
+                if (newBorderColor) setBorderColor(newBorderColor);
+                if (newIsChatEnabled) setIsChatEnabled(newIsChatEnabled);
+                if (newSchedules) setSchedules(newSchedules);
+            }}
+            allEvents={events}
+            allChannels={channels}
+        />
     </div>
   );
 }

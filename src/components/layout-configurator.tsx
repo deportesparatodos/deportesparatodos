@@ -41,6 +41,7 @@ export interface EventListManagementProps {
   onAddEvent?: () => void;
   onSchedule?: () => void;
   onNotificationManager?: () => void;
+  onRemoteControl?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   gridGap: number;
@@ -184,7 +185,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        isViewPage, onSchedule
+        isViewPage, onSchedule, onRemoteControl
     } = props;
     
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -263,7 +264,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
                   <AccordionItem value="item-features" className="border rounded-lg px-4">
                       <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-                      <AccordionContent className="pt-4 pb-4">
+                      <AccordionContent className="pt-4 pb-4 space-y-4">
                           <div className="flex items-center justify-between">
                               <Label htmlFor="chat-switch" className="flex flex-col gap-1">
                                   <span>Activar Chat en Vivo</span>
@@ -275,6 +276,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
+                          {onRemoteControl && (
+                            <Button variant="outline" className="w-full justify-center mt-2" onClick={onRemoteControl}>
+                                <Airplay className="mr-2 h-4 w-4" /> Control Remoto
+                            </Button>
+                           )}
                       </AccordionContent>
                   </AccordionItem>
               </Accordion>
