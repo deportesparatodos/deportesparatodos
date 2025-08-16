@@ -20,7 +20,7 @@ interface CameraConfigurationProps {
   isViewPage: boolean;
   onAddEvent: () => void;
   onSchedule?: () => void;
-  onNotification: () => void;
+  onNotificationManager: () => void;
   onRemoteControl?: () => void;
   onRemoteControlControlling?: () => void;
   gridGap: number;

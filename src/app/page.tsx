@@ -32,7 +32,6 @@ import {
     DialogTitle as DialogModalTitle,
     DialogDescription,
     DialogFooter as DialogModalFooter,
-    DialogClose,
     DialogClose as DialogModalClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
@@ -1813,8 +1812,6 @@ export function HomePageContent() {
                                             onOpenTutorial={() => setIsTutorialOpen(true)}
                                             onOpenErrors={() => setIsErrorsOpen(true)}
                                             onNotificationManager={() => setNotificationManagerOpen(true)}
-                                            onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
-                                            onRemoteControlControlling={() => setIsControllerPromptOpen(true)}
                                             onOpenCalendar={() => setCalendarOpen(true)}
                                             isTutorialOpen={isTutorialOpen}
                                             onIsTutorialOpenChange={setIsTutorialOpen}

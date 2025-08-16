@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, Copy, Check, X } from 'lucide-react';
-import type { Event } from '@/components/event-carousel';
+import type { Event } from './event-carousel';
 import type { Schedule } from './schedule-manager';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Channel } from './channel-list';
@@ -57,8 +57,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   const [sessionId, setSessionId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
-  const [controllerCode, setControllerCode] = useState('');
+  const [isControlledSessionDialog, setIsControlledSessionDialog] = useState(false);
 
   
   const ablyClientRef = useRef<Realtime | null>(null);
@@ -84,12 +83,12 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   
   const initializeAbly = async (clientId: string) => {
     try {
-        const client = new Realtime({ 
+        const ably = new Realtime({ 
             authUrl: `/api/ably?clientId=${encodeURIComponent(clientId)}`,
             echoMessages: false 
         });
-        ablyClientRef.current = client;
-        return client;
+        ablyClientRef.current = ably;
+        return ably;
     } catch (e) {
         console.error("Ably initialization failed", e);
         setError("Failed to connect to the real-time service.");
@@ -110,6 +109,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
       ably.connection.on('connected', () => {
         setMode('controlled');
         setIsConnecting(false);
+        setIsControlledSessionDialog(true);
         const channel = ably.channels.get(newSessionId);
         channelRef.current = channel;
 
@@ -129,12 +129,14 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
       ably.connection.on('failed', (error) => {
           setError(error.reason.message);
           setIsConnecting(false);
+          setIsControlledSessionDialog(false);
           setMode('inactive');
       });
 
     } catch (e) {
       setIsConnecting(false);
       setMode('inactive');
+      setIsControlledSessionDialog(false);
     }
   };
   
@@ -183,6 +185,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     setSessionId('');
     setError(null);
     setIsConnecting(false);
+    setIsControlledSessionDialog(false);
   };
   
   useImperativeHandle(ref, () => ({
@@ -204,7 +207,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
   return (
       <>
-        <Dialog open={mode === 'controlled'} onOpenChange={(isOpen) => !isOpen && stopSession()}>
+        <Dialog open={isControlledSessionDialog} onOpenChange={(isOpen) => !isOpen && stopSession()}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Control Remoto Activado</DialogTitle>
@@ -214,8 +217,13 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
                 ) : error ? (
                    <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error de Conexión</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>
                 ) : (
-                    <ControlledView sessionId={sessionId} onStop={stopSession} />
+                    <ControlledView sessionId={sessionId} />
                 )}
+                 <DialogFooter>
+                    <DialogClose asChild>
+                      <Button onClick={stopSession}>Cerrar</Button>
+                    </DialogClose>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
       </>
@@ -226,7 +234,7 @@ RemoteControlManager.displayName = 'RemoteControlManager';
 
 // --- UI Components for different modes ---
 
-function ControlledView({ sessionId, onStop }: { sessionId: string, onStop: () => void }) {
+function ControlledView({ sessionId }: { sessionId: string }) {
     const [copied, setCopied] = useState(false);
     const handleCopy = () => {
         navigator.clipboard.writeText(sessionId);
@@ -243,7 +251,6 @@ function ControlledView({ sessionId, onStop }: { sessionId: string, onStop: () =
                     {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
                 </Button>
             </div>
-            <Button variant="outline" onClick={onStop} className="w-full">Detener Control Remoto</Button>
         </div>
     )
 }

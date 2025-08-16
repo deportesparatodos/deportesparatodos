@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -277,6 +278,26 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
+                          {isViewPage && (onRemoteControl || onRemoteControlControlling) && (
+                            <>
+                              <Separator/>
+                              <div className="flex items-center justify-between">
+                                <Label className="flex flex-col gap-1">
+                                  <span>Control Remoto</span>
+                                  <span className="text-xs text-muted-foreground">Controla esta vista desde otro dispositivo.</span>
+                                </Label>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">Opciones</Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    {onRemoteControl && <DropdownMenuItem onClick={onRemoteControl}>Ser Controlado</DropdownMenuItem>}
+                                    {onRemoteControlControlling && <DropdownMenuItem onClick={onRemoteControlControlling}>Controlar Dispositivo</DropdownMenuItem>}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                             </>
+                          )}
                       </AccordionContent>
                   </AccordionItem>
               </Accordion>
@@ -299,19 +320,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                   <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
                       <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
                   </Button>
-                )}
-                 {(onRemoteControl || onRemoteControlControlling) && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start">
-                          <Airplay className="mr-2 h-4 w-4" /> Control Remoto
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
-                        {onRemoteControl && <DropdownMenuItem onClick={onRemoteControl}>Ser Controlado</DropdownMenuItem>}
-                        {onRemoteControlControlling && <DropdownMenuItem onClick={onRemoteControlControlling}>Controlar Dispositivo</DropdownMenuItem>}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                 )}
                 <Button variant="outline" className="w-full justify-start" onClick={() => setIsContactOpen(true)}>
                     <Mail className="mr-2 h-4 w-4" /> Contacto
