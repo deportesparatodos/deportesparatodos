@@ -24,6 +24,9 @@ import { EventSelectionDialog } from './event-selection-dialog';
 import { ScheduleManager } from './schedule-manager';
 import { NotificationManager } from './notification-manager';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Airplay } from 'lucide-react';
+
 
 type AppState = {
   selectedEvents: (Event | null)[];
@@ -53,6 +56,9 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   const [sessionId, setSessionId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
+  const [controllerCode, setControllerCode] = useState('');
+
   
   const ablyClientRef = useRef<Realtime | null>(null);
   const channelRef = useRef<any>(null);
@@ -77,13 +83,10 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   
   const initializeAbly = async (clientId: string) => {
     try {
-        const response = await fetch(`/api/ably?clientId=${encodeURIComponent(clientId)}`);
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to get Ably token: ${response.status} ${errorText}`);
-        }
-        const tokenRequest = await response.json();
-        const client = new Realtime({ ...tokenRequest, echoMessages: false });
+        const client = new Realtime({ 
+            authUrl: `/api/ably?clientId=${encodeURIComponent(clientId)}`,
+            echoMessages: false 
+        });
         ablyClientRef.current = client;
         return client;
     } catch (e) {
@@ -92,6 +95,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
         throw e;
     }
   };
+
 
   const startControlledSession = async () => {
     if (ablyClientRef.current) cleanupAbly();
@@ -179,26 +183,27 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     setError(null);
     setIsConnecting(false);
   };
-
+  
   useImperativeHandle(ref, () => ({
     startControlledSession,
-    startControllingSession
+    startControllingSession,
+    openControllerPrompt: () => setIsControllerPromptOpen(true),
   }));
 
-  if (mode === 'inactive') return null;
+  if (mode === 'controlling') {
+    return (
+      <ControllingView
+          onStop={stopSession}
+          appState={appState}
+          onAction={(payload) => channelRef.current?.publish('action', { name: 'SET_APP_STATE', data: { type: 'SET_APP_STATE', payload }})}
+          allEvents={allEvents}
+          allChannels={allChannels}
+      />
+    );
+  }
 
   return (
       <>
-        {mode === 'controlling' && (
-            <ControllingView
-                onStop={stopSession}
-                appState={appState}
-                allEvents={allEvents}
-                allChannels={allChannels}
-                onAction={(payload) => channelRef.current?.publish('action', { name: 'SET_APP_STATE', data: { type: 'SET_APP_STATE', payload }})}
-            />
-        )}
-
         <Dialog open={mode === 'controlled'} onOpenChange={(isOpen) => !isOpen && stopSession()}>
             <DialogContent>
                 <DialogHeader>
@@ -211,6 +216,31 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
                 ) : (
                     <ControlledView sessionId={sessionId} onStop={stopSession} />
                 )}
+            </DialogContent>
+        </Dialog>
+        
+        <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Controlar Dispositivo</DialogTitle>
+                    <DialogDescription>Introduce el código del dispositivo que quieres controlar.</DialogDescription>
+                </DialogHeader>
+                <div className="flex gap-2 py-4">
+                    <Input
+                        placeholder="Código de sesión..."
+                        value={controllerCode}
+                        onChange={(e) => setControllerCode(e.target.value)}
+                    />
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant="secondary">Cancelar</Button>
+                    </DialogClose>
+                    <Button onClick={() => {
+                        startControllingSession(controllerCode);
+                        setIsControllerPromptOpen(false);
+                    }}>Conectar</Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
       </>
