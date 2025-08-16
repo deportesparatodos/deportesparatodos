@@ -30,10 +30,12 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
     const [isSubDialogLoading, setIsSubDialogLoading] = useState(false);
     const [isModification, setIsModification] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     useEffect(() => {
         if (!open) {
             setSearchTerm('');
+            setIsFullScreen(false);
         }
     }, [open]);
 
@@ -75,6 +77,14 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
 
         setIsModification(selection.isSelected);
         
+        // This logic is now handled in the main page component to prevent re-fetching loops
+        const mainEvent = allEvents.find(e => e.id === event.id);
+        if (mainEvent && mainEvent.options.length > 0) {
+            setDialogEvent({ ...eventForDialog, options: mainEvent.options });
+            setIsSubDialogLoading(false);
+            return;
+        }
+
         if (event.source === 'streamed.pk' && event.options.length === 0) {
             try {
                 const sourcePromises = event.sources.map(async (source) => {
@@ -103,7 +113,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
                 setDialogEvent(updatedEventForDialog);
 
                 // Also update the main events array so we don't fetch again
-                updateAllEvents(allEvents => allEvents.map(e => e.id === updatedEventForDialog.id ? { ...e, options: streamOptions } : e));
+                updateAllEvents(prevEvents => prevEvents.map(e => e.id === updatedEventForDialog.id ? { ...e, options: streamOptions } : e));
             } catch (error) {
                 console.error(`Failed to fetch streams for ${event.title}`);
                 const updatedEventForDialog = { ...eventForDialog, options: [] };
@@ -117,7 +127,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
         const event: Event = {
             id: `${channel.name}-channel-static`,
             title: channel.name,
-            options: channel.urls,
+            options: channel.urls.map(u => ({...u, hd: false, language: ''})),
             sources: [],
             buttons: [],
             time: 'AHORA',
@@ -189,11 +199,17 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
         <Dialog open={open} onOpenChange={isOpen => { onOpenChange(isOpen); }}>
             <DialogContent 
                 hideClose={true}
-                className="flex flex-col p-4 h-[90vh] sm:max-w-4xl"
+                className={cn(
+                    "flex flex-col p-4 h-[90vh] sm:max-w-4xl transition-all duration-300",
+                    isFullScreen && "w-screen h-screen max-w-none rounded-none"
+                )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
                     <DialogTitle>Añadir Evento/Canal</DialogTitle>
                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
+                           {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }}>
                            <X className="h-5 w-5" />
                         </Button>
@@ -254,7 +270,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
                             <ScrollArea className="h-full pr-4 -mr-4">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                     {filteredChannels.map((channel, index) => {
-                                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: [], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                                         const selection = getEventSelection(channelAsEvent);
                                         return (
                                             <Card 
@@ -304,9 +320,6 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
                         isModification={isModification}
                         onRemove={() => handleSubDialogRemove(dialogEvent)}
                         isLoading={isSubDialogLoading}
-                        setIsLoading={setIsSubDialogLoading}
-                        setEventForDialog={setDialogEvent}
-                        updateEventsList={updateAllEvents}
                     />
                 </Dialog>
             )}

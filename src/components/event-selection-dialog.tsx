@@ -69,8 +69,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             <Image
               src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
               alt={event.title}
-              layout="fill"
-              objectFit={(isTCChaserEvent || isChannel) ? 'contain' : 'cover'}
+              fill
               className={(isTCChaserEvent || isChannel) ? 'object-contain' : 'object-cover'}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
