@@ -24,6 +24,7 @@ import {
   DialogTitle,
   DialogClose,
 } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,8 @@ export interface EventListManagementProps {
   onAddEvent?: () => void;
   onSchedule?: () => void;
   onNotificationManager?: () => void;
+  onRemoteControl?: () => void;
+  onRemoteControlControlling?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   gridGap: number;
@@ -183,7 +186,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        isViewPage, onSchedule
+        isViewPage, onSchedule, onRemoteControl, onRemoteControlControlling
     } = props;
     
     const [isContactOpen, setIsContactOpen] = useState(false);
@@ -296,6 +299,19 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                   <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
                       <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
                   </Button>
+                )}
+                 {(onRemoteControl || onRemoteControlControlling) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start">
+                          <Airplay className="mr-2 h-4 w-4" /> Control Remoto
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
+                        {onRemoteControl && <DropdownMenuItem onClick={onRemoteControl}>Ser Controlado</DropdownMenuItem>}
+                        {onRemoteControlControlling && <DropdownMenuItem onClick={onRemoteControlControlling}>Controlar Dispositivo</DropdownMenuItem>}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                 )}
                 <Button variant="outline" className="w-full justify-start" onClick={() => setIsContactOpen(true)}>
                     <Mail className="mr-2 h-4 w-4" /> Contacto

@@ -1403,6 +1403,8 @@ export function HomePageContent() {
                 }}
                 onSchedule={() => setScheduleManagerOpen(true)}
                 onNotification={() => setNotificationManagerOpen(true)}
+                onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
+                onRemoteControlControlling={() => setIsControllerPromptOpen(true)}
                 onOpenCalendar={() => setCalendarOpen(true)}
                 gridGap={gridGap}
                 onGridGapChange={setGridGap}
@@ -1796,6 +1798,8 @@ export function HomePageContent() {
                                             onOpenTutorial={() => setIsTutorialOpen(true)}
                                             onOpenErrors={() => setIsErrorsOpen(true)}
                                             onNotificationManager={() => setNotificationManagerOpen(true)}
+                                            onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
+                                            onRemoteControlControlling={() => setIsControllerPromptOpen(true)}
                                             onOpenCalendar={() => setCalendarOpen(true)}
                                             isTutorialOpen={isTutorialOpen}
                                             onIsTutorialOpenChange={setIsTutorialOpen}
@@ -1849,7 +1853,7 @@ export function HomePageContent() {
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={setDialogEvent}
-                updateEventsList={(updateFn) => setEvents(updateFn(events))}
+                updateEventsList={(updateFn) => setEvents(events => updateFn(events))}
             />
         )}
         <RemoteControlManager
@@ -1895,9 +1899,9 @@ export function HomePageContent() {
                     />
                 </div>
                 <DialogModalFooter>
-                    <DialogModalClose asChild>
+                    <DialogClose asChild>
                       <Button variant="secondary">Cancelar</Button>
-                    </DialogModalClose>
+                    </DialogClose>
                     <Button onClick={() => {
                         remoteControlManagerRef.current?.startControllingSession(controllerCode);
                         setIsControllerPromptOpen(false);
