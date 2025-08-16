@@ -1069,7 +1069,7 @@ export function HomePageContent() {
     remoteControlManagerRef.current?.startControlledSession();
   };
 
-  const openDialogForEvent = (event: Event, context: 'view' | 'schedule' = 'view') => {
+ const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
     setDialogContext(context);
     const selection = getEventSelection(event);
     let eventForDialog = {...event};
@@ -1089,6 +1089,43 @@ export function HomePageContent() {
     
     setDialogEvent(eventForDialog);
     setEventSelectionDialogOpen(true);
+
+    if (event.source === 'streamed.pk' && event.options.length === 0) {
+        setIsOptionsLoading(true);
+        try {
+            const sourcePromises = event.sources.map(async (source) => {
+                try {
+                    const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                    if (response.ok) {
+                        const streams: any[] = await response.json();
+                        if (Array.isArray(streams)) {
+                            return streams.map(stream => ({
+                                url: stream.embedUrl,
+                                label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                                hd: stream.hd,
+                                language: stream.language,
+                            }));
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
+                }
+                return [];
+            });
+            const results = await Promise.all(sourcePromises);
+            const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
+
+            // Update the event in the main state
+            setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, options: streamOptions } : e));
+            // Update the event in the dialog
+            setDialogEvent({ ...eventForDialog, options: streamOptions });
+
+        } catch (error) {
+            console.error(`Failed to fetch streams for ${event.title}`);
+        } finally {
+            setIsOptionsLoading(false);
+        }
+    }
   };
 
 
@@ -1815,6 +1852,8 @@ export function HomePageContent() {
                                             onIsTutorialOpenChange={setIsTutorialOpen}
                                             isErrorsOpen={isErrorsOpen}
                                             onIsErrorsOpenChange={setIsErrorsOpen}
+                                            onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
+                                            onRemoteControlControlling={() => setIsControllerPromptOpen(true)}
                                           />
                                   </SheetContent>
                                   </Sheet>
@@ -1861,9 +1900,6 @@ export function HomePageContent() {
                 isModification={isModification}
                 onRemove={() => handleRemoveEventFromDialog(dialogEvent)}
                 isLoading={isOptionsLoading}
-                setIsLoading={setIsOptionsLoading}
-                setEventForDialog={setDialogEvent}
-                updateEventsList={setEvents}
             />
         )}
         <AddEventsDialog
