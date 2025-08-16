@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -30,6 +31,7 @@ import {
     DialogTitle as DialogModalTitle,
     DialogDescription,
     DialogFooter as DialogModalFooter,
+    DialogClose,
     DialogClose as DialogModalClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
@@ -1921,3 +1923,4 @@ export default function Page() {
     </Suspense>
   );
 }
+
