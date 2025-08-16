@@ -52,7 +52,7 @@ export function CameraConfigurationComponent(props: CameraConfigurationProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-          <LayoutConfigurator {...props} onNotificationManager={props.onNotification} onRemoteControl={props.onRemoteControl}/>
+          <LayoutConfigurator {...props} />
         </SheetContent>
       </Sheet>
     </>

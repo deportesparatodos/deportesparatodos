@@ -1125,7 +1125,7 @@ export function HomePageContent() {
   };
 
   const handleToggleFullscreen = (index: number) => {
-    setFullscreenIndex(prevIndex => prevIndex === index ? null : index);
+    setFullscreenIndex(prevIndex => prevIndex === index ? null : prevIndex);
   };
 
 
@@ -1821,7 +1821,7 @@ export function HomePageContent() {
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={setDialogEvent}
-                updateEventsList={setEvents}
+                updateEventsList={(updateFn) => setEvents(updateFn(events))}
             />
         )}
         <RemoteControlManager
