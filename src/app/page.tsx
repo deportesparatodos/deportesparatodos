@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -32,7 +31,7 @@ import {
     DialogTitle as DialogModalTitle,
     DialogDescription,
     DialogFooter as DialogModalFooter,
-    DialogClose as DialogModalClose,
+    DialogClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
 import {
@@ -43,7 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { EventSelectionDialog } from '@/components/event-selection-dialog';
+import { AddEventsDialog } from '@/components/add-events-dialog';
 import { channels } from '@/components/channel-list';
 import type { Channel } from '@/components/channel-list';
 import { Card } from '@/components/ui/card';
@@ -66,7 +65,7 @@ import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RemoteControlManager } from '@/components/remote-control';
-import { AddEventsDialog } from '@/components/add-events-dialog';
+import { EventSelectionDialog } from '@/components/event-selection-dialog';
 
 
 interface StreamedMatch {
@@ -1071,6 +1070,10 @@ export function HomePageContent() {
 
  const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
     setDialogContext(context);
+    setIsOptionsLoading(true);
+    setEventSelectionDialogOpen(true);
+    setDialogEvent(event);
+    
     const selection = getEventSelection(event);
     let eventForDialog = {...event};
     
@@ -1087,11 +1090,15 @@ export function HomePageContent() {
         setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     
-    setDialogEvent(eventForDialog);
-    setEventSelectionDialogOpen(true);
+    // Check if event in the main `events` state already has options
+    const mainEvent = events.find(e => e.id === event.id);
+    if (mainEvent && mainEvent.options.length > 0) {
+        setDialogEvent({ ...eventForDialog, options: mainEvent.options });
+        setIsOptionsLoading(false);
+        return;
+    }
 
     if (event.source === 'streamed.pk' && event.options.length === 0) {
-        setIsOptionsLoading(true);
         try {
             const sourcePromises = event.sources.map(async (source) => {
                 try {
@@ -1115,7 +1122,7 @@ export function HomePageContent() {
             const results = await Promise.all(sourcePromises);
             const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
 
-            // Update the event in the main state
+            // Update the event in the main state so we don't have to fetch again
             setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, options: streamOptions } : e));
             // Update the event in the dialog
             setDialogEvent({ ...eventForDialog, options: streamOptions });
@@ -1125,6 +1132,10 @@ export function HomePageContent() {
         } finally {
             setIsOptionsLoading(false);
         }
+    } else {
+        // For events that are not from 'streamed.pk' or already have options
+        setDialogEvent(eventForDialog);
+        setIsOptionsLoading(false);
     }
   };
 
@@ -1155,6 +1166,8 @@ export function HomePageContent() {
 
     setDialogEvent(channelAsEvent);
     setEventSelectionDialogOpen(true);
+    setIsOptionsLoading(false);
+
 
     if (selection.isSelected) {
         setIsModification(true);
@@ -1327,12 +1340,12 @@ export function HomePageContent() {
               <DialogHeader className="sr-only">
                   <DialogModalTitle>Bienvenida</DialogModalTitle>
               </DialogHeader>
-               <DialogModalClose asChild>
+               <DialogClose asChild>
                 <Button variant="ghost" className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10" onClick={() => setWelcomePopupOpen(false)}>
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>
                 </Button>
-              </DialogModalClose>
+              </DialogClose>
               <div className="relative">
                   <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
               </div>
@@ -1380,7 +1393,7 @@ export function HomePageContent() {
                             </div>
                         </ScrollArea>
                         <DialogModalFooter>
-                            <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
+                            <DialogClose asChild><Button>Entendido</Button></DialogClose>
                         </DialogModalFooter>
                     </DialogContent>
                   </Dialog>
@@ -1418,7 +1431,7 @@ export function HomePageContent() {
                               </div>
                           </ScrollArea>
                           <DialogModalFooter>
-                              <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
+                              <DialogClose asChild><Button>Cerrar</Button></DialogClose>
                           </DialogModalFooter>
                       </DialogContent>
                   </Dialog>
@@ -1583,6 +1596,17 @@ export function HomePageContent() {
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
         <CalendarDialogContent categories={categories} />
       </Dialog>
+      <AddEventsDialog
+          open={addEventsDialogOpen}
+          onOpenChange={setAddEventsDialogOpen}
+          onSelect={handleEventSelect}
+          onRemove={handleEventRemove}
+          selectedEvents={selectedEvents}
+          allEvents={events}
+          allChannels={channelsData}
+          onFetchEvents={() => fetchEvents(true, true)}
+          updateAllEvents={setEvents}
+      />
       </>
     );
   }
@@ -1852,7 +1876,7 @@ export function HomePageContent() {
                                             onIsTutorialOpenChange={setIsTutorialOpen}
                                             isErrorsOpen={isErrorsOpen}
                                             onIsErrorsOpenChange={setIsErrorsOpen}
-                                            onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
+                                            onRemoteControl={handleStartAndControl}
                                             onRemoteControlControlling={() => setIsControllerPromptOpen(true)}
                                           />
                                   </SheetContent>
@@ -1956,9 +1980,9 @@ export function HomePageContent() {
                     />
                 </div>
                 <DialogModalFooter>
-                    <DialogModalClose asChild>
+                    <DialogClose asChild>
                       <Button variant="secondary">Cancelar</Button>
-                    </DialogModalClose>
+                    </DialogClose>
                     <Button onClick={() => {
                         remoteControlManagerRef.current?.startControllingSession(controllerCode);
                         setIsControllerPromptOpen(false);

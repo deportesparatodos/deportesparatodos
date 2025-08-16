@@ -98,11 +98,11 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
         
         <div className="flex-grow overflow-y-auto px-6 pb-6">
             {isLoading ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex items-center justify-center h-full min-h-[100px]">
                     <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
             ) : event.options.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-center text-muted-foreground">
+                <div className="flex items-center justify-center h-full text-center text-muted-foreground min-h-[100px]">
                     No se encontraron opciones de transmisión.
                 </div>
             ) : (
