@@ -200,8 +200,10 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
             <DialogContent 
                 hideClose={true}
                 className={cn(
-                    "flex flex-col p-4 h-[90vh] sm:max-w-4xl transition-all duration-300",
-                    isFullScreen && "w-screen h-screen max-w-none rounded-none"
+                    "flex flex-col p-4 transition-all duration-300",
+                    isFullScreen 
+                        ? "w-screen h-screen max-w-none rounded-none inset-0 translate-x-0 translate-y-0"
+                        : "h-[90vh] sm:max-w-4xl"
                 )}
             >
                 <DialogHeader className='flex-row items-center justify-between pb-0'>
