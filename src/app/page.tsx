@@ -66,6 +66,7 @@ import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RemoteControlManager } from '@/components/remote-control';
+import { AddEventsDialog } from '@/components/add-events-dialog';
 
 
 interface StreamedMatch {
@@ -232,12 +233,11 @@ export function HomePageContent() {
 
   // Home mode state
   const [events, setEvents] = useState<Event[]>([]);
-  const [channels, setChannels] = useState<Channel[]>([]);
+  const [channelsData, setChannelsData] = useState<Channel[]>(channels);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
@@ -246,6 +246,9 @@ export function HomePageContent() {
   const [currentView, setCurrentView] = useState<string>('home');
   
   // Dialog/Popup states
+  const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
+  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -622,10 +625,10 @@ export function HomePageContent() {
   }, [isInitialLoadDone, fetchEvents]);
   
   useEffect(() => {
-    if (dialogOpen) {
+    if (addEventsDialogOpen) {
       // Logic inside EventSelectionDialog now
     }
-  }, [dialogOpen, fetchEvents]);
+  }, [addEventsDialogOpen, fetchEvents]);
 
   useEffect(() => {
     if (isInitialLoadDone) {
@@ -915,7 +918,7 @@ export function HomePageContent() {
             : [...processedEvents].filter(e => e.category.toLowerCase() === currentView.toLowerCase());
             
         const filteredEvents = eventsSource.filter(e => e.title.toLowerCase().includes(lowercasedFilter));
-        const sChannels = (currentView === 'home' || currentView === 'channels') ? channels.filter(c => c.name.toLowerCase().includes(lowercasedFilter)) : [];
+        const sChannels = (currentView === 'home' || currentView === 'channels') ? channelsData.filter(c => c.name.toLowerCase().includes(lowercasedFilter)) : [];
         
         const combinedResults = [...filteredEvents, ...sChannels];
 
@@ -956,7 +959,7 @@ export function HomePageContent() {
         categoryFilteredEvents,
         channels247Events: channels247FromEvents,
     };
-  }, [events, searchTerm, currentView]);
+  }, [events, searchTerm, currentView, channelsData]);
 
 
   const categories = useMemo(() => {
@@ -997,7 +1000,7 @@ export function HomePageContent() {
         } else {
             alert("No hay espacios disponibles en la programación.");
         }
-        setDialogOpen(false);
+        setEventSelectionDialogOpen(false);
         setScheduleManagerOpen(true);
         return;
     }
@@ -1021,7 +1024,8 @@ export function HomePageContent() {
         });
     }
     
-    setDialogOpen(false);
+    setEventSelectionDialogOpen(false);
+    setAddEventsDialogOpen(false); // Close add dialog if open
     setIsModification(false);
     setModificationIndex(null);
   };
@@ -1084,7 +1088,7 @@ export function HomePageContent() {
     }
     
     setDialogEvent(eventForDialog);
-    setDialogOpen(true);
+    setEventSelectionDialogOpen(true);
   };
 
 
@@ -1113,7 +1117,7 @@ export function HomePageContent() {
     }
 
     setDialogEvent(channelAsEvent);
-    setDialogOpen(true);
+    setEventSelectionDialogOpen(true);
 
     if (selection.isSelected) {
         setIsModification(true);
@@ -1160,7 +1164,7 @@ export function HomePageContent() {
     setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
         return currentSelectedEvents.map(se => se?.id === event.id ? null : se);
     });
-    setDialogOpen(false);
+    setEventSelectionDialogOpen(false);
 };
   
   const getItemClasses = (orderedIndex: number, count: number) => {
@@ -1270,10 +1274,7 @@ export function HomePageContent() {
           onSchedulesChange={setSchedules}
           onModifyEventInView={openDialogForModification}
           isLoading={isAddEventsLoading}
-          onAddEvent={() => {
-            setDialogContext('schedule');
-            setDialogOpen(true);
-          }}
+          onAddEvent={() => setAddEventsDialogOpen(true)}
           setFutureSelection={setFutureSelection}
           setFutureOrder={setFutureOrder}
           initialSelection={selectedEvents}
@@ -1411,10 +1412,7 @@ export function HomePageContent() {
                 onToggleFullscreen={handleToggleFullscreen}
                 fullscreenIndex={fullscreenIndex}
                 isViewPage={true}
-                onAddEvent={() => {
-                  setDialogContext('view');
-                  setDialogOpen(true);
-                }}
+                onAddEvent={() => setAddEventsDialogOpen(true)}
                 onSchedule={() => setScheduleManagerOpen(true)}
                 onNotificationManager={() => setNotificationManagerOpen(true)}
                 onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
@@ -1612,7 +1610,7 @@ export function HomePageContent() {
             ) : (
                 <>
                     <div className="mb-8">
-                        <EventCarousel title="Canales" channels={channels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales" channels={channelsData} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
@@ -1636,7 +1634,7 @@ export function HomePageContent() {
     } else if (currentView === 'live') {
       itemsToDisplay = liveEvents;
     } else if (currentView === 'channels') {
-      itemsToDisplay = channels;
+      itemsToDisplay = channelsData;
     } else {
       itemsToDisplay = categoryFilteredEvents;
     }
@@ -1800,7 +1798,7 @@ export function HomePageContent() {
                                             onRemove={handleEventRemove}
                                             onModify={openDialogForModification}
                                             isViewPage={false}
-                                            onAddEvent={() => setDialogOpen(true)}
+                                            onAddEvent={() => setAddEventsDialogOpen(true)}
                                             gridGap={gridGap}
                                             onGridGapChange={setGridGap}
                                             borderColor={borderColor}
@@ -1856,8 +1854,8 @@ export function HomePageContent() {
         
         {dialogEvent && (
             <EventSelectionDialog
-                isOpen={dialogOpen}
-                onOpenChange={setDialogOpen}
+                isOpen={eventSelectionDialogOpen}
+                onOpenChange={setEventSelectionDialogOpen}
                 event={dialogEvent}
                 onSelect={handleEventSelect}
                 isModification={isModification}
@@ -1865,9 +1863,20 @@ export function HomePageContent() {
                 isLoading={isOptionsLoading}
                 setIsLoading={setIsOptionsLoading}
                 setEventForDialog={setDialogEvent}
-                updateEventsList={(updateFn) => setEvents(events => updateFn(events))}
+                updateEventsList={setEvents}
             />
         )}
+        <AddEventsDialog
+            open={addEventsDialogOpen}
+            onOpenChange={setAddEventsDialogOpen}
+            onSelect={handleEventSelect}
+            onRemove={handleEventRemove}
+            selectedEvents={selectedEvents}
+            allEvents={events}
+            allChannels={channelsData}
+            onFetchEvents={() => fetchEvents(true, true)}
+            updateAllEvents={setEvents}
+        />
         <RemoteControlManager
             ref={remoteControlManagerRef}
             appState={{
@@ -1894,7 +1903,7 @@ export function HomePageContent() {
                 if (newSchedules) setSchedules(newSchedules);
             }}
             allEvents={events}
-            allChannels={channels}
+            allChannels={channelsData}
         />
 
         <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>

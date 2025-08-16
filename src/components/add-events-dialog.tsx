@@ -22,7 +22,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { parse, isValid, isBefore } from 'date-fns';
 
-export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, onRemove: (event: Event) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (events: Event[]) => void }) {
+export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, selectedEvents, allEvents, allChannels, onFetchEvents, updateAllEvents }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (event: Event, option: string) => void, onRemove: (event: Event) => void, selectedEvents: (Event|null)[], allEvents: Event[], allChannels: Channel[], onFetchEvents: () => Promise<void>, updateAllEvents: (updateFn: (prevEvents: Event[]) => Event[]) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
     
@@ -103,7 +103,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
                 setDialogEvent(updatedEventForDialog);
 
                 // Also update the main events array so we don't fetch again
-                updateAllEvents(allEvents.map(e => e.id === updatedEventForDialog.id ? { ...e, options: streamOptions } : e));
+                updateAllEvents(allEvents => allEvents.map(e => e.id === updatedEventForDialog.id ? { ...e, options: streamOptions } : e));
             } catch (error) {
                 console.error(`Failed to fetch streams for ${event.title}`);
                 const updatedEventForDialog = { ...eventForDialog, options: [] };
@@ -306,6 +306,7 @@ export function AddEventsDialog({ open, onOpenChange, onSelect, onRemove, select
                         isLoading={isSubDialogLoading}
                         setIsLoading={setIsSubDialogLoading}
                         setEventForDialog={setDialogEvent}
+                        updateEventsList={updateAllEvents}
                     />
                 </Dialog>
             )}
