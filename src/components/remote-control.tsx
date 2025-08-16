@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { Realtime } from 'ably';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, AlertCircle, Copy, Check, X } from 'lucide-react';
-import type { Event, StreamOption } from '@/components/event-carousel';
+import type { Event } from '@/components/event-carousel';
 import type { Schedule } from './schedule-manager';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Channel } from './channel-list';
@@ -35,8 +35,6 @@ type AppState = {
 };
 
 type RemoteControlManagerProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   appState: AppState;
   setAppState: (newState: Partial<AppState>) => void;
   allEvents: Event[];
@@ -49,23 +47,15 @@ type AblyMessage = {
 };
 
 // --- Main Component ---
-export function RemoteControlManager({
-  open,
-  onOpenChange,
-  appState,
-  setAppState,
-  allEvents,
-  allChannels
-}: RemoteControlManagerProps) {
-  const [mode, setMode] = useState<'inactive' | 'prompt' | 'controlled' | 'controlling'>('inactive');
+export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps, ref) => {
+  const { appState, setAppState, allEvents, allChannels } = props;
+  const [mode, setMode] = useState<'inactive' | 'controlled' | 'controlling'>('inactive');
   const [sessionId, setSessionId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [inputSessionId, setInputSessionId] = useState('');
   
   const ablyClientRef = useRef<Realtime | null>(null);
   const channelRef = useRef<any>(null);
-
   const { toast } = useToast();
 
   const cleanupAbly = useCallback(() => {
@@ -93,7 +83,7 @@ export function RemoteControlManager({
             throw new Error(`Failed to get Ably token: ${response.status} ${errorText}`);
         }
         const tokenRequest = await response.json();
-        const client = new Realtime({ ...tokenRequest });
+        const client = new Realtime({ ...tokenRequest, echoMessages: false });
         ablyClientRef.current = client;
         return client;
     } catch (e) {
@@ -102,7 +92,6 @@ export function RemoteControlManager({
         throw e;
     }
   };
-
 
   const startControlledSession = async () => {
     if (ablyClientRef.current) cleanupAbly();
@@ -135,25 +124,27 @@ export function RemoteControlManager({
       ably.connection.on('failed', (error) => {
           setError(error.reason.message);
           setIsConnecting(false);
+          setMode('inactive');
       });
 
     } catch (e) {
       setIsConnecting(false);
+      setMode('inactive');
     }
   };
   
-  const startControllingSession = async () => {
+  const startControllingSession = async (code: string) => {
     if (ablyClientRef.current) cleanupAbly();
-    if (!inputSessionId) {
-        setError("Please enter a session ID.");
+    if (!code) {
+        toast({ variant: 'destructive', title: "Error", description: "Por favor, introduce un código de sesión." });
         return;
     }
     setIsConnecting(true);
     setError(null);
     try {
-        const ably = await initializeAbly(`controller-${inputSessionId}`);
+        const ably = await initializeAbly(`controller-${code}`);
         ably.connection.on('connected', () => {
-            const channel = ably.channels.get(inputSessionId);
+            const channel = ably.channels.get(code);
             channelRef.current = channel;
 
             channel.subscribe('state-update', (message: AblyMessage) => {
@@ -163,45 +154,38 @@ export function RemoteControlManager({
             channel.publish('sync-request', {});
             setMode('controlling');
             setIsConnecting(false);
-            onOpenChange(false); // Close the prompt dialog
-            toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${inputSessionId}.` });
+            toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${code}.` });
         });
 
         ably.connection.on('failed', (error) => {
-            setError(error.reason.message || "Failed to connect to the session.");
+            setError(error.reason.message || "No se pudo conectar a la sesión.");
             setIsConnecting(false);
+            setMode('inactive');
         });
 
     } catch (e) {
         setIsConnecting(false);
+        setMode('inactive');
     }
   };
 
   const stopSession = () => {
     cleanupAbly();
-    setMode('prompt');
-    setSessionId('');
-    setError(null);
     if(mode === 'controlling') {
         toast({ title: "Control Remoto Desconectado" });
     }
+    setMode('inactive');
+    setSessionId('');
+    setError(null);
+    setIsConnecting(false);
   };
 
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      cleanupAbly();
-      setMode('inactive');
-      setError(null);
-      setSessionId('');
-    }
-    onOpenChange(isOpen);
-  };
-  
-  useEffect(() => {
-    if(open && mode === 'inactive') {
-      setMode('prompt');
-    }
-  }, [open, mode]);
+  useImperativeHandle(ref, () => ({
+    startControlledSession,
+    startControllingSession
+  }));
+
+  if (mode === 'inactive') return null;
 
   return (
       <>
@@ -215,60 +199,27 @@ export function RemoteControlManager({
             />
         )}
 
-        <Dialog open={open && (mode === 'prompt' || mode === 'controlled')} onOpenChange={handleOpenChange}>
+        <Dialog open={mode === 'controlled'} onOpenChange={(isOpen) => !isOpen && stopSession()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Control Remoto</DialogTitle>
-                    <DialogDescription>
-                        Controla esta sesión desde otro dispositivo o usa este para controlar otra sesión.
-                    </DialogDescription>
+                    <DialogTitle>Control Remoto Activado</DialogTitle>
                 </DialogHeader>
-
-                {error && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
-
                 {isConnecting ? (
-                    <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                ) : mode === 'controlled' ? (
-                    <ControlledView sessionId={sessionId} onStop={stopSession} />
+                  <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                ) : error ? (
+                   <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error de Conexión</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>
                 ) : (
-                    <PromptView
-                        onStartControlled={startControlledSession}
-                        onStartControlling={startControllingSession}
-                        sessionId={inputSessionId}
-                        setSessionId={setInputSessionId}
-                    />
+                    <ControlledView sessionId={sessionId} onStop={stopSession} />
                 )}
             </DialogContent>
         </Dialog>
       </>
   );
-}
+});
+
+RemoteControlManager.displayName = 'RemoteControlManager';
 
 // --- UI Components for different modes ---
-
-function PromptView({ onStartControlled, onStartControlling, sessionId, setSessionId }: any) {
-    return (
-        <div className="space-y-4 pt-4">
-            <div className="p-4 border rounded-md space-y-3">
-                <h3 className="font-semibold">1. Activar control en este dispositivo</h3>
-                <p className="text-sm text-muted-foreground">Genera un código para permitir que otro dispositivo controle esta pantalla.</p>
-                <Button onClick={onStartControlled} className="w-full">Generar Código</Button>
-            </div>
-            <div className="p-4 border rounded-md space-y-3">
-                <h3 className="font-semibold">2. Usar este dispositivo como control</h3>
-                <p className="text-sm text-muted-foreground">Introduce el código del dispositivo que quieres controlar.</p>
-                <div className="flex gap-2">
-                    <Input
-                        placeholder="Código de sesión..."
-                        value={sessionId}
-                        onChange={(e) => setSessionId(e.target.value)}
-                    />
-                    <Button onClick={onStartControlling}>Conectar</Button>
-                </div>
-            </div>
-        </div>
-    )
-}
 
 function ControlledView({ sessionId, onStop }: { sessionId: string, onStop: () => void }) {
     const [copied, setCopied] = useState(false);
@@ -279,7 +230,7 @@ function ControlledView({ sessionId, onStop }: { sessionId: string, onStop: () =
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4">
             <p className="text-sm text-center text-muted-foreground">Este dispositivo ahora puede ser controlado. Introduce el siguiente código en el dispositivo que quieras usar como mando:</p>
             <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg">
                 <span className="text-2xl font-bold tracking-widest">{sessionId}</span>
@@ -388,8 +339,6 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
               onIsChatEnabledChange={(value: boolean) => onAction({ isChatEnabled: value })}
               categories={allCategories}
               onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
-              // These are not used in controller, but props are required
-              onRemoteControl={() => {}}
               onOpenTutorial={() => {}}
               onOpenErrors={() => {}}
               onOpenCalendar={() => {}}
@@ -401,7 +350,6 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
         </div>
       </div>
       
-      {/* DIALOGS */}
       {dialogEvent && (
         <EventSelectionDialog
           isOpen={openDialog === 'add-event'}
@@ -410,10 +358,10 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
           onSelect={handleEventSelect}
           isModification={isModification}
           onRemove={handleRemoveFromDialog}
-          isLoading={false} // Controller doesn't load options, it gets them from state
+          isLoading={false}
           setIsLoading={() => {}}
           setEventForDialog={setDialogEvent}
-          updateEventsList={() => {}} // Not needed for controller
+          updateEventsList={() => {}}
         />
       )}
       

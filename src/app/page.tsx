@@ -33,6 +33,12 @@ import {
     DialogClose as DialogModalClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
@@ -244,7 +250,14 @@ export function HomePageContent() {
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
-  const [isRemoteControlOpen, setIsRemoteControlOpen] = useState(false);
+  
+  // Remote Control state
+  const remoteControlManagerRef = useRef<{ 
+    startControlledSession: () => void; 
+    startControllingSession: (id: string) => void;
+  }>(null);
+  const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
+  const [controllerCode, setControllerCode] = useState('');
 
 
   // Schedule related states
@@ -1405,7 +1418,6 @@ export function HomePageContent() {
                 onIsTutorialOpenChange={setIsTutorialOpen}
                 isErrorsOpen={isErrorsOpen}
                 onIsErrorsOpenChange={setIsErrorsOpen}
-                onRemoteControl={() => setIsRemoteControlOpen(true)}
             />
 
             {isChatEnabled && (
@@ -1738,6 +1750,23 @@ export function HomePageContent() {
                                 >
                                   <RotateCw className={cn(isDataLoading && "animate-spin")} />
                                 </Button>
+
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <Airplay />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => remoteControlManagerRef.current?.startControlledSession()}>
+                                      Ser Controlado
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setIsControllerPromptOpen(true)}>
+                                      Controlar Dispositivo
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+
                                  <Sheet>
                                     <SheetTrigger asChild>
                                       <Button variant="ghost" size="icon">
@@ -1772,7 +1801,6 @@ export function HomePageContent() {
                                             onIsTutorialOpenChange={setIsTutorialOpen}
                                             isErrorsOpen={isErrorsOpen}
                                             onIsErrorsOpenChange={setIsErrorsOpen}
-                                            onRemoteControl={() => setIsRemoteControlOpen(true)}
                                           />
                                   </SheetContent>
                                   </Sheet>
@@ -1825,8 +1853,7 @@ export function HomePageContent() {
             />
         )}
         <RemoteControlManager
-            open={isRemoteControlOpen}
-            onOpenChange={setIsRemoteControlOpen}
+            ref={remoteControlManagerRef}
             appState={{
                 selectedEvents,
                 viewOrder,
@@ -1853,6 +1880,31 @@ export function HomePageContent() {
             allEvents={events}
             allChannels={channels}
         />
+
+        <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogModalTitle>Controlar Dispositivo</DialogModalTitle>
+                    <DialogDescription>Introduce el código del dispositivo que quieres controlar.</DialogDescription>
+                </DialogHeader>
+                <div className="flex gap-2 py-4">
+                    <Input
+                        placeholder="Código de sesión..."
+                        value={controllerCode}
+                        onChange={(e) => setControllerCode(e.target.value)}
+                    />
+                </div>
+                <DialogModalFooter>
+                    <DialogModalClose asChild>
+                      <Button variant="secondary">Cancelar</Button>
+                    </DialogModalClose>
+                    <Button onClick={() => {
+                        remoteControlManagerRef.current?.startControllingSession(controllerCode);
+                        setIsControllerPromptOpen(false);
+                    }}>Conectar</Button>
+                </DialogModalFooter>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
