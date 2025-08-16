@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
@@ -187,7 +188,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   useImperativeHandle(ref, () => ({
     startControlledSession,
     startControllingSession,
-    openControllerPrompt: () => setIsControllerPromptOpen(true),
   }));
 
   if (mode === 'controlling') {
@@ -216,31 +216,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
                 ) : (
                     <ControlledView sessionId={sessionId} onStop={stopSession} />
                 )}
-            </DialogContent>
-        </Dialog>
-        
-        <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Controlar Dispositivo</DialogTitle>
-                    <DialogDescription>Introduce el código del dispositivo que quieres controlar.</DialogDescription>
-                </DialogHeader>
-                <div className="flex gap-2 py-4">
-                    <Input
-                        placeholder="Código de sesión..."
-                        value={controllerCode}
-                        onChange={(e) => setControllerCode(e.target.value)}
-                    />
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                      <Button variant="secondary">Cancelar</Button>
-                    </DialogClose>
-                    <Button onClick={() => {
-                        startControllingSession(controllerCode);
-                        setIsControllerPromptOpen(false);
-                    }}>Conectar</Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
       </>

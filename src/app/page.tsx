@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -266,6 +267,7 @@ export function HomePageContent() {
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
+  const { toast } = useToast();
 
   const getGridClasses = useCallback((count: number) => {
     if (isMobile) {
@@ -741,8 +743,6 @@ export function HomePageContent() {
     setBorderColor('#000000');
   };
 
-  const { toast } = useToast();
-  
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
@@ -1052,6 +1052,19 @@ export function HomePageContent() {
     setIsViewMode(false);
     setFullscreenIndex(null);
   }, []);
+
+  const handleStartAndControl = () => {
+    if (selectedEventsCount === 0) {
+        toast({
+            variant: 'destructive',
+            title: 'No hay eventos seleccionados',
+            description: 'Por favor, selecciona al menos un evento para iniciar la vista controlada.',
+        });
+        return;
+    }
+    handleStartView();
+    remoteControlManagerRef.current?.startControlledSession();
+  };
 
   const openDialogForEvent = (event: Event, context: 'view' | 'schedule' = 'view') => {
     setDialogContext(context);
@@ -1404,7 +1417,7 @@ export function HomePageContent() {
                   setDialogOpen(true);
                 }}
                 onSchedule={() => setScheduleManagerOpen(true)}
-                onNotification={() => setNotificationManagerOpen(true)}
+                onNotificationManager={() => setNotificationManagerOpen(true)}
                 onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
                 onRemoteControlControlling={() => setIsControllerPromptOpen(true)}
                 onOpenCalendar={() => setCalendarOpen(true)}
@@ -1762,7 +1775,7 @@ export function HomePageContent() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={() => remoteControlManagerRef.current?.startControlledSession()}>
+                                    <DropdownMenuItem onClick={handleStartAndControl}>
                                       Ser Controlado
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setIsControllerPromptOpen(true)}>
@@ -1901,9 +1914,9 @@ export function HomePageContent() {
                     />
                 </div>
                 <DialogModalFooter>
-                    <DialogClose asChild>
+                    <DialogModalClose asChild>
                       <Button variant="secondary">Cancelar</Button>
-                    </DialogClose>
+                    </DialogModalClose>
                     <Button onClick={() => {
                         remoteControlManagerRef.current?.startControllingSession(controllerCode);
                         setIsControllerPromptOpen(false);
