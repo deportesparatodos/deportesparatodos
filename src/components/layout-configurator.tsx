@@ -241,6 +241,25 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                       </AccordionContent>
                   </AccordionItem>
 
+                  {isViewPage && (
+                    <AccordionItem value="item-remote" className="border rounded-lg px-4">
+                        <AccordionTrigger>Control Remoto</AccordionTrigger>
+                        <AccordionContent className="pt-4 pb-4 space-y-4">
+                            {isRemoteSessionActive ? (
+                                <div className="text-center space-y-2">
+                                    <Label>Código de Sesión Activa</Label>
+                                    <p className="text-2xl font-bold tracking-widest text-primary">{remoteSessionCode}</p>
+                                    <p className="text-xs text-muted-foreground">Introduce este código en el otro dispositivo.</p>
+                                </div>
+                            ) : (
+                                <Button variant="outline" className="w-full" onClick={handleActivateRemote}>
+                                    <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
+                                </Button>
+                            )}
+                        </AccordionContent>
+                    </AccordionItem>
+                  )}
+
                   <AccordionItem value="item-grid" className="border rounded-lg px-4">
                       <AccordionTrigger>Diseño de Cuadrícula</AccordionTrigger>
                       <AccordionContent className="pt-4 pb-4 space-y-6">
@@ -291,31 +310,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                          {isViewPage && onRemoteControl && (
-                            <>
-                              <Separator/>
-                               <DropdownMenu onOpenChange={(open) => !open && setIsRemoteSessionActive(false)}>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-center">
-                                      <Airplay className="mr-2 h-4 w-4" /> Control Remoto
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56">
-                                  {isRemoteSessionActive ? (
-                                    <div className="p-2 text-center">
-                                      <Label>Código de Sesión</Label>
-                                      <p className="text-lg font-bold tracking-widest">{remoteSessionCode}</p>
-                                    </div>
-                                  ) : (
-                                    <DropdownMenuItem onClick={handleActivateRemote}>
-                                      Activar Control Remoto
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                             </>
-                          )}
-                           {isViewPage && onNotificationManager && (
+                           {onNotificationManager && (
                                 <>
                                   <Separator/>
                                   <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
@@ -515,3 +510,5 @@ export function LayoutConfigurator(props: EventListManagementProps) {
       </div>
     );
 }
+
+    

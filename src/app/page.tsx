@@ -1189,7 +1189,11 @@ export function HomePageContent() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
-    openDialogForEvent(event, 'view');
+    const eventWithSelection = { ...event, selectedOption: selectedEvents[index]?.selectedOption };
+    setDialogEvent(eventWithSelection);
+    setIsModification(true);
+    setModificationIndex(index);
+    setEventSelectionDialogOpen(true);
   };
 
   const handleViewChange = (view: string) => {
@@ -1885,6 +1889,20 @@ export function HomePageContent() {
       )}
 
       {/* Dialogs at top level */}
+      <AddEventsDialog
+          open={addEventsDialogOpen}
+          onOpenChange={setAddEventsDialogOpen}
+          onEventSelect={handleEventSelect}
+          onChannelClick={handleChannelClick}
+          getEventSelection={getEventSelection}
+          events={events}
+          channels={channelsData}
+          liveEvents={liveEvents}
+          upcomingEvents={upcomingEvents}
+          unknownEvents={unknownEvents}
+          finishedEvents={finishedEvents}
+          channels247Events={channels247Events}
+      />
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
           <CalendarDialogContent categories={categories} />
       </Dialog>
@@ -1892,10 +1910,6 @@ export function HomePageContent() {
           open={notificationManagerOpen}
           onOpenChange={setNotificationManagerOpen}
           allCategories={categories}
-      />
-      <AddEventsDialog
-          open={addEventsDialogOpen}
-          onOpenChange={setAddEventsDialogOpen}
       />
       {dialogEvent && (
           <EventSelectionDialog
@@ -2000,3 +2014,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
+    

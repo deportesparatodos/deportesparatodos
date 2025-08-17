@@ -16,16 +16,42 @@ import type { Event, StreamOption } from './event-carousel';
 import { Card } from './ui/card';
 import Image from 'next/image';
 import type { Channel } from './channel-list';
-import { EventSelectionDialog } from './event-selection-dialog';
+import { EventCarousel } from './event-carousel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { parse, isValid, isBefore } from 'date-fns';
 
-export function AddEventsDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+interface AddEventsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onEventSelect: (event: Event, optionUrl: string) => void;
+  onChannelClick: (channel: Channel) => void;
+  getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null };
+  events: Event[];
+  channels: Channel[];
+  liveEvents: Event[];
+  upcomingEvents: Event[];
+  unknownEvents: Event[];
+  finishedEvents: Event[];
+  channels247Events: Event[];
+}
+
+export function AddEventsDialog({ 
+    open, 
+    onOpenChange,
+    onEventSelect,
+    onChannelClick,
+    getEventSelection,
+    events,
+    channels,
+    liveEvents,
+    upcomingEvents,
+    unknownEvents,
+    finishedEvents,
+    channels247Events
+}: AddEventsDialogProps) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
-    
     const [isFullScreen, setIsFullScreen] = useState(false);
 
     useEffect(() => {
@@ -35,9 +61,25 @@ export function AddEventsDialog({ open, onOpenChange }: { open: boolean, onOpenC
         }
     }, [open]);
 
+    const handleChannelClick = (channel: Channel) => {
+        onChannelClick(channel);
+        onOpenChange(false);
+    }
+    
+    const handleEventClick = (event: Event) => {
+        // This will be handled by the parent opening the EventSelectionDialog
+        // For now, we just close this dialog. The parent should handle opening the next one.
+        onOpenChange(false);
+        // A bit of a hack, but we need to call the original onCardClick logic which is in page.tsx
+        // A better solution might involve more context/state management
+        setTimeout(() => {
+            const el = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement;
+            if (el) el.click();
+        }, 100);
+    }
     
     return (
-        <Dialog open={open} onOpenChange={isOpen => { onOpenChange(isOpen); }}>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent 
                 hideClose={true}
                 className={cn(
@@ -66,3 +108,5 @@ export function AddEventsDialog({ open, onOpenChange }: { open: boolean, onOpenC
         </Dialog>
     );
 }
+
+    
