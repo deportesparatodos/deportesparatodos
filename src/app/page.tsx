@@ -1077,10 +1077,18 @@ export function HomePageContent() {
         return;
     }
     handleStartView(true);
-    const code = await remoteControlManagerRef.current?.startControlledSession();
-    if (code) {
-        setControlledSessionCode(code);
-        setIsControlledSessionDialog(true);
+    try {
+        const code = await remoteControlManagerRef.current?.startControlledSession();
+        if (code) {
+            setControlledSessionCode(code);
+            setIsControlledSessionDialog(true);
+        }
+    } catch(e: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Error de Control Remoto',
+            description: e.message || 'No se pudo iniciar la sesión controlada.',
+        });
     }
   };
 
@@ -2046,3 +2054,5 @@ export default function Page() {
   );
 }
 
+
+    

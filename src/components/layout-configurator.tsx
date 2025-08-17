@@ -30,6 +30,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { SheetTitle } from './ui/sheet';
+import { useToast } from '@/hooks/use-toast';
 
 export interface EventListManagementProps {
   order: number[];
@@ -196,8 +197,9 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     const [isRemoteSessionActive, setIsRemoteSessionActive] = useState(false);
     const [remoteSessionCode, setRemoteSessionCode] = useState('');
-    const [isActivatingRemote, setIsActivatingRemote] = useState(false);
+    const [isActivatingRemote, setIsActivatingRemote] = useState(isRemoteSessionActive);
     const [copied, setCopied] = useState(false);
+    const { toast } = useToast();
 
     const handleActivateRemote = async () => {
         if (props.onRemoteControl) {
@@ -208,8 +210,12 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                     setRemoteSessionCode(code);
                     setIsRemoteSessionActive(true);
                 }
-            } catch (e) {
-                // Error toast is handled by the remote control manager
+            } catch (e: any) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Error de Conexión',
+                    description: e.message || 'No se pudo activar el control remoto.',
+                });
             } finally {
                 setIsActivatingRemote(false);
             }
@@ -420,7 +426,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                         <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
                         <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
                         <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de <a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">Cloudflare (1.1.1.1)</a> o Google (8.8.8.8) puede saltarse estas restricciones.</p>
-                        
+
                         <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
                         <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
                         <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como <a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">"Reproductor MPD/M3U8/M3U/EPG"</a> (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
@@ -532,3 +538,5 @@ export function LayoutConfigurator(props: EventListManagementProps) {
       </div>
     );
 }
+
+    
