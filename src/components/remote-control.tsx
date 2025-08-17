@@ -91,28 +91,32 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   }, [cleanupAbly]);
   
   const initializeAbly = async (clientId: string): Promise<Realtime> => {
-    return new Promise((resolve, reject) => {
-      const apiKey = process.env.NEXT_PUBLIC_ABLY_API_KEY;
-      if (!apiKey) {
-        const errorMessage = "La clave de API de Ably no está configurada.";
-        setError(errorMessage);
-        toast({ variant: 'destructive', title: 'Error de Configuración', description: errorMessage });
-        return reject(new Error(errorMessage));
-      }
-      try {
-          const client = new Realtime({ 
-              key: apiKey,
-              clientId: clientId,
-              echoMessages: false 
-          });
-          ablyClientRef.current = client;
-          resolve(client);
-      } catch (e: any) {
-          console.error("Ably initialization failed", e);
-          setError(e.message || "No se pudo conectar al servicio en tiempo real.");
-          reject(e);
-      }
-    });
+      return new Promise(async (resolve, reject) => {
+          try {
+              const response = await fetch('/api/ably');
+              if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(errorData.error || 'Failed to fetch Ably API key.');
+              }
+              const { apiKey } = await response.json();
+
+              if (!apiKey) {
+                  throw new Error("La clave de API de Ably no está configurada.");
+              }
+
+              const client = new Realtime({ 
+                  key: apiKey,
+                  clientId: clientId,
+                  echoMessages: false 
+              });
+              ablyClientRef.current = client;
+              resolve(client);
+          } catch (e: any) {
+              console.error("Ably initialization failed", e);
+              setError(e.message || "No se pudo conectar al servicio en tiempo real.");
+              reject(e);
+          }
+      });
   };
 
 
@@ -395,5 +399,3 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     </>
   );
 }
-
-    
