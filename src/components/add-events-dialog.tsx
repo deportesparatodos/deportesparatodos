@@ -25,7 +25,7 @@ import { parse, isValid, isBefore } from 'date-fns';
 interface AddEventsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEventSelect: (event: Event, optionUrl: string) => void;
+  onEventSelect: (event: Event) => void;
   onChannelClick: (channel: Channel) => void;
   getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null };
   events: Event[];
@@ -67,17 +67,24 @@ export function AddEventsDialog({
     }
     
     const handleEventClick = (event: Event) => {
-        // This will be handled by the parent opening the EventSelectionDialog
-        // For now, we just close this dialog. The parent should handle opening the next one.
+        onEventSelect(event);
         onOpenChange(false);
-        // A bit of a hack, but we need to call the original onCardClick logic which is in page.tsx
-        // A better solution might involve more context/state management
-        setTimeout(() => {
-            const el = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement;
-            if (el) el.click();
-        }, 100);
     }
     
+    const searchResults = useMemo(() => {
+        if (!searchTerm) return [];
+        const lowercasedFilter = searchTerm.toLowerCase();
+
+        const filteredEvents = events.filter(event =>
+            event.title.toLowerCase().includes(lowercasedFilter)
+        );
+        const filteredChannels = channels.filter(channel =>
+            channel.name.toLowerCase().includes(lowercasedFilter)
+        );
+        return [...filteredEvents, ...filteredChannels];
+    }, [searchTerm, events, channels]);
+
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent 
@@ -102,11 +109,68 @@ export function AddEventsDialog({
                 </DialogHeader>
                  
                 <div className="relative flex-grow flex flex-col mt-2">
-                   <p>This dialog is now a placeholder. The main logic has been moved to the page component.</p>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            placeholder="Buscar evento o canal..."
+                            className="w-full pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <ScrollArea className="flex-grow h-0 mt-4">
+                        {searchTerm ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {searchResults.map((item, index) => {
+                                    if ('urls' in item) { // It's a Channel
+                                        const channelAsEvent: Event = { id: `${item.name}-channel-static`, title: item.name, options: [], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: item.logo };
+                                        const selection = getEventSelection(channelAsEvent);
+                                        return (
+                                            <Card key={`search-channel-${index}`} onClick={() => handleChannelClick(item)} className="cursor-pointer">
+                                                <div className="relative w-full aspect-video bg-white p-2">
+                                                     <Image src={item.logo} alt={item.name} fill className="object-contain" />
+                                                      {selection.isSelected && (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                                                            <Check className="h-10 w-10 text-green-500" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <h3 className="font-bold text-sm p-2 text-center">{item.name}</h3>
+                                            </Card>
+                                        )
+                                    } else { // It's an Event
+                                        return (
+                                            <EventCard key={`search-event-${index}`} event={item} selection={getEventSelection(item)} onClick={() => handleEventClick(item)} />
+                                        )
+                                    }
+                                })}
+                            </div>
+                        ) : (
+                             <Tabs defaultValue="live" className="w-full">
+                                <TabsList className="grid w-full grid-cols-3">
+                                    <TabsTrigger value="live">En Vivo</TabsTrigger>
+                                    <TabsTrigger value="upcoming">Próximos</TabsTrigger>
+                                    <TabsTrigger value="channels">Canales</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="live" className="mt-4">
+                                    <EventCarousel title="En Vivo" events={liveEvents} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
+                                    <EventCarousel title="24/7" events={channels247Events} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
+                                </TabsContent>
+                                <TabsContent value="upcoming" className="mt-4">
+                                     <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
+                                     <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
+                                     <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
+                                </TabsContent>
+                                <TabsContent value="channels" className="mt-4">
+                                     <EventCarousel title="Canales" channels={channels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
+                                </TabsContent>
+                            </Tabs>
+                        )}
+                    </ScrollArea>
                 </div>
             </DialogContent>
         </Dialog>
     );
 }
-
     

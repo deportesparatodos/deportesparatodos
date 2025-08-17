@@ -61,6 +61,7 @@ export interface EventListManagementProps {
   onIsTutorialOpenChange: (open: boolean) => void;
   isErrorsOpen: boolean;
   onIsErrorsOpenChange: (open: boolean) => void;
+  onStopSession?: () => void;
 }
 
 export function EventList({
@@ -187,55 +188,20 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        isViewPage, onSchedule, onRemoteControl
+        isViewPage, onSchedule, onRemoteControl,
+        onStopSession
     } = props;
-    
-    const [isContactOpen, setIsContactOpen] = useState(false);
-    const [isLegalOpen, setIsLegalOpen] = useState(false);
-    
+        
     const order = props.order || [];
 
-    const [isRemoteSessionActive, setIsRemoteSessionActive] = useState(false);
-    const [remoteSessionCode, setRemoteSessionCode] = useState('');
-    const [isActivatingRemote, setIsActivatingRemote] = useState(false);
-    const [copied, setCopied] = useState(false);
     const { toast } = useToast();
-
-    const handleActivateRemote = async () => {
-        if (props.onRemoteControl) {
-            setIsActivatingRemote(true);
-            try {
-                const code = await props.onRemoteControl();
-                if (code) {
-                    setRemoteSessionCode(code);
-                    setIsRemoteSessionActive(true);
-                }
-            } catch (e: any) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Error de Conexión',
-                    description: e.message || 'No se pudo activar el control remoto.',
-                });
-            } finally {
-                setIsActivatingRemote(false);
-            }
-        }
-    };
-    
-    const handleCopy = () => {
-        if(!remoteSessionCode) return;
-        navigator.clipboard.writeText(remoteSessionCode);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
 
     return (
       <div className="flex flex-col h-full">
         <div className="p-4 flex-shrink-0 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-center">Configuración</h2>
-           {props.onStopSession && (
-              <Button variant="destructive" size="sm" onClick={props.onStopSession}>
+           {onStopSession && (
+              <Button variant="destructive" size="sm" onClick={onStopSession}>
                   <X className="mr-2 h-4 w-4" /> Desconectar
               </Button>
           )}

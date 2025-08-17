@@ -216,6 +216,7 @@ export type AppState = {
   borderColor: string;
   isChatEnabled: boolean;
   schedules: Schedule[];
+  fullscreenIndex: number | null;
 };
 
 export function HomePageContent() {
@@ -228,9 +229,10 @@ export function HomePageContent() {
     borderColor: '#000000',
     isChatEnabled: true,
     schedules: [],
+    fullscreenIndex: null,
   });
 
-  const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules } = appState;
+  const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = appState;
   
   const setLiveAppState = (newState: AppState) => {
     setAppState(newState);
@@ -242,13 +244,13 @@ export function HomePageContent() {
   const setBorderColor = (color: string) => setAppState(prev => ({ ...prev, borderColor: color }));
   const setIsChatEnabled = (enabled: boolean) => setAppState(prev => ({ ...prev, isChatEnabled: enabled }));
   const setSchedules = (newSchedules: Schedule[]) => setAppState(prev => ({ ...prev, schedules: newSchedules }));
+  const setFullscreenIndex = (index: number | null) => setAppState(prev => ({...prev, fullscreenIndex: index}));
 
 
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
   // View mode state
   const [isViewMode, setIsViewMode] = useState(false);
-  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [reloadCounters, setReloadCounters] = useState<number[]>(Array(9).fill(0));
   const [welcomePopupOpen, setWelcomePopupOpen] = useState(false);
@@ -652,24 +654,27 @@ export function HomePageContent() {
   
   // This effect is responsible for syncing state when being controlled
   useEffect(() => {
-      const handleRemoteUpdate = (event: any) => {
-          const { newState } = event.detail;
-          if (newState) {
-              setAppState(newState);
-          }
-      };
-      
-      window.addEventListener('remote-state-update', handleRemoteUpdate);
-      
-      // Mark this session as controlled to stop local persistence
-      if (sessionStorage.getItem('isControlledSession')) {
-        // No local saving
-      }
+    const handleRemoteUpdate = (event: Event) => {
+        const { detail } = event as CustomEvent;
+        if (detail.newState) {
+            // Ensure date objects are correctly hydrated
+            const hydratedState = {
+                ...detail.newState,
+                schedules: (detail.newState.schedules || []).map((s: any) => ({
+                    ...s,
+                    dateTime: new Date(s.dateTime),
+                })),
+            };
+            setAppState(hydratedState);
+        }
+    };
 
-      return () => {
-          window.removeEventListener('remote-state-update', handleRemoteUpdate);
-      };
-  }, []);
+    window.addEventListener('remote-state-update', handleRemoteUpdate as EventListener);
+
+    return () => {
+        window.removeEventListener('remote-state-update', handleRemoteUpdate as EventListener);
+    };
+}, []);
 
   // URL reload effect
   useEffect(() => {
@@ -1958,7 +1963,7 @@ export function HomePageContent() {
       <AddEventsDialog
           open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
-          onEventSelect={handleEventSelect}
+          onEventSelect={openDialogForEvent}
           onChannelClick={handleChannelClick}
           getEventSelection={getEventSelection}
           events={events}
