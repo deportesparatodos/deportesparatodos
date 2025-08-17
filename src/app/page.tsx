@@ -657,15 +657,7 @@ export function HomePageContent() {
     const handleRemoteUpdate = (event: Event) => {
         const { detail } = event as CustomEvent;
         if (detail.newState) {
-            // Ensure date objects are correctly hydrated
-            const hydratedState = {
-                ...detail.newState,
-                schedules: (detail.newState.schedules || []).map((s: any) => ({
-                    ...s,
-                    dateTime: new Date(s.dateTime),
-                })),
-            };
-            setAppState(hydratedState);
+            setAppState(prevState => ({ ...prevState, ...detail.newState }));
         }
     };
 
@@ -674,7 +666,7 @@ export function HomePageContent() {
     return () => {
         window.removeEventListener('remote-state-update', handleRemoteUpdate as EventListener);
     };
-}, []);
+}, [setAppState]);
 
   // URL reload effect
   useEffect(() => {
@@ -1545,7 +1537,7 @@ export function HomePageContent() {
                     onAddEvent={() => setAddEventsDialogOpen(true)}
                     onSchedule={() => setScheduleManagerOpen(true)}
                     onNotificationManager={() => setNotificationManagerOpen(true)}
-                    onRemoteControl={remoteControlManagerRef.current?.startControlledSession}
+                    onRemoteControl={handleStartAndControl}
                     gridGap={gridGap}
                     onGridGapChange={setGridGap}
                     borderColor={borderColor}
@@ -1902,9 +1894,6 @@ export function HomePageContent() {
                                           </Button>
                                         </SheetTrigger>
                                          <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                              <SheetHeader className="p-0 m-0 h-0">
-                                                <SheetTitle className="sr-only">Configuración</SheetTitle>
-                                              </SheetHeader>
                                               <LayoutConfigurator
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                                 onOrderChange={handleOrderChange}
@@ -1913,6 +1902,9 @@ export function HomePageContent() {
                                                 onModify={openDialogForModification}
                                                 isViewPage={false}
                                                 onAddEvent={() => setAddEventsDialogOpen(true)}
+                                                onSchedule={() => setScheduleManagerOpen(true)}
+                                                onNotificationManager={() => setNotificationManagerOpen(true)}
+                                                onRemoteControl={handleStartAndControl}
                                                 gridGap={gridGap}
                                                 onGridGapChange={setGridGap}
                                                 borderColor={borderColor}
@@ -1923,7 +1915,6 @@ export function HomePageContent() {
                                                 categories={categories}
                                                 onOpenTutorial={() => setIsTutorialOpen(true)}
                                                 onOpenErrors={() => setIsErrorsOpen(true)}
-                                                onNotificationManager={() => setNotificationManagerOpen(true)}
                                                 onOpenCalendar={() => setCalendarOpen(true)}
                                                 isTutorialOpen={isTutorialOpen}
                                                 onIsTutorialOpenChange={setIsTutorialOpen}
@@ -1996,7 +1987,7 @@ export function HomePageContent() {
       <RemoteControlManager
           ref={remoteControlManagerRef}
           appState={appState}
-          setAppState={setLiveAppState}
+          setAppState={setAppState}
           allEvents={events}
           allChannels={channelsData}
       />
@@ -2065,5 +2056,3 @@ export default function Page() {
   );
 }
 
-
-    

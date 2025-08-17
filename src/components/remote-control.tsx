@@ -41,6 +41,7 @@ type AppState = {
   borderColor: string;
   isChatEnabled: boolean;
   schedules: Schedule[];
+  fullscreenIndex: number | null;
 };
 
 type RemoteControlManagerProps = {
@@ -92,51 +93,49 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     };
   }, [cleanupAbly]);
   
-  const initializeAbly = async (clientId: string): Promise<Realtime> => {
-      return new Promise(async (resolve, reject) => {
-        try {
-            const response = await fetch('/api/ably');
-            if (!response.ok) {
-                const errorData = await response.json();
-                reject(new Error(errorData.error || 'Failed to fetch Ably API key.'));
-                return;
-            }
-            const { apiKey } = await response.json();
-
-            if (!apiKey) {
-                reject(new Error("La clave de API de Ably no está configurada."));
-                return;
-            }
-
-            const client = new Realtime({
-                key: apiKey,
-                clientId: clientId,
-                echoMessages: false
-            });
-
-            ablyClientRef.current = client;
-            resolve(client);
-        } catch (e: any) {
-            const errorMessage = e.message || "No se pudo conectar al servicio en tiempo real.";
-            setError(errorMessage);
-            toast({
-                variant: 'destructive',
-                title: 'Error de Conexión',
-                description: errorMessage,
-            });
-            reject(e);
-        }
-    });
-  };
-
-
- const startControlledSession = useCallback(async (): Promise<string> => {
-    if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
-    
-    setIsConnecting(true);
-    setError(null);
-
+  const initializeAbly = (clientId: string): Promise<Realtime> => {
     return new Promise(async (resolve, reject) => {
+      try {
+          const response = await fetch('/api/ably');
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Failed to fetch Ably API key.');
+          }
+          const { apiKey } = await response.json();
+
+          if (!apiKey) {
+              throw new Error("La clave de API de Ably no está configurada.");
+          }
+
+          const client = new Realtime({
+              key: apiKey,
+              clientId: clientId,
+              echoMessages: false
+          });
+
+          ablyClientRef.current = client;
+          resolve(client);
+      } catch (e: any) {
+          const errorMessage = e.message || "No se pudo conectar al servicio en tiempo real.";
+          setError(errorMessage);
+          toast({
+              variant: 'destructive',
+              title: 'Error de Conexión',
+              description: errorMessage,
+          });
+          reject(e);
+      }
+  });
+};
+
+
+ const startControlledSession = (): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
+        
+        setIsConnecting(true);
+        setError(null);
+        
         try {
             const newSessionId = `dpt-${Math.random().toString(36).substring(2, 6)}`;
             const ably = await initializeAbly(`controlled-${newSessionId}`);
@@ -156,13 +155,12 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
                 channel.subscribe('action', (message: AblyMessage) => {
                     if (message.data.type === 'SET_APP_STATE') {
-                        // Dispatch custom event to be caught by the page
-                         window.dispatchEvent(new CustomEvent('remote-state-update', { detail: { newState: message.data.payload } }));
+                        window.dispatchEvent(new CustomEvent('remote-state-update', { detail: { newState: message.data.payload } }));
                     }
                 });
                 
                 channel.publish('state-update', { appState });
-                resolve(newSessionId);
+                resolve(newSessionId); 
             });
             
             ably.connection.once('failed', (error) => {
@@ -178,7 +176,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             reject(e);
         }
     });
-  }, [appState, cleanupAbly, toast]);
+};
 
   
   const startControllingSession = async (code: string) => {
@@ -280,197 +278,192 @@ RemoteControlManager.displayName = 'RemoteControlManager';
 // --- UI Components for different modes ---
 
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: any) {
-  const [openDialog, setOpenDialog] = useState<null | 'add-event' | 'schedule' | 'notification' | 'event-selection'>(null);
-  
-  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
-  const [isModification, setIsModification] = useState(false);
-  const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+    const [openDialog, setOpenDialog] = useState<null | 'add-event' | 'schedule' | 'notification' | 'event-selection'>(null);
+    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+    const [isModification, setIsModification] = useState(false);
+    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+    const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
+    const [futureOrder, setFutureOrder] = useState<number[]>([]);
+    const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
 
-  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
-  const [futureOrder, setFutureOrder] = useState<number[]>([]);
-  const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
+    const handleUpdateState = (newState: Partial<AppState>) => {
+        const fullNewState = { ...appState, ...newState };
+        onAction(fullNewState);
+    };
 
-  
-  const handleUpdateState = (newState: Partial<AppState>) => {
-    onAction(newState);
-  };
-  
-  const handleModifyEvent = (event: Event, index: number) => {
-    const currentEventState = appState.selectedEvents[index];
-    if (!currentEventState) return;
+    const handleModifyEvent = (event: Event, index: number) => {
+        const currentEventState = appState.selectedEvents[index];
+        if (!currentEventState) return;
 
-    const eventForModification = {
-      ...event,
-      selectedOption: currentEventState.selectedOption,
+        const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
+        setDialogEvent(eventForModification);
+        setIsModification(true);
+        setModificationIndex(index);
+        setOpenDialog('event-selection');
+    };
+
+    const handleEventSelect = (event: Event, optionUrl: string) => {
+        const newSelectedEvents = [...appState.selectedEvents];
+        let targetIndex = modificationIndex;
+
+        if (targetIndex !== null && targetIndex !== -1) {
+            newSelectedEvents[targetIndex] = { ...event, selectedOption: optionUrl };
+            handleUpdateState({ selectedEvents: newSelectedEvents });
+        }
+        setOpenDialog(null);
+    };
+
+    const handleRemoveEvent = (indexToRemove: number) => {
+        const newSelectedEvents = [...appState.selectedEvents];
+        newSelectedEvents[indexToRemove] = null;
+        handleUpdateState({ selectedEvents: newSelectedEvents });
+    };
+
+    const handleRemoveFromDialog = () => {
+        if (modificationIndex !== null) {
+            handleRemoveEvent(modificationIndex);
+            setOpenDialog(null);
+        }
+    };
+
+    const handleToggleFullscreen = (index: number) => {
+        const currentFullscreen = appState.fullscreenIndex;
+        handleUpdateState({ fullscreenIndex: currentFullscreen === index ? null : index });
     };
     
-    setDialogEvent(eventForModification);
-    setIsModification(true);
-    setModificationIndex(index);
-    setOpenDialog('event-selection');
-  };
-  
-  const handleEventSelect = (event: Event, optionUrl: string) => {
-    const newSelectedEvents = [...appState.selectedEvents];
-    let targetIndex = modificationIndex;
+    const handleAddEventFromDialog = (event: Event) => {
+        setDialogEvent(event);
+        setIsModification(false);
+        setModificationIndex(appState.selectedEvents.findIndex((e: Event | null) => e === null));
+        setOpenDialog('event-selection');
+    };
+    
+    const handleAddChannelFromDialog = (channel: Channel) => {
+         const targetIndex = appState.selectedEvents.findIndex((e: any) => e === null);
+        if (targetIndex !== -1) {
+            const event = {
+                id: `${channel.name}-channel-static`,
+                title: channel.name,
+                options: channel.urls.map(u => ({ ...u, hd: false, language: '' })),
+                sources: [],
+                buttons: [],
+                time: 'AHORA',
+                category: 'Canal',
+                language: '',
+                date: '',
+                source: '',
+                status: 'En Vivo' as const,
+                image: channel.logo,
+            };
+            setDialogEvent(event);
+            setIsModification(false);
+            setModificationIndex(targetIndex);
+            setOpenDialog('event-selection');
+        }
+    };
 
-    if (targetIndex !== null && targetIndex !== -1) {
-      newSelectedEvents[targetIndex] = { ...event, selectedOption: optionUrl };
-      handleUpdateState({ selectedEvents: newSelectedEvents });
-    }
-    setOpenDialog(null);
-  };
-  
-  const handleRemoveEvent = (indexToRemove: number) => {
-    const newSelectedEvents = [...appState.selectedEvents];
-    newSelectedEvents[indexToRemove] = null;
-    handleUpdateState({ selectedEvents: newSelectedEvents });
-  };
-  
-  const handleRemoveFromDialog = () => {
-    if(modificationIndex !== null){
-        handleRemoveEvent(modificationIndex);
-        setOpenDialog(null);
-    }
-  }
-  
-  const handleToggleFullscreen = (index: number) => {
-      const currentFullscreen = appState.fullscreenIndex;
-      handleUpdateState({ fullscreenIndex: currentFullscreen === index ? null : index });
-  }
+    const allCategories = useMemo(() => {
+        const categorySet = new Set<string>();
+        [...allEvents].forEach(event => {
+            if (event.category) categorySet.add(event.category);
+        });
+        return Array.from(categorySet).sort();
+    }, [allEvents]);
 
-  const allCategories = useMemo(() => {
-    const categorySet = new Set<string>();
-    [...allEvents].forEach(event => {
-        if (event.category) categorySet.add(event.category);
-    });
-    return Array.from(categorySet).sort();
-  }, [allEvents]);
-
-  return (
-      <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-        <LayoutConfigurator
-            order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
-            onOrderChange={(newOrder: number[]) => handleUpdateState({ viewOrder: newOrder })}
-            eventDetails={appState.selectedEvents}
-            onRemove={handleRemoveEvent}
-            onModify={handleModifyEvent}
-            isViewPage={true}
-            onAddEvent={() => setOpenDialog('add-event')}
-            onSchedule={() => setOpenDialog('schedule')}
-            onNotificationManager={() => setOpenDialog('notification')}
-            onToggleFullscreen={handleToggleFullscreen}
-            fullscreenIndex={appState.fullscreenIndex}
-            gridGap={appState.gridGap}
-            onGridGapChange={(value: number) => handleUpdateState({ gridGap: value })}
-            borderColor={appState.borderColor}
-            onBorderColorChange={(value: string) => handleUpdateState({ borderColor: value })}
-            isChatEnabled={appState.isChatEnabled}
-            onIsChatEnabledChange={(value: boolean) => handleUpdateState({ isChatEnabled: value })}
-            categories={allCategories}
-            onRestoreGridSettings={() => handleUpdateState({ gridGap: 0, borderColor: '#000000' })}
-            onOpenTutorial={() => {}}
-            onOpenErrors={() => {}}
-            onOpenCalendar={() => {}}
-            isTutorialOpen={false}
-            onIsTutorialOpenChange={() => {}}
-            isErrorsOpen={false}
-            onIsErrorsOpenChange={() => {}}
-            onStopSession={onStop}
-        />
-        
-        <Dialog open={openDialog === 'event-selection'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-        {dialogEvent && (
-          <EventSelectionDialog
-              isOpen={openDialog === 'event-selection'}
-              onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-              event={dialogEvent}
-              onSelect={handleEventSelect}
-              isModification={isModification}
-              onRemove={handleRemoveFromDialog}
-              isLoading={false}
-          />
-        )}
-        </Dialog>
-        
-        <Dialog open={openDialog === 'add-event'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-            <AddEventsDialog
-                open={openDialog === 'add-event'}
-                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                events={allEvents}
-                channels={allChannels}
-                liveEvents={[]}
-                upcomingEvents={[]}
-                unknownEvents={[]}
-                finishedEvents={[]}
-                channels247Events={[]}
-                getEventSelection={(event) => {
-                    const selectionIndex = appState.selectedEvents.findIndex((se: any) => se?.id === event.id);
-                    if (selectionIndex !== -1 && appState.selectedEvents[selectionIndex]) {
-                        return { isSelected: true, selectedOption: appState.selectedEvents[selectionIndex]!.selectedOption };
-                    }
-                    return { isSelected: false, selectedOption: null };
-                }}
-                onEventSelect={(event, optionUrl) => {
-                  const newSelectedEvents = [...appState.selectedEvents];
-                  const targetIndex = newSelectedEvents.findIndex(e => e === null);
-                  if (targetIndex !== -1) {
-                    newSelectedEvents[targetIndex] = { ...event, selectedOption: optionUrl };
-                    handleUpdateState({ selectedEvents: newSelectedEvents });
-                  }
-                  setOpenDialog(null);
-                }}
-                onChannelClick={(channel) => {
-                  const targetIndex = appState.selectedEvents.findIndex((e: any) => e === null);
-                  if (targetIndex !== -1) {
-                    const event = {
-                        id: `${channel.name}-channel-static`,
-                        title: channel.name,
-                        options: channel.urls.map(u => ({ ...u, hd: false, language: '' })),
-                        sources: [],
-                        buttons: [],
-                        time: 'AHORA',
-                        category: 'Canal',
-                        language: '',
-                        date: '',
-                        source: '',
-                        status: 'En Vivo' as const,
-                        image: channel.logo,
-                    };
-                    setDialogEvent(event);
-                    setIsModification(false);
-                    setModificationIndex(targetIndex);
-                    setOpenDialog('event-selection');
-                  }
-                }}
-            />
-        </Dialog>
-        
-        <Dialog open={openDialog === 'schedule'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-            <ScheduleManager
-                open={openDialog === 'schedule'}
-                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                currentSelection={futureSelection}
-                currentOrder={futureOrder}
-                schedules={appState.schedules}
-                onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
-                onModifyEventInView={handleModifyEvent}
-                isLoading={isAddEventsLoading}
+    return (
+        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+            <LayoutConfigurator
+                order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
+                onOrderChange={(newOrder: number[]) => handleUpdateState({ viewOrder: newOrder })}
+                eventDetails={appState.selectedEvents}
+                onRemove={handleRemoveEvent}
+                onModify={handleModifyEvent}
+                isViewPage={true}
                 onAddEvent={() => setOpenDialog('add-event')}
-                initialSelection={appState.selectedEvents}
-                initialOrder={appState.viewOrder}
-                setFutureSelection={setFutureSelection}
-                setFutureOrder={setFutureOrder}
+                onSchedule={() => setOpenDialog('schedule')}
+                onToggleFullscreen={handleToggleFullscreen}
+                fullscreenIndex={appState.fullscreenIndex}
+                gridGap={appState.gridGap}
+                onGridGapChange={(value: number) => handleUpdateState({ gridGap: value })}
+                borderColor={appState.borderColor}
+                onBorderColorChange={(value: string) => handleUpdateState({ borderColor: value })}
+                isChatEnabled={appState.isChatEnabled}
+                onIsChatEnabledChange={(value: boolean) => handleUpdateState({ isChatEnabled: value })}
+                categories={allCategories}
+                onRestoreGridSettings={() => handleUpdateState({ gridGap: 0, borderColor: '#000000' })}
+                onOpenTutorial={() => {}}
+                onOpenErrors={() => {}}
+                onOpenCalendar={() => {}}
+                isTutorialOpen={false}
+                onIsTutorialOpenChange={() => {}}
+                isErrorsOpen={false}
+                onIsErrorsOpenChange={() => {}}
+                onStopSession={onStop}
+                isRemoteControlView={true}
             />
-        </Dialog>
-        
-        <Dialog open={openDialog === 'notification'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-          <NotificationManager
-              open={openDialog === 'notification'}
-              onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-              allCategories={allCategories}
-          />
-        </Dialog>
-      </div>
-  );
+
+            <Dialog open={openDialog === 'event-selection'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+                {dialogEvent && (
+                    <EventSelectionDialog
+                        isOpen={openDialog === 'event-selection'}
+                        onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                        event={dialogEvent}
+                        onSelect={handleEventSelect}
+                        isModification={isModification}
+                        onRemove={handleRemoveFromDialog}
+                        isLoading={false}
+                    />
+                )}
+            </Dialog>
+
+            <Dialog open={openDialog === 'add-event'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+                <AddEventsDialog
+                    open={openDialog === 'add-event'}
+                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                    events={allEvents}
+                    channels={allChannels}
+                    liveEvents={allEvents.filter(e => e.status === 'En Vivo')}
+                    upcomingEvents={allEvents.filter(e => e.status === 'Próximo')}
+                    unknownEvents={allEvents.filter(e => e.status === 'Desconocido')}
+                    finishedEvents={allEvents.filter(e => e.status === 'Finalizado')}
+                    channels247Events={allEvents.filter(e => e.category === '24/7')}
+                    getEventSelection={(event) => {
+                        const selectionIndex = appState.selectedEvents.findIndex((se: any) => se?.id === event.id);
+                        if (selectionIndex !== -1 && appState.selectedEvents[selectionIndex]) {
+                            return { isSelected: true, selectedOption: appState.selectedEvents[selectionIndex]!.selectedOption };
+                        }
+                        return { isSelected: false, selectedOption: null };
+                    }}
+                    onEventSelect={handleAddEventFromDialog}
+                    onChannelClick={handleAddChannelFromDialog}
+                />
+            </Dialog>
+
+            <Dialog open={openDialog === 'schedule'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+                 <ScheduleManager
+                    open={openDialog === 'schedule'}
+                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                    currentSelection={futureSelection}
+                    currentOrder={futureOrder}
+                    schedules={appState.schedules}
+                    onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
+                    onModifyEventInView={handleModifyEvent}
+                    isLoading={isAddEventsLoading}
+                    onAddEvent={() => setOpenDialog('add-event')}
+                    initialSelection={appState.selectedEvents}
+                    initialOrder={appState.viewOrder}
+                    setFutureSelection={setFutureSelection}
+                    setFutureOrder={setFutureOrder}
+                />
+            </Dialog>
+
+            <Dialog open={openDialog === 'notification'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+                <NotificationManager
+                    open={openDialog === 'notification'}
+                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                    allCategories={allCategories}
+                />
+            </Dialog>
+        </div>
+    );
 }

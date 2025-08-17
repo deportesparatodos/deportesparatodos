@@ -62,6 +62,7 @@ export interface EventListManagementProps {
   isErrorsOpen: boolean;
   onIsErrorsOpenChange: (open: boolean) => void;
   onStopSession?: () => void;
+  isRemoteControlView?: boolean;
 }
 
 export function EventList({
@@ -189,11 +190,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
         isViewPage, onSchedule, onRemoteControl,
-        onStopSession
+        onStopSession,
+        isRemoteControlView = false
     } = props;
         
     const order = props.order || [];
-
     const { toast } = useToast();
 
     return (
@@ -282,7 +283,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                           {onNotificationManager && (
+                           {!isRemoteControlView && onNotificationManager && (
                                 <>
                                   <Separator/>
                                   <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
@@ -292,6 +293,51 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                            )}
                       </AccordionContent>
                   </AccordionItem>
+                  
+                  {!isRemoteControlView && (
+                    <>
+                        <AccordionItem value="item-remote" className="border rounded-lg px-4">
+                            <AccordionTrigger>Control Remoto</AccordionTrigger>
+                            <AccordionContent className="pt-4 pb-4 space-y-4">
+                                <Alert>
+                                    <Airplay className="h-4 w-4" />
+                                    <AlertTitle>Activa el Control Remoto</AlertTitle>
+                                    <AlertDescription>
+                                        Puedes controlar esta vista desde otro dispositivo (como tu teléfono) o dejar que otro dispositivo tome el control.
+                                    </AlertDescription>
+                                </Alert>
+                                <Button className="w-full" onClick={onRemoteControl}>
+                                    <Settings className="mr-2 h-4 w-4" /> Activar Control Remoto
+                                </Button>
+                            </AccordionContent>
+                        </AccordionItem>
+                        
+                        <AccordionItem value="item-help" className="border rounded-lg px-4">
+                            <AccordionTrigger>Ayuda y Soporte</AccordionTrigger>
+                            <AccordionContent className="pt-4 pb-4 space-y-2">
+                                <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
+                                    <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
+                                </Button>
+                                <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
+                                    <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
+                                </Button>
+                                <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
+                                    <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
+                                </Button>
+                                <a href="https://forms.gle/491b1iE9p63s11K39" target="_blank" rel="noopener noreferrer" className="w-full">
+                                    <Button variant="outline" className="w-full justify-start">
+                                        <FileText className="mr-2 h-4 w-4" /> Contacto
+                                    </Button>
+                                </a>
+                                <a href="https://www.terminos-y-condiciones.com/live/2357d1eb-6062-4235-a743-346779893d56" target="_blank" rel="noopener noreferrer" className="w-full">
+                                    <Button variant="outline" className="w-full justify-start">
+                                        <FileText className="mr-2 h-4 w-4" /> Aviso Legal
+                                    </Button>
+                                </a>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </>
+                  )}
               </Accordion>
           </div>
         </ScrollArea>
