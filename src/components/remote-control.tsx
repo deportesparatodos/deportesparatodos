@@ -90,34 +90,40 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     };
   }, [cleanupAbly]);
   
-  const initializeAbly = async (clientId: string): Promise<Realtime> => {
-      return new Promise(async (resolve, reject) => {
-          try {
-              const response = await fetch(`/api/ably`);
-              if (!response.ok) {
-                  const errorData = await response.json();
-                  throw new Error(errorData.error || 'Failed to fetch Ably API key.');
-              }
-              const { apiKey } = await response.json();
+ const initializeAbly = async (clientId: string): Promise<Realtime> => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const response = await fetch('/api/ably');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch Ably API key.');
+            }
+            const { apiKey } = await response.json();
 
-              if (!apiKey) {
-                  throw new Error("La clave de API de Ably no está configurada.");
-              }
+            if (!apiKey) {
+                throw new Error("La clave de API de Ably no está configurada.");
+            }
 
-              const client = new Realtime({ 
-                  key: apiKey,
-                  clientId: clientId,
-                  echoMessages: false 
-              });
-              ablyClientRef.current = client;
-              resolve(client);
-          } catch (e: any) {
-              console.error("Ably initialization failed", e);
-              setError(e.message || "No se pudo conectar al servicio en tiempo real.");
-              reject(e);
-          }
-      });
-  };
+            const client = new Realtime({
+                key: apiKey,
+                clientId: clientId,
+                echoMessages: false
+            });
+            ablyClientRef.current = client;
+            resolve(client);
+        } catch (e: any) {
+            console.error("Ably initialization failed", e);
+            const errorMessage = e.message || "No se pudo conectar al servicio en tiempo real.";
+            setError(errorMessage);
+            toast({
+                variant: 'destructive',
+                title: 'Error de Conexión',
+                description: errorMessage,
+            });
+            reject(e);
+        }
+    });
+};
 
 
   const startControlledSession = useCallback(async (): Promise<string> => {
@@ -165,7 +171,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             reject(e);
         }
     });
-  }, [appState, cleanupAbly, setAppState]);
+  }, [appState, cleanupAbly, setAppState, toast]);
 
   
   const startControllingSession = async (code: string) => {
@@ -321,16 +327,15 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
   }, [allEvents]);
 
   return (
-      <>
-        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-            <header className="flex items-center justify-between p-2 border-b flex-shrink-0">
-            <h2 className="font-semibold">Control Remoto</h2>
-            <Button variant="destructive" size="sm" onClick={onStop}>
-                <X className="mr-2 h-4 w-4" /> Desconectar
-            </Button>
-            </header>
-            <div className="flex-grow overflow-y-auto">
-                <LayoutConfigurator
+      <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+        <header className="flex items-center justify-between p-2 border-b flex-shrink-0">
+          <h2 className="font-semibold">Control Remoto</h2>
+          <Button variant="destructive" size="sm" onClick={onStop}>
+              <X className="mr-2 h-4 w-4" /> Desconectar
+          </Button>
+        </header>
+        <div className="flex-grow overflow-y-auto">
+            <LayoutConfigurator
                 order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
                 onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
                 eventDetails={appState.selectedEvents}
@@ -355,12 +360,11 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 onIsTutorialOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
                 isErrorsOpen={openDialog === 'errors'}
                 onIsErrorsOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                />
-            </div>
+            />
         </div>
         
-        {dialogEvent && (
-          <Dialog open={openDialog === 'add-event'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+        <Dialog open={openDialog === 'add-event'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+          {dialogEvent && (
             <EventSelectionDialog
                 isOpen={openDialog === 'add-event'}
                 onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
@@ -370,8 +374,8 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 onRemove={handleRemoveFromDialog}
                 isLoading={false}
             />
-          </Dialog>
-        )}
+          )}
+        </Dialog>
         
         <Dialog open={openDialog === 'schedule'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
           <ScheduleManager
@@ -398,6 +402,6 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
               allCategories={allCategories}
           />
         </Dialog>
-      </>
+      </div>
   );
 }

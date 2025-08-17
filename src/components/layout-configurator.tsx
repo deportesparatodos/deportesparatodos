@@ -29,7 +29,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
-import { SheetTitle } from './ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 
 export interface EventListManagementProps {
@@ -232,7 +231,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full">
-        <SheetTitle className="sr-only">Configuración</SheetTitle>
         <div className="p-4 flex-shrink-0">
           <h2 className="text-lg font-semibold text-center">Configuración</h2>
         </div>
