@@ -30,7 +30,7 @@ import {
     DialogHeader,
     DialogTitle as DialogModalTitle,
     DialogDescription,
-    DialogFooter as DialogModalFooter,
+    DialogFooter,
     DialogClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
@@ -254,6 +254,7 @@ export function HomePageContent() {
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
+  const [remoteControlOptionsOpen, setRemoteControlOptionsOpen] = useState(false);
   
   // Remote Control state
   const remoteControlManagerRef = useRef<{ 
@@ -584,13 +585,17 @@ export function HomePageContent() {
 
   // Popup logic
   useEffect(() => {
-    if (isViewMode) {
+    if (isViewMode && !sessionStorage.getItem('isControlledStart')) {
       const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
       if (!hasVisited) {
         setWelcomePopupOpen(true);
         sessionStorage.setItem('hasVisitedViewPage', 'true');
         setProgress(100);
       }
+    }
+     // Cleanup the flag after use
+     if (sessionStorage.getItem('isControlledStart')) {
+      sessionStorage.removeItem('isControlledStart');
     }
   }, [isViewMode]);
 
@@ -646,7 +651,7 @@ export function HomePageContent() {
       selectedEvents.forEach((event, index) => {
         const iframe = iframeRefs.current[index];
         if (iframe && event?.selectedOption) {
-            const newSrc = `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[index] || 0}`;
+            const newSrc = `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowSlotIndex] || 0}`;
 
             let currentSrc = 'about:blank';
             try {
@@ -1045,8 +1050,11 @@ export function HomePageContent() {
 
   const selectedEventsCount = selectedEvents.filter(Boolean).length;
 
-  const handleStartView = () => {
+  const handleStartView = (isControlledStart = false) => {
     if (selectedEventsCount === 0) return;
+    if (isControlledStart) {
+      sessionStorage.setItem('isControlledStart', 'true');
+    }
     setIsViewMode(true);
   };
   
@@ -1064,7 +1072,7 @@ export function HomePageContent() {
         });
         return;
     }
-    handleStartView();
+    handleStartView(true);
     remoteControlManagerRef.current?.startControlledSession();
   };
 
@@ -1362,7 +1370,7 @@ export function HomePageContent() {
                       </DialogDescription>
                   </Alert>
               </div>
-               <DialogModalFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
+               <DialogFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
                   <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
                     <DialogTrigger asChild>
                        <Button variant="outline" className="gap-2">
@@ -1392,9 +1400,9 @@ export function HomePageContent() {
                                 <p className="pt-2">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
                             </div>
                         </ScrollArea>
-                        <DialogModalFooter>
+                        <DialogFooter>
                             <DialogClose asChild><Button>Entendido</Button></DialogClose>
-                        </DialogModalFooter>
+                        </DialogFooter>
                     </DialogContent>
                   </Dialog>
                    <Dialog open={isErrorsOpen} onOpenChange={setIsErrorsOpen}>
@@ -1430,12 +1438,12 @@ export function HomePageContent() {
                                     <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender".</p>
                               </div>
                           </ScrollArea>
-                          <DialogModalFooter>
+                          <DialogFooter>
                               <DialogClose asChild><Button>Cerrar</Button></DialogClose>
-                          </DialogModalFooter>
+                          </DialogFooter>
                       </DialogContent>
                   </Dialog>
-               </DialogModalFooter>
+               </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -1466,8 +1474,6 @@ export function HomePageContent() {
                 onSchedule={() => setScheduleManagerOpen(true)}
                 onNotificationManager={() => setNotificationManagerOpen(true)}
                 onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
-                onRemoteControlControlling={() => setIsControllerPromptOpen(true)}
-                onOpenCalendar={() => setCalendarOpen(true)}
                 gridGap={gridGap}
                 onGridGapChange={setGridGap}
                 borderColor={borderColor}
@@ -1478,6 +1484,7 @@ export function HomePageContent() {
                 categories={categories}
                 onOpenTutorial={() => setIsTutorialOpen(true)}
                 onOpenErrors={() => setIsErrorsOpen(true)}
+                onOpenCalendar={() => setCalendarOpen(true)}
                 isTutorialOpen={isTutorialOpen}
                 onIsTutorialOpenChange={setIsTutorialOpen}
                 isErrorsOpen={isErrorsOpen}
@@ -1825,22 +1832,10 @@ export function HomePageContent() {
                                 >
                                   <RotateCw className={cn(isDataLoading && "animate-spin")} />
                                 </Button>
-
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                      <Airplay />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={handleStartAndControl}>
-                                      Ser Controlado
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setIsControllerPromptOpen(true)}>
-                                      Controlar Dispositivo
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                
+                                <Button variant="ghost" size="icon" onClick={() => setRemoteControlOptionsOpen(true)}>
+                                  <Airplay />
+                                </Button>
 
                                  <Sheet>
                                     <SheetTrigger asChild>
@@ -1876,15 +1871,13 @@ export function HomePageContent() {
                                             onIsTutorialOpenChange={setIsTutorialOpen}
                                             isErrorsOpen={isErrorsOpen}
                                             onIsErrorsOpenChange={setIsErrorsOpen}
-                                            onRemoteControl={handleStartAndControl}
-                                            onRemoteControlControlling={() => setIsControllerPromptOpen(true)}
                                           />
                                   </SheetContent>
                                   </Sheet>
 
                                 <Button
                                     size="icon"
-                                    onClick={handleStartView}
+                                    onClick={() => handleStartView(false)}
                                     disabled={selectedEventsCount === 0}
                                     className="bg-green-600 hover:bg-green-700 text-white relative"
                                 >
@@ -1979,7 +1972,7 @@ export function HomePageContent() {
                         onChange={(e) => setControllerCode(e.target.value)}
                     />
                 </div>
-                <DialogModalFooter>
+                <DialogFooter>
                     <DialogClose asChild>
                       <Button variant="secondary">Cancelar</Button>
                     </DialogClose>
@@ -1987,9 +1980,39 @@ export function HomePageContent() {
                         remoteControlManagerRef.current?.startControllingSession(controllerCode);
                         setIsControllerPromptOpen(false);
                     }}>Conectar</Button>
-                </DialogModalFooter>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
+        
+        <Dialog open={remoteControlOptionsOpen} onOpenChange={setRemoteControlOptionsOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogModalTitle>Opciones de Control Remoto</DialogModalTitle>
+                    <DialogDescription>Elige cómo quieres usar el control remoto.</DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 gap-4 py-4">
+                     <Button
+                        variant="outline"
+                        onClick={() => {
+                            setRemoteControlOptionsOpen(false);
+                            handleStartAndControl();
+                        }}
+                    >
+                        Ser Controlado
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            setRemoteControlOptionsOpen(false);
+                            setIsControllerPromptOpen(true);
+                        }}
+                    >
+                        Controlar un Dispositivo
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+
     </div>
   );
 }

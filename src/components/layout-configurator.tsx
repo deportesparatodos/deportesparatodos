@@ -43,7 +43,6 @@ export interface EventListManagementProps {
   onSchedule?: () => void;
   onNotificationManager?: () => void;
   onRemoteControl?: () => void;
-  onRemoteControlControlling?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   gridGap: number;
@@ -187,13 +186,27 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        isViewPage, onSchedule, onRemoteControl, onRemoteControlControlling
+        isViewPage, onSchedule, onRemoteControl
     } = props;
     
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isLegalOpen, setIsLegalOpen] = useState(false);
     
     const order = props.order || [];
+
+    const [isRemoteSessionActive, setIsRemoteSessionActive] = useState(false);
+    const [remoteSessionCode, setRemoteSessionCode] = useState('');
+
+    const handleActivateRemote = () => {
+        if (props.onRemoteControl) {
+            const code = props.onRemoteControl();
+            if (code) {
+                setRemoteSessionCode(code);
+                setIsRemoteSessionActive(true);
+            }
+        }
+    };
+
 
     return (
       <div className="flex flex-col h-full">
@@ -278,24 +291,28 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                          {isViewPage && (onRemoteControl || onRemoteControlControlling) && (
+                          {isViewPage && (
                             <>
                               <Separator/>
-                              <div className="flex items-center justify-between">
-                                <Label className="flex flex-col gap-1">
-                                  <span>Control Remoto</span>
-                                  <span className="text-xs text-muted-foreground">Controla esta vista desde otro dispositivo.</span>
-                                </Label>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm">Opciones</Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent>
-                                    {onRemoteControl && <DropdownMenuItem onClick={onRemoteControl}>Ser Controlado</DropdownMenuItem>}
-                                    {onRemoteControlControlling && <DropdownMenuItem onClick={onRemoteControlControlling}>Controlar Dispositivo</DropdownMenuItem>}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
+                               <DropdownMenu onOpenChange={(open) => !open && setIsRemoteSessionActive(false)}>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="w-full justify-center">
+                                      <Airplay className="mr-2 h-4 w-4" /> Control Remoto
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-56">
+                                  {isRemoteSessionActive ? (
+                                    <div className="p-2 text-center">
+                                      <Label>Código de Sesión</Label>
+                                      <p className="text-lg font-bold tracking-widest">{remoteSessionCode}</p>
+                                    </div>
+                                  ) : (
+                                    <DropdownMenuItem onClick={handleActivateRemote}>
+                                      Activar Control Remoto
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                              </>
                           )}
                       </AccordionContent>

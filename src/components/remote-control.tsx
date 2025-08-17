@@ -81,64 +81,71 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     };
   }, [cleanupAbly]);
   
-  const initializeAbly = async (clientId: string) => {
+ const initializeAbly = async (clientId: string): Promise<Realtime> => {
     try {
-        const ably = new Realtime({ 
+        const client = new Realtime({ 
             authUrl: `/api/ably?clientId=${encodeURIComponent(clientId)}`,
             echoMessages: false 
         });
-        ablyClientRef.current = ably;
-        return ably;
-    } catch (e) {
+        ablyClientRef.current = client;
+        return client;
+    } catch (e: any) {
         console.error("Ably initialization failed", e);
-        setError("Failed to connect to the real-time service.");
+        setError(e.message || "Failed to connect to the real-time service.");
         throw e;
     }
   };
 
 
-  const startControlledSession = async () => {
+  const startControlledSession = useCallback(async (): Promise<string | undefined> => {
     if (ablyClientRef.current) cleanupAbly();
     setIsConnecting(true);
     setError(null);
-    try {
-      const newSessionId = `dpt-${Math.random().toString(36).substring(2, 8)}`;
-      setSessionId(newSessionId);
-      const ably = await initializeAbly(`controlled-${newSessionId}`);
-      
-      ably.connection.on('connected', () => {
-        setMode('controlled');
-        setIsConnecting(false);
-        setIsControlledSessionDialog(true);
-        const channel = ably.channels.get(newSessionId);
-        channelRef.current = channel;
 
-        channel.subscribe('sync-request', () => {
-          channel.publish('state-update', appState);
-        });
+    return new Promise(async (resolve, reject) => {
+        try {
+            const newSessionId = `dpt-${Math.random().toString(36).substring(2, 6)}`;
+            const ably = await initializeAbly(`controlled-${newSessionId}`);
+            
+            ably.connection.once('connected', () => {
+                setSessionId(newSessionId);
+                setMode('controlled');
+                setIsConnecting(false);
+                setIsControlledSessionDialog(true);
+                const channel = ably.channels.get(newSessionId);
+                channelRef.current = channel;
 
-        channel.subscribe('action', (message: AblyMessage) => {
-          if (message.data.type === 'SET_APP_STATE') {
-            setAppState(message.data.payload);
-          }
-        });
-        
-        channel.publish('state-update', appState);
-      });
-      
-      ably.connection.on('failed', (error) => {
-          setError(error.reason.message);
-          setIsConnecting(false);
-          setIsControlledSessionDialog(false);
-          setMode('inactive');
-      });
+                channel.subscribe('sync-request', () => {
+                    channel.publish('state-update', appState);
+                });
 
-    } catch (e) {
-      setIsConnecting(false);
-      setMode('inactive');
-      setIsControlledSessionDialog(false);
-    }
-  };
+                channel.subscribe('action', (message: AblyMessage) => {
+                    if (message.data.type === 'SET_APP_STATE') {
+                        setAppState(message.data.payload);
+                    }
+                });
+                
+                channel.publish('state-update', appState);
+                resolve(newSessionId);
+            });
+            
+            ably.connection.once('failed', (error) => {
+                setError(error.reason.message);
+                setIsConnecting(false);
+                setIsControlledSessionDialog(false);
+                setMode('inactive');
+                reject(new Error(error.reason.message));
+            });
+
+        } catch (e) {
+            setIsConnecting(false);
+            setMode('inactive');
+            setIsControlledSessionDialog(false);
+            reject(e);
+        }
+    });
+  }, [appState, cleanupAbly, setAppState]);
+
   
   const startControllingSession = async (code: string) => {
     if (ablyClientRef.current) cleanupAbly();
@@ -371,9 +378,6 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
           isModification={isModification}
           onRemove={handleRemoveFromDialog}
           isLoading={false}
-          setIsLoading={() => {}}
-          setEventForDialog={setDialogEvent}
-          updateEventsList={() => {}}
         />
       )}
       

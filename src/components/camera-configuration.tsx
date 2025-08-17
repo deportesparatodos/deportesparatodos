@@ -22,7 +22,6 @@ interface CameraConfigurationProps {
   onSchedule?: () => void;
   onNotificationManager: () => void;
   onRemoteControl?: () => void;
-  onRemoteControlControlling?: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
