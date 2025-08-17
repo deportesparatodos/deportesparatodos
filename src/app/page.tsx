@@ -1303,11 +1303,11 @@ export function HomePageContent() {
     );
   };
 
-  if (isViewMode) {
-     const numCameras = selectedEvents.filter(Boolean).length;
-     const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
+  const renderViewContent = () => {
+    const numCameras = selectedEvents.filter(Boolean).length;
+    const gridContainerClasses = `grid flex-grow w-full h-full ${getGridClasses(numCameras)}`;
      
-    if (numCameras === 0) {
+    if (isViewMode && numCameras === 0) {
         return (
             <div className="flex flex-col h-screen bg-background text-foreground p-4 items-center justify-center">
                 <p className="mb-4">No hay URLs seleccionadas para mostrar.</p>
@@ -1319,298 +1319,288 @@ export function HomePageContent() {
     }
     
     return (
-      <>
-      <div className="flex h-screen w-screen bg-background text-foreground group">
-        <ScheduleManager 
-          open={scheduleManagerOpen}
-          onOpenChange={setScheduleManagerOpen}
-          currentSelection={futureSelection}
-          currentOrder={futureOrder}
-          schedules={schedules}
-          onSchedulesChange={setSchedules}
-          onModifyEventInView={openDialogForModification}
-          isLoading={isAddEventsLoading}
-          onAddEvent={() => setAddEventsDialogOpen(true)}
-          setFutureSelection={setFutureSelection}
-          setFutureOrder={setFutureOrder}
-          initialSelection={selectedEvents}
-          initialOrder={viewOrder}
-        />
-        <NotificationManager
-          open={notificationManagerOpen}
-          onOpenChange={setNotificationManagerOpen}
-          allCategories={categories}
-        />
-        <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
-           <DialogContent className="sm:max-w-md p-0" hideClose={true}>
-              <DialogHeader className="sr-only">
-                  <DialogModalTitle>Bienvenida</DialogModalTitle>
-              </DialogHeader>
-               <DialogModalClose asChild>
-                <Button variant="ghost" className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10" onClick={() => setWelcomePopupOpen(false)}>
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </DialogModalClose>
-              <div className="relative">
-                  <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
-              </div>
-              <div className="px-6 pt-8 pb-2 text-center">
-                  <h2 className="text-lg font-bold">¡Bienvenido a Deportes para Todos!</h2>
-              </div>
-              <div className="px-6 pb-6 pt-0 text-sm text-muted-foreground text-left space-y-4">
-                  <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
-                  <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500'>
-                      <AlertTriangle className="h-4 w-4 !text-yellow-500" />
-                      <AlertTitle className="font-bold">¡Atención!</AlertTitle>
-                      <DialogDescription className="text-yellow-500/80">
-                         Algunos canales pueden tardar mas en cargar que otros, hasta no ver un mensaje de error, NO CAMBIAR DE CANAL.
-                      </DialogDescription>
-                  </Alert>
-              </div>
-               <DialogFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
-                  <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
-                    <DialogTrigger asChild>
-                       <Button variant="outline" className="gap-2">
-                          <BookOpen /> Tutorial
-                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                            <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
-                        </DialogHeader>
-                        <ScrollArea className="h-96 pr-6">
-                           <div className="text-sm text-muted-foreground space-y-4">
-                                <p><strong>¡Bienvenido a Deportes para Todos!</strong> Aquí puedes ver múltiples eventos deportivos a la vez. Sigue estos simples pasos para empezar:</p>
-                                
-                                <h3 className="font-bold text-foreground mt-4">1. Elige tus Eventos</h3>
-                                <p>En la pantalla principal, haz clic en las tarjetas de los partidos o canales que quieras ver. Se abrirá una ventana para que elijas una opción de transmisión.</p>
-                                
-                                <h3 className="font-bold text-foreground mt-4">2. Configura tu Vista</h3>
-                                <p>Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) en la esquina superior derecha. Se abrirá un panel donde podrás ver tu selección, reordenar las ventanas o eliminarlas.</p>
-                                
-                                <h3 className="font-bold text-foreground mt-4">3. Inicia la Transmisión</h3>
-                                <p>Una vez que estés listo, presiona el botón de "Play" (<Play className="inline-block h-4 w-4" />). Tu pantalla se dividirá para mostrar todos los eventos que elegiste.</p>
-
-                                <h3 className="font-bold text-foreground mt-4">4. Control Remoto y Programación</h3>
-                                <p>Puedes controlar la vista desde otro dispositivo activando el <strong>Control Remoto</strong> en el menú de configuración. También puedes <strong>Programar</strong> una selección de eventos para que se active a una hora específica.</p>
-                                
-                                <p className="pt-2">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
-                            </div>
-                        </ScrollArea>
-                        <DialogFooter>
-                            <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
-                        </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                   <Dialog open={isErrorsOpen} onOpenChange={setIsErrorsOpen}>
-                      <DialogTrigger asChild>
-                          <Button variant="outline" className="gap-2">
-                             <AlertCircle /> Solución de Errores
-                          </Button>
-                      </DialogTrigger>
-                       <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                              <DialogModalTitle>Solución de Errores Comunes</DialogModalTitle>
-                          </DialogHeader>
-                          <ScrollArea className="h-96 pr-6">
-                              <div className="text-sm text-muted-foreground space-y-4">
-                                    <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
-                                    <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
-                                    <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de <a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">Cloudflare (1.1.1.1)</a> o Google (8.8.8.8) puede saltarse estas restricciones.</p>
-                                    <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
-                                    <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
-                                    <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
-                                    <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge.</p>
-                                    <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
-                                    <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web.</p>
-                                    <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
-                                    <p><span className="font-semibold text-foreground">El Problema:</span> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora.</p>
-                                    <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
-                                    <p><span className="font-semibold text-foreground">El Problema:</span> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
-                                    <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender".</p>
-                              </div>
-                          </ScrollArea>
-                          <DialogFooter>
-                              <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
-                          </DialogFooter>
-                      </DialogContent>
-                  </Dialog>
-               </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <div className="relative flex flex-col h-screen w-screen flex-grow">
-          <div
-            className={cn(
-              "absolute z-30 flex items-center gap-2 transition-opacity duration-300",
-              areControlsVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-              isChatOpen && !isMobile ? "flex-row-reverse left-0" : "left-auto"
-            )}
-            style={
-              isChatOpen && !isMobile 
-                ? { top: `${gridGap}px`, left: `${gridGap}px` } 
-                : { top: `${gridGap}px`, right: `${gridGap}px` }
-            }
-          >
-            <CameraConfigurationComponent
-                order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                onOrderChange={handleOrderChange}
-                eventDetails={selectedEvents}
-                onReload={handleReloadCamera}
-                onRemove={handleEventRemove}
-                onModify={openDialogForModification}
-                onToggleFullscreen={handleToggleFullscreen}
-                fullscreenIndex={fullscreenIndex}
-                isViewPage={true}
-                onAddEvent={() => setAddEventsDialogOpen(true)}
-                onSchedule={() => setScheduleManagerOpen(true)}
-                onNotificationManager={() => setNotificationManagerOpen(true)}
-                onRemoteControl={remoteControlManagerRef.current?.startControlledSession}
-                gridGap={gridGap}
-                onGridGapChange={setGridGap}
-                borderColor={borderColor}
-                onBorderColorChange={setBorderColor}
-                onRestoreGridSettings={handleRestoreGridSettings}
-                isChatEnabled={isChatEnabled}
-                onIsChatEnabledChange={setIsChatEnabled}
-                categories={categories}
-                onOpenTutorial={() => setIsTutorialOpen(true)}
-                onOpenErrors={() => setIsErrorsOpen(true)}
-                onOpenCalendar={() => setCalendarOpen(true)}
-                isTutorialOpen={isTutorialOpen}
-                onIsTutorialOpenChange={setIsTutorialOpen}
-                isErrorsOpen={isErrorsOpen}
-                onIsErrorsOpenChange={setIsErrorsOpen}
+        <div className="flex h-screen w-screen bg-background text-foreground group">
+            <ScheduleManager 
+            open={scheduleManagerOpen}
+            onOpenChange={setScheduleManagerOpen}
+            currentSelection={futureSelection}
+            currentOrder={futureOrder}
+            schedules={schedules}
+            onSchedulesChange={setSchedules}
+            onModifyEventInView={openDialogForModification}
+            isLoading={isAddEventsLoading}
+            onAddEvent={() => setAddEventsDialogOpen(true)}
+            setFutureSelection={setFutureSelection}
+            setFutureOrder={setFutureOrder}
+            initialSelection={selectedEvents}
+            initialOrder={viewOrder}
             />
-
-            {isChatEnabled && (
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="bg-transparent hover:bg-accent/80 text-white h-10 w-10" 
-                onClick={() => setIsChatOpen(!isChatOpen)}
-                aria-label="Abrir o cerrar chat"
-              >
-                <MessageSquare className="h-5 w-5" />
-              </Button>
-            )}
-            
-            <Button
-              onClick={handleStopView}
-              variant="ghost"
-              size="icon"
-              className="bg-transparent hover:bg-accent/80 text-white h-10 w-10"
-              aria-label="Cerrar Vista"
-            >
-              <X className="h-7 w-7 text-white" />
-            </Button>
-          </div>
-          
-           <main 
-                className={cn(
-                    "relative grid w-full h-full",
-                    fullscreenIndex === null && gridContainerClasses
-                )} 
-                style={{ 
-                    ...fullscreenIndex === null ? { 
-                        gap: `${gridGap}px`,
-                        padding: `${gridGap}px`,
-                        backgroundColor: borderColor
-                    } : {},
-                    display: 'grid',
-                }}
-            >
-            {Array.from({ length: 9 }).map((_, windowSlotIndex) => {
-                const event = selectedEvents[windowSlotIndex];
-                const orderedIndex = viewOrder.indexOf(windowSlotIndex);
-
-                return (
-                    <div
-                        key={`window-stable-${windowSlotIndex}`}
-                        className={cn(
-                            "overflow-hidden bg-black relative",
-                            fullscreenIndex !== null && fullscreenIndex !== windowSlotIndex && "hidden", // Hide if another is fullscreen
-                            fullscreenIndex === windowSlotIndex && 'absolute inset-0 z-20', // Style for fullscreen window
-                            !event && "hidden", // Hide if no event is selected for this slot
-                            fullscreenIndex === null && getItemClasses(orderedIndex, numCameras)
-                        )}
-                        style={{
-                            order: orderedIndex,
-                        }}
-                    >
-                      {event && (
-                        <iframe
-                            ref={el => (iframeRefs.current[windowSlotIndex] = el)}
-                            src={event.selectedOption ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowSlotIndex] || 0}`: 'about:blank'}
-                            title={`Stream ${windowSlotIndex + 1}`}
-                            className="w-full h-full border-0"
-                            loading="eager"
-                            allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                            allowFullScreen
-                        />
-                      )}
+            <NotificationManager
+            open={notificationManagerOpen}
+            onOpenChange={setNotificationManagerOpen}
+            allCategories={categories}
+            />
+            <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
+                <DialogContent className="sm:max-w-md p-0" hideClose={true}>
+                    <DialogHeader className="sr-only">
+                        <DialogModalTitle>Bienvenida</DialogModalTitle>
+                    </DialogHeader>
+                    <DialogModalClose asChild>
+                    <Button variant="ghost" className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10" onClick={() => setWelcomePopupOpen(false)}>
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                    </Button>
+                    </DialogModalClose>
+                    <div className="relative">
+                        <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
                     </div>
-                );
-            })}
-          </main>
-        </div>
-        
-        {/* Chat Sidebar for Desktop */}
-        <div
-          className={cn(
-            'w-80 flex-shrink-0 bg-background flex-col border-l border-border',
-            isChatOpen && !isMobile ? 'flex' : 'hidden'
-          )}
-        >
-          <div className="p-2 border-b border-border flex justify-between items-center">
-            <h2 className="font-semibold">Chat en Vivo</h2>
-            <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="h-8 w-8">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <iframe
-            src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
-            title="Chat en Vivo"
-            className="w-full flex-grow border-0"
-          />
-        </div>
+                    <div className="px-6 pt-8 pb-2 text-center">
+                        <h2 className="text-lg font-bold">¡Bienvenido a Deportes para Todos!</h2>
+                    </div>
+                    <div className="px-6 pb-6 pt-0 text-sm text-muted-foreground text-left space-y-4">
+                        <p>Si encuentras algún problema o no estás seguro de cómo funciona algo, consulta nuestras guías rápidas.</p>
+                        <Alert variant="destructive" className='bg-yellow-500/10 border-yellow-500/50 text-yellow-500'>
+                            <AlertTriangle className="h-4 w-4 !text-yellow-500" />
+                            <AlertTitle className="font-bold">¡Atención!</AlertTitle>
+                            <DialogDescription className="text-yellow-500/80">
+                                Algunos canales pueden tardar mas en cargar que otros, hasta no ver un mensaje de error, NO CAMBIAR DE CANAL.
+                            </DialogDescription>
+                        </Alert>
+                    </div>
+                    <DialogFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
+                        <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                <BookOpen /> Tutorial
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
+                            </DialogHeader>
+                            <ScrollArea className="h-96 pr-6">
+                                <div className="text-sm text-muted-foreground space-y-4">
+                                    <p><strong>¡Bienvenido a Deportes para Todos!</strong> Aquí puedes ver múltiples eventos deportivos a la vez. Sigue estos simples pasos para empezar:</p>
+                                    
+                                    <h3 className="font-bold text-foreground mt-4">1. Elige tus Eventos</h3>
+                                    <p>En la pantalla principal, haz clic en las tarjetas de los partidos o canales que quieras ver. Se abrirá una ventana para que elijas una opción de transmisión.</p>
+                                    
+                                    <h3 className="font-bold text-foreground mt-4">2. Configura tu Vista</h3>
+                                    <p>Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) en la esquina superior derecha. Se abrirá un panel donde podrás ver tu selección, reordenar las ventanas o eliminarlas.</p>
+                                    
+                                    <h3 className="font-bold text-foreground mt-4">3. Inicia la Transmisión</h3>
+                                    <p>Una vez que estés listo, presiona el botón de "Play" (<Play className="inline-block h-4 w-4" />). Tu pantalla se dividirá para mostrar todos los eventos que elegiste.</p>
 
-        {/* Chat Dialog for Mobile */}
-        {isMobile && (
-          <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-            <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
-              <DialogHeader className="p-4 border-b">
-                  <DialogModalTitle>Chat en Vivo</DialogModalTitle>
-                  <DialogDescription className="sr-only">Contenedor del chat en vivo de Minnit.</DialogDescription>
-              </DialogHeader>
-              <iframe
+                                    <h3 className="font-bold text-foreground mt-4">4. Control Remoto y Programación</h3>
+                                    <p>Puedes controlar la vista desde otro dispositivo activando el <strong>Control Remoto</strong> en el menú de configuración. También puedes <strong>Programar</strong> una selección de eventos para que se active a una hora específica.</p>
+                                    
+                                    <p className="pt-2">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
+                                </div>
+                            </ScrollArea>
+                            <DialogFooter>
+                                <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
+                            </DialogFooter>
+                        </DialogContent>
+                        </Dialog>
+                        <Dialog open={isErrorsOpen} onOpenChange={setIsErrorsOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="gap-2">
+                                    <AlertCircle /> Solución de Errores
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                    <DialogModalTitle>Solución de Errores Comunes</DialogModalTitle>
+                                </DialogHeader>
+                                <ScrollArea className="h-96 pr-6">
+                                    <div className="text-sm text-muted-foreground space-y-4">
+                                        <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
+                                        <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
+                                        <p><span className="font-semibold text-foreground">El Problema:</span> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
+                                        <p><span className="font-semibold text-foreground">La Solución:</span> Cambiar el DNS de tu dispositivo o router a uno público como el de <a href="https://one.one.one.one" target="_blank" rel="noopener noreferrer" className="text-primary underline">Cloudflare (1.1.1.1)</a> o Google (8.8.8.8) puede saltarse estas restricciones.</p>
+                                        <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
+                                        <p><span className="font-semibold text-foreground">El Problema:</span> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
+                                        <p><span className="font-semibold text-foreground">La Solución:</span> Instalar una extensión como "<a href="https://chromewebstore.google.com/detail/reproductor-mpdm3u8m3uepg/opmeopcambhfimffbomjgemehjkbbmji?hl=es" target="_blank" rel="noopener noreferrer" className="text-primary underline">Reproductor MPD/M3U8/M3U/EPG</a>" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
+                                        <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
+                                        <p><span className="font-semibold text-foreground">El Problema:</span> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
+                                        <p><span className="font-semibold text-foreground">La Solución:</span> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge.</p>
+                                        <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
+                                        <p><span className="font-semibold text-foreground">El Problema:</span> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
+                                        <p><span className="font-semibold text-foreground">La Solución:</span> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web.</p>
+                                        <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
+                                        <p><span className="font-semibold text-foreground">El Problema:</span> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
+                                        <p><span className="font-semibold text-foreground">La Solución:</span> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora.</p>
+                                        <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
+                                        <p><span className="font-semibold text-foreground">El Problema:</span> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
+                                        <p><span className="font-semibold text-foreground">La Solución:</span> El clásico "apagar y volver a encender".</p>
+                                    </div>
+                                </ScrollArea>
+                                <DialogFooter>
+                                    <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <div className="relative flex flex-col h-screen w-screen flex-grow">
+                <div
+                className={cn(
+                    "absolute z-30 flex items-center gap-2 transition-opacity duration-300",
+                    areControlsVisible ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                    isChatOpen && !isMobile ? "flex-row-reverse left-0" : "left-auto"
+                )}
+                style={
+                    isChatOpen && !isMobile 
+                    ? { top: `${gridGap}px`, left: `${gridGap}px` } 
+                    : { top: `${gridGap}px`, right: `${gridGap}px` }
+                }
+                >
+                <CameraConfigurationComponent
+                    order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                    onOrderChange={handleOrderChange}
+                    eventDetails={selectedEvents}
+                    onReload={handleReloadCamera}
+                    onRemove={handleEventRemove}
+                    onModify={openDialogForModification}
+                    onToggleFullscreen={handleToggleFullscreen}
+                    fullscreenIndex={fullscreenIndex}
+                    isViewPage={true}
+                    onAddEvent={() => setAddEventsDialogOpen(true)}
+                    onSchedule={() => setScheduleManagerOpen(true)}
+                    onNotificationManager={() => setNotificationManagerOpen(true)}
+                    onRemoteControl={remoteControlManagerRef.current?.startControlledSession}
+                    gridGap={gridGap}
+                    onGridGapChange={setGridGap}
+                    borderColor={borderColor}
+                    onBorderColorChange={setBorderColor}
+                    onRestoreGridSettings={handleRestoreGridSettings}
+                    isChatEnabled={isChatEnabled}
+                    onIsChatEnabledChange={setIsChatEnabled}
+                    categories={categories}
+                    onOpenTutorial={() => setIsTutorialOpen(true)}
+                    onOpenErrors={() => setIsErrorsOpen(true)}
+                    onOpenCalendar={() => setCalendarOpen(true)}
+                    isTutorialOpen={isTutorialOpen}
+                    onIsTutorialOpenChange={setIsTutorialOpen}
+                    isErrorsOpen={isErrorsOpen}
+                    onIsErrorsOpenChange={setIsErrorsOpen}
+                />
+
+                {isChatEnabled && (
+                    <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="bg-transparent hover:bg-accent/80 text-white h-10 w-10" 
+                    onClick={() => setIsChatOpen(!isChatOpen)}
+                    aria-label="Abrir o cerrar chat"
+                    >
+                    <MessageSquare className="h-5 w-5" />
+                    </Button>
+                )}
+                
+                <Button
+                    onClick={handleStopView}
+                    variant="ghost"
+                    size="icon"
+                    className="bg-transparent hover:bg-accent/80 text-white h-10 w-10"
+                    aria-label="Cerrar Vista"
+                >
+                    <X className="h-7 w-7 text-white" />
+                </Button>
+                </div>
+                
+                <main 
+                    className={cn(
+                        "relative grid w-full h-full",
+                        fullscreenIndex === null && gridContainerClasses
+                    )} 
+                    style={{ 
+                        ...fullscreenIndex === null ? { 
+                            gap: `${gridGap}px`,
+                            padding: `${gridGap}px`,
+                            backgroundColor: borderColor
+                        } : {},
+                        display: 'grid',
+                    }}
+                >
+                {Array.from({ length: 9 }).map((_, windowSlotIndex) => {
+                    const event = selectedEvents[windowSlotIndex];
+                    const orderedIndex = viewOrder.indexOf(windowSlotIndex);
+
+                    return (
+                        <div
+                            key={`window-stable-${windowSlotIndex}`}
+                            className={cn(
+                                "overflow-hidden bg-black relative",
+                                fullscreenIndex !== null && fullscreenIndex !== windowSlotIndex && "hidden", // Hide if another is fullscreen
+                                fullscreenIndex === windowSlotIndex && 'absolute inset-0 z-20', // Style for fullscreen window
+                                !event && "hidden", // Hide if no event is selected for this slot
+                                fullscreenIndex === null && getItemClasses(orderedIndex, numCameras)
+                            )}
+                            style={{
+                                order: orderedIndex,
+                            }}
+                        >
+                        {event && (
+                            <iframe
+                                ref={el => (iframeRefs.current[windowSlotIndex] = el)}
+                                src={event.selectedOption ? `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowSlotIndex] || 0}`: 'about:blank'}
+                                title={`Stream ${windowSlotIndex + 1}`}
+                                className="w-full h-full border-0"
+                                loading="eager"
+                                allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
+                                allowFullScreen
+                            />
+                        )}
+                        </div>
+                    );
+                })}
+                </main>
+            </div>
+            
+            {/* Chat Sidebar for Desktop */}
+            <div
+            className={cn(
+                'w-80 flex-shrink-0 bg-background flex-col border-l border-border',
+                isChatOpen && !isMobile ? 'flex' : 'hidden'
+            )}
+            >
+            <div className="p-2 border-b border-border flex justify-between items-center">
+                <h2 className="font-semibold">Chat en Vivo</h2>
+                <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+                </Button>
+            </div>
+            <iframe
                 src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
                 title="Chat en Vivo"
                 className="w-full flex-grow border-0"
-              />
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
-      <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
-        <CalendarDialogContent categories={categories} />
-      </Dialog>
-      <AddEventsDialog
-          open={addEventsDialogOpen}
-          onOpenChange={setAddEventsDialogOpen}
-      />
-      </>
-    );
+            />
+            </div>
+
+            {/* Chat Dialog for Mobile */}
+            {isMobile && (
+            <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+                <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
+                <DialogHeader className="p-4 border-b">
+                    <DialogModalTitle>Chat en Vivo</DialogModalTitle>
+                    <DialogDescription className="sr-only">Contenedor del chat en vivo de Minnit.</DialogDescription>
+                </DialogHeader>
+                <iframe
+                    src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
+                    title="Chat en Vivo"
+                    className="w-full flex-grow border-0"
+                />
+                </DialogContent>
+            </Dialog>
+            )}
+        </div>
+    )
   }
 
-  // --- HOME VIEW (DEFAULT) ---
-  const renderContent = () => {
+  const renderHomeContent = () => {
     let itemsToDisplay: (Event|Channel)[] = [];
     if (searchTerm) {
       itemsToDisplay = searchResults;
@@ -1752,251 +1742,253 @@ export function HomePageContent() {
   };
   
   return (
-    <div className="flex h-screen w-screen flex-col bg-background text-foreground">
-       {isDataLoading && !isInitialLoadDone && (
-        <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
-            <LoadingScreen />
-        </div>
-       )}
-        <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
-            <header className="sticky top-0 z-30 flex h-header-height w-full shrink-0 items-center border-b border-border bg-background/80 backdrop-blur-sm px-4">
-                <div className={cn("flex items-center", isSearchOpen && 'hidden sm:flex')}>
-                    {currentView === 'home' && (
-                        <Link href="/" className="shrink-0 mr-4" onClick={handleBackToHome}>
-                            <Image
-                                src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
-                                alt="Deportes Para Todos Logo"
-                                width={150}
-                                height={37.5}
-                                priority
-                                className='w-auto h-auto max-h-[40px] max-w-[150px]'
-                            />
-                        </Link>
-                    )}
-                    {currentView !== 'home' && (
-                        <div className="flex items-center gap-1 min-w-0">
-                            <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0 -ml-2'>
-                                <ArrowLeft />
-                            </Button>
-                            <h1 className="text-lg md:text-xl font-bold capitalize truncate shrink">{currentView}</h1>
-                        </div>
-                    )}
-                </div>
-
-                <div className={cn(
-                    "flex flex-1 items-center gap-2",
-                    !isSearchOpen && "justify-end",
-                    isSearchOpen && "justify-between"
-                )}>
-                    {isSearchOpen ? (
-                        <div className="relative w-full ml-4">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                            <Input
-                                ref={r => { if (r) r.focus(); }}
-                                type="text"
-                                placeholder="Buscar evento o canal..."
-                                className="w-full pl-10"
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                    ) : null}
-
-                    <div className="flex items-center gap-1">
-                       <Button variant="ghost" size="icon" onClick={() => {
-                            if (isSearchOpen) {
-                                setSearchTerm('');
-                            }
-                            setIsSearchOpen(!isSearchOpen);
-                        }}>
-                            {isSearchOpen ? <X/> : <Search />}
-                        </Button>
-                        
-                        {!isSearchOpen && (
-                             <>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => fetchEvents(true)}
-                                  disabled={isDataLoading}
-                                  aria-label="Refrescar eventos"
-                                >
-                                  <RotateCw className={cn(isDataLoading && "animate-spin")} />
+    <>
+      {isViewMode ? renderViewContent() : (
+        <div className="flex h-screen w-screen flex-col bg-background text-foreground">
+           {isDataLoading && !isInitialLoadDone && (
+            <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
+                <LoadingScreen />
+            </div>
+           )}
+            <div className={cn("flex h-full w-full flex-col", isDataLoading && !isInitialLoadDone ? "invisible" : "")}>
+                <header className="sticky top-0 z-30 flex h-header-height w-full shrink-0 items-center border-b border-border bg-background/80 backdrop-blur-sm px-4">
+                    <div className={cn("flex items-center", isSearchOpen && 'hidden sm:flex')}>
+                        {currentView === 'home' && (
+                            <Link href="/" className="shrink-0 mr-4" onClick={handleBackToHome}>
+                                <Image
+                                    src="https://i.ibb.co/gZKpR4fc/deportes-para-todos.png"
+                                    alt="Deportes Para Todos Logo"
+                                    width={150}
+                                    height={37.5}
+                                    priority
+                                    className='w-auto h-auto max-h-[40px] max-w-[150px]'
+                                />
+                            </Link>
+                        )}
+                        {currentView !== 'home' && (
+                            <div className="flex items-center gap-1 min-w-0">
+                                <Button variant="ghost" size="icon" onClick={handleBackToHome} className='flex-shrink-0 -ml-2'>
+                                    <ArrowLeft />
                                 </Button>
-                                
-                                <Button variant="ghost" size="icon" onClick={() => setRemoteControlOptionsOpen(true)}>
-                                  <Airplay />
-                                </Button>
-
-                                 <Sheet>
-                                    <SheetTrigger asChild>
-                                      <Button variant="ghost" size="icon">
-                                        <Settings />
-                                      </Button>
-                                    </SheetTrigger>
-                                     <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                          <SheetHeader className="p-0 m-0 h-0">
-                                            <SheetTitle className="sr-only">Configuración</SheetTitle>
-                                          </SheetHeader>
-                                          <LayoutConfigurator
-                                            order={viewOrder.filter(i => selectedEvents[i] !== null)}
-                                            onOrderChange={handleOrderChange}
-                                            eventDetails={selectedEvents}
-                                            onRemove={handleEventRemove}
-                                            onModify={openDialogForModification}
-                                            isViewPage={false}
-                                            onAddEvent={() => setAddEventsDialogOpen(true)}
-                                            gridGap={gridGap}
-                                            onGridGapChange={setGridGap}
-                                            borderColor={borderColor}
-                                            onBorderColorChange={setBorderColor}
-                                            onRestoreGridSettings={handleRestoreGridSettings}
-                                            isChatEnabled={isChatEnabled}
-                                            onIsChatEnabledChange={setIsChatEnabled}
-                                            categories={categories}
-                                            onOpenTutorial={() => setIsTutorialOpen(true)}
-                                            onOpenErrors={() => setIsErrorsOpen(true)}
-                                            onNotificationManager={() => setNotificationManagerOpen(true)}
-                                            onOpenCalendar={() => setCalendarOpen(true)}
-                                            isTutorialOpen={isTutorialOpen}
-                                            onIsTutorialOpenChange={setIsTutorialOpen}
-                                            isErrorsOpen={isErrorsOpen}
-                                            onIsErrorsOpenChange={setIsErrorsOpen}
-                                          />
-                                  </SheetContent>
-                                  </Sheet>
-
-                                <Button
-                                    size="icon"
-                                    onClick={() => handleStartView(false)}
-                                    disabled={selectedEventsCount === 0}
-                                    className="bg-green-600 hover:bg-green-700 text-white relative"
-                                >
-                                    <Play />
-                                     {selectedEventsCount > 0 && (
-                                        <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
-                                            {selectedEventsCount}
-                                        </Badge>
-                                    )}
-                                </Button>
-                            </>
+                                <h1 className="text-lg md:text-xl font-bold capitalize truncate shrink">{currentView}</h1>
+                            </div>
                         )}
                     </div>
-                </div>
-            </header>
 
-            <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8">
-                {renderContent()}
-            </main>
+                    <div className={cn(
+                        "flex flex-1 items-center gap-2",
+                        !isSearchOpen && "justify-end",
+                        isSearchOpen && "justify-between"
+                    )}>
+                        {isSearchOpen ? (
+                            <div className="relative w-full ml-4">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                <Input
+                                    ref={r => { if (r) r.focus(); }}
+                                    type="text"
+                                    placeholder="Buscar evento o canal..."
+                                    className="w-full pl-10"
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        ) : null}
+
+                        <div className="flex items-center gap-1">
+                           <Button variant="ghost" size="icon" onClick={() => {
+                                if (isSearchOpen) {
+                                    setSearchTerm('');
+                                }
+                                setIsSearchOpen(!isSearchOpen);
+                            }}>
+                                {isSearchOpen ? <X/> : <Search />}
+                            </Button>
+                            
+                            {!isSearchOpen && (
+                                <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => fetchEvents(true)}
+                                      disabled={isDataLoading}
+                                      aria-label="Refrescar eventos"
+                                    >
+                                      <RotateCw className={cn(isDataLoading && "animate-spin")} />
+                                    </Button>
+                                    
+                                    <Button variant="ghost" size="icon" onClick={() => setRemoteControlOptionsOpen(true)}>
+                                      <Airplay />
+                                    </Button>
+
+                                     <Sheet>
+                                        <SheetTrigger asChild>
+                                          <Button variant="ghost" size="icon">
+                                            <Settings />
+                                          </Button>
+                                        </SheetTrigger>
+                                         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                              <SheetHeader className="p-0 m-0 h-0">
+                                                <SheetTitle className="sr-only">Configuración</SheetTitle>
+                                              </SheetHeader>
+                                              <LayoutConfigurator
+                                                order={viewOrder.filter(i => selectedEvents[i] !== null)}
+                                                onOrderChange={handleOrderChange}
+                                                eventDetails={selectedEvents}
+                                                onRemove={handleEventRemove}
+                                                onModify={openDialogForModification}
+                                                isViewPage={false}
+                                                onAddEvent={() => setAddEventsDialogOpen(true)}
+                                                gridGap={gridGap}
+                                                onGridGapChange={setGridGap}
+                                                borderColor={borderColor}
+                                                onBorderColorChange={setBorderColor}
+                                                onRestoreGridSettings={handleRestoreGridSettings}
+                                                isChatEnabled={isChatEnabled}
+                                                onIsChatEnabledChange={setIsChatEnabled}
+                                                categories={categories}
+                                                onOpenTutorial={() => setIsTutorialOpen(true)}
+                                                onOpenErrors={() => setIsErrorsOpen(true)}
+                                                onNotificationManager={() => setNotificationManagerOpen(true)}
+                                                onOpenCalendar={() => setCalendarOpen(true)}
+                                                isTutorialOpen={isTutorialOpen}
+                                                onIsTutorialOpenChange={setIsTutorialOpen}
+                                                isErrorsOpen={isErrorsOpen}
+                                                onIsErrorsOpenChange={setIsErrorsOpen}
+                                              />
+                                      </SheetContent>
+                                      </Sheet>
+
+                                    <Button
+                                        size="icon"
+                                        onClick={() => handleStartView(false)}
+                                        disabled={selectedEventsCount === 0}
+                                        className="bg-green-600 hover:bg-green-700 text-white relative"
+                                    >
+                                        <Play />
+                                         {selectedEventsCount > 0 && (
+                                            <Badge variant="destructive" className="absolute -top-2 -right-2 px-2 h-6 flex items-center justify-center rounded-full">
+                                                {selectedEventsCount}
+                                            </Badge>
+                                        )}
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-grow overflow-y-auto px-4 md:px-8 pb-8">
+                    {renderHomeContent()}
+                </main>
+            </div>
         </div>
-        
-        <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
-           <CalendarDialogContent categories={categories} />
-        </Dialog>
-        <NotificationManager
-            open={notificationManagerOpen}
-            onOpenChange={setNotificationManagerOpen}
-            allCategories={categories}
-        />
-        <AddEventsDialog
-            open={addEventsDialogOpen}
-            onOpenChange={setAddEventsDialogOpen}
-        />
-        {dialogEvent && (
-            <EventSelectionDialog
-                isOpen={eventSelectionDialogOpen}
-                onOpenChange={setEventSelectionDialogOpen}
-                event={dialogEvent}
-                onSelect={handleEventSelect}
-                isModification={isModification}
-                onRemove={() => handleRemoveEventFromDialog(dialogEvent)}
-                isLoading={isOptionsLoading}
-            />
-        )}
-        <RemoteControlManager
-            ref={remoteControlManagerRef}
-            appState={{
-                selectedEvents,
-                viewOrder,
-                gridGap,
-                borderColor,
-                isChatEnabled,
-                schedules,
-            }}
-            setAppState={({
-                selectedEvents: newSelectedEvents,
-                viewOrder: newViewOrder,
-                gridGap: newGridGap,
-                borderColor: newBorderColor,
-                isChatEnabled: newIsChatEnabled,
-                schedules: newSchedules,
-            }) => {
-                if (newSelectedEvents) setSelectedEvents(newSelectedEvents);
-                if (newViewOrder) setViewOrder(newViewOrder);
-                if (newGridGap) setGridGap(newGridGap);
-                if (newBorderColor) setBorderColor(newBorderColor);
-                if (newIsChatEnabled) setIsChatEnabled(newIsChatEnabled);
-                if (newSchedules) setSchedules(newSchedules);
-            }}
-            allEvents={events}
-            allChannels={channelsData}
-        />
+      )}
 
-        <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogModalTitle>Controlar Dispositivo</DialogModalTitle>
-                    <DialogDescription>Introduce el código del dispositivo que quieres controlar.</DialogDescription>
-                </DialogHeader>
-                <div className="flex gap-2 py-4">
-                    <Input
-                        placeholder="Código de sesión..."
-                        value={controllerCode}
-                        onChange={(e) => setControllerCode(e.target.value)}
-                    />
-                </div>
-                <DialogFooter>
-                    <DialogModalClose asChild>
-                      <Button variant="secondary">Cancelar</Button>
-                    </DialogModalClose>
-                    <Button onClick={() => {
-                        remoteControlManagerRef.current?.startControllingSession(controllerCode);
-                        setIsControllerPromptOpen(false);
-                    }}>Conectar</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-        
-        <Dialog open={remoteControlOptionsOpen} onOpenChange={setRemoteControlOptionsOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogModalTitle>Opciones de Control Remoto</DialogModalTitle>
-                    <DialogDescription>Elige cómo quieres usar el control remoto.</DialogDescription>
-                </DialogHeader>
-                <div className="grid grid-cols-1 gap-4 py-4">
-                     <Button
-                        variant="outline"
-                        onClick={() => {
-                            setRemoteControlOptionsOpen(false);
-                            handleStartAndControl();
-                        }}
-                    >
-                        Ser Controlado
-                    </Button>
+      {/* Dialogs at top level */}
+      <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <CalendarDialogContent categories={categories} />
+      </Dialog>
+      <NotificationManager
+          open={notificationManagerOpen}
+          onOpenChange={setNotificationManagerOpen}
+          allCategories={categories}
+      />
+      <AddEventsDialog
+          open={addEventsDialogOpen}
+          onOpenChange={setAddEventsDialogOpen}
+      />
+      {dialogEvent && (
+          <EventSelectionDialog
+              isOpen={eventSelectionDialogOpen}
+              onOpenChange={setEventSelectionDialogOpen}
+              event={dialogEvent}
+              onSelect={handleEventSelect}
+              isModification={isModification}
+              onRemove={() => handleRemoveEventFromDialog(dialogEvent)}
+              isLoading={isOptionsLoading}
+          />
+      )}
+      <RemoteControlManager
+          ref={remoteControlManagerRef}
+          appState={{
+              selectedEvents,
+              viewOrder,
+              gridGap,
+              borderColor,
+              isChatEnabled,
+              schedules,
+          }}
+          setAppState={({
+              selectedEvents: newSelectedEvents,
+              viewOrder: newViewOrder,
+              gridGap: newGridGap,
+              borderColor: newBorderColor,
+              isChatEnabled: newIsChatEnabled,
+              schedules: newSchedules,
+          }) => {
+              if (newSelectedEvents) setSelectedEvents(newSelectedEvents);
+              if (newViewOrder) setViewOrder(newViewOrder);
+              if (newGridGap) setGridGap(newGridGap);
+              if (newBorderColor) setBorderColor(newBorderColor);
+              if (newIsChatEnabled) setIsChatEnabled(newIsChatEnabled);
+              if (newSchedules) setSchedules(newSchedules);
+          }}
+          allEvents={events}
+          allChannels={channelsData}
+      />
+      <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogModalTitle>Controlar Dispositivo</DialogModalTitle>
+                  <DialogDescription>Introduce el código del dispositivo que quieres controlar.</DialogDescription>
+              </DialogHeader>
+              <div className="flex gap-2 py-4">
+                  <Input
+                      placeholder="Código de sesión..."
+                      value={controllerCode}
+                      onChange={(e) => setControllerCode(e.target.value)}
+                  />
+              </div>
+              <DialogFooter>
+                  <DialogModalClose asChild>
+                    <Button variant="secondary">Cancelar</Button>
+                  </DialogModalClose>
+                  <Button onClick={() => {
+                      remoteControlManagerRef.current?.startControllingSession(controllerCode);
+                      setIsControllerPromptOpen(false);
+                  }}>Conectar</Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+      <Dialog open={remoteControlOptionsOpen} onOpenChange={setRemoteControlOptionsOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogModalTitle>Opciones de Control Remoto</DialogModalTitle>
+                  <DialogDescription>Elige cómo quieres usar el control remoto.</DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 gap-4 py-4">
                     <Button
-                        variant="outline"
-                        onClick={() => {
-                            setRemoteControlOptionsOpen(false);
-                            setIsControllerPromptOpen(true);
-                        }}
-                    >
-                        Controlar un Dispositivo
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
-
-    </div>
+                      variant="outline"
+                      onClick={() => {
+                          setRemoteControlOptionsOpen(false);
+                          handleStartAndControl();
+                      }}
+                  >
+                      Ser Controlado
+                  </Button>
+                  <Button
+                      variant="outline"
+                      onClick={() => {
+                          setRemoteControlOptionsOpen(false);
+                          setIsControllerPromptOpen(true);
+                      }}
+                  >
+                      Controlar un Dispositivo
+                  </Button>
+              </div>
+          </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -2008,5 +2000,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-
