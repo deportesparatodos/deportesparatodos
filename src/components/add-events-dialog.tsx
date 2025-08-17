@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, X, Maximize, Minimize, RotateCw, Check } from 'lucide-react';
+import { Loader2, Search, X, Maximize, Minimize, RotateCw } from 'lucide-react';
 import { EventCard } from './event-card';
 import type { Event, StreamOption } from './event-carousel';
 import { Card } from './ui/card';
