@@ -31,7 +31,7 @@ import {
     DialogTitle as DialogModalTitle,
     DialogDescription,
     DialogFooter,
-    DialogClose,
+    DialogClose as DialogModalClose,
     DialogTrigger,
 } from '@/components/ui/dialog';
 import {
@@ -258,7 +258,7 @@ export function HomePageContent() {
   
   // Remote Control state
   const remoteControlManagerRef = useRef<{ 
-    startControlledSession: () => void; 
+    startControlledSession: () => Promise<string | undefined>; 
     startControllingSession: (id: string) => void;
   }>(null);
   const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
@@ -648,16 +648,21 @@ export function HomePageContent() {
   // URL reload effect
   useEffect(() => {
     if (isViewMode) {
-      selectedEvents.forEach((event, index) => {
-        const iframe = iframeRefs.current[index];
-        if (iframe && event?.selectedOption) {
-            const newSrc = `${event.selectedOption}${event.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowSlotIndex] || 0}`;
+      selectedEvents.forEach((event, i) => {
+        const windowSlotIndex = viewOrder[i];
+        if (typeof windowSlotIndex !== 'number') return;
+        
+        const iframe = iframeRefs.current[windowSlotIndex];
+        const currentEvent = selectedEvents[windowSlotIndex];
+        
+        if (iframe && currentEvent?.selectedOption) {
+            const newSrc = `${currentEvent.selectedOption}${currentEvent.selectedOption.includes('?') ? '&' : '?'}reload=${reloadCounters[windowSlotIndex] || 0}`;
 
             let currentSrc = 'about:blank';
             try {
                 if (iframe.src && iframe.src !== 'about:blank') {
                     const url = new URL(iframe.src);
-                    const targetUrl = new URL(event.selectedOption);
+                    const targetUrl = new URL(currentEvent.selectedOption);
                     url.searchParams.delete('reload');
                     const cleanCurrentSrc = `${url.origin}${url.pathname}`;
                     const cleanTargetSrc = `${targetUrl.origin}${targetUrl.pathname}`;
@@ -669,7 +674,7 @@ export function HomePageContent() {
             } catch(e) {
                 // Handle cases where iframe.src is not a full URL, e.g., 'about:blank'
                 currentSrc = iframe.src.split('?')[0];
-                const targetSrc = event.selectedOption.split('?')[0];
+                const targetSrc = currentEvent.selectedOption.split('?')[0];
                 if(currentSrc === targetSrc) return;
             }
 
@@ -678,7 +683,7 @@ export function HomePageContent() {
         }
       });
     }
-  }, [selectedEvents, isViewMode, reloadCounters]);
+  }, [selectedEvents, isViewMode, reloadCounters, viewOrder]);
 
 
   const startTimer = useCallback(() => {
@@ -1063,7 +1068,7 @@ export function HomePageContent() {
     setFullscreenIndex(null);
   }, []);
 
-  const handleStartAndControl = () => {
+  const handleStartAndControl = async () => {
     if (selectedEventsCount === 0) {
         toast({
             variant: 'destructive',
@@ -1073,7 +1078,7 @@ export function HomePageContent() {
         return;
     }
     handleStartView(true);
-    remoteControlManagerRef.current?.startControlledSession();
+    await remoteControlManagerRef.current?.startControlledSession();
   };
 
  const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
@@ -1348,12 +1353,12 @@ export function HomePageContent() {
               <DialogHeader className="sr-only">
                   <DialogModalTitle>Bienvenida</DialogModalTitle>
               </DialogHeader>
-               <DialogClose asChild>
+               <DialogModalClose asChild>
                 <Button variant="ghost" className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10" onClick={() => setWelcomePopupOpen(false)}>
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>
                 </Button>
-              </DialogClose>
+              </DialogModalClose>
               <div className="relative">
                   <Progress value={progress} indicatorClassName="bg-primary" className="absolute top-0 left-0 right-0 h-1 rounded-none" />
               </div>
@@ -1401,7 +1406,7 @@ export function HomePageContent() {
                             </div>
                         </ScrollArea>
                         <DialogFooter>
-                            <DialogClose asChild><Button>Entendido</Button></DialogClose>
+                            <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
                         </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -1439,7 +1444,7 @@ export function HomePageContent() {
                               </div>
                           </ScrollArea>
                           <DialogFooter>
-                              <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                              <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
                           </DialogFooter>
                       </DialogContent>
                   </Dialog>
@@ -1473,7 +1478,7 @@ export function HomePageContent() {
                 onAddEvent={() => setAddEventsDialogOpen(true)}
                 onSchedule={() => setScheduleManagerOpen(true)}
                 onNotificationManager={() => setNotificationManagerOpen(true)}
-                onRemoteControl={() => remoteControlManagerRef.current?.startControlledSession()}
+                onRemoteControl={remoteControlManagerRef.current?.startControlledSession}
                 gridGap={gridGap}
                 onGridGapChange={setGridGap}
                 borderColor={borderColor}
@@ -1973,9 +1978,9 @@ export function HomePageContent() {
                     />
                 </div>
                 <DialogFooter>
-                    <DialogClose asChild>
+                    <DialogModalClose asChild>
                       <Button variant="secondary">Cancelar</Button>
-                    </DialogClose>
+                    </DialogModalClose>
                     <Button onClick={() => {
                         remoteControlManagerRef.current?.startControllingSession(controllerCode);
                         setIsControllerPromptOpen(false);

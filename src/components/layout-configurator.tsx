@@ -42,7 +42,7 @@ export interface EventListManagementProps {
   onAddEvent?: () => void;
   onSchedule?: () => void;
   onNotificationManager?: () => void;
-  onRemoteControl?: () => void;
+  onRemoteControl?: () => Promise<string | undefined>;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   gridGap: number;
@@ -197,9 +197,9 @@ export function LayoutConfigurator(props: EventListManagementProps) {
     const [isRemoteSessionActive, setIsRemoteSessionActive] = useState(false);
     const [remoteSessionCode, setRemoteSessionCode] = useState('');
 
-    const handleActivateRemote = () => {
+    const handleActivateRemote = async () => {
         if (props.onRemoteControl) {
-            const code = props.onRemoteControl();
+            const code = await props.onRemoteControl();
             if (code) {
                 setRemoteSessionCode(code);
                 setIsRemoteSessionActive(true);
@@ -291,7 +291,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                          {isViewPage && (
+                          {isViewPage && onRemoteControl && (
                             <>
                               <Separator/>
                                <DropdownMenu onOpenChange={(open) => !open && setIsRemoteSessionActive(false)}>
