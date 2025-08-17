@@ -43,7 +43,7 @@ type AppState = {
 
 type RemoteControlManagerProps = {
   appState: AppState;
-  setAppState: (newState: Partial<AppState>) => void;
+  setAppState: (newState: AppState) => void;
   allEvents: Event[];
   allChannels: Channel[];
 };
@@ -90,8 +90,8 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     };
   }, [cleanupAbly]);
   
- const initializeAbly = async (clientId: string): Promise<Realtime> => {
-    return new Promise(async (resolve, reject) => {
+  const initializeAbly = async (clientId: string): Promise<Realtime> => {
+      return new Promise(async (resolve, reject) => {
         try {
             const response = await fetch('/api/ably');
             if (!response.ok) {
@@ -109,10 +109,10 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
                 clientId: clientId,
                 echoMessages: false
             });
+
             ablyClientRef.current = client;
             resolve(client);
         } catch (e: any) {
-            console.error("Ably initialization failed", e);
             const errorMessage = e.message || "No se pudo conectar al servicio en tiempo real.";
             setError(errorMessage);
             toast({
@@ -123,11 +123,12 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             reject(e);
         }
     });
-};
+  };
 
 
-  const startControlledSession = useCallback(async (): Promise<string> => {
+ const startControlledSession = useCallback(async (): Promise<string> => {
     if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
+    
     setIsConnecting(true);
     setError(null);
 
@@ -257,18 +258,23 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
 RemoteControlManager.displayName = 'RemoteControlManager';
 
+
 // --- UI Components for different modes ---
 
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: any) {
   const [openDialog, setOpenDialog] = useState<null | 'add-event' | 'schedule' | 'notification' | 'tutorial' | 'errors' | 'contact' | 'legal'>(null);
-
-  // States for dialogs
+  
+  const [isEventSelectionOpen, setIsEventSelectionOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
 
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
+  
+  const handleUpdateState = (newState: Partial<AppState>) => {
+    onAction({ ...appState, ...newState });
+  };
   
   const handleModifyEvent = (event: Event, index: number) => {
     const currentEventState = appState.selectedEvents[index];
@@ -282,14 +288,14 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     setDialogEvent(eventForModification);
     setIsModification(true);
     setModificationIndex(index);
-    setOpenDialog('add-event');
+    setIsEventSelectionOpen(true);
   };
 
   const handleAddEvent = () => {
     setDialogEvent(null);
     setIsModification(false);
     setModificationIndex(appState.selectedEvents.findIndex((e: any) => e === null));
-    setOpenDialog('add-event');
+    setIsEventSelectionOpen(true); // Needs a generic event/channel selection dialog
   };
   
   const handleEventSelect = (event: Event, optionUrl: string) => {
@@ -298,23 +304,23 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
 
     if (targetIndex !== -1 && targetIndex !== null) {
       newSelectedEvents[targetIndex] = { ...event, selectedOption: optionUrl };
-      onAction({ selectedEvents: newSelectedEvents });
+      handleUpdateState({ selectedEvents: newSelectedEvents });
     }
-    setOpenDialog(null);
+    setIsEventSelectionOpen(false);
   };
   
   const handleRemoveEvent = (indexToRemove: number) => {
     const newSelectedEvents = [...appState.selectedEvents];
     newSelectedEvents[indexToRemove] = null;
-    onAction({ selectedEvents: newSelectedEvents });
+    handleUpdateState({ selectedEvents: newSelectedEvents });
   };
   
   const handleRemoveFromDialog = () => {
     if(modificationIndex !== null){
         const newSelectedEvents = [...appState.selectedEvents];
         newSelectedEvents[modificationIndex] = null;
-        onAction({ selectedEvents: newSelectedEvents });
-        setOpenDialog(null);
+        handleUpdateState({ selectedEvents: newSelectedEvents });
+        setIsEventSelectionOpen(false);
     }
   }
 
@@ -334,74 +340,67 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
               <X className="mr-2 h-4 w-4" /> Desconectar
           </Button>
         </header>
-        <div className="flex-grow overflow-y-auto">
-            <LayoutConfigurator
-                order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
-                onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
-                eventDetails={appState.selectedEvents}
-                onRemove={handleRemoveEvent}
-                onModify={handleModifyEvent}
-                isViewPage={true}
-                onAddEvent={handleAddEvent}
-                onSchedule={() => setOpenDialog('schedule')}
-                onNotificationManager={() => setOpenDialog('notification')}
-                gridGap={appState.gridGap}
-                onGridGapChange={(value: number) => onAction({ gridGap: value })}
-                borderColor={appState.borderColor}
-                onBorderColorChange={(value: string) => onAction({ borderColor: value })}
-                isChatEnabled={appState.isChatEnabled}
-                onIsChatEnabledChange={(value: boolean) => onAction({ isChatEnabled: value })}
-                categories={allCategories}
-                onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
-                onOpenTutorial={() => setOpenDialog('tutorial')}
-                onOpenErrors={() => setOpenDialog('errors')}
-                onOpenCalendar={() => {}} // Calendar subscription is a client-side action, not remote controlled
-                isTutorialOpen={openDialog === 'tutorial'}
-                onIsTutorialOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                isErrorsOpen={openDialog === 'errors'}
-                onIsErrorsOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-            />
-        </div>
-        
-        <Dialog open={openDialog === 'add-event'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-          {dialogEvent && (
-            <EventSelectionDialog
-                isOpen={openDialog === 'add-event'}
-                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                event={dialogEvent}
-                onSelect={handleEventSelect}
-                isModification={isModification}
-                onRemove={handleRemoveFromDialog}
-                isLoading={false}
-            />
-          )}
-        </Dialog>
-        
-        <Dialog open={openDialog === 'schedule'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-          <ScheduleManager
-              open={openDialog === 'schedule'}
-              onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-              currentSelection={futureSelection}
-              currentOrder={futureOrder}
-              schedules={appState.schedules}
-              onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
-              onModifyEventInView={() => {}}
-              isLoading={false}
-              onAddEvent={() => {}}
-              initialSelection={appState.selectedEvents}
-              initialOrder={appState.viewOrder}
-              setFutureSelection={setFutureSelection}
-              setFutureOrder={setFutureOrder}
-          />
-        </Dialog>
 
-        <Dialog open={openDialog === 'notification'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-          <NotificationManager
-              open={openDialog === 'notification'}
-              onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-              allCategories={allCategories}
+        <LayoutConfigurator
+            order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
+            onOrderChange={(newOrder: number[]) => handleUpdateState({ viewOrder: newOrder })}
+            eventDetails={appState.selectedEvents}
+            onRemove={handleRemoveEvent}
+            onModify={handleModifyEvent}
+            isViewPage={true}
+            onAddEvent={handleAddEvent}
+            onSchedule={() => setOpenDialog('schedule')}
+            onNotificationManager={() => setOpenDialog('notification')}
+            gridGap={appState.gridGap}
+            onGridGapChange={(value: number) => handleUpdateState({ gridGap: value })}
+            borderColor={appState.borderColor}
+            onBorderColorChange={(value: string) => handleUpdateState({ borderColor: value })}
+            isChatEnabled={appState.isChatEnabled}
+            onIsChatEnabledChange={(value: boolean) => handleUpdateState({ isChatEnabled: value })}
+            categories={allCategories}
+            onRestoreGridSettings={() => handleUpdateState({ gridGap: 0, borderColor: '#000000' })}
+            onOpenTutorial={() => setOpenDialog('tutorial')}
+            onOpenErrors={() => setOpenDialog('errors')}
+            onOpenCalendar={() => {}} // Calendar subscription is a client-side action, not remote controlled
+            isTutorialOpen={openDialog === 'tutorial'}
+            onIsTutorialOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+            isErrorsOpen={openDialog === 'errors'}
+            onIsErrorsOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+        />
+        
+        {isEventSelectionOpen && dialogEvent && (
+          <EventSelectionDialog
+              isOpen={isEventSelectionOpen}
+              onOpenChange={setIsEventSelectionOpen}
+              event={dialogEvent}
+              onSelect={handleEventSelect}
+              isModification={isModification}
+              onRemove={handleRemoveFromDialog}
+              isLoading={false}
           />
-        </Dialog>
+        )}
+        
+        <ScheduleManager
+            open={openDialog === 'schedule'}
+            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+            currentSelection={futureSelection}
+            currentOrder={futureOrder}
+            schedules={appState.schedules}
+            onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
+            onModifyEventInView={() => {}}
+            isLoading={false}
+            onAddEvent={() => {}}
+            initialSelection={appState.selectedEvents}
+            initialOrder={appState.viewOrder}
+            setFutureSelection={setFutureSelection}
+            setFutureOrder={setFutureOrder}
+        />
+
+        <NotificationManager
+            open={openDialog === 'notification'}
+            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+            allCategories={allCategories}
+        />
       </div>
   );
 }

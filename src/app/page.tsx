@@ -208,14 +208,36 @@ const normalizeCategory = (category: string): string => {
     return category;
 };
 
+type AppState = {
+  selectedEvents: (Event | null)[];
+  viewOrder: number[];
+  gridGap: number;
+  borderColor: string;
+  isChatEnabled: boolean;
+  schedules: Schedule[];
+};
+
 export function HomePageContent() {
   const isMobile = useIsMobile();
-  const [selectedEvents, setSelectedEvents] = useState<(Event | null)[]>(Array(9).fill(null));
-  const [viewOrder, setViewOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
-  const [gridGap, setGridGap] = useState<number>(0);
-  const [borderColor, setBorderColor] = useState<string>('#000000');
-  const [isChatEnabled, setIsChatEnabled] = useState<boolean>(true);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  
+  const [appState, setAppState] = useState<AppState>({
+    selectedEvents: Array(9).fill(null),
+    viewOrder: Array.from({ length: 9 }, (_, i) => i),
+    gridGap: 0,
+    borderColor: '#000000',
+    isChatEnabled: true,
+    schedules: [],
+  });
+
+  const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules } = appState;
+  
+  const setSelectedEvents = (events: (Event | null)[]) => setAppState(prev => ({ ...prev, selectedEvents: events }));
+  const setViewOrder = (order: number[]) => setAppState(prev => ({ ...prev, viewOrder: order }));
+  const setGridGap = (gap: number) => setAppState(prev => ({ ...prev, gridGap: gap }));
+  const setBorderColor = (color: string) => setAppState(prev => ({ ...prev, borderColor: color }));
+  const setIsChatEnabled = (enabled: boolean) => setAppState(prev => ({ ...prev, isChatEnabled: enabled }));
+  const setSchedules = (newSchedules: Schedule[]) => setAppState(prev => ({ ...prev, schedules: newSchedules }));
+
 
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
 
@@ -541,47 +563,29 @@ export function HomePageContent() {
   // Load state from localStorage on initial mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const storedSelectedEvents = localStorage.getItem('selectedEvents');
-    if (storedSelectedEvents) {
-      try {
-          const parsedEvents = JSON.parse(storedSelectedEvents);
-          if(Array.isArray(parsedEvents)) {
-              const validEvents = parsedEvents.filter(Boolean);
-              const newSelectedEvents = Array(9).fill(null);
-              validEvents.slice(0, 9).forEach((event, i) => {
-                  newSelectedEvents[i] = event;
-              });
-              setSelectedEvents(newSelectedEvents);
-          }
-      } catch (e) { console.error("Failed to parse selectedEvents from localStorage", e); }
-    }
-     const storedViewOrder = localStorage.getItem('viewOrder');
-    if (storedViewOrder) {
-      try {
-          const parsedOrder = JSON.parse(storedViewOrder);
-          if(Array.isArray(parsedOrder) && parsedOrder.length === 9) {
-              setViewOrder(parsedOrder);
-          }
-      } catch(e) { console.error("Failed to parse viewOrder from localStorage", e); }
-    }
-    const storedGap = localStorage.getItem('gridGap');
-    if (storedGap) setGridGap(parseInt(storedGap, 10));
-
-    const storedBorderColor = localStorage.getItem('borderColor');
-    if (storedBorderColor) setBorderColor(storedBorderColor);
-
-    const storedChatEnabled = localStorage.getItem('isChatEnabled');
-    if (storedChatEnabled) setIsChatEnabled(JSON.parse(storedChatEnabled));
     
-    const storedSchedules = localStorage.getItem('schedules');
-    if (storedSchedules) {
+    const storedState = localStorage.getItem('appState');
+    if (storedState) {
         try {
-            const parsedSchedules: Schedule[] = JSON.parse(storedSchedules).map((s: any) => ({
-                ...s,
-                dateTime: new Date(s.dateTime) // Re-hydrate Date objects
-            }));
-            setSchedules(parsedSchedules);
-        } catch(e) { console.error("Failed to parse schedules from localStorage", e); }
+            const parsedState: AppState = JSON.parse(storedState);
+            if(Array.isArray(parsedState.selectedEvents)) {
+                const validEvents = parsedState.selectedEvents.filter(Boolean);
+                const newSelectedEvents = Array(9).fill(null);
+                validEvents.slice(0, 9).forEach((event, i) => {
+                    newSelectedEvents[i] = event;
+                });
+                parsedState.selectedEvents = newSelectedEvents;
+            }
+            if(parsedState.schedules) {
+                 parsedState.schedules = parsedState.schedules.map((s: any) => ({
+                    ...s,
+                    dateTime: new Date(s.dateTime) // Re-hydrate Date objects
+                }));
+            }
+            setAppState(prevState => ({...prevState, ...parsedState}));
+        } catch (e) {
+            console.error("Failed to parse appState from localStorage", e);
+        }
     }
     
   }, []);
@@ -635,14 +639,9 @@ export function HomePageContent() {
 
   useEffect(() => {
     if (isInitialLoadDone) {
-        localStorage.setItem('selectedEvents', JSON.stringify(selectedEvents));
-        localStorage.setItem('viewOrder', JSON.stringify(viewOrder));
-        localStorage.setItem('gridGap', gridGap.toString());
-        localStorage.setItem('borderColor', borderColor);
-        localStorage.setItem('isChatEnabled', JSON.stringify(isChatEnabled));
-        localStorage.setItem('schedules', JSON.stringify(schedules));
+        localStorage.setItem('appState', JSON.stringify(appState));
     }
-  }, [selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, isInitialLoadDone]); 
+  }, [appState, isInitialLoadDone]); 
 
   // URL reload effect
   useEffect(() => {
@@ -1963,29 +1962,8 @@ export function HomePageContent() {
       )}
       <RemoteControlManager
           ref={remoteControlManagerRef}
-          appState={{
-              selectedEvents,
-              viewOrder,
-              gridGap,
-              borderColor,
-              isChatEnabled,
-              schedules,
-          }}
-          setAppState={({
-              selectedEvents: newSelectedEvents,
-              viewOrder: newViewOrder,
-              gridGap: newGridGap,
-              borderColor: newBorderColor,
-              isChatEnabled: newIsChatEnabled,
-              schedules: newSchedules,
-          }) => {
-              if (newSelectedEvents) setSelectedEvents(newSelectedEvents);
-              if (newViewOrder) setViewOrder(newViewOrder);
-              if (newGridGap) setGridGap(newGridGap);
-              if (newBorderColor) setBorderColor(newBorderColor);
-              if (newIsChatEnabled) setIsChatEnabled(newIsChatEnabled);
-              if (newSchedules) setSchedules(newSchedules);
-          }}
+          appState={appState}
+          setAppState={setAppState}
           allEvents={events}
           allChannels={channelsData}
       />
