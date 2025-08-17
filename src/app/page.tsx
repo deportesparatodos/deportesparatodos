@@ -1450,7 +1450,7 @@ export function HomePageContent() {
                                     </div>
                                 </ScrollArea>
                                 <DialogFooter>
-                                    <DialogClose asChild><Button>Cerrar</Button></DialogClose>
+                                    <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -2045,3 +2045,4 @@ export default function Page() {
     </Suspense>
   );
 }
+
