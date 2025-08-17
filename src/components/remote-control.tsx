@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
@@ -68,10 +67,18 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
   const cleanupAbly = useCallback(() => {
     if (channelRef.current) {
-      channelRef.current.detach();
+      try {
+        channelRef.current.detach();
+      } catch (e) {
+        console.error("Error detaching from Ably channel:", e);
+      }
     }
     if (ablyClientRef.current) {
-      ablyClientRef.current.close();
+      try {
+        ablyClientRef.current.close();
+      } catch (e) {
+        console.error("Error closing Ably connection:", e);
+      }
     }
     channelRef.current = null;
     ablyClientRef.current = null;
@@ -84,23 +91,31 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   }, [cleanupAbly]);
   
  const initializeAbly = async (clientId: string): Promise<Realtime> => {
+    const apiKey = process.env.NEXT_PUBLIC_ABLY_API_KEY;
+    if (!apiKey) {
+      const errorMessage = "La clave de API de Ably no está configurada.";
+      setError(errorMessage);
+      toast({ variant: 'destructive', title: 'Error de Configuración', description: errorMessage });
+      throw new Error(errorMessage);
+    }
     try {
         const client = new Realtime({ 
-            authUrl: `/api/ably?clientId=${encodeURIComponent(clientId)}`,
+            key: apiKey,
+            clientId: clientId,
             echoMessages: false 
         });
         ablyClientRef.current = client;
         return client;
     } catch (e: any) {
         console.error("Ably initialization failed", e);
-        setError(e.message || "Failed to connect to the real-time service.");
+        setError(e.message || "No se pudo conectar al servicio en tiempo real.");
         throw e;
     }
   };
 
 
   const startControlledSession = useCallback(async (): Promise<string | undefined> => {
-    if (ablyClientRef.current) cleanupAbly();
+    if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
     setIsConnecting(true);
     setError(null);
 
@@ -150,7 +165,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
   
   const startControllingSession = async (code: string) => {
-    if (ablyClientRef.current) cleanupAbly();
+    if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
     if (!code) {
         toast({ variant: 'destructive', title: "Error", description: "Por favor, introduce un código de sesión." });
         return;
@@ -159,7 +174,18 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     setError(null);
     try {
         const ably = await initializeAbly(`controller-${code}`);
-        ably.connection.on('connected', () => {
+
+        const connectionTimeout = setTimeout(() => {
+            if (mode !== 'controlling') {
+                setIsConnecting(false);
+                setMode('inactive');
+                toast({ variant: 'destructive', title: "Error de Conexión", description: "No se pudo conectar a la sesión. Verifica el código e inténtalo de nuevo." });
+                cleanupAbly();
+            }
+        }, 15000); // 15 second timeout
+
+        ably.connection.once('connected', () => {
+            clearTimeout(connectionTimeout);
             const channel = ably.channels.get(code);
             channelRef.current = channel;
 
@@ -173,7 +199,8 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${code}.` });
         });
 
-        ably.connection.on('failed', (error) => {
+        ably.connection.once('failed', (error) => {
+            clearTimeout(connectionTimeout);
             setError(error.reason.message || "No se pudo conectar a la sesión.");
             setIsConnecting(false);
             setMode('inactive');

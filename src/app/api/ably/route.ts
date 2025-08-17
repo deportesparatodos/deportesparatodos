@@ -1,30 +1,43 @@
-
-import { NextRequest, NextResponse } from 'next/server';
-import Ably from 'ably';
-
-export const dynamic = 'force-dynamic';
-
-export async function GET(request: NextRequest) {
-  if (!process.env.ABLY_API_KEY) {
-    return NextResponse.json(
-      { error: 'ABLY_API_KEY environment variable not set' },
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
-  const clientId = request.nextUrl.searchParams.get('clientId') || 'anonymous';
-  
-  try {
-    const ably = new Ably.Rest({ key: process.env.ABLY_API_KEY });
-    const tokenRequest = await ably.auth.createTokenRequest({ 
-        clientId: clientId,
-    });
-    return NextResponse.json(tokenRequest);
-  } catch (error: any) {
-    console.error('Ably token request error:', error);
-    return NextResponse.json(
-      { error: `Failed to create Ably token: ${error.message}` },
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+{
+  "functions": {
+    "src/app/api/streams/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "src/app/api/cron/route.ts": {
+      "maxDuration": 300,
+      "memory": 512
+    },
+    "src/app/api/subscribe/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/notifications/test/route.ts": {
+      "maxDuration": 60,
+      "memory": 512
+    },
+    "src/app/api/calendar/route.ts": {
+      "maxDuration": 60,
+      "memory": 512
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/streams/:path*",
+      "destination": "/api/streams"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 11 * * *"
+    }
+  ],
+  "env": {
+    "MAILCHIMP_API_KEY": "36daf19427c9b10ed8642229fe3b8f68",
+    "MAILCHIMP_AUDIENCE_ID": "23534877f5",
+    "MAILCHIMP_SERVER_PREFIX": "us6",
+    "SCRAPER_API_KEY": "da6edab5082261b1b4d39ffe229e0ed8",
+    "ABLY_API_KEY": "GURB2g.Fm2ZsA:Wvp_BAgowEHMei4ak5oCEFGY_YoleTGUJWSvL77PtUA",
+    "NEXT_PUBLIC_ABLY_API_KEY": "GURB2g.Fm2ZsA:Wvp_BAgowEHMei4ak5oCEFGY_YoleTGUJWSvL77PtUA"
   }
 }
