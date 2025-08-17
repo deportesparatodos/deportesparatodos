@@ -28,7 +28,7 @@ interface EventSelectionDialogProps {
   event: Event;
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
-  onRemove: () => void;
+  onRemove: (event: Event) => void;
   isLoading: boolean;
 }
 
@@ -144,7 +144,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     variant="destructive"
                     className="w-full"
                     onClick={() => {
-                        onRemove();
+                        onRemove(event);
                         onOpenChange(false);
                     }}
                 >

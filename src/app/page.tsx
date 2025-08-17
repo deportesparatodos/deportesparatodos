@@ -581,30 +581,37 @@ export function HomePageContent() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    const storedState = localStorage.getItem('appState');
-    if (storedState) {
-        try {
-            const parsedState: AppState = JSON.parse(storedState);
-            if(!Array.isArray(parsedState.selectedEvents)) {
-                parsedState.selectedEvents = Array(9).fill(null);
-            } else {
-                const validEvents = parsedState.selectedEvents.filter(Boolean);
-                const newSelectedEvents = Array(9).fill(null);
-                validEvents.slice(0, 9).forEach((event, i) => {
-                    newSelectedEvents[i] = event;
-                });
-                parsedState.selectedEvents = newSelectedEvents;
-            }
-            if(parsedState.schedules) {
-                 parsedState.schedules = parsedState.schedules.map((s: any) => ({
-                    ...s,
-                    dateTime: new Date(s.dateTime) // Re-hydrate Date objects
-                }));
-            }
-            setAppState(prevState => ({...prevState, ...parsedState}));
-        } catch (e) {
-            console.error("Failed to parse appState from localStorage", e);
+    try {
+        const storedStateJSON = localStorage.getItem('appState');
+        if (storedStateJSON) {
+            const storedState: AppState = JSON.parse(storedStateJSON);
+            const selectedEventsArray = Array.isArray(storedState.selectedEvents) ? storedState.selectedEvents : Array(9).fill(null);
+            
+            // Re-hydrate dates
+            const schedulesArray = Array.isArray(storedState.schedules) ? storedState.schedules.map(s => ({
+                ...s,
+                dateTime: new Date(s.dateTime),
+            })) : [];
+
+            setAppState(prevState => ({
+                ...prevState,
+                ...storedState,
+                selectedEvents: selectedEventsArray,
+                schedules: schedulesArray,
+            }));
         }
+    } catch (e) {
+        console.error("Failed to parse appState from localStorage", e);
+        // If parsing fails, ensure we have a clean state
+        setAppState({
+            selectedEvents: Array(9).fill(null),
+            viewOrder: Array.from({ length: 9 }, (_, i) => i),
+            gridGap: 0,
+            borderColor: '#000000',
+            isChatEnabled: true,
+            schedules: [],
+            fullscreenIndex: null,
+        });
     }
     
   }, []);
@@ -1265,7 +1272,7 @@ export function HomePageContent() {
   };
 
   const handleToggleFullscreen = (index: number) => {
-    setFullscreenIndex(prevIndex => (prevIndex === index ? null : index));
+    setFullscreenIndex(prevIndex => (prevIndex === index ? null : prevIndex));
   };
 
 
@@ -1998,7 +2005,7 @@ export function HomePageContent() {
               event={dialogEvent}
               onSelect={handleEventSelect}
               isModification={isModification}
-              onRemove={() => handleRemoveEventFromDialog(dialogEvent)}
+              onRemove={handleRemoveEventFromDialog}
               isLoading={isOptionsLoading}
           />
       )}
@@ -2073,5 +2080,6 @@ export default function Page() {
     </Suspense>
   );
 }
+
 
 
