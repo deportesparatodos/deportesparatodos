@@ -93,7 +93,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   const initializeAbly = async (clientId: string): Promise<Realtime> => {
       return new Promise(async (resolve, reject) => {
           try {
-              const response = await fetch('/api/ably');
+              const response = await fetch(`/api/ably?clientId=${encodeURIComponent(clientId)}`);
               if (!response.ok) {
                   const errorData = await response.json();
                   throw new Error(errorData.error || 'Failed to fetch Ably API key.');
@@ -165,7 +165,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             reject(e);
         }
     });
-  }, [appState, cleanupAbly, setAppState, toast]);
+  }, [appState, cleanupAbly, setAppState]);
 
   
   const startControllingSession = async (code: string) => {
@@ -258,7 +258,7 @@ RemoteControlManager.displayName = 'RemoteControlManager';
 // --- UI Components for different modes ---
 
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: any) {
-  const [openDialog, setOpenDialog] = useState<null | 'add-event' | 'schedule' | 'notification'>(null);
+  const [openDialog, setOpenDialog] = useState<null | 'add-event' | 'schedule' | 'notification' | 'tutorial' | 'errors' | 'contact' | 'legal'>(null);
 
   // States for dialogs
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -323,79 +323,89 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     });
     return Array.from(categorySet).sort();
   }, [allEvents]);
+  
+  // This is a dummy dialog wrapper to provide context for sub-dialogs
+  const DialogManager = ({children}: {children: React.ReactNode}) => (
+    <Dialog open={true}>
+        <DialogContent className="hidden">
+           {/* This content is never shown, it just provides the context */}
+        </DialogContent>
+        {children}
+    </Dialog>
+  )
 
   return (
-    <>
-      <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-        <header className="flex items-center justify-between p-2 border-b flex-shrink-0">
-          <h2 className="font-semibold">Control Remoto</h2>
-          <Button variant="destructive" size="sm" onClick={onStop}>
-            <X className="mr-2 h-4 w-4" /> Desconectar
-          </Button>
-        </header>
-        <div className="flex-grow overflow-y-auto">
-            <LayoutConfigurator
-              order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
-              onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
-              eventDetails={appState.selectedEvents}
-              onRemove={handleRemoveEvent}
-              onModify={handleModifyEvent}
-              isViewPage={true}
-              onAddEvent={handleAddEvent}
-              onSchedule={() => setOpenDialog('schedule')}
-              onNotificationManager={() => setOpenDialog('notification')}
-              gridGap={appState.gridGap}
-              onGridGapChange={(value: number) => onAction({ gridGap: value })}
-              borderColor={appState.borderColor}
-              onBorderColorChange={(value: string) => onAction({ borderColor: value })}
-              isChatEnabled={appState.isChatEnabled}
-              onIsChatEnabledChange={(value: boolean) => onAction({ isChatEnabled: value })}
-              categories={allCategories}
-              onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
-              onOpenTutorial={() => {}}
-              onOpenErrors={() => {}}
-              onOpenCalendar={() => {}}
-              isTutorialOpen={false}
-              onIsTutorialOpenChange={() => {}}
-              isErrorsOpen={false}
-              onIsErrorsOpenChange={() => {}}
-            />
+      <DialogManager>
+        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+            <header className="flex items-center justify-between p-2 border-b flex-shrink-0">
+            <h2 className="font-semibold">Control Remoto</h2>
+            <Button variant="destructive" size="sm" onClick={onStop}>
+                <X className="mr-2 h-4 w-4" /> Desconectar
+            </Button>
+            </header>
+            <div className="flex-grow overflow-y-auto">
+                <LayoutConfigurator
+                order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
+                onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
+                eventDetails={appState.selectedEvents}
+                onRemove={handleRemoveEvent}
+                onModify={handleModifyEvent}
+                isViewPage={true}
+                onAddEvent={handleAddEvent}
+                onSchedule={() => setOpenDialog('schedule')}
+                onNotificationManager={() => setOpenDialog('notification')}
+                gridGap={appState.gridGap}
+                onGridGapChange={(value: number) => onAction({ gridGap: value })}
+                borderColor={appState.borderColor}
+                onBorderColorChange={(value: string) => onAction({ borderColor: value })}
+                isChatEnabled={appState.isChatEnabled}
+                onIsChatEnabledChange={(value: boolean) => onAction({ isChatEnabled: value })}
+                categories={allCategories}
+                onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
+                onOpenTutorial={() => setOpenDialog('tutorial')}
+                onOpenErrors={() => setOpenDialog('errors')}
+                onOpenCalendar={() => {}} // Calendar subscription is a client-side action, not remote controlled
+                isTutorialOpen={openDialog === 'tutorial'}
+                onIsTutorialOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                isErrorsOpen={openDialog === 'errors'}
+                onIsErrorsOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                />
+            </div>
         </div>
-      </div>
-      
-      {dialogEvent && (
-        <EventSelectionDialog
-          isOpen={openDialog === 'add-event'}
-          onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-          event={dialogEvent}
-          onSelect={handleEventSelect}
-          isModification={isModification}
-          onRemove={handleRemoveFromDialog}
-          isLoading={false}
+        
+        {dialogEvent && (
+            <EventSelectionDialog
+            isOpen={openDialog === 'add-event'}
+            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+            event={dialogEvent}
+            onSelect={handleEventSelect}
+            isModification={isModification}
+            onRemove={handleRemoveFromDialog}
+            isLoading={false}
+            />
+        )}
+        
+        <ScheduleManager
+            open={openDialog === 'schedule'}
+            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+            currentSelection={futureSelection}
+            currentOrder={futureOrder}
+            schedules={appState.schedules}
+            onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
+            onModifyEventInView={() => {}}
+            isLoading={false}
+            onAddEvent={() => {}}
+            initialSelection={appState.selectedEvents}
+            initialOrder={appState.viewOrder}
+            setFutureSelection={setFutureSelection}
+            setFutureOrder={setFutureOrder}
         />
-      )}
-      
-      <ScheduleManager
-          open={openDialog === 'schedule'}
-          onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-          currentSelection={futureSelection}
-          currentOrder={futureOrder}
-          schedules={appState.schedules}
-          onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
-          onModifyEventInView={() => {}}
-          isLoading={false}
-          onAddEvent={() => {}}
-          initialSelection={appState.selectedEvents}
-          initialOrder={appState.viewOrder}
-          setFutureSelection={setFutureSelection}
-          setFutureOrder={setFutureOrder}
-      />
-      
-      <NotificationManager
-        open={openDialog === 'notification'}
-        onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-        allCategories={allCategories}
-      />
-    </>
+        
+        <NotificationManager
+            open={openDialog === 'notification'}
+            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+            allCategories={allCategories}
+        />
+      </DialogManager>
   );
 }
