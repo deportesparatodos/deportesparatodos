@@ -27,6 +27,11 @@ interface AddEventsDialogProps {
   getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null };
   events: Event[];
   channels: Channel[];
+  liveEvents: Event[];
+  upcomingEvents: Event[];
+  unknownEvents: Event[];
+  finishedEvents: Event[];
+  channels247Events: Event[];
 }
 
 export function AddEventsDialog({ 
@@ -36,7 +41,7 @@ export function AddEventsDialog({
     onChannelClick,
     getEventSelection,
     events,
-    channels,
+    channels
 }: AddEventsDialogProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -58,36 +63,30 @@ export function AddEventsDialog({
     
     const { sortedEvents, filteredChannels } = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
-
-        // Sort events based on the specified priority
+        
         const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
         const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+        
+        const filteredEvents = events.filter(event => event.title.toLowerCase().includes(lowercasedFilter));
 
-        const allSortedEvents = [...events]
-            .filter(event => event.title.toLowerCase().includes(lowercasedFilter))
-            .sort((a, b) => {
-                const statusA = statusOrder[a.status] ?? 5;
-                const statusB = statusOrder[b.status] ?? 5;
+        filteredEvents.sort((a, b) => {
+            const statusA = statusOrder[a.status] ?? 5;
+            const statusB = statusOrder[b.status] ?? 5;
+            if (statusA !== statusB) return statusA - statusB;
 
-                if (statusA !== statusB) {
-                    return statusA - statusB;
-                }
-
-                // If both are "En Vivo", prioritize those with custom images
-                if (a.status === 'En Vivo' && b.status === 'En Vivo') {
-                    const aHasCustomImage = a.image && a.image !== placeholderImage;
-                    const bHasCustomImage = b.image && b.image !== placeholderImage;
-                    if (aHasCustomImage && !bHasCustomImage) return -1;
-                    if (!aHasCustomImage && bHasCustomImage) return 1;
-                }
-                
-                // Fallback to title sort
-                return a.title.localeCompare(b.title);
-            });
+            if (a.status === 'En Vivo') {
+                const aHasCustomImage = a.image && a.image !== placeholderImage;
+                const bHasCustomImage = b.image && b.image !== placeholderImage;
+                if (aHasCustomImage && !bHasCustomImage) return -1;
+                if (!aHasCustomImage && bHasCustomImage) return 1;
+            }
+            
+            return a.title.localeCompare(b.title);
+        });
         
         const filteredCh = channels.filter(channel => channel.name.toLowerCase().includes(lowercasedFilter));
 
-        return { sortedEvents: allSortedEvents, filteredChannels: filteredCh };
+        return { sortedEvents: filteredEvents, filteredChannels: filteredCh };
     }, [searchTerm, events, channels]);
 
 
@@ -143,7 +142,7 @@ export function AddEventsDialog({
                             <TabsContent value="channels">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                      {filteredChannels.map((channel, index) => {
-                                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: [], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                                         const selection = getEventSelection(channelAsEvent);
                                         return (
                                             <Card key={`dialog-channel-${index}`} onClick={() => handleChannelClick(channel)} className="cursor-pointer group rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border h-full w-full flex flex-col">

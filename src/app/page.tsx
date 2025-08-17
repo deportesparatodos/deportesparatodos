@@ -235,18 +235,21 @@ export function HomePageContent() {
   const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = appState;
   
   const setLiveAppState = (newState: Partial<AppState>) => {
-    const validatedState = { ...appState, ...newState };
-    if (!Array.isArray(validatedState.selectedEvents)) {
-      validatedState.selectedEvents = Array(9).fill(null);
-    }
-    if (validatedState.schedules) {
-      validatedState.schedules = validatedState.schedules.map((s: any) => ({
-        ...s,
-        dateTime: new Date(s.dateTime) // Re-hydrate Date objects
-      }));
-    }
-    setAppState(validatedState);
-  };
+    setAppState(prevState => {
+        const validatedState = { ...prevState, ...newState };
+        if (!Array.isArray(validatedState.selectedEvents)) {
+          validatedState.selectedEvents = Array(9).fill(null);
+        }
+        if (validatedState.schedules) {
+          validatedState.schedules = validatedState.schedules.map((s: any) => ({
+            ...s,
+            dateTime: new Date(s.dateTime) // Re-hydrate Date objects
+          }));
+        }
+        return validatedState;
+    });
+};
+
 
   const setSelectedEvents = (events: (Event | null)[]) => setLiveAppState({ selectedEvents: events });
   const setViewOrder = (order: number[]) => setLiveAppState({ viewOrder: order });
@@ -667,7 +670,13 @@ export function HomePageContent() {
   useEffect(() => {
       // Only persist state if not in a controlled session
       if (isInitialLoadDone && !sessionStorage.getItem('isControlledSession')) {
-          localStorage.setItem('appState', JSON.stringify(appState));
+          try {
+             if (appState && Array.isArray(appState.selectedEvents)) {
+                localStorage.setItem('appState', JSON.stringify(appState));
+             }
+          } catch (e) {
+            console.error("Error saving appState to localStorage", e);
+          }
       }
   }, [appState, isInitialLoadDone]);
   
@@ -1137,6 +1146,14 @@ export function HomePageContent() {
     }
   };
 
+  const handleRemoveEventFromDialog = (eventToRemove: Event) => {
+    setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
+      // Create a new array, setting the specific event to null
+      return currentSelectedEvents.map(se => (se?.id === eventToRemove.id ? null : se));
+    });
+    setEventSelectionDialogOpen(false); // Close dialog after removal
+};
+
  const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
     setDialogContext(context);
     setIsOptionsLoading(true);
@@ -1275,14 +1292,6 @@ export function HomePageContent() {
     setFullscreenIndex(prevIndex => (prevIndex === index ? null : prevIndex));
   };
 
-
-  const handleRemoveEventFromDialog = (event: Event) => {
-    setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
-        return currentSelectedEvents.map(se => se?.id === event.id ? null : se);
-    });
-    setEventSelectionDialogOpen(false);
-};
-  
   const getItemClasses = (orderedIndex: number, count: number) => {
     if (isMobile) return '';
     if (count === 3) {
@@ -1915,9 +1924,9 @@ export function HomePageContent() {
                                           </Button>
                                         </SheetTrigger>
                                          <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                            <SheetHeader>
-                                                <SheetTitle className="sr-only">Configuration Panel</SheetTitle>
-                                            </SheetHeader>
+                                              <SheetHeader className="p-4 border-b">
+                                                <SheetTitle>Configuración</SheetTitle>
+                                              </SheetHeader>
                                               <LayoutConfigurator
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                                 onOrderChange={handleOrderChange}
@@ -2005,7 +2014,7 @@ export function HomePageContent() {
               event={dialogEvent}
               onSelect={handleEventSelect}
               isModification={isModification}
-              onRemove={handleRemoveEventFromDialog}
+              onRemove={() => handleRemoveEventFromDialog(dialogEvent)}
               isLoading={isOptionsLoading}
           />
       )}
@@ -2080,6 +2089,7 @@ export default function Page() {
     </Suspense>
   );
 }
+
 
 
 

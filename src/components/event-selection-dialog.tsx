@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { FC, useEffect, useState } from 'react';
@@ -28,7 +29,7 @@ interface EventSelectionDialogProps {
   event: Event;
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
-  onRemove: (event: Event) => void;
+  onRemove: () => void;
   isLoading: boolean;
 }
 
@@ -144,7 +145,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     variant="destructive"
                     className="w-full"
                     onClick={() => {
-                        onRemove(event);
+                        onRemove();
                         onOpenChange(false);
                     }}
                 >
