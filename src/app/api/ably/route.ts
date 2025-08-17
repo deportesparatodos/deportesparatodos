@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 // This endpoint securely provides the Ably API key to the client.
 export async function GET() {
-  const apiKey = process.env.ABLY_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_ABLY_API_KEY;
 
   if (!apiKey) {
     console.error("Ably API Key is not configured on the server.");
