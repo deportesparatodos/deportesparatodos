@@ -93,7 +93,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   const initializeAbly = async (clientId: string): Promise<Realtime> => {
       return new Promise(async (resolve, reject) => {
           try {
-              const response = await fetch(`/api/ably?clientId=${encodeURIComponent(clientId)}`);
+              const response = await fetch(`/api/ably`);
               if (!response.ok) {
                   const errorData = await response.json();
                   throw new Error(errorData.error || 'Failed to fetch Ably API key.');
@@ -246,11 +246,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     );
   }
 
-  return (
-      <>
-        {/* This component doesn't render anything itself, it just provides the functions */}
-      </>
-  );
+  return null;
 });
 
 RemoteControlManager.displayName = 'RemoteControlManager';
@@ -323,19 +319,9 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     });
     return Array.from(categorySet).sort();
   }, [allEvents]);
-  
-  // This is a dummy dialog wrapper to provide context for sub-dialogs
-  const DialogManager = ({children}: {children: React.ReactNode}) => (
-    <Dialog open={true}>
-        <DialogContent className="hidden">
-           {/* This content is never shown, it just provides the context */}
-        </DialogContent>
-        {children}
-    </Dialog>
-  )
 
   return (
-      <DialogManager>
+      <>
         <div className="fixed inset-0 bg-background z-[100] flex flex-col">
             <header className="flex items-center justify-between p-2 border-b flex-shrink-0">
             <h2 className="font-semibold">Control Remoto</h2>
@@ -374,38 +360,44 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
         </div>
         
         {dialogEvent && (
+          <Dialog open={openDialog === 'add-event'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
             <EventSelectionDialog
-            isOpen={openDialog === 'add-event'}
-            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-            event={dialogEvent}
-            onSelect={handleEventSelect}
-            isModification={isModification}
-            onRemove={handleRemoveFromDialog}
-            isLoading={false}
+                isOpen={openDialog === 'add-event'}
+                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                event={dialogEvent}
+                onSelect={handleEventSelect}
+                isModification={isModification}
+                onRemove={handleRemoveFromDialog}
+                isLoading={false}
             />
+          </Dialog>
         )}
         
-        <ScheduleManager
-            open={openDialog === 'schedule'}
-            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-            currentSelection={futureSelection}
-            currentOrder={futureOrder}
-            schedules={appState.schedules}
-            onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
-            onModifyEventInView={() => {}}
-            isLoading={false}
-            onAddEvent={() => {}}
-            initialSelection={appState.selectedEvents}
-            initialOrder={appState.viewOrder}
-            setFutureSelection={setFutureSelection}
-            setFutureOrder={setFutureOrder}
-        />
-        
-        <NotificationManager
-            open={openDialog === 'notification'}
-            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-            allCategories={allCategories}
-        />
-      </DialogManager>
+        <Dialog open={openDialog === 'schedule'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+          <ScheduleManager
+              open={openDialog === 'schedule'}
+              onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+              currentSelection={futureSelection}
+              currentOrder={futureOrder}
+              schedules={appState.schedules}
+              onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
+              onModifyEventInView={() => {}}
+              isLoading={false}
+              onAddEvent={() => {}}
+              initialSelection={appState.selectedEvents}
+              initialOrder={appState.viewOrder}
+              setFutureSelection={setFutureSelection}
+              setFutureOrder={setFutureOrder}
+          />
+        </Dialog>
+
+        <Dialog open={openDialog === 'notification'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+          <NotificationManager
+              open={openDialog === 'notification'}
+              onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+              allCategories={allCategories}
+          />
+        </Dialog>
+      </>
   );
 }

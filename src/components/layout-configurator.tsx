@@ -197,7 +197,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     const [isRemoteSessionActive, setIsRemoteSessionActive] = useState(false);
     const [remoteSessionCode, setRemoteSessionCode] = useState('');
-    const [isActivatingRemote, setIsActivatingRemote] = useState(isRemoteSessionActive);
+    const [isActivatingRemote, setIsActivatingRemote] = useState(false);
     const [copied, setCopied] = useState(false);
     const { toast } = useToast();
 
@@ -453,7 +453,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-
+        
         <Dialog open={isContactOpen} onOpenChange={setIsContactOpen}>
             <DialogContent>
                 <DialogHeader>
@@ -538,5 +538,3 @@ export function LayoutConfigurator(props: EventListManagementProps) {
       </div>
     );
 }
-
-    
