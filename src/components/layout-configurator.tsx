@@ -106,11 +106,11 @@ export function EventList({
                         {currentIndex + 1}
                     </div>
                     
-                    <div className="flex-grow flex flex-col gap-2 text-center">
-                        <p className="text-sm font-semibold break-words">
+                    <div className="flex-grow flex flex-col gap-2 min-w-0">
+                        <p className="text-sm font-semibold break-words truncate">
                             {event.title}
                         </p>
-                         <div className="flex items-center justify-center gap-1">
+                         <div className="flex items-center justify-start gap-1 flex-wrap">
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -315,6 +315,14 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                               </DropdownMenu>
                              </>
                           )}
+                           {isViewPage && onNotificationManager && (
+                                <>
+                                  <Separator/>
+                                  <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
+                                      <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
+                                  </Button>
+                                </>
+                           )}
                       </AccordionContent>
                   </AccordionItem>
               </Accordion>
@@ -328,11 +336,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
                     <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
                 </Button>
-                {onNotificationManager && (
-                  <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
-                      <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
-                  </Button>
-                )}
                 {onOpenCalendar && (
                   <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
                       <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario

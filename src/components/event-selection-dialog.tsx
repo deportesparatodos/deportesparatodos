@@ -122,7 +122,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                                             )}
                                             onClick={() => onSelect(event, option.url)}
                                         >
-                                            {option.label}
+                                            <span className="truncate">{option.label}</span>
                                         </Button>
                                     </TooltipTrigger>
                                     {domain && (

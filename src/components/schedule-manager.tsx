@@ -187,8 +187,6 @@ export function ScheduleManager({
               isModification={true}
               onRemove={() => {}}
               isLoading={false}
-              setIsLoading={() => {}}
-              setEventForDialog={() => {}}
             />
         )}
       </Dialog>
@@ -238,13 +236,13 @@ export function ScheduleManager({
                               .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
                               .map((schedule) => (
                                   <div key={schedule.id} className="flex items-center justify-between p-3 rounded-md border bg-secondary">
-                                  <div>
-                                      <p className="font-bold">{format(schedule.dateTime, 'EEE, d MMM, p')}</p>
-                                      <p className="text-sm text-muted-foreground">
+                                  <div className="min-w-0">
+                                      <p className="font-bold truncate">{format(schedule.dateTime, 'EEE, d MMM, p')}</p>
+                                      <p className="text-sm text-muted-foreground truncate">
                                           Eventos: {schedule.events.filter(Boolean).length}
                                       </p>
                                   </div>
-                                  <div className="flex items-center">
+                                  <div className="flex items-center flex-shrink-0">
                                       <Button variant="ghost" size="icon" onClick={() => handleEditSchedule(schedule)}>
                                           <Pencil className="h-4 w-4" />
                                       </Button>
@@ -314,7 +312,6 @@ export function ScheduleManager({
                                 setModifyEventForSchedule({ event: eventForModification, index });
                               }}
                               isViewPage={true}
-                              onAddEvent={onAddEvent}
                           />
                       </div>
                   </ScrollArea>
