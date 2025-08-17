@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -208,7 +209,7 @@ const normalizeCategory = (category: string): string => {
     return category;
 };
 
-type AppState = {
+export type AppState = {
   selectedEvents: (Event | null)[];
   viewOrder: number[];
   gridGap: number;
@@ -230,6 +231,10 @@ export function HomePageContent() {
   });
 
   const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules } = appState;
+  
+  const setLiveAppState = (newState: AppState) => {
+    setAppState(newState);
+  };
   
   const setSelectedEvents = (events: (Event | null)[]) => setAppState(prev => ({ ...prev, selectedEvents: events }));
   const setViewOrder = (order: number[]) => setAppState(prev => ({ ...prev, viewOrder: order }));
@@ -637,11 +642,34 @@ export function HomePageContent() {
     }
   }, [addEventsDialogOpen, fetchEvents]);
 
+  // Centralized state persistence
   useEffect(() => {
-    if (isInitialLoadDone) {
-        localStorage.setItem('appState', JSON.stringify(appState));
-    }
-  }, [appState, isInitialLoadDone]); 
+      // Only persist state if not in a controlled session
+      if (isInitialLoadDone && !sessionStorage.getItem('isControlledSession')) {
+          localStorage.setItem('appState', JSON.stringify(appState));
+      }
+  }, [appState, isInitialLoadDone]);
+  
+  // This effect is responsible for syncing state when being controlled
+  useEffect(() => {
+      const handleRemoteUpdate = (event: any) => {
+          const { newState } = event.detail;
+          if (newState) {
+              setAppState(newState);
+          }
+      };
+      
+      window.addEventListener('remote-state-update', handleRemoteUpdate);
+      
+      // Mark this session as controlled to stop local persistence
+      if (sessionStorage.getItem('isControlledSession')) {
+        // No local saving
+      }
+
+      return () => {
+          window.removeEventListener('remote-state-update', handleRemoteUpdate);
+      };
+  }, []);
 
   // URL reload effect
   useEffect(() => {
@@ -1963,7 +1991,7 @@ export function HomePageContent() {
       <RemoteControlManager
           ref={remoteControlManagerRef}
           appState={appState}
-          setAppState={setAppState}
+          setAppState={setLiveAppState}
           allEvents={events}
           allChannels={channelsData}
       />

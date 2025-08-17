@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
@@ -15,8 +16,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, AlertCircle, Copy, Check, X, Airplay } from 'lucide-react';
-import type { Event } from './event-carousel';
+import { Loader2, AlertCircle, Copy, Check, X, Airplay, Maximize, Minimize } from 'lucide-react';
+import type { Event, StreamOption } from './event-carousel';
 import type { Schedule } from './schedule-manager';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Channel } from './channel-list';
@@ -30,6 +31,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { AddEventsDialog } from './add-events-dialog';
 
 
 type AppState = {
@@ -96,12 +98,14 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             const response = await fetch('/api/ably');
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to fetch Ably API key.');
+                reject(new Error(errorData.error || 'Failed to fetch Ably API key.'));
+                return;
             }
             const { apiKey } = await response.json();
 
             if (!apiKey) {
-                throw new Error("La clave de API de Ably no está configurada.");
+                reject(new Error("La clave de API de Ably no está configurada."));
+                return;
             }
 
             const client = new Realtime({
@@ -141,21 +145,23 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
                 setSessionId(newSessionId);
                 setMode('controlled');
                 setIsConnecting(false);
+                sessionStorage.setItem('isControlledSession', 'true');
                 
                 const channel = ably.channels.get(newSessionId);
                 channelRef.current = channel;
 
                 channel.subscribe('sync-request', () => {
-                    channel.publish('state-update', appState);
+                    channel.publish('state-update', { appState });
                 });
 
                 channel.subscribe('action', (message: AblyMessage) => {
                     if (message.data.type === 'SET_APP_STATE') {
-                        setAppState(message.data.payload);
+                        // Dispatch custom event to be caught by the page
+                         window.dispatchEvent(new CustomEvent('remote-state-update', { detail: { newState: message.data.payload } }));
                     }
                 });
                 
-                channel.publish('state-update', appState);
+                channel.publish('state-update', { appState });
                 resolve(newSessionId);
             });
             
@@ -172,7 +178,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             reject(e);
         }
     });
-  }, [appState, cleanupAbly, setAppState, toast]);
+  }, [appState, cleanupAbly, toast]);
 
   
   const startControllingSession = async (code: string) => {
@@ -201,7 +207,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             channelRef.current = channel;
 
             channel.subscribe('state-update', (message: AblyMessage) => {
-                setAppState(message.data);
+                setAppState(message.data.appState);
             });
 
             channel.publish('sync-request', {});
@@ -230,6 +236,9 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     if(mode === 'controlling') {
         toast({ title: "Control Remoto Desconectado" });
     }
+    if (mode === 'controlled') {
+        sessionStorage.removeItem('isControlledSession');
+    }
     setMode('inactive');
     setSessionId('');
     setError(null);
@@ -240,13 +249,22 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     startControlledSession,
     startControllingSession,
   }));
+  
+  const handleAction = (newState: Partial<AppState>) => {
+      const updatedState = { ...appState, ...newState };
+      setAppState(updatedState); // Update local state for immediate feedback
+      channelRef.current?.publish('action', { 
+        name: 'SET_APP_STATE', 
+        data: { type: 'SET_APP_STATE', payload: updatedState }
+      });
+  };
 
   if (mode === 'controlling') {
     return (
       <ControllingView
           onStop={stopSession}
           appState={appState}
-          onAction={(payload) => channelRef.current?.publish('action', { name: 'SET_APP_STATE', data: { type: 'SET_APP_STATE', payload }})}
+          onAction={handleAction}
           allEvents={allEvents}
           allChannels={allChannels}
       />
@@ -262,18 +280,19 @@ RemoteControlManager.displayName = 'RemoteControlManager';
 // --- UI Components for different modes ---
 
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: any) {
-  const [openDialog, setOpenDialog] = useState<null | 'add-event' | 'schedule' | 'notification' | 'tutorial' | 'errors' | 'contact' | 'legal'>(null);
+  const [openDialog, setOpenDialog] = useState<null | 'add-event' | 'schedule' | 'notification' | 'event-selection'>(null);
   
-  const [isEventSelectionOpen, setIsEventSelectionOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
 
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
+  const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
+
   
   const handleUpdateState = (newState: Partial<AppState>) => {
-    onAction({ ...appState, ...newState });
+    onAction(newState);
   };
   
   const handleModifyEvent = (event: Event, index: number) => {
@@ -288,25 +307,18 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     setDialogEvent(eventForModification);
     setIsModification(true);
     setModificationIndex(index);
-    setIsEventSelectionOpen(true);
-  };
-
-  const handleAddEvent = () => {
-    setDialogEvent(null);
-    setIsModification(false);
-    setModificationIndex(appState.selectedEvents.findIndex((e: any) => e === null));
-    setIsEventSelectionOpen(true); // Needs a generic event/channel selection dialog
+    setOpenDialog('event-selection');
   };
   
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const newSelectedEvents = [...appState.selectedEvents];
     let targetIndex = modificationIndex;
 
-    if (targetIndex !== -1 && targetIndex !== null) {
+    if (targetIndex !== null && targetIndex !== -1) {
       newSelectedEvents[targetIndex] = { ...event, selectedOption: optionUrl };
       handleUpdateState({ selectedEvents: newSelectedEvents });
     }
-    setIsEventSelectionOpen(false);
+    setOpenDialog(null);
   };
   
   const handleRemoveEvent = (indexToRemove: number) => {
@@ -317,11 +329,14 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
   
   const handleRemoveFromDialog = () => {
     if(modificationIndex !== null){
-        const newSelectedEvents = [...appState.selectedEvents];
-        newSelectedEvents[modificationIndex] = null;
-        handleUpdateState({ selectedEvents: newSelectedEvents });
-        setIsEventSelectionOpen(false);
+        handleRemoveEvent(modificationIndex);
+        setOpenDialog(null);
     }
+  }
+  
+  const handleToggleFullscreen = (index: number) => {
+      const currentFullscreen = appState.fullscreenIndex;
+      handleUpdateState({ fullscreenIndex: currentFullscreen === index ? null : index });
   }
 
   const allCategories = useMemo(() => {
@@ -334,13 +349,6 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
 
   return (
       <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-        <header className="flex items-center justify-between p-2 border-b flex-shrink-0">
-          <h2 className="font-semibold">Control Remoto</h2>
-          <Button variant="destructive" size="sm" onClick={onStop}>
-              <X className="mr-2 h-4 w-4" /> Desconectar
-          </Button>
-        </header>
-
         <LayoutConfigurator
             order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
             onOrderChange={(newOrder: number[]) => handleUpdateState({ viewOrder: newOrder })}
@@ -348,9 +356,11 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
             onRemove={handleRemoveEvent}
             onModify={handleModifyEvent}
             isViewPage={true}
-            onAddEvent={handleAddEvent}
+            onAddEvent={() => setOpenDialog('add-event')}
             onSchedule={() => setOpenDialog('schedule')}
             onNotificationManager={() => setOpenDialog('notification')}
+            onToggleFullscreen={handleToggleFullscreen}
+            fullscreenIndex={appState.fullscreenIndex}
             gridGap={appState.gridGap}
             onGridGapChange={(value: number) => handleUpdateState({ gridGap: value })}
             borderColor={appState.borderColor}
@@ -359,19 +369,21 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
             onIsChatEnabledChange={(value: boolean) => handleUpdateState({ isChatEnabled: value })}
             categories={allCategories}
             onRestoreGridSettings={() => handleUpdateState({ gridGap: 0, borderColor: '#000000' })}
-            onOpenTutorial={() => setOpenDialog('tutorial')}
-            onOpenErrors={() => setOpenDialog('errors')}
-            onOpenCalendar={() => {}} // Calendar subscription is a client-side action, not remote controlled
-            isTutorialOpen={openDialog === 'tutorial'}
-            onIsTutorialOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-            isErrorsOpen={openDialog === 'errors'}
-            onIsErrorsOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+            onOpenTutorial={() => {}}
+            onOpenErrors={() => {}}
+            onOpenCalendar={() => {}}
+            isTutorialOpen={false}
+            onIsTutorialOpenChange={() => {}}
+            isErrorsOpen={false}
+            onIsErrorsOpenChange={() => {}}
+            onStopSession={onStop}
         />
         
-        {isEventSelectionOpen && dialogEvent && (
+        <Dialog open={openDialog === 'event-selection'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+        {dialogEvent && (
           <EventSelectionDialog
-              isOpen={isEventSelectionOpen}
-              onOpenChange={setIsEventSelectionOpen}
+              isOpen={openDialog === 'event-selection'}
+              onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
               event={dialogEvent}
               onSelect={handleEventSelect}
               isModification={isModification}
@@ -379,28 +391,86 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
               isLoading={false}
           />
         )}
+        </Dialog>
         
-        <ScheduleManager
-            open={openDialog === 'schedule'}
-            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-            currentSelection={futureSelection}
-            currentOrder={futureOrder}
-            schedules={appState.schedules}
-            onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
-            onModifyEventInView={() => {}}
-            isLoading={false}
-            onAddEvent={() => {}}
-            initialSelection={appState.selectedEvents}
-            initialOrder={appState.viewOrder}
-            setFutureSelection={setFutureSelection}
-            setFutureOrder={setFutureOrder}
-        />
-
-        <NotificationManager
-            open={openDialog === 'notification'}
-            onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-            allCategories={allCategories}
-        />
+        <Dialog open={openDialog === 'add-event'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+            <AddEventsDialog
+                open={openDialog === 'add-event'}
+                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                events={allEvents}
+                channels={allChannels}
+                liveEvents={[]}
+                upcomingEvents={[]}
+                unknownEvents={[]}
+                finishedEvents={[]}
+                channels247Events={[]}
+                getEventSelection={(event) => {
+                    const selectionIndex = appState.selectedEvents.findIndex((se: any) => se?.id === event.id);
+                    if (selectionIndex !== -1 && appState.selectedEvents[selectionIndex]) {
+                        return { isSelected: true, selectedOption: appState.selectedEvents[selectionIndex]!.selectedOption };
+                    }
+                    return { isSelected: false, selectedOption: null };
+                }}
+                onEventSelect={(event, optionUrl) => {
+                  const newSelectedEvents = [...appState.selectedEvents];
+                  const targetIndex = newSelectedEvents.findIndex(e => e === null);
+                  if (targetIndex !== -1) {
+                    newSelectedEvents[targetIndex] = { ...event, selectedOption: optionUrl };
+                    handleUpdateState({ selectedEvents: newSelectedEvents });
+                  }
+                  setOpenDialog(null);
+                }}
+                onChannelClick={(channel) => {
+                  const targetIndex = appState.selectedEvents.findIndex((e: any) => e === null);
+                  if (targetIndex !== -1) {
+                    const event = {
+                        id: `${channel.name}-channel-static`,
+                        title: channel.name,
+                        options: channel.urls.map(u => ({ ...u, hd: false, language: '' })),
+                        sources: [],
+                        buttons: [],
+                        time: 'AHORA',
+                        category: 'Canal',
+                        language: '',
+                        date: '',
+                        source: '',
+                        status: 'En Vivo' as const,
+                        image: channel.logo,
+                    };
+                    setDialogEvent(event);
+                    setIsModification(false);
+                    setModificationIndex(targetIndex);
+                    setOpenDialog('event-selection');
+                  }
+                }}
+            />
+        </Dialog>
+        
+        <Dialog open={openDialog === 'schedule'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+            <ScheduleManager
+                open={openDialog === 'schedule'}
+                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                currentSelection={futureSelection}
+                currentOrder={futureOrder}
+                schedules={appState.schedules}
+                onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
+                onModifyEventInView={handleModifyEvent}
+                isLoading={isAddEventsLoading}
+                onAddEvent={() => setOpenDialog('add-event')}
+                initialSelection={appState.selectedEvents}
+                initialOrder={appState.viewOrder}
+                setFutureSelection={setFutureSelection}
+                setFutureOrder={setFutureOrder}
+            />
+        </Dialog>
+        
+        <Dialog open={openDialog === 'notification'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
+          <NotificationManager
+              open={openDialog === 'notification'}
+              onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+              allCategories={allCategories}
+          />
+        </Dialog>
       </div>
   );
 }
