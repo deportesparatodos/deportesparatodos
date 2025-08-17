@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, Play } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, Play, Copy, Check, Loader2 } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -196,15 +196,31 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     const [isRemoteSessionActive, setIsRemoteSessionActive] = useState(false);
     const [remoteSessionCode, setRemoteSessionCode] = useState('');
+    const [isActivatingRemote, setIsActivatingRemote] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const handleActivateRemote = async () => {
         if (props.onRemoteControl) {
-            const code = await props.onRemoteControl();
-            if (code) {
-                setRemoteSessionCode(code);
-                setIsRemoteSessionActive(true);
+            setIsActivatingRemote(true);
+            try {
+                const code = await props.onRemoteControl();
+                if (code) {
+                    setRemoteSessionCode(code);
+                    setIsRemoteSessionActive(true);
+                }
+            } catch (e) {
+                // Error toast is handled by the remote control manager
+            } finally {
+                setIsActivatingRemote(false);
             }
         }
+    };
+    
+    const handleCopy = () => {
+        if(!remoteSessionCode) return;
+        navigator.clipboard.writeText(remoteSessionCode);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
 
@@ -248,12 +264,18 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                             {isRemoteSessionActive ? (
                                 <div className="text-center space-y-2">
                                     <Label>Código de Sesión Activa</Label>
-                                    <p className="text-2xl font-bold tracking-widest text-primary">{remoteSessionCode}</p>
+                                    <div className="flex items-center justify-center gap-2 p-2 border-2 border-dashed rounded-lg">
+                                        <span className="text-xl font-bold tracking-widest text-primary">{remoteSessionCode}</span>
+                                        <Button size="icon" variant="ghost" onClick={handleCopy} className="h-8 w-8">
+                                            {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                        </Button>
+                                    </div>
                                     <p className="text-xs text-muted-foreground">Introduce este código en el otro dispositivo.</p>
                                 </div>
                             ) : (
-                                <Button variant="outline" className="w-full" onClick={handleActivateRemote}>
-                                    <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
+                                <Button variant="outline" className="w-full" onClick={handleActivateRemote} disabled={isActivatingRemote}>
+                                    {isActivatingRemote ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Airplay className="mr-2 h-4 w-4" />}
+                                    Activar Control Remoto
                                 </Button>
                             )}
                         </AccordionContent>
@@ -510,5 +532,3 @@ export function LayoutConfigurator(props: EventListManagementProps) {
       </div>
     );
 }
-
-    

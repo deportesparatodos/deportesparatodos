@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, AlertCircle, Copy, Check, X } from 'lucide-react';
+import { Loader2, AlertCircle, Copy, Check, X, Airplay } from 'lucide-react';
 import type { Event } from './event-carousel';
 import type { Schedule } from './schedule-manager';
 import { LayoutConfigurator } from './layout-configurator';
@@ -25,8 +25,12 @@ import { EventSelectionDialog } from './event-selection-dialog';
 import { ScheduleManager } from './schedule-manager';
 import { NotificationManager } from './notification-manager';
 import { useToast } from '@/hooks/use-toast';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Airplay } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 
 type AppState = {
@@ -57,8 +61,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   const [sessionId, setSessionId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isControlledSessionDialog, setIsControlledSessionDialog] = useState(false);
-
   
   const ablyClientRef = useRef<Realtime | null>(null);
   const channelRef = useRef<any>(null);
@@ -83,6 +85,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   
  const initializeAbly = async (clientId: string): Promise<Realtime> => {
     try {
+        // Ensure the Ably client is created with the correct authUrl format.
         const client = new Realtime({ 
             authUrl: `/api/ably?clientId=${encodeURIComponent(clientId)}`,
             echoMessages: false 
@@ -111,7 +114,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
                 setSessionId(newSessionId);
                 setMode('controlled');
                 setIsConnecting(false);
-                setIsControlledSessionDialog(true);
+                
                 const channel = ably.channels.get(newSessionId);
                 channelRef.current = channel;
 
@@ -132,19 +135,19 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             ably.connection.once('failed', (error) => {
                 setError(error.reason.message);
                 setIsConnecting(false);
-                setIsControlledSessionDialog(false);
                 setMode('inactive');
+                toast({ variant: 'destructive', title: 'Error de Conexión', description: error.reason.message || "No se pudo activar el control remoto."});
                 reject(new Error(error.reason.message));
             });
 
-        } catch (e) {
+        } catch (e: any) {
             setIsConnecting(false);
             setMode('inactive');
-            setIsControlledSessionDialog(false);
+            toast({ variant: 'destructive', title: 'Error de Inicialización', description: e.message || "No se pudo activar el control remoto."});
             reject(e);
         }
     });
-  }, [appState, cleanupAbly, setAppState]);
+  }, [appState, cleanupAbly, setAppState, toast]);
 
   
   const startControllingSession = async (code: string) => {
@@ -175,11 +178,13 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             setError(error.reason.message || "No se pudo conectar a la sesión.");
             setIsConnecting(false);
             setMode('inactive');
+            toast({ variant: 'destructive', title: "Error de Conexión", description: error.reason.message || "No se pudo conectar a la sesión. Verifica el código." });
         });
 
-    } catch (e) {
+    } catch (e: any) {
         setIsConnecting(false);
         setMode('inactive');
+        toast({ variant: 'destructive', title: "Error", description: e.message || "Ocurrió un error inesperado." });
     }
   };
 
@@ -192,7 +197,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     setSessionId('');
     setError(null);
     setIsConnecting(false);
-    setIsControlledSessionDialog(false);
   };
   
   useImperativeHandle(ref, () => ({
@@ -214,25 +218,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
   return (
       <>
-        <Dialog open={isControlledSessionDialog} onOpenChange={(isOpen) => !isOpen && stopSession()}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Control Remoto Activado</DialogTitle>
-                </DialogHeader>
-                {isConnecting ? (
-                  <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                ) : error ? (
-                   <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error de Conexión</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>
-                ) : (
-                    <ControlledView sessionId={sessionId} />
-                )}
-                 <DialogFooter>
-                    <DialogClose asChild>
-                      <Button onClick={stopSession}>Cerrar</Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        {/* This component doesn't render anything itself, it just provides the functions */}
       </>
   );
 });
@@ -240,28 +226,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 RemoteControlManager.displayName = 'RemoteControlManager';
 
 // --- UI Components for different modes ---
-
-function ControlledView({ sessionId }: { sessionId: string }) {
-    const [copied, setCopied] = useState(false);
-    const handleCopy = () => {
-        navigator.clipboard.writeText(sessionId);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    return (
-        <div className="space-y-4 pt-4">
-            <p className="text-sm text-center text-muted-foreground">Este dispositivo ahora puede ser controlado. Introduce el siguiente código en el dispositivo que quieras usar como mando:</p>
-            <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg">
-                <span className="text-2xl font-bold tracking-widest">{sessionId}</span>
-                <Button size="icon" variant="ghost" onClick={handleCopy}>
-                    {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
-                </Button>
-            </div>
-        </div>
-    )
-}
-
 
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: any) {
   const [openDialog, setOpenDialog] = useState<null | 'add-event' | 'schedule' | 'notification'>(null);
@@ -406,4 +370,3 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
   );
 }
 
-    

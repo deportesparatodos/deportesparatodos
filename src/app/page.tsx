@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays, Copy, Check } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -263,6 +263,9 @@ export function HomePageContent() {
   }>(null);
   const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
   const [controllerCode, setControllerCode] = useState('');
+  const [isControlledSessionDialog, setIsControlledSessionDialog] = useState(false);
+  const [controlledSessionCode, setControlledSessionCode] = useState('');
+  const [copied, setCopied] = useState(false);
 
 
   // Schedule related states
@@ -592,10 +595,6 @@ export function HomePageContent() {
         sessionStorage.setItem('hasVisitedViewPage', 'true');
         setProgress(100);
       }
-    }
-     // Cleanup the flag after use
-     if (sessionStorage.getItem('isControlledStart')) {
-      sessionStorage.removeItem('isControlledStart');
     }
   }, [isViewMode]);
 
@@ -1078,7 +1077,11 @@ export function HomePageContent() {
         return;
     }
     handleStartView(true);
-    await remoteControlManagerRef.current?.startControlledSession();
+    const code = await remoteControlManagerRef.current?.startControlledSession();
+    if (code) {
+        setControlledSessionCode(code);
+        setIsControlledSessionDialog(true);
+    }
   };
 
  const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
@@ -1243,6 +1246,13 @@ export function HomePageContent() {
     }
     return '';
  };
+ 
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(controlledSessionCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
 
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
@@ -1444,6 +1454,27 @@ export function HomePageContent() {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isControlledSessionDialog} onOpenChange={setIsControlledSessionDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogModalTitle>Control Remoto Activado</DialogModalTitle>
+                        <DialogDescription>
+                            Introduce este código en el dispositivo que usarás como control remoto para empezar a gestionar esta vista.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg my-4">
+                        <span className="text-2xl font-bold tracking-widest">{controlledSessionCode}</span>
+                        <Button size="icon" variant="ghost" onClick={handleCopyCode}>
+                            {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
+                        </Button>
+                    </div>
+                    <DialogFooter>
+                        <DialogModalClose asChild>
+                            <Button>Cerrar</Button>
+                        </DialogModalClose>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -2014,5 +2045,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-    
