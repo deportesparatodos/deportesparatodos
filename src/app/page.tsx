@@ -657,7 +657,8 @@ export function HomePageContent() {
     const handleRemoteUpdate = (event: Event) => {
         const { detail } = event as CustomEvent;
         if (detail.newState) {
-            setAppState(prevState => ({ ...prevState, ...detail.newState }));
+            // Directly set the new state from the remote
+            setAppState(detail.newState);
         }
     };
 
@@ -666,7 +667,7 @@ export function HomePageContent() {
     return () => {
         window.removeEventListener('remote-state-update', handleRemoteUpdate as EventListener);
     };
-}, [setAppState]);
+}, []);
 
   // URL reload effect
   useEffect(() => {
@@ -1894,6 +1895,9 @@ export function HomePageContent() {
                                           </Button>
                                         </SheetTrigger>
                                          <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                            <SheetHeader>
+                                                <SheetTitle className="sr-only">Configuration Panel</SheetTitle>
+                                            </SheetHeader>
                                               <LayoutConfigurator
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                                 onOrderChange={handleOrderChange}
@@ -1920,6 +1924,7 @@ export function HomePageContent() {
                                                 onIsTutorialOpenChange={setIsTutorialOpen}
                                                 isErrorsOpen={isErrorsOpen}
                                                 onIsErrorsOpenChange={setIsErrorsOpen}
+                                                isRemoteControlView={false}
                                               />
                                       </SheetContent>
                                       </Sheet>
@@ -2055,4 +2060,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
 

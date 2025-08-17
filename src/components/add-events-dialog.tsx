@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, X, Maximize, Minimize, RotateCw } from 'lucide-react';
+import { Search, X, Maximize, Minimize } from 'lucide-react';
 import { EventCard } from './event-card';
-import type { Event, StreamOption } from './event-carousel';
+import type { Event } from './event-carousel';
 import { Card } from './ui/card';
 import Image from 'next/image';
 import type { Channel } from './channel-list';
@@ -19,7 +19,6 @@ import { EventCarousel } from './event-carousel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { parse, isValid, isBefore } from 'date-fns';
 
 interface AddEventsDialogProps {
   open: boolean;
@@ -131,7 +130,7 @@ export function AddEventsDialog({
                                                      <Image src={item.logo} alt={item.name} fill className="object-contain" />
                                                       {selection.isSelected && (
                                                         <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                                                            <Check className="h-10 w-10 text-green-500" />
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
                                                         </div>
                                                     )}
                                                 </div>
