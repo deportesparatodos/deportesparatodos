@@ -107,10 +107,10 @@ export function EventList({
                     </div>
                     
                     <div className="flex-grow flex flex-col gap-2 min-w-0">
-                        <p className="text-sm font-semibold break-words truncate">
+                        <p className="text-sm font-semibold truncate text-center">
                             {event.title}
                         </p>
-                         <div className="flex items-center justify-start gap-1 flex-wrap">
+                         <div className="flex items-center justify-center gap-1 flex-wrap">
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
