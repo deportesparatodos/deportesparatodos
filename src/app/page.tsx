@@ -1450,7 +1450,7 @@ export function HomePageContent() {
                                     </div>
                                 </ScrollArea>
                                 <DialogFooter>
-                                    <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
+                                    <DialogClose asChild><Button>Cerrar</Button></DialogClose>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>

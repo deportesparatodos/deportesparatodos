@@ -85,7 +85,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   
  const initializeAbly = async (clientId: string): Promise<Realtime> => {
     try {
-        // Ensure the Ably client is created with the correct authUrl format.
         const client = new Realtime({ 
             authUrl: `/api/ably?clientId=${encodeURIComponent(clientId)}`,
             echoMessages: false 
@@ -369,4 +368,3 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     </>
   );
 }
-
