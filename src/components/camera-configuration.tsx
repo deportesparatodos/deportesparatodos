@@ -52,7 +52,10 @@ export function CameraConfigurationComponent(props: CameraConfigurationProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-          <LayoutConfigurator {...props} isRemoteControlView={false} />
+          <SheetHeader className="sr-only">
+              <SheetTitle>Configuration Panel</SheetTitle>
+          </SheetHeader>
+          <LayoutConfigurator {...props} />
         </SheetContent>
       </Sheet>
     </>
