@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,6 @@ import type { Event } from './event-carousel';
 import { Card } from './ui/card';
 import Image from 'next/image';
 import type { Channel } from './channel-list';
-import { EventCarousel } from './event-carousel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -28,11 +27,6 @@ interface AddEventsDialogProps {
   getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null };
   events: Event[];
   channels: Channel[];
-  liveEvents: Event[];
-  upcomingEvents: Event[];
-  unknownEvents: Event[];
-  finishedEvents: Event[];
-  channels247Events: Event[];
 }
 
 export function AddEventsDialog({ 
@@ -43,11 +37,6 @@ export function AddEventsDialog({
     getEventSelection,
     events,
     channels,
-    liveEvents,
-    upcomingEvents,
-    unknownEvents,
-    finishedEvents,
-    channels247Events
 }: AddEventsDialogProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -61,25 +50,44 @@ export function AddEventsDialog({
 
     const handleChannelClick = (channel: Channel) => {
         onChannelClick(channel);
-        onOpenChange(false);
     }
     
     const handleEventClick = (event: Event) => {
         onEventSelect(event);
-        onOpenChange(false);
     }
     
-    const searchResults = useMemo(() => {
-        if (!searchTerm) return [];
+    const { sortedEvents, filteredChannels } = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
 
-        const filteredEvents = events.filter(event =>
-            event.title.toLowerCase().includes(lowercasedFilter)
-        );
-        const filteredChannels = channels.filter(channel =>
-            channel.name.toLowerCase().includes(lowercasedFilter)
-        );
-        return [...filteredEvents, ...filteredChannels];
+        // Sort events based on the specified priority
+        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
+        const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+
+        const allSortedEvents = [...events]
+            .filter(event => event.title.toLowerCase().includes(lowercasedFilter))
+            .sort((a, b) => {
+                const statusA = statusOrder[a.status] ?? 5;
+                const statusB = statusOrder[b.status] ?? 5;
+
+                if (statusA !== statusB) {
+                    return statusA - statusB;
+                }
+
+                // If both are "En Vivo", prioritize those with custom images
+                if (a.status === 'En Vivo' && b.status === 'En Vivo') {
+                    const aHasCustomImage = a.image && a.image !== placeholderImage;
+                    const bHasCustomImage = b.image && b.image !== placeholderImage;
+                    if (aHasCustomImage && !bHasCustomImage) return -1;
+                    if (!aHasCustomImage && bHasCustomImage) return 1;
+                }
+                
+                // Fallback to title sort
+                return a.title.localeCompare(b.title);
+            });
+        
+        const filteredCh = channels.filter(channel => channel.name.toLowerCase().includes(lowercasedFilter));
+
+        return { sortedEvents: allSortedEvents, filteredChannels: filteredCh };
     }, [searchTerm, events, channels]);
 
 
@@ -107,65 +115,56 @@ export function AddEventsDialog({
                 </DialogHeader>
                  
                 <div className="relative flex-grow flex flex-col mt-2">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input
-                            type="text"
-                            placeholder="Buscar evento o canal..."
-                            className="w-full pl-10"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <ScrollArea className="flex-grow h-0 mt-4">
-                        {searchTerm ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {searchResults.map((item, index) => {
-                                    if ('urls' in item) { // It's a Channel
-                                        const channelAsEvent: Event = { id: `${item.name}-channel-static`, title: item.name, options: [], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: item.logo };
+                     <Tabs defaultValue="events" className="w-full flex flex-col flex-grow">
+                        <div className="flex-shrink-0">
+                            <div className="relative mb-4">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                <Input
+                                    type="text"
+                                    placeholder="Buscar..."
+                                    className="w-full pl-10"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="events">Eventos</TabsTrigger>
+                                <TabsTrigger value="channels">Canales</TabsTrigger>
+                            </TabsList>
+                        </div>
+                        <ScrollArea className="flex-grow h-0 mt-4">
+                            <TabsContent value="events">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    {sortedEvents.map((event, index) => (
+                                        <EventCard key={`dialog-event-${event.id}-${index}`} event={event} selection={getEventSelection(event)} onClick={() => handleEventClick(event)} />
+                                    ))}
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="channels">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                     {filteredChannels.map((channel, index) => {
+                                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: [], sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                                         const selection = getEventSelection(channelAsEvent);
                                         return (
-                                            <Card key={`search-channel-${index}`} onClick={() => handleChannelClick(item)} className="cursor-pointer">
-                                                <div className="relative w-full aspect-video bg-white p-2">
-                                                     <Image src={item.logo} alt={item.name} fill className="object-contain" />
+                                            <Card key={`dialog-channel-${index}`} onClick={() => handleChannelClick(channel)} className="cursor-pointer group rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border h-full w-full flex flex-col">
+                                                <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white flex-shrink-0">
+                                                     <Image src={channel.logo} alt={channel.name} fill className="object-contain" />
                                                       {selection.isSelected && (
                                                         <div className="absolute inset-0 flex items-center justify-center bg-black/60">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
                                                         </div>
                                                     )}
                                                 </div>
-                                                <h3 className="font-bold text-sm p-2 text-center">{item.name}</h3>
+                                                <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
+                                                    <h3 className="font-bold text-sm text-center">{channel.name}</h3>
+                                                </div>
                                             </Card>
                                         )
-                                    } else { // It's an Event
-                                        return (
-                                            <EventCard key={`search-event-${index}`} event={item} selection={getEventSelection(item)} onClick={() => handleEventClick(item)} />
-                                        )
-                                    }
-                                })}
-                            </div>
-                        ) : (
-                             <Tabs defaultValue="live" className="w-full">
-                                <TabsList className="grid w-full grid-cols-3">
-                                    <TabsTrigger value="live">En Vivo</TabsTrigger>
-                                    <TabsTrigger value="upcoming">Próximos</TabsTrigger>
-                                    <TabsTrigger value="channels">Canales</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="live" className="mt-4">
-                                    <EventCarousel title="En Vivo" events={liveEvents} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
-                                    <EventCarousel title="24/7" events={channels247Events} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
-                                </TabsContent>
-                                <TabsContent value="upcoming" className="mt-4">
-                                     <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
-                                     <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
-                                     <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={handleEventClick} getEventSelection={getEventSelection} />
-                                </TabsContent>
-                                <TabsContent value="channels" className="mt-4">
-                                     <EventCarousel title="Canales" channels={channels} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
-                                </TabsContent>
-                            </Tabs>
-                        )}
-                    </ScrollArea>
+                                     })}
+                                </div>
+                            </TabsContent>
+                        </ScrollArea>
+                    </Tabs>
                 </div>
             </DialogContent>
         </Dialog>
