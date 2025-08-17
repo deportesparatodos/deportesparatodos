@@ -231,20 +231,30 @@ export function HomePageContent() {
     schedules: [],
     fullscreenIndex: null,
   });
-
+  
   const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = appState;
   
-  const setLiveAppState = (newState: AppState) => {
-    setAppState(newState);
+  const setLiveAppState = (newState: Partial<AppState>) => {
+    const validatedState = { ...appState, ...newState };
+    if (!Array.isArray(validatedState.selectedEvents)) {
+      validatedState.selectedEvents = Array(9).fill(null);
+    }
+    if (validatedState.schedules) {
+      validatedState.schedules = validatedState.schedules.map((s: any) => ({
+        ...s,
+        dateTime: new Date(s.dateTime) // Re-hydrate Date objects
+      }));
+    }
+    setAppState(validatedState);
   };
-  
-  const setSelectedEvents = (events: (Event | null)[]) => setAppState(prev => ({ ...prev, selectedEvents: events }));
-  const setViewOrder = (order: number[]) => setAppState(prev => ({ ...prev, viewOrder: order }));
-  const setGridGap = (gap: number) => setAppState(prev => ({ ...prev, gridGap: gap }));
-  const setBorderColor = (color: string) => setAppState(prev => ({ ...prev, borderColor: color }));
-  const setIsChatEnabled = (enabled: boolean) => setAppState(prev => ({ ...prev, isChatEnabled: enabled }));
-  const setSchedules = (newSchedules: Schedule[]) => setAppState(prev => ({ ...prev, schedules: newSchedules }));
-  const setFullscreenIndex = (index: number | null) => setAppState(prev => ({...prev, fullscreenIndex: index}));
+
+  const setSelectedEvents = (events: (Event | null)[]) => setLiveAppState({ selectedEvents: events });
+  const setViewOrder = (order: number[]) => setLiveAppState({ viewOrder: order });
+  const setGridGap = (gap: number) => setLiveAppState({ gridGap: gap });
+  const setBorderColor = (color: string) => setLiveAppState({ borderColor: color });
+  const setIsChatEnabled = (enabled: boolean) => setLiveAppState({ isChatEnabled: enabled });
+  const setSchedules = (newSchedules: Schedule[]) => setLiveAppState({ schedules: newSchedules });
+  const setFullscreenIndex = (index: number | null) => setLiveAppState({fullscreenIndex: index});
 
 
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
@@ -575,7 +585,9 @@ export function HomePageContent() {
     if (storedState) {
         try {
             const parsedState: AppState = JSON.parse(storedState);
-            if(Array.isArray(parsedState.selectedEvents)) {
+            if(!Array.isArray(parsedState.selectedEvents)) {
+                parsedState.selectedEvents = Array(9).fill(null);
+            } else {
                 const validEvents = parsedState.selectedEvents.filter(Boolean);
                 const newSelectedEvents = Array(9).fill(null);
                 validEvents.slice(0, 9).forEach((event, i) => {
@@ -611,7 +623,7 @@ export function HomePageContent() {
 
   // Schedule activation checker
   useEffect(() => {
-    if (!isViewMode || schedules.length === 0) return;
+    if (!isViewMode || !schedules || schedules.length === 0) return;
 
     const interval = setInterval(() => {
         const now = new Date();
@@ -658,7 +670,7 @@ export function HomePageContent() {
         const { detail } = event as CustomEvent;
         if (detail.newState) {
             // Directly set the new state from the remote
-            setAppState(detail.newState);
+            setLiveAppState(detail.newState);
         }
     };
 
@@ -1077,7 +1089,8 @@ export function HomePageContent() {
     return { isSelected: false, selectedOption: null };
   };
 
-  const selectedEventsCount = selectedEvents.filter(Boolean).length;
+  const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
+
 
   const handleStartView = (isControlledStart = false) => {
     if (selectedEventsCount === 0) return;
@@ -1992,7 +2005,7 @@ export function HomePageContent() {
       <RemoteControlManager
           ref={remoteControlManagerRef}
           appState={appState}
-          setAppState={setAppState}
+          setAppState={setLiveAppState}
           allEvents={events}
           allChannels={channelsData}
       />
