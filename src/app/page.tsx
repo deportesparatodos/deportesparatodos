@@ -1013,7 +1013,7 @@ export function HomePageContent() {
         setScheduleManagerOpen(true);
         return;
     }
-
+    
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
     if (isModification && modificationIndex !== null) {
@@ -1034,7 +1034,7 @@ export function HomePageContent() {
     }
     
     setEventSelectionDialogOpen(false);
-    setAddEventsDialogOpen(false); // Close add dialog if open
+    setAddEventsDialogOpen(false);
     setIsModification(false);
     setModificationIndex(null);
   };
@@ -1103,7 +1103,6 @@ export function HomePageContent() {
         setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     
-    // Check if event in the main `events` state already has options
     const mainEvent = events.find(e => e.id === event.id);
     if (mainEvent && mainEvent.options.length > 0) {
         setDialogEvent({ ...eventForDialog, options: mainEvent.options });
@@ -1135,9 +1134,7 @@ export function HomePageContent() {
             const results = await Promise.all(sourcePromises);
             const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
 
-            // Update the event in the main state so we don't have to fetch again
             setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, options: streamOptions } : e));
-            // Update the event in the dialog
             setDialogEvent({ ...eventForDialog, options: streamOptions });
 
         } catch (error) {
@@ -1146,7 +1143,6 @@ export function HomePageContent() {
             setIsOptionsLoading(false);
         }
     } else {
-        // For events that are not from 'streamed.pk' or already have options
         setDialogEvent(eventForDialog);
         setIsOptionsLoading(false);
     }
@@ -1193,9 +1189,6 @@ export function HomePageContent() {
   };
   
   const openDialogForModification = (event: Event, index: number) => {
-    const currentEventState = selectedEvents[index];
-    if (!currentEventState) return;
-
     openDialogForEvent(event, 'view');
   };
 
@@ -1219,7 +1212,7 @@ export function HomePageContent() {
   };
 
   const handleToggleFullscreen = (index: number) => {
-    setFullscreenIndex(prevIndex => prevIndex === index ? null : prevIndex);
+    setFullscreenIndex(prevIndex => (prevIndex === index ? null : index));
   };
 
 
@@ -1611,13 +1604,6 @@ export function HomePageContent() {
       <AddEventsDialog
           open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
-          onSelect={handleEventSelect}
-          onRemove={handleEventRemove}
-          selectedEvents={selectedEvents}
-          allEvents={events}
-          allChannels={channelsData}
-          onFetchEvents={() => fetchEvents(true, true)}
-          updateAllEvents={setEvents}
       />
       </>
     );
@@ -1912,7 +1898,10 @@ export function HomePageContent() {
             onOpenChange={setNotificationManagerOpen}
             allCategories={categories}
         />
-        
+        <AddEventsDialog
+            open={addEventsDialogOpen}
+            onOpenChange={setAddEventsDialogOpen}
+        />
         {dialogEvent && (
             <EventSelectionDialog
                 isOpen={eventSelectionDialogOpen}
@@ -1924,17 +1913,6 @@ export function HomePageContent() {
                 isLoading={isOptionsLoading}
             />
         )}
-        <AddEventsDialog
-            open={addEventsDialogOpen}
-            onOpenChange={setAddEventsDialogOpen}
-            onSelect={handleEventSelect}
-            onRemove={handleEventRemove}
-            selectedEvents={selectedEvents}
-            allEvents={events}
-            allChannels={channelsData}
-            onFetchEvents={() => fetchEvents(true, true)}
-            updateAllEvents={setEvents}
-        />
         <RemoteControlManager
             ref={remoteControlManagerRef}
             appState={{
@@ -2030,4 +2008,5 @@ export default function Page() {
     </Suspense>
   );
 }
+
 
