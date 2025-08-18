@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -197,7 +198,10 @@ export function LayoutConfigurator(props: EventListManagementProps) {
     return (
       <div className="flex flex-col h-full">
         <div className="p-4 flex-shrink-0 flex items-center justify-between">
-           {!isRemoteControlView && (
+           {!isViewPage && (
+              <h2 className="text-lg font-semibold">Configuración</h2>
+           )}
+           {isViewPage && (
               <h2 className="text-lg font-semibold">Configuración</h2>
            )}
            {onStopSession && (
