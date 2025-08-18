@@ -198,7 +198,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
       <div className="flex flex-col h-full">
         <div className="p-4 flex-shrink-0 flex items-center justify-between">
            {!isRemoteControlView && (
-              <h2 className="text-lg font-semibold text-center">Configuración</h2>
+              <h2 className="text-lg font-semibold">Configuración</h2>
            )}
            {onStopSession && (
               <Button variant="destructive" size="sm" onClick={onStopSession}>
@@ -282,7 +282,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                           {!isRemoteControlView && onNotificationManager && (
+                           {!isRemoteControlView && (
                                 <>
                                   <Separator className="my-2"/>
                                   <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>

@@ -1148,7 +1148,12 @@ export function HomePageContent() {
 
   const handleRemoveEventFromDialog = (eventToRemove: Event) => {
     setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
-      return currentSelectedEvents.map(se => (se?.id === eventToRemove.id ? null : se));
+      const newSelection = [...currentSelectedEvents];
+      const indexToRemove = newSelection.findIndex(se => se?.id === eventToRemove.id);
+      if (indexToRemove !== -1) {
+        newSelection[indexToRemove] = null;
+      }
+      return newSelection;
     });
     setEventSelectionDialogOpen(false);
 };
@@ -1839,6 +1844,13 @@ export function HomePageContent() {
   
   return (
     <>
+      <RemoteControlManager
+          ref={remoteControlManagerRef}
+          appState={appState}
+          setAppState={setLiveAppState}
+          allEvents={events}
+          allChannels={channelsData}
+      />
       {isViewMode ? renderViewContent() : (
         <div className="flex h-screen w-screen flex-col bg-background text-foreground">
            {isDataLoading && !isInitialLoadDone && (
@@ -1923,9 +1935,6 @@ export function HomePageContent() {
                                           </Button>
                                         </SheetTrigger>
                                          <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                              <SheetHeader className="p-4 border-b">
-                                                <SheetTitle>Configuración</SheetTitle>
-                                              </SheetHeader>
                                               <LayoutConfigurator
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                                 onOrderChange={handleOrderChange}
@@ -1987,16 +1996,11 @@ export function HomePageContent() {
       <AddEventsDialog
           open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
-          onEventSelect={openDialogForEvent}
+          onEventSelect={(event: Event) => openDialogForEvent(event)}
           onChannelClick={handleChannelClick}
           getEventSelection={getEventSelection}
           events={events}
           channels={channelsData}
-          liveEvents={liveEvents}
-          upcomingEvents={upcomingEvents}
-          unknownEvents={unknownEvents}
-          finishedEvents={finishedEvents}
-          channels247Events={channels247Events}
       />
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
           <CalendarDialogContent categories={categories} />
@@ -2017,13 +2021,6 @@ export function HomePageContent() {
               isLoading={isOptionsLoading}
           />
       )}
-      <RemoteControlManager
-          ref={remoteControlManagerRef}
-          appState={appState}
-          setAppState={setLiveAppState}
-          allEvents={events}
-          allChannels={channelsData}
-      />
       <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>
           <DialogContent>
               <DialogHeader>
@@ -2088,8 +2085,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-
-
-
-
