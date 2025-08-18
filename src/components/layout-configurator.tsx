@@ -206,6 +206,8 @@ export function LayoutConfigurator(props: EventListManagementProps) {
               </Button>
           )}
         </div>
+        {isViewPage && <Separator />}
+
 
         <ScrollArea className="flex-grow h-0">
           <div className='p-4 space-y-4'>
