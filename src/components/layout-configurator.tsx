@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState } from 'react';
@@ -195,12 +193,13 @@ export function LayoutConfigurator(props: EventListManagementProps) {
     } = props;
         
     const order = props.order || [];
-    const { toast } = useToast();
 
     return (
       <div className="flex flex-col h-full">
         <div className="p-4 flex-shrink-0 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-center">Configuración</h2>
+           {!isRemoteControlView && (
+              <h2 className="text-lg font-semibold text-center">Configuración</h2>
+           )}
            {onStopSession && (
               <Button variant="destructive" size="sm" onClick={onStopSession}>
                   <X className="mr-2 h-4 w-4" /> Desconectar
@@ -271,7 +270,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
                   <AccordionItem value="item-features" className="border rounded-lg px-4">
                       <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
-                      <AccordionContent className="pt-4 pb-4 space-y-4">
+                      <AccordionContent className="pt-4 pb-4 space-y-2">
                           <div className="flex items-center justify-between">
                               <Label htmlFor="chat-switch" className="flex flex-col gap-1">
                                   <span>Activar Chat en Vivo</span>
@@ -285,9 +284,12 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                           </div>
                            {!isRemoteControlView && onNotificationManager && (
                                 <>
-                                  <Separator/>
+                                  <Separator className="my-2"/>
                                   <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
                                       <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
+                                  </Button>
+                                  <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
+                                    <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
                                   </Button>
                                 </>
                            )}
@@ -320,9 +322,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                 </Button>
                                 <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
                                     <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
-                                    <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
                                 </Button>
                                 <a href="https://forms.gle/491b1iE9p63s11K39" target="_blank" rel="noopener noreferrer" className="w-full">
                                     <Button variant="outline" className="w-full justify-start">

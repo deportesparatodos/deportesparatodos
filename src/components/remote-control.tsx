@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
@@ -250,10 +248,12 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   
   const handleAction = (newState: Partial<AppState>) => {
       const updatedState = { ...appState, ...newState };
-      setAppState(updatedState); // Update local state for immediate feedback
+      // Update local state for immediate feedback
+      setAppState(updatedState); 
+      // Publish the new state to the controlled device
       channelRef.current?.publish('action', { 
-        name: 'SET_APP_STATE', 
-        data: { type: 'SET_APP_STATE', payload: updatedState }
+        type: 'SET_APP_STATE', 
+        payload: updatedState 
       });
   };
 
@@ -306,7 +306,11 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
         const newSelectedEvents = [...appState.selectedEvents];
         let targetIndex = modificationIndex;
 
-        if (targetIndex !== null && targetIndex !== -1) {
+        if (targetIndex === null) {
+          targetIndex = newSelectedEvents.findIndex(e => e === null);
+        }
+
+        if (targetIndex !== -1) {
             newSelectedEvents[targetIndex] = { ...event, selectedOption: optionUrl };
             handleUpdateState({ selectedEvents: newSelectedEvents });
         }
@@ -401,69 +405,36 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 onStopSession={onStop}
                 isRemoteControlView={true}
             />
+            
+            {openDialog === 'add-event' && (
+              <AddEventsDialog
+                  open={openDialog === 'add-event'}
+                  onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                  events={allEvents}
+                  channels={allChannels}
+                  getEventSelection={(event) => {
+                      const selectionIndex = appState.selectedEvents.findIndex((se: any) => se?.id === event.id);
+                      if (selectionIndex !== -1 && appState.selectedEvents[selectionIndex]) {
+                          return { isSelected: true, selectedOption: appState.selectedEvents[selectionIndex]!.selectedOption };
+                      }
+                      return { isSelected: false, selectedOption: null };
+                  }}
+                  onEventSelect={handleAddEventFromDialog}
+                  onChannelClick={handleAddChannelFromDialog}
+              />
+            )}
 
-            <Dialog open={openDialog === 'event-selection'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-                {dialogEvent && (
-                    <EventSelectionDialog
-                        isOpen={openDialog === 'event-selection'}
-                        onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                        event={dialogEvent}
-                        onSelect={handleEventSelect}
-                        isModification={isModification}
-                        onRemove={handleRemoveFromDialog}
-                        isLoading={false}
-                    />
-                )}
-            </Dialog>
-
-            <Dialog open={openDialog === 'add-event'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-                <AddEventsDialog
-                    open={openDialog === 'add-event'}
+            {openDialog === 'event-selection' && dialogEvent && (
+                <EventSelectionDialog
+                    isOpen={openDialog === 'event-selection'}
                     onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                    events={allEvents}
-                    channels={allChannels}
-                    liveEvents={allEvents.filter(e => e.status === 'En Vivo')}
-                    upcomingEvents={allEvents.filter(e => e.status === 'Próximo')}
-                    unknownEvents={allEvents.filter(e => e.status === 'Desconocido')}
-                    finishedEvents={allEvents.filter(e => e.status === 'Finalizado')}
-                    channels247Events={allEvents.filter(e => e.category === '24/7')}
-                    getEventSelection={(event) => {
-                        const selectionIndex = appState.selectedEvents.findIndex((se: any) => se?.id === event.id);
-                        if (selectionIndex !== -1 && appState.selectedEvents[selectionIndex]) {
-                            return { isSelected: true, selectedOption: appState.selectedEvents[selectionIndex]!.selectedOption };
-                        }
-                        return { isSelected: false, selectedOption: null };
-                    }}
-                    onEventSelect={handleAddEventFromDialog}
-                    onChannelClick={handleAddChannelFromDialog}
+                    event={dialogEvent}
+                    onSelect={handleEventSelect}
+                    isModification={isModification}
+                    onRemove={handleRemoveFromDialog}
+                    isLoading={false}
                 />
-            </Dialog>
-
-            <Dialog open={openDialog === 'schedule'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-                 <ScheduleManager
-                    open={openDialog === 'schedule'}
-                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                    currentSelection={futureSelection}
-                    currentOrder={futureOrder}
-                    schedules={appState.schedules}
-                    onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
-                    onModifyEventInView={handleModifyEvent}
-                    isLoading={isAddEventsLoading}
-                    onAddEvent={() => setOpenDialog('add-event')}
-                    initialSelection={appState.selectedEvents}
-                    initialOrder={appState.viewOrder}
-                    setFutureSelection={setFutureSelection}
-                    setFutureOrder={setFutureOrder}
-                />
-            </Dialog>
-
-            <Dialog open={openDialog === 'notification'} onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}>
-                <NotificationManager
-                    open={openDialog === 'notification'}
-                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                    allCategories={allCategories}
-                />
-            </Dialog>
+            )}
         </div>
     );
 }

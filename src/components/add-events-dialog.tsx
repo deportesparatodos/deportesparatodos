@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -115,8 +115,8 @@ export function AddEventsDialog({
                                 />
                             </div>
                             <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="events">Eventos ({sortedEvents.length})</TabsTrigger>
-                                <TabsTrigger value="channels">Canales ({filteredChannels.length})</TabsTrigger>
+                                <TabsTrigger value="events">Eventos</TabsTrigger>
+                                <TabsTrigger value="channels">Canales</TabsTrigger>
                             </TabsList>
                         </div>
                         <ScrollArea className="flex-grow h-0 mt-4">
