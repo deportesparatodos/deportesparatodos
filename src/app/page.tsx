@@ -1147,14 +1147,9 @@ export function HomePageContent() {
   };
 
   const handleRemoveEventFromDialog = (eventToRemove: Event) => {
-    setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
-      const newSelection = [...currentSelectedEvents];
-      const indexToRemove = newSelection.findIndex(se => se?.id === eventToRemove.id);
-      if (indexToRemove !== -1) {
-        newSelection[indexToRemove] = null;
-      }
-      return newSelection;
-    });
+    setSelectedEvents((currentSelectedEvents) => 
+        currentSelectedEvents.map(se => (se?.id === eventToRemove.id ? null : se))
+    );
     setEventSelectionDialogOpen(false);
 };
 
@@ -1935,7 +1930,10 @@ export function HomePageContent() {
                                           </Button>
                                         </SheetTrigger>
                                          <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
-                                              <LayoutConfigurator
+                                            <SheetHeader className="sr-only">
+                                                <SheetTitle>Configuration</SheetTitle>
+                                            </SheetHeader>
+                                            <LayoutConfigurator
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
                                                 onOrderChange={handleOrderChange}
                                                 eventDetails={selectedEvents}
@@ -1962,7 +1960,7 @@ export function HomePageContent() {
                                                 isErrorsOpen={isErrorsOpen}
                                                 onIsErrorsOpenChange={setIsErrorsOpen}
                                                 isRemoteControlView={false}
-                                              />
+                                            />
                                       </SheetContent>
                                       </Sheet>
 
