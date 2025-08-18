@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
@@ -68,18 +69,21 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
   const cleanupAbly = useCallback(() => {
     if (channelRef.current) {
-      try {
-        channelRef.current.detach();
-      } catch (e) {
-        console.error("Error detaching from Ably channel:", e);
-      }
+        try {
+            channelRef.current.detach();
+        } catch (e) {
+            console.error("Error detaching from Ably channel:", e);
+        }
     }
     if (ablyClientRef.current) {
-      try {
-        ablyClientRef.current.close();
-      } catch (e) {
-        console.error("Error closing Ably connection:", e);
-      }
+        try {
+            const state = ablyClientRef.current.connection.state;
+            if (state === 'connecting' || state === 'connected' || state === 'suspended') {
+                ablyClientRef.current.close();
+            }
+        } catch (e) {
+            console.error("Error closing Ably connection:", e);
+        }
     }
     channelRef.current = null;
     ablyClientRef.current = null;
@@ -249,7 +253,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   const handleAction = (newState: Partial<AppState>) => {
       const updatedState = { ...appState, ...newState };
       // Update local state for immediate feedback
-      setAppState(updatedState); 
+      setAppState(updatedState as AppState); 
       // Publish the new state to the controlled device
       channelRef.current?.publish('action', { 
         type: 'SET_APP_STATE', 
