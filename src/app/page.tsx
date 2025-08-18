@@ -1148,10 +1148,9 @@ export function HomePageContent() {
 
   const handleRemoveEventFromDialog = (eventToRemove: Event) => {
     setSelectedEvents((currentSelectedEvents: (Event | null)[]) => {
-      // Create a new array, setting the specific event to null
       return currentSelectedEvents.map(se => (se?.id === eventToRemove.id ? null : se));
     });
-    setEventSelectionDialogOpen(false); // Close dialog after removal
+    setEventSelectionDialogOpen(false);
 };
 
  const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
@@ -2089,6 +2088,7 @@ export default function Page() {
     </Suspense>
   );
 }
+
 
 
 

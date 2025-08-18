@@ -110,7 +110,7 @@ export function EventList({
                     </div>
                     
                     <div className="flex-grow flex flex-col gap-2 min-w-0">
-                        <p className="text-sm font-semibold truncate text-center">
+                        <p className="text-sm font-semibold truncate text-center min-w-0">
                             {event.title}
                         </p>
                          <div className="flex items-center justify-center gap-1 flex-wrap">
