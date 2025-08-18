@@ -27,11 +27,6 @@ interface AddEventsDialogProps {
   getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null };
   events: Event[];
   channels: Channel[];
-  liveEvents: Event[];
-  upcomingEvents: Event[];
-  unknownEvents: Event[];
-  finishedEvents: Event[];
-  channels247Events: Event[];
 }
 
 export function AddEventsDialog({ 
@@ -41,10 +36,11 @@ export function AddEventsDialog({
     onChannelClick,
     getEventSelection,
     events,
-    channels
+    channels,
 }: AddEventsDialogProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [activeTab, setActiveTab] = useState('events');
 
     useEffect(() => {
         if (!open) {
@@ -53,21 +49,13 @@ export function AddEventsDialog({
         }
     }, [open]);
 
-    const handleChannelClick = (channel: Channel) => {
-        onChannelClick(channel);
-    }
-    
-    const handleEventClick = (event: Event) => {
-        onEventSelect(event);
-    }
-    
     const { sortedEvents, filteredChannels } = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
         
+        const filteredEvents = events.filter(event => event.title.toLowerCase().includes(lowercasedFilter));
+
         const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
         const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-        
-        const filteredEvents = events.filter(event => event.title.toLowerCase().includes(lowercasedFilter));
 
         filteredEvents.sort((a, b) => {
             const statusA = statusOrder[a.status] ?? 5;
@@ -114,7 +102,7 @@ export function AddEventsDialog({
                 </DialogHeader>
                  
                 <div className="relative flex-grow flex flex-col mt-2">
-                     <Tabs defaultValue="events" className="w-full flex flex-col flex-grow">
+                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow">
                         <div className="flex-shrink-0">
                             <div className="relative mb-4">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -127,15 +115,15 @@ export function AddEventsDialog({
                                 />
                             </div>
                             <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="events">Eventos</TabsTrigger>
-                                <TabsTrigger value="channels">Canales</TabsTrigger>
+                                <TabsTrigger value="events">Eventos ({sortedEvents.length})</TabsTrigger>
+                                <TabsTrigger value="channels">Canales ({filteredChannels.length})</TabsTrigger>
                             </TabsList>
                         </div>
                         <ScrollArea className="flex-grow h-0 mt-4">
                             <TabsContent value="events">
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                     {sortedEvents.map((event, index) => (
-                                        <EventCard key={`dialog-event-${event.id}-${index}`} event={event} selection={getEventSelection(event)} onClick={() => handleEventClick(event)} />
+                                        <EventCard key={`dialog-event-${event.id}-${index}`} event={event} selection={getEventSelection(event)} onClick={() => onEventSelect(event)} />
                                     ))}
                                 </div>
                             </TabsContent>
@@ -145,7 +133,7 @@ export function AddEventsDialog({
                                         const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                                         const selection = getEventSelection(channelAsEvent);
                                         return (
-                                            <Card key={`dialog-channel-${index}`} onClick={() => handleChannelClick(channel)} className="cursor-pointer group rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border h-full w-full flex flex-col">
+                                            <Card key={`dialog-channel-${index}`} onClick={() => onChannelClick(channel)} className="cursor-pointer group rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border h-full w-full flex flex-col">
                                                 <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white flex-shrink-0">
                                                      <Image src={channel.logo} alt={channel.name} fill className="object-contain" />
                                                       {selection.isSelected && (

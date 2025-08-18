@@ -144,10 +144,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                 <Button
                     variant="destructive"
                     className="w-full"
-                    onClick={() => {
-                        onRemove();
-                        onOpenChange(false);
-                    }}
+                    onClick={onRemove}
                 >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Eliminar Selección
