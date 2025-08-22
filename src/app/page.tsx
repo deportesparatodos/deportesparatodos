@@ -237,7 +237,7 @@ export function HomePageContent() {
   const setLiveAppState = (newState: Partial<AppState>) => {
     setAppState(prevState => {
         const validatedState = { ...prevState, ...newState };
-        if (!Array.isArray(validatedState.selectedEvents)) {
+        if (!Array.isArray(validatedState.selectedEvents) || validatedState.selectedEvents === null) {
           validatedState.selectedEvents = Array(9).fill(null);
         }
         if (validatedState.schedules) {
@@ -588,7 +588,7 @@ export function HomePageContent() {
         const storedStateJSON = localStorage.getItem('appState');
         if (storedStateJSON) {
             const storedState: AppState = JSON.parse(storedStateJSON);
-            const selectedEventsArray = Array.isArray(storedState.selectedEvents) ? storedState.selectedEvents : Array(9).fill(null);
+            const selectedEventsArray = (Array.isArray(storedState.selectedEvents) && storedState.selectedEvents.length > 0) ? storedState.selectedEvents : Array(9).fill(null);
             
             // Re-hydrate dates
             const schedulesArray = Array.isArray(storedState.schedules) ? storedState.schedules.map(s => ({
@@ -826,7 +826,7 @@ export function HomePageContent() {
     const eventMap = new Map<string, Event>();
 
     combinedEvents.forEach(event => {
-        const key = event.id;
+        const key = normalizeTitle(event.title);
         const existingEvent = eventMap.get(key);
 
         if (existingEvent) {
@@ -841,10 +841,13 @@ export function HomePageContent() {
                              : (event.image && event.image !== placeholderImage) 
                                ? event.image 
                                : placeholderImage;
-            const newTitle = event.title.length > existingEvent.title.length ? event.title : event.title;
+                               
+            const newTitle = event.title.includes(':') ? event.title : existingEvent.title;
+
 
             eventMap.set(key, {
                 ...existingEvent,
+                id: existingEvent.id, // Keep the ID of the first event encountered
                 title: newTitle,
                 image: newImage,
                 options: uniqueOptions,
@@ -1147,11 +1150,12 @@ export function HomePageContent() {
   };
 
   const handleRemoveEventFromDialog = (eventToRemove: Event) => {
-    setSelectedEvents((currentSelectedEvents) => 
+    setSelectedEvents((currentSelectedEvents) =>
         currentSelectedEvents.map(se => (se?.id === eventToRemove.id ? null : se))
     );
     setEventSelectionDialogOpen(false);
-};
+  };
+
 
  const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
     setDialogContext(context);
@@ -1163,15 +1167,16 @@ export function HomePageContent() {
     let eventForDialog = {...event};
     
     const isModifying = selection.isSelected;
-    setIsModification(isModifying);
-
+    
     if (isModifying) {
         const originalIndex = selectedEvents.findIndex(se => se?.id === event.id);
+        setIsModification(true);
         setModificationIndex(originalIndex);
         if(selection.selectedOption) {
             eventForDialog.selectedOption = selection.selectedOption;
         }
     } else {
+        setIsModification(false);
         setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     
@@ -1997,7 +2002,7 @@ export function HomePageContent() {
           onEventSelect={(event: Event) => openDialogForEvent(event)}
           onChannelClick={handleChannelClick}
           getEventSelection={getEventSelection}
-          events={events}
+          events={allSortedEvents}
           channels={channelsData}
       />
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
