@@ -545,6 +545,10 @@ export function HomePageContent() {
       ];
       
       const tcChaserEvents: Event[] = tcChaserData.map((event, index) => {
+          let imageUrl = event.cover_image;
+          if (imageUrl === 'https://placehold.co/600x400.png') {
+              imageUrl = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+          }
           return {
               id: `${event.event_title}-tc-chaser-${index}`,
               title: event.event_title,
@@ -556,7 +560,7 @@ export function HomePageContent() {
               language: '',
               date: event.event_time_and_day.split('T')[0],
               source: 'tc-chaser',
-              image: event.cover_image,
+              image: imageUrl,
               status: 'Desconocido',
           };
       });
@@ -945,6 +949,12 @@ export function HomePageContent() {
         
         return timeA!.getTime() - timeB!.getTime();
     };
+    
+    const unknownSortLogic = (a: Event, b: Event): number => {
+        if (a.title === "Formula 1: MULTICAM") return 1;
+        if (b.title === "Formula 1: MULTICAM") return -1;
+        return upcomingSortLogic(a, b);
+    };
 
     const allLiveEvents = processedEvents.filter(e => e.status === 'En Vivo' && e.category !== '24/7');
     const liveCustom = allLiveEvents.filter(e => e.image && e.image !== placeholderImage).sort(liveSortLogic);
@@ -955,7 +965,7 @@ export function HomePageContent() {
     
     const unknown = processedEvents
       .filter(e => e.status === 'Desconocido')
-      .sort(upcomingSortLogic);
+      .sort(unknownSortLogic);
 
     const finished = processedEvents
         .filter(e => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
@@ -1006,7 +1016,7 @@ export function HomePageContent() {
         const liveCatCustom = categoryEvents.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
         const liveCatDefault = categoryEvents.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
         const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
-        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
+        const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(unknownSortLogic);
         const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
         categoryFilteredEvents = [...liveCatCustom, ...liveCatDefault, ...upcomingCat, ...unknownCat, ...finishedCat];
@@ -1150,10 +1160,10 @@ export function HomePageContent() {
   };
 
   const handleRemoveEventFromDialog = (eventToRemove: Event) => {
-    setSelectedEvents((currentSelectedEvents) =>
-        currentSelectedEvents.map(se => (se?.id === eventToRemove.id ? null : se))
-    );
-    setEventSelectionDialogOpen(false);
+      setSelectedEvents(prevEvents => 
+          prevEvents.map(se => (se?.id === eventToRemove.id ? null : se))
+      );
+      setEventSelectionDialogOpen(false);
   };
 
 
@@ -1936,7 +1946,7 @@ export function HomePageContent() {
                                         </SheetTrigger>
                                          <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
                                             <SheetHeader className="sr-only">
-                                                <SheetTitle>Configuration</SheetTitle>
+                                                <SheetTitle>Configuration Panel</SheetTitle>
                                             </SheetHeader>
                                             <LayoutConfigurator
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
