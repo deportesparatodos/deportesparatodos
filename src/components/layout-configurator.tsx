@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -44,7 +45,7 @@ export interface EventListManagementProps {
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
   isViewPage: boolean;
-  onAddEvent?: () => void;
+  onAddEvent: () => void;
   onSchedule?: () => void;
   onNotificationManager?: () => void;
   onRemoteControl?: () => Promise<string | undefined>;
@@ -67,26 +68,6 @@ export interface EventListManagementProps {
   onIsErrorsOpenChange: (open: boolean) => void;
   onStopSession?: () => void;
   isRemoteControlView?: boolean;
-    // --- Dialog props for remote view ---
-  openDialog?: string | null;
-  setOpenDialog?: (dialog: string | null) => void;
-  allEvents?: Event[];
-  allChannels?: Channel[];
-  handleAddEventFromDialog?: (event: Event) => void;
-  handleAddChannelFromDialog?: (channel: Channel) => void;
-  futureSelection?: (Event | null)[];
-  setFutureSelection?: (selection: (Event | null)[]) => void;
-  futureOrder?: number[];
-  setFutureOrder?: (order: number[]) => void;
-  schedules?: any[]; // Simplified for remote
-  onSchedulesChange?: (schedules: any[]) => void;
-  initialSelection?: (Event | null)[];
-  initialOrder?: number[];
-  dialogEvent?: Event | null;
-  handleEventSelect?: (event: Event, option: string) => void;
-  isModification?: boolean;
-  handleRemoveFromDialog?: () => void;
-  isLoading?: boolean;
 }
 
 export function EventList({
@@ -213,92 +194,15 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        isViewPage, onSchedule, onRemoteControl,
+        isViewPage, onSchedule, onRemoteControl, onAddEvent,
         onStopSession,
         isRemoteControlView = false,
-        // Dialog Props
-        openDialog,
-        setOpenDialog,
-        allEvents,
-        allChannels,
-        handleAddEventFromDialog,
-        handleAddChannelFromDialog,
-        futureSelection,
-        setFutureSelection,
-        futureOrder,
-        setFutureOrder,
-        schedules,
-        onSchedulesChange,
-        initialSelection,
-        initialOrder,
-        dialogEvent,
-        handleEventSelect,
-        isModification,
-        handleRemoveFromDialog,
-        isLoading
     } = props;
         
     const order = props.order || [];
 
-    const onAddEventClick = onAddEvent || (() => setOpenDialog?.('add-event'));
-    const onScheduleClick = onSchedule || (() => setOpenDialog?.('schedule'));
-    
-    // Fallback for props not available in remote view
-    const getEventSelection = (event: Event) => {
-        if (!props.eventDetails) return { isSelected: false, selectedOption: null };
-        const selectionIndex = props.eventDetails.findIndex(se => se?.id === event.id);
-        if (selectionIndex !== -1 && props.eventDetails[selectionIndex]) {
-            return { isSelected: true, selectedOption: props.eventDetails[selectionIndex]!.selectedOption };
-        }
-        return { isSelected: false, selectedOption: null };
-    };
-
-
     return (
       <div className="flex flex-col h-full">
-        {/* Render Dialogs for Remote View */}
-        {isRemoteControlView && setOpenDialog && (
-            <>
-                <AddEventsDialog
-                    open={openDialog === 'add-event'}
-                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                    events={allEvents || []}
-                    channels={allChannels || []}
-                    getEventSelection={getEventSelection}
-                    onEventSelect={handleAddEventFromDialog!}
-                    onChannelClick={handleAddChannelFromDialog!}
-                />
-
-                <ScheduleManager
-                    open={openDialog === 'schedule'}
-                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                    currentSelection={futureSelection!}
-                    currentOrder={futureOrder!}
-                    schedules={schedules!}
-                    onSchedulesChange={onSchedulesChange!}
-                    onModifyEventInView={props.onModify}
-                    onAddEvent={() => setOpenDialog('add-event')}
-                    initialSelection={initialSelection!}
-                    initialOrder={initialOrder!}
-                    setFutureSelection={setFutureSelection!}
-                    setFutureOrder={setFutureOrder!}
-                    isLoading={false}
-                />
-
-                {dialogEvent && handleEventSelect && (
-                    <EventSelectionDialog
-                        isOpen={openDialog === 'event-selection'}
-                        onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
-                        event={dialogEvent}
-                        onSelect={handleEventSelect}
-                        isModification={isModification!}
-                        onRemove={handleRemoveFromDialog!}
-                        isLoading={isLoading!}
-                    />
-                )}
-            </>
-        )}
-
         <div className="p-4 flex-shrink-0 flex items-center justify-between">
            <h2 className="text-lg font-semibold">Configuración</h2>
            {onStopSession && (
@@ -318,13 +222,13 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                           <>
                               <EventList {...props} />
                               <div className="space-y-2 pt-2">
-                                  <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEventClick}>
+                                  <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEvent}>
                                       <Plus className="mr-2 h-4 w-4" />
                                       Añadir Evento/Canal
                                   </Button>
-                                  <Button variant="outline" className="w-full justify-center" onClick={onScheduleClick}>
+                                  {onSchedule && <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                       <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                                  </Button>
+                                  </Button>}
                               </div>
                           </>
                       </AccordionContent>
