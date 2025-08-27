@@ -30,6 +30,11 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { AddEventsDialog } from './add-events-dialog';
+import { ScheduleManager } from './schedule-manager';
+import { EventSelectionDialog } from './event-selection-dialog';
+import type { Channel } from './channel-list';
+
 
 export interface EventListManagementProps {
   order: number[];
@@ -62,6 +67,26 @@ export interface EventListManagementProps {
   onIsErrorsOpenChange: (open: boolean) => void;
   onStopSession?: () => void;
   isRemoteControlView?: boolean;
+    // --- Dialog props for remote view ---
+  openDialog?: string | null;
+  setOpenDialog?: (dialog: string | null) => void;
+  allEvents?: Event[];
+  allChannels?: Channel[];
+  handleAddEventFromDialog?: (event: Event) => void;
+  handleAddChannelFromDialog?: (channel: Channel) => void;
+  futureSelection?: (Event | null)[];
+  setFutureSelection?: (selection: (Event | null)[]) => void;
+  futureOrder?: number[];
+  setFutureOrder?: (order: number[]) => void;
+  schedules?: any[]; // Simplified for remote
+  onSchedulesChange?: (schedules: any[]) => void;
+  initialSelection?: (Event | null)[];
+  initialOrder?: number[];
+  dialogEvent?: Event | null;
+  handleEventSelect?: (event: Event, option: string) => void;
+  isModification?: boolean;
+  handleRemoveFromDialog?: () => void;
+  isLoading?: boolean;
 }
 
 export function EventList({
@@ -190,28 +215,99 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
         isViewPage, onSchedule, onRemoteControl,
         onStopSession,
-        isRemoteControlView = false
+        isRemoteControlView = false,
+        // Dialog Props
+        openDialog,
+        setOpenDialog,
+        allEvents,
+        allChannels,
+        handleAddEventFromDialog,
+        handleAddChannelFromDialog,
+        futureSelection,
+        setFutureSelection,
+        futureOrder,
+        setFutureOrder,
+        schedules,
+        onSchedulesChange,
+        initialSelection,
+        initialOrder,
+        dialogEvent,
+        handleEventSelect,
+        isModification,
+        handleRemoveFromDialog,
+        isLoading
     } = props;
         
     const order = props.order || [];
 
+    const onAddEventClick = onAddEvent || (() => setOpenDialog?.('add-event'));
+    const onScheduleClick = onSchedule || (() => setOpenDialog?.('schedule'));
+    
+    // Fallback for props not available in remote view
+    const getEventSelection = (event: Event) => {
+        if (!props.eventDetails) return { isSelected: false, selectedOption: null };
+        const selectionIndex = props.eventDetails.findIndex(se => se?.id === event.id);
+        if (selectionIndex !== -1 && props.eventDetails[selectionIndex]) {
+            return { isSelected: true, selectedOption: props.eventDetails[selectionIndex]!.selectedOption };
+        }
+        return { isSelected: false, selectedOption: null };
+    };
+
+
     return (
       <div className="flex flex-col h-full">
+        {/* Render Dialogs for Remote View */}
+        {isRemoteControlView && setOpenDialog && (
+            <>
+                <AddEventsDialog
+                    open={openDialog === 'add-event'}
+                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                    events={allEvents || []}
+                    channels={allChannels || []}
+                    getEventSelection={getEventSelection}
+                    onEventSelect={handleAddEventFromDialog!}
+                    onChannelClick={handleAddChannelFromDialog!}
+                />
+
+                <ScheduleManager
+                    open={openDialog === 'schedule'}
+                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                    currentSelection={futureSelection!}
+                    currentOrder={futureOrder!}
+                    schedules={schedules!}
+                    onSchedulesChange={onSchedulesChange!}
+                    onModifyEventInView={props.onModify}
+                    onAddEvent={() => setOpenDialog('add-event')}
+                    initialSelection={initialSelection!}
+                    initialOrder={initialOrder!}
+                    setFutureSelection={setFutureSelection!}
+                    setFutureOrder={setFutureOrder!}
+                    isLoading={false}
+                />
+
+                {dialogEvent && handleEventSelect && (
+                    <EventSelectionDialog
+                        isOpen={openDialog === 'event-selection'}
+                        onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                        event={dialogEvent}
+                        onSelect={handleEventSelect}
+                        isModification={isModification!}
+                        onRemove={handleRemoveFromDialog!}
+                        isLoading={isLoading!}
+                    />
+                )}
+            </>
+        )}
+
         <div className="p-4 flex-shrink-0 flex items-center justify-between">
-           {!isViewPage && (
-              <h2 className="text-lg font-semibold">Configuración</h2>
-           )}
-           {isViewPage && (
-              <h2 className="text-lg font-semibold">Configuración</h2>
-           )}
+           <h2 className="text-lg font-semibold">Configuración</h2>
            {onStopSession && (
               <Button variant="destructive" size="sm" onClick={onStopSession}>
                   <X className="mr-2 h-4 w-4" /> Desconectar
               </Button>
-          )}
+           )}
         </div>
         {isViewPage && <Separator />}
-
 
         <ScrollArea className="flex-grow h-0">
           <div className='p-4 space-y-4'>
@@ -222,17 +318,13 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                           <>
                               <EventList {...props} />
                               <div className="space-y-2 pt-2">
-                                  {props.onAddEvent && (
-                                      <Button variant="outline" className="w-full flex-shrink-0" onClick={props.onAddEvent}>
-                                          <Plus className="mr-2 h-4 w-4" />
-                                          Añadir Evento/Canal
-                                      </Button>
-                                  )}
-                                  {onSchedule && (
-                                    <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
-                                        <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                                    </Button>
-                                  )}
+                                  <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEventClick}>
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      Añadir Evento/Canal
+                                  </Button>
+                                  <Button variant="outline" className="w-full justify-center" onClick={onScheduleClick}>
+                                      <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                                  </Button>
                               </div>
                           </>
                       </AccordionContent>
@@ -288,7 +380,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                           {!isRemoteControlView && (
+                           {!isRemoteControlView && onNotificationManager && (
                                 <>
                                   <Separator className="my-2"/>
                                   <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
@@ -304,21 +396,23 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                   
                   {!isRemoteControlView && (
                     <>
-                        <AccordionItem value="item-remote" className="border rounded-lg px-4">
-                            <AccordionTrigger>Control Remoto</AccordionTrigger>
-                            <AccordionContent className="pt-4 pb-4 space-y-4">
-                                <Alert>
-                                    <Airplay className="h-4 w-4" />
-                                    <AlertTitle>Activa el Control Remoto</AlertTitle>
-                                    <AlertDescription>
-                                        Puedes controlar esta vista desde otro dispositivo (como tu teléfono) o dejar que otro dispositivo tome el control.
-                                    </AlertDescription>
-                                </Alert>
-                                <Button className="w-full" onClick={onRemoteControl}>
-                                    <Settings className="mr-2 h-4 w-4" /> Activar Control Remoto
-                                </Button>
-                            </AccordionContent>
-                        </AccordionItem>
+                        {onRemoteControl && (
+                          <AccordionItem value="item-remote" className="border rounded-lg px-4">
+                              <AccordionTrigger>Control Remoto</AccordionTrigger>
+                              <AccordionContent className="pt-4 pb-4 space-y-4">
+                                  <Alert>
+                                      <Airplay className="h-4 w-4" />
+                                      <AlertTitle>Activa el Control Remoto</AlertTitle>
+                                      <AlertDescription>
+                                          Puedes controlar esta vista desde otro dispositivo (como tu teléfono) o dejar que otro dispositivo tome el control.
+                                      </AlertDescription>
+                                  </Alert>
+                                  <Button className="w-full" onClick={onRemoteControl}>
+                                      <Settings className="mr-2 h-4 w-4" /> Activar Control Remoto
+                                  </Button>
+                              </AccordionContent>
+                          </AccordionItem>
+                        )}
                         
                         <AccordionItem value="item-help" className="border rounded-lg px-4">
                             <AccordionTrigger>Ayuda y Soporte</AccordionTrigger>
