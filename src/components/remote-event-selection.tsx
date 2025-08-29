@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { FC } from 'react';
@@ -14,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Loader2, Trash2, ArrowLeft } from 'lucide-react';
+import { ScrollArea } from './ui/scroll-area';
 
 interface RemoteEventSelectionProps {
   event: Event;
@@ -21,6 +23,7 @@ interface RemoteEventSelectionProps {
   isModification: boolean;
   onRemove: () => void;
   onClose: () => void;
+  onBack: () => void;
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
@@ -31,6 +34,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   isModification,
   onRemove,
   onClose,
+  onBack
 }) => {
   if (!event) return null;
 
@@ -44,7 +48,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   return (
     <div className="fixed inset-0 z-[210] bg-background text-foreground flex flex-col">
       <header className="flex-shrink-0 p-4 flex items-center gap-2 border-b">
-        <Button variant="ghost" size="icon" onClick={onClose}>
+        <Button variant="ghost" size="icon" onClick={onBack}>
             <ArrowLeft />
         </Button>
         <h2 className="text-lg font-bold truncate">{event.title}</h2>
@@ -119,7 +123,10 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
           <Button
             variant="destructive"
             className="w-full"
-            onClick={onRemove}
+            onClick={() => {
+                onRemove();
+                onClose(); // Close this view after removing
+            }}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Eliminar Selección
@@ -129,4 +136,3 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
     </div>
   );
 };
-

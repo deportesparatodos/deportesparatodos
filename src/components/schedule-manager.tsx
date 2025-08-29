@@ -53,6 +53,7 @@ interface ScheduleManagerProps {
   initialOrder: number[];
   setFutureSelection: (selection: (Event | null)[]) => void;
   setFutureOrder: (order: number[]) => void;
+  isFullScreenProp?: boolean;
   container?: HTMLElement;
 }
 
@@ -70,12 +71,13 @@ export function ScheduleManager({
   initialOrder,
   setFutureSelection,
   setFutureOrder,
+  isFullScreenProp = false,
   container,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(isFullScreenProp);
   
   const [modifyEventForSchedule, setModifyEventForSchedule] = useState<{ event: Event, index: number } | null>(null);
 
@@ -93,11 +95,12 @@ export function ScheduleManager({
   useEffect(() => {
     if (open) {
       resetToCurrentSelection();
+      setIsFullScreen(isFullScreenProp);
     } else {
-      setIsFullScreen(false); // Reset on close
+      setIsFullScreen(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, isFullScreenProp]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -319,6 +322,7 @@ export function ScheduleManager({
                                   setModifyEventForSchedule({ event: eventForModification, index });
                                 }}
                                 isViewPage={true}
+                                onAddEvent={onAddEvent}
                             />
                         </div>
                     </ScrollArea>
