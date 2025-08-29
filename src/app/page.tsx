@@ -65,8 +65,8 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RemoteControlManager } from '@/components/remote-control';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
+import { Realtime } from 'ably';
 
 
 interface StreamedMatch {
@@ -219,6 +219,11 @@ export type AppState = {
   fullscreenIndex: number | null;
 };
 
+type AblyMessage = {
+    name: string;
+    data: any;
+};
+
 export function HomePageContent() {
   const isMobile = useIsMobile();
   
@@ -234,30 +239,49 @@ export function HomePageContent() {
   
   const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = appState;
   
-  const setLiveAppState = (newState: Partial<AppState>) => {
-    setAppState(prevState => {
-        const validatedState = { ...prevState, ...newState };
-        if (!Array.isArray(validatedState.selectedEvents) || validatedState.selectedEvents === null) {
-          validatedState.selectedEvents = Array(9).fill(null);
-        }
-        if (validatedState.schedules) {
-          validatedState.schedules = validatedState.schedules.map((s: any) => ({
-            ...s,
-            dateTime: new Date(s.dateTime) // Re-hydrate Date objects
-          }));
-        }
-        return validatedState;
-    });
-};
+  // Ably and Remote Control state
+  const ablyClientRef = useRef<Realtime | null>(null);
+  const channelRef = useRef<any>(null);
+  const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlled' | 'controlling'>('inactive');
+  const [controlledSessionCode, setControlledSessionCode] = useState('');
+  
+  // State for the controlling view specifically
+  const [isControlling, setIsControlling] = useState(false);
+  const [controllerAppState, setControllerAppState] = useState<AppState | null>(null);
 
+
+  const setLiveAppState = useCallback((newState: Partial<AppState>) => {
+    const isControllingSession = remoteControlMode === 'controlling';
+
+    if (isControllingSession && channelRef.current) {
+        // If we are the controller, we publish the new state to the controlled device
+        const updatedState = { ...controllerAppState, ...newState };
+        setControllerAppState(updatedState as AppState);
+        channelRef.current.publish('action', {
+            type: 'SET_APP_STATE',
+            payload: updatedState,
+        });
+    } else {
+        // If we are not the controller, we just update our own state
+        setAppState(prevState => {
+            const validatedState: AppState = { ...prevState, ...newState };
+            if (!Array.isArray(validatedState.selectedEvents) || validatedState.selectedEvents === null) {
+                validatedState.selectedEvents = Array(9).fill(null);
+            }
+            if (validatedState.schedules) {
+                validatedState.schedules = validatedState.schedules.map((s: any) => ({
+                    ...s,
+                    dateTime: s.dateTime ? new Date(s.dateTime) : new Date() // Re-hydrate Date objects
+                }));
+            }
+            return validatedState;
+        });
+    }
+  }, [remoteControlMode, controllerAppState]);
 
   const setSelectedEvents = (events: (Event | null)[]) => setLiveAppState({ selectedEvents: events });
   const setViewOrder = (order: number[]) => setLiveAppState({ viewOrder: order });
-  const setGridGap = (gap: number) => setLiveAppState({ gridGap: gap });
-  const setBorderColor = (color: string) => setLiveAppState({ borderColor: color });
-  const setIsChatEnabled = (enabled: boolean) => setLiveAppState({ isChatEnabled: enabled });
   const setSchedules = (newSchedules: Schedule[]) => setLiveAppState({ schedules: newSchedules });
-  const setFullscreenIndex = (index: number | null) => setLiveAppState({fullscreenIndex: index});
 
 
   const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
@@ -298,15 +322,9 @@ export function HomePageContent() {
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
   const [remoteControlOptionsOpen, setRemoteControlOptionsOpen] = useState(false);
   
-  // Remote Control state
-  const remoteControlManagerRef = useRef<{ 
-    startControlledSession: () => Promise<string | undefined>; 
-    startControllingSession: (id: string) => void;
-  }>(null);
   const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
   const [controllerCode, setControllerCode] = useState('');
   const [isControlledSessionDialog, setIsControlledSessionDialog] = useState(false);
-  const [controlledSessionCode, setControlledSessionCode] = useState('');
   const [copied, setCopied] = useState(false);
 
 
@@ -684,23 +702,6 @@ export function HomePageContent() {
       }
   }, [appState, isInitialLoadDone]);
   
-  // This effect is responsible for syncing state when being controlled
-  useEffect(() => {
-    const handleRemoteUpdate = (event: Event) => {
-        const { detail } = event as CustomEvent;
-        if (detail.newState) {
-            // Directly set the new state from the remote
-            setLiveAppState(detail.newState);
-        }
-    };
-
-    window.addEventListener('remote-state-update', handleRemoteUpdate as EventListener);
-
-    return () => {
-        window.removeEventListener('remote-state-update', handleRemoteUpdate as EventListener);
-    };
-}, []);
-
   // URL reload effect
   useEffect(() => {
     if (isViewMode) {
@@ -806,8 +807,7 @@ export function HomePageContent() {
   };
   
   const handleRestoreGridSettings = () => {
-    setGridGap(0);
-    setBorderColor('#000000');
+    setLiveAppState({ gridGap: 0, borderColor: '#000000' });
   };
 
   const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
@@ -1111,9 +1111,12 @@ export function HomePageContent() {
   }, [selectedEvents, setSelectedEvents]);
   
   const getEventSelection = (event: Event) => {
-    const selectionIndex = selectedEvents.findIndex(se => se?.id === event.id);
-    if (selectionIndex !== -1 && selectedEvents[selectionIndex]) {
-      return { isSelected: true, selectedOption: selectedEvents[selectionIndex]!.selectedOption };
+    const sourceState = isControlling ? controllerAppState : appState;
+    if (!sourceState?.selectedEvents) return { isSelected: false, selectedOption: null };
+
+    const selectionIndex = sourceState.selectedEvents.findIndex(se => se?.id === event.id);
+    if (selectionIndex !== -1 && sourceState.selectedEvents[selectionIndex]) {
+      return { isSelected: true, selectedOption: sourceState.selectedEvents[selectionIndex]!.selectedOption };
     }
     return { isSelected: false, selectedOption: null };
   };
@@ -1131,33 +1134,8 @@ export function HomePageContent() {
   
   const handleStopView = useCallback(() => {
     setIsViewMode(false);
-    setFullscreenIndex(null);
-  }, []);
-
-  const handleStartAndControl = async () => {
-    if (selectedEventsCount === 0) {
-        toast({
-            variant: 'destructive',
-            title: 'No hay eventos seleccionados',
-            description: 'Por favor, selecciona al menos un evento para iniciar la vista controlada.',
-        });
-        return;
-    }
-    handleStartView(true);
-    try {
-        const code = await remoteControlManagerRef.current?.startControlledSession();
-        if (code) {
-            setControlledSessionCode(code);
-            setIsControlledSessionDialog(true);
-        }
-    } catch(e: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Error de Control Remoto',
-            description: e.message || 'No se pudo iniciar la sesión controlada.',
-        });
-    }
-  };
+    setLiveAppState({ fullscreenIndex: null });
+  }, [setLiveAppState]);
 
   const handleRemoveEventFromDialog = (eventToRemove: Event) => {
       setSelectedEvents(prevEvents => 
@@ -1303,7 +1281,7 @@ export function HomePageContent() {
   };
 
   const handleToggleFullscreen = (index: number) => {
-    setFullscreenIndex(prevIndex => (prevIndex === index ? null : prevIndex));
+    setLiveAppState({ fullscreenIndex: fullscreenIndex === index ? null : index });
   };
 
   const getItemClasses = (orderedIndex: number, count: number) => {
@@ -1328,10 +1306,142 @@ export function HomePageContent() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+  
+  // --- Remote Control Logic ---
+  
+  const cleanupAbly = useCallback(() => {
+    if (channelRef.current) {
+        try { channelRef.current.detach(); } catch (e) { console.error("Error detaching from Ably channel:", e); }
+    }
+    if (ablyClientRef.current) {
+        try {
+            const state = ablyClientRef.current.connection.state;
+            if (state === 'connecting' || state === 'connected' || state === 'suspended') {
+                ablyClientRef.current.close();
+            }
+        } catch (e) { console.error("Error closing Ably connection:", e); }
+    }
+    channelRef.current = null;
+    ablyClientRef.current = null;
+  }, []);
 
+  useEffect(() => {
+    return () => { cleanupAbly(); };
+  }, [cleanupAbly]);
+
+  const initializeAbly = (clientId: string): Promise<Realtime> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+          const response = await fetch('/api/ably');
+          if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch Ably API key.');
+          const { apiKey } = await response.json();
+          if (!apiKey) throw new Error("La clave de API de Ably no está configurada.");
+
+          const client = new Realtime({ key: apiKey, clientId: clientId, echoMessages: false });
+          ablyClientRef.current = client;
+          resolve(client);
+      } catch (e: any) {
+          toast({ variant: 'destructive', title: 'Error de Conexión', description: e.message || "No se pudo conectar al servicio en tiempo real." });
+          reject(e);
+      }
+    });
+  };
+
+  const startControlledSession = (): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+        if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
+        try {
+            const newSessionId = `dpt-${Math.random().toString(36).substring(2, 6)}`;
+            const ably = await initializeAbly(`controlled-${newSessionId}`);
+            
+            ably.connection.once('connected', () => {
+                setControlledSessionCode(newSessionId);
+                setRemoteControlMode('controlled');
+                sessionStorage.setItem('isControlledSession', 'true');
+                
+                const channel = ably.channels.get(newSessionId);
+                channelRef.current = channel;
+
+                channel.subscribe('sync-request', () => {
+                    channel.publish('state-update', { appState });
+                });
+                
+                // Listen for actions from the controller
+                channel.subscribe('action', (message: AblyMessage) => {
+                    if (message.data.type === 'SET_APP_STATE') {
+                       setAppState(message.data.payload);
+                    }
+                });
+                
+                resolve(newSessionId); 
+            });
+            ably.connection.once('failed', (err) => reject(new Error(err.reason.message || "No se pudo activar el control remoto.")));
+        } catch (e) { reject(e); }
+    });
+  };
+  
+  const startControllingSession = async (code: string) => {
+    if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
+    if (!code) { toast({ variant: 'destructive', title: "Error", description: "Por favor, introduce un código de sesión." }); return; }
+    
+    try {
+        const ably = await initializeAbly(`controller-${code}`);
+        ably.connection.once('connected', () => {
+            const channel = ably.channels.get(code);
+            channelRef.current = channel;
+
+            channel.subscribe('state-update', (message: AblyMessage) => {
+                setControllerAppState(message.data.appState);
+            });
+
+            channel.publish('sync-request', {});
+            setIsControlling(true);
+            setRemoteControlMode('controlling');
+            toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${code}.` });
+        });
+        ably.connection.once('failed', (err) => toast({ variant: 'destructive', title: "Error de Conexión", description: err.reason.message || "No se pudo conectar. Verifica el código." }));
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: "Error", description: e.message || "Ocurrió un error inesperado." });
+    }
+  };
+  
+  const handleStartAndControl = async () => {
+    if (selectedEventsCount === 0) {
+        toast({ variant: 'destructive', title: 'No hay eventos seleccionados', description: 'Selecciona al menos un evento.' });
+        return;
+    }
+    handleStartView(true);
+    try {
+        const code = await startControlledSession();
+        if (code) {
+            setControlledSessionCode(code);
+            setIsControlledSessionDialog(true);
+        }
+    } catch(e: any) {
+        toast({ variant: 'destructive', title: 'Error de Control Remoto', description: e.message || 'No se pudo iniciar la sesión controlada.' });
+    }
+  };
 
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
+  }
+
+  if (isControlling && controllerAppState) {
+    return (
+        <ControllingView
+            appState={controllerAppState}
+            onAction={setLiveAppState}
+            allEvents={events}
+            allChannels={channelsData}
+            onStop={() => {
+                cleanupAbly();
+                setIsControlling(false);
+                setRemoteControlMode('inactive');
+                setControllerAppState(null);
+                toast({ title: "Control Remoto Desconectado" });
+            }}
+        />
+    );
   }
   
   // --- Client-side component to build the webcal:// link ---
@@ -1583,12 +1693,12 @@ export function HomePageContent() {
                     onNotificationManager={() => setNotificationManagerOpen(true)}
                     onRemoteControl={handleStartAndControl}
                     gridGap={gridGap}
-                    onGridGapChange={setGridGap}
+                    onGridGapChange={(v) => setLiveAppState({ gridGap: v })}
                     borderColor={borderColor}
-                    onBorderColorChange={setBorderColor}
+                    onBorderColorChange={(c) => setLiveAppState({ borderColor: c })}
                     onRestoreGridSettings={handleRestoreGridSettings}
                     isChatEnabled={isChatEnabled}
-                    onIsChatEnabledChange={setIsChatEnabled}
+                    onIsChatEnabledChange={(v) => setLiveAppState({ isChatEnabled: v })}
                     categories={categories}
                     onOpenTutorial={() => setIsTutorialOpen(true)}
                     onOpenErrors={() => setIsErrorsOpen(true)}
@@ -1854,13 +1964,6 @@ export function HomePageContent() {
   
   return (
     <>
-      <RemoteControlManager
-          ref={remoteControlManagerRef}
-          appState={appState}
-          setAppState={setLiveAppState}
-          allEvents={events}
-          allChannels={channelsData}
-      />
       {isViewMode ? renderViewContent() : (
         <div className="flex h-screen w-screen flex-col bg-background text-foreground">
            {isDataLoading && !isInitialLoadDone && (
@@ -1960,12 +2063,12 @@ export function HomePageContent() {
                                                 onNotificationManager={() => setNotificationManagerOpen(true)}
                                                 onRemoteControl={handleStartAndControl}
                                                 gridGap={gridGap}
-                                                onGridGapChange={setGridGap}
+                                                onGridGapChange={(v) => setLiveAppState({ gridGap: v })}
                                                 borderColor={borderColor}
-                                                onBorderColorChange={setBorderColor}
+                                                onBorderColorChange={(c) => setLiveAppState({ borderColor: c })}
                                                 onRestoreGridSettings={handleRestoreGridSettings}
                                                 isChatEnabled={isChatEnabled}
-                                                onIsChatEnabledChange={setIsChatEnabled}
+                                                onIsChatEnabledChange={(v) => setLiveAppState({ isChatEnabled: v })}
                                                 categories={categories}
                                                 onOpenTutorial={() => setIsTutorialOpen(true)}
                                                 onOpenErrors={() => setIsErrorsOpen(true)}
@@ -2052,7 +2155,7 @@ export function HomePageContent() {
                     <Button variant="secondary">Cancelar</Button>
                   </DialogModalClose>
                   <Button onClick={() => {
-                      remoteControlManagerRef.current?.startControllingSession(controllerCode);
+                      startControllingSession(controllerCode);
                       setIsControllerPromptOpen(false);
                   }}>Conectar</Button>
               </DialogFooter>
@@ -2090,6 +2193,7 @@ export function HomePageContent() {
   );
 }
 
+
 // Wrapper to handle Suspense for client components
 export default function Page() {
   return (
@@ -2097,4 +2201,175 @@ export default function Page() {
       <HomePageContent />
     </Suspense>
   );
+}
+
+// Controller View Component
+function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: {
+    onStop: () => void;
+    appState: AppState;
+    onAction: (newState: Partial<AppState>) => void;
+    allEvents: Event[];
+    allChannels: Channel[];
+}) {
+    const [openDialog, setOpenDialog] = useState<'add-event' | 'schedule' | 'event-select' | null>(null);
+    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+    const [isModification, setIsModification] = useState(false);
+    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+
+    // States for ScheduleManager
+    const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(appState.selectedEvents);
+    const [futureOrder, setFutureOrder] = useState<number[]>(appState.viewOrder);
+
+    useEffect(() => {
+        setFutureSelection(appState.selectedEvents);
+        setFutureOrder(appState.viewOrder);
+    }, [appState.selectedEvents, appState.viewOrder]);
+
+    const getEventSelection = (event: Event) => {
+        const selectionIndex = appState.selectedEvents.findIndex((se: Event | null) => se?.id === event.id);
+        if (selectionIndex !== -1 && appState.selectedEvents[selectionIndex]) {
+            return { isSelected: true, selectedOption: appState.selectedEvents[selectionIndex]!.selectedOption };
+        }
+        return { isSelected: false, selectedOption: null };
+    };
+
+    const handleModifyEventInList = (event: Event, index: number) => {
+        const currentEventState = appState.selectedEvents[index];
+        if (!currentEventState) return;
+        const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
+        setDialogEvent(eventForModification);
+        setIsModification(true);
+        setModificationIndex(index);
+        setOpenDialog('event-select');
+    };
+    
+    const handleAddEventClick = () => {
+        setOpenDialog('add-event');
+    };
+    
+    const handleScheduleClick = () => {
+        setFutureSelection([...appState.selectedEvents]);
+        setFutureOrder([...appState.viewOrder]);
+        setOpenDialog('schedule');
+    };
+
+    const handleSelectEventFromList = (event: Event) => {
+        const targetIndex = appState.selectedEvents.findIndex((e: Event | null) => e === null);
+        setDialogEvent(event);
+        setIsModification(false);
+        setModificationIndex(targetIndex);
+        setOpenDialog('event-select');
+    };
+    
+    const handleChannelClick = (channel: Channel) => {
+        const targetIndex = appState.selectedEvents.findIndex((e: Event | null) => e === null);
+        if (targetIndex !== -1) {
+            const event: Event = {
+                id: `${channel.name}-channel-static`,
+                title: channel.name,
+                options: channel.urls.map(u => ({ ...u, hd: false, language: '' })),
+                sources: [], buttons: [], time: 'AHORA', category: 'Canal',
+                language: '', date: '', source: '', status: 'En Vivo', image: channel.logo,
+            };
+            setDialogEvent(event);
+            setIsModification(false);
+            setModificationIndex(targetIndex);
+            setOpenDialog('event-select');
+        }
+    };
+    
+    const handleFinalSelectEvent = (event: Event, option: string) => {
+       if (modificationIndex !== null && modificationIndex >= 0) {
+          const newSelectedEvents = [...appState.selectedEvents];
+          newSelectedEvents[modificationIndex] = { ...event, selectedOption: option };
+          onAction({ selectedEvents: newSelectedEvents });
+       }
+       setOpenDialog(null);
+    };
+    
+    const handleRemoveEventFromSelection = () => {
+        if (modificationIndex !== null) {
+            const newSelectedEvents = [...appState.selectedEvents];
+            newSelectedEvents[modificationIndex] = null;
+            onAction({ selectedEvents: newSelectedEvents });
+            setOpenDialog(null);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+            {/* The Main UI for the controller */}
+            <LayoutConfigurator
+                order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
+                onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
+                eventDetails={appState.selectedEvents}
+                onRemove={(indexToRemove: number) => {
+                    const newSelectedEvents = [...appState.selectedEvents];
+                    newSelectedEvents[indexToRemove] = null;
+                    onAction({ selectedEvents: newSelectedEvents });
+                }}
+                onModify={handleModifyEventInList}
+                isViewPage={true}
+                onAddEvent={handleAddEventClick}
+                onSchedule={handleScheduleClick}
+                onToggleFullscreen={(index) => onAction({ fullscreenIndex: appState.fullscreenIndex === index ? null : index })}
+                fullscreenIndex={appState.fullscreenIndex}
+                gridGap={appState.gridGap}
+                onGridGapChange={(value) => onAction({ gridGap: value })}
+                borderColor={appState.borderColor}
+                onBorderColorChange={(value) => onAction({ borderColor: value })}
+                isChatEnabled={appState.isChatEnabled}
+                onIsChatEnabledChange={(value) => onAction({ isChatEnabled: value })}
+                onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
+                onStopSession={onStop}
+                isRemoteControlView={true}
+                onNotificationManager={() => {}}
+                onOpenCalendar={() => {}}
+                onOpenErrors={() => {}}
+                onOpenTutorial={() => {}}
+                categories={[]} 
+                isErrorsOpen={false} isTutorialOpen={false}
+                onIsErrorsOpenChange={() => {}} onIsTutorialOpenChange={() => {}}
+            />
+
+            {/* The Dialogs, rendered at the same level */}
+            <AddEventsDialog
+                open={openDialog === 'add-event'}
+                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                events={allEvents}
+                channels={allChannels}
+                getEventSelection={getEventSelection}
+                onEventSelect={handleSelectEventFromList}
+                onChannelClick={handleChannelClick}
+            />
+
+            <ScheduleManager
+                open={openDialog === 'schedule'}
+                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                currentSelection={futureSelection}
+                currentOrder={futureOrder}
+                schedules={appState.schedules}
+                onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
+                onModifyEventInView={handleModifyEventInList}
+                onAddEvent={() => setOpenDialog('add-event')}
+                initialSelection={appState.selectedEvents}
+                initialOrder={appState.viewOrder}
+                setFutureSelection={setFutureSelection}
+                setFutureOrder={setFutureOrder}
+                isLoading={false}
+            />
+
+            {dialogEvent && (
+                <EventSelectionDialog
+                    isOpen={openDialog === 'event-select'}
+                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                    event={dialogEvent}
+                    onSelect={handleFinalSelectEvent}
+                    isModification={isModification}
+                    onRemove={handleRemoveEventFromSelection}
+                    isLoading={false}
+                />
+            )}
+        </div>
+    );
 }
