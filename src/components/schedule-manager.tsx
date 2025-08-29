@@ -54,7 +54,6 @@ interface ScheduleManagerProps {
   setFutureSelection: (selection: (Event | null)[]) => void;
   setFutureOrder: (order: number[]) => void;
   isFullScreenProp?: boolean;
-  container?: HTMLElement;
 }
 
 export function ScheduleManager({
@@ -72,7 +71,6 @@ export function ScheduleManager({
   setFutureSelection,
   setFutureOrder,
   isFullScreenProp = false,
-  container,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -184,7 +182,6 @@ export function ScheduleManager({
                 setModifyEventForSchedule(null)
             }
         }}>
-         <DialogPortal container={container}>
           {modifyEventForSchedule && (
               <EventSelectionDialog
                 isOpen={!!modifyEventForSchedule}
@@ -194,15 +191,12 @@ export function ScheduleManager({
                 isModification={true}
                 onRemove={() => {}}
                 isLoading={false}
-                container={container}
               />
           )}
-          </DialogPortal>
         </Dialog>
 
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogPortal container={container}>
           <DialogContent 
               hideClose={true}
               className={cn(
@@ -322,11 +316,13 @@ export function ScheduleManager({
                                   setModifyEventForSchedule({ event: eventForModification, index });
                                 }}
                                 isViewPage={true}
-                                onAddEvent={onAddEvent}
                             />
                         </div>
                     </ScrollArea>
-                     <div className="p-4 border-t border-border mt-auto flex-shrink-0">
+                     <div className="p-4 border-t border-border mt-auto flex-shrink-0 space-y-2">
+                        <Button variant="outline" className="w-full" onClick={onAddEvent}>
+                            <Plus className="mr-2 h-4 w-4"/> Añadir Evento/Canal a Programación
+                        </Button>
                         <Button className="w-full" onClick={handleSaveOrUpdateSchedule} disabled={activeFutureEventsCount === 0}>
                             {editingScheduleId ? 'Actualizar Programación' : 'Guardar Programación'}
                         </Button>
@@ -339,7 +335,6 @@ export function ScheduleManager({
               </DialogClose>
             </DialogFooter>
           </DialogContent>
-        </DialogPortal>
       </Dialog>
     </>
   );
