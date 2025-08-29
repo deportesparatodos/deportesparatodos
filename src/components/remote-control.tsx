@@ -255,6 +255,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
 RemoteControlManager.displayName = 'RemoteControlManager';
 
+
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: any) {
     const [isAddEventOpen, setIsAddEventOpen] = useState(false);
     const [isScheduleOpen, setIsScheduleOpen] = useState(false);
@@ -262,8 +263,15 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
     const [isModification, setIsModification] = useState(false);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-    const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
-    const [futureOrder, setFutureOrder] = useState<number[]>([]);
+    
+    // States for ScheduleManager specifically
+    const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(appState.selectedEvents);
+    const [futureOrder, setFutureOrder] = useState<number[]>(appState.viewOrder);
+
+    useEffect(() => {
+        setFutureSelection(appState.selectedEvents);
+        setFutureOrder(appState.viewOrder);
+    }, [appState.selectedEvents, appState.viewOrder]);
 
     const handleUpdateState = (newState: Partial<AppState>) => {
         if(appState && onAction) {
@@ -346,6 +354,7 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
 
     return (
         <>
+            {/* The UI layer, which is always present but might be overlaid by a dialog */}
             <div className="fixed inset-0 bg-background z-[100] flex flex-col">
                 <LayoutConfigurator
                     order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
@@ -383,6 +392,7 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 />
             </div>
 
+            {/* The Dialogs, rendered at the same level to allow them to correctly overlay the UI */}
             <AddEventsDialog
                 open={isAddEventOpen}
                 onOpenChange={setIsAddEventOpen}
@@ -399,7 +409,7 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 currentOrder={futureOrder}
                 schedules={appState.schedules}
                 onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
-                onModifyEventInView={() => {}}
+                onModifyEventInView={handleModifyEvent}
                 onAddEvent={() => {
                     setIsScheduleOpen(false);
                     setIsAddEventOpen(true);
@@ -424,4 +434,3 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
         </>
     );
 }
-
