@@ -70,6 +70,7 @@ import { AddEventsDialog } from '@/components/add-events-dialog';
 import { RemoteAddEvents } from '@/components/remote-add-events';
 import { RemoteEventSelection } from '@/components/remote-event-selection';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
+import { RemoteScheduleManager } from '@/components/remote-schedule-manager';
 
 
 interface StreamedMatch {
@@ -1974,7 +1975,7 @@ export function HomePageContent() {
   return (
     <>
       {isViewMode ? renderViewContent() : (
-        <div ref={remoteControlContainerRef} className="flex h-screen w-screen flex-col bg-background text-foreground">
+        <div className="flex h-screen w-screen flex-col bg-background text-foreground">
            {isDataLoading && !isInitialLoadDone && (
             <div className="absolute inset-0 z-50 bg-background flex items-center justify-center">
                 <LoadingScreen />
@@ -2214,7 +2215,7 @@ export default function Page() {
   );
 }
 
-// Controller View Component - REWRITTEN FROM SCRATCH TO FIX DIALOG VISIBILITY
+// Controller View Component
 function ControllingView({
   containerRef,
   onStop,
@@ -2235,16 +2236,9 @@ function ControllingView({
   
   const [eventForSelection, setEventForSelection] = useState<Event | null>(null);
   const [isEventSelectionLoading, setIsEventSelectionLoading] = useState(false);
+  
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-
-  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(appState.selectedEvents);
-  const [futureOrder, setFutureOrder] = useState<number[]>(appState.viewOrder);
-
-  useEffect(() => {
-    setFutureSelection(appState.selectedEvents);
-    setFutureOrder(appState.viewOrder);
-  }, [appState.selectedEvents, appState.viewOrder]);
 
   const getEventSelection = (event: Event) => {
     const selectionIndex = appState.selectedEvents.findIndex((se: Event | null) => se?.id === event.id);
@@ -2357,8 +2351,8 @@ function ControllingView({
   
   return (
     <div ref={containerRef} className="fixed inset-0 bg-background z-[200] flex flex-col">
-        {/* Render popups on top of the main UI */}
-        {isAddEventOpen && (
+        {/* Render popups or main UI */}
+        {isAddEventOpen ? (
             <RemoteAddEvents
                 onOpenChange={setIsAddEventOpen}
                 onEventSelect={handleSelectEventFromList}
@@ -2367,9 +2361,7 @@ function ControllingView({
                 allEvents={allEvents}
                 allChannels={allChannels}
             />
-        )}
-        
-        {eventForSelection && (
+        ) : eventForSelection ? (
              <RemoteEventSelection
                 event={eventForSelection}
                 isModification={isModification}
@@ -2385,33 +2377,17 @@ function ControllingView({
                 }}
                 onBack={handleBackFromSelection}
             />
-        )}
-        
-        {isScheduleOpen && (
-            <ScheduleManager
-                open={isScheduleOpen}
-                onOpenChange={setIsScheduleOpen}
-                currentSelection={futureSelection}
-                currentOrder={futureOrder}
-                schedules={appState.schedules}
-                onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
-                onModifyEventInView={handleModifyEventInList}
-                onAddEvent={() => {
-                    setIsScheduleOpen(false);
-                    handleOpenAddEvent();
-                }}
-                initialSelection={appState.selectedEvents}
-                initialOrder={appState.viewOrder}
-                setFutureSelection={setFutureSelection}
-                setFutureOrder={setFutureOrder}
-                isLoading={false}
-                isFullScreenProp={true}
-                container={containerRef.current}
+        ) : isScheduleOpen ? (
+            <RemoteScheduleManager
+              open={isScheduleOpen}
+              onOpenChange={setIsScheduleOpen}
+              initialSelection={appState.selectedEvents}
+              initialOrder={appState.viewOrder}
+              schedules={appState.schedules}
+              onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
+              onAddEventFromSchedule={handleOpenAddEvent}
             />
-        )}
-
-        {/* Main UI - Only visible if no popups are open */}
-        <div className={cn("flex-grow flex flex-col", (isAddEventOpen || !!eventForSelection || isScheduleOpen) && "hidden")}>
+        ) : (
              <LayoutConfigurator
                 order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
                 onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
@@ -2437,7 +2413,7 @@ function ControllingView({
                 onStopSession={onStop}
                 isRemoteControlView={true}
             />
-        </div>
+        )}
     </div>
   );
 }

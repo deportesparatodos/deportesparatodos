@@ -53,8 +53,6 @@ interface ScheduleManagerProps {
   initialOrder: number[];
   setFutureSelection: (selection: (Event | null)[]) => void;
   setFutureOrder: (order: number[]) => void;
-  isFullScreenProp?: boolean;
-  container?: HTMLElement | null;
 }
 
 export function ScheduleManager({
@@ -71,13 +69,11 @@ export function ScheduleManager({
   initialOrder,
   setFutureSelection,
   setFutureOrder,
-  isFullScreenProp = false,
-  container,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
-  const [isFullScreen, setIsFullScreen] = useState(isFullScreenProp);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
   const [modifyEventForSchedule, setModifyEventForSchedule] = useState<{ event: Event, index: number } | null>(null);
 
@@ -95,12 +91,10 @@ export function ScheduleManager({
   useEffect(() => {
     if (open) {
       resetToCurrentSelection();
-      setIsFullScreen(isFullScreenProp);
-    } else {
-      setIsFullScreen(false);
+      setIsFullScreen(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, isFullScreenProp]);
+  }, [open]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -109,11 +103,13 @@ export function ScheduleManager({
     const combinedDateTime = new Date(date);
     combinedDateTime.setHours(hours, minutes, 0, 0);
 
+    const activeOrder = currentOrder.filter(i => currentSelection[i] !== null);
+
     if (editingScheduleId) {
       // Update existing schedule
       const updatedSchedules = schedules.map(s => 
         s.id === editingScheduleId 
-          ? { ...s, dateTime: combinedDateTime, events: currentSelection, order: currentOrder }
+          ? { ...s, dateTime: combinedDateTime, events: currentSelection, order: activeOrder }
           : s
       );
       onSchedulesChange(updatedSchedules);
@@ -123,7 +119,7 @@ export function ScheduleManager({
         id: new Date().toISOString(),
         dateTime: combinedDateTime,
         events: currentSelection,
-        order: currentOrder,
+        order: activeOrder,
       };
       onSchedulesChange([...schedules, newSchedule]);
     }
@@ -137,7 +133,10 @@ export function ScheduleManager({
     setDate(new Date(schedule.dateTime));
     setTime(format(new Date(schedule.dateTime), 'HH:mm'));
     setFutureSelection([...schedule.events]);
-    setFutureOrder([...schedule.order]);
+    
+    const fullOrder = Array.from({ length: 9 }, (_, i) => i);
+    const finalOrder = [...schedule.order, ...fullOrder.filter(i => !schedule.order.includes(i))];
+    setFutureOrder(finalOrder);
   };
 
   const handleRemoveSchedule = (id: string) => {
@@ -180,36 +179,26 @@ export function ScheduleManager({
   return (
     <>
       <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => { if(!open) setModifyEventForSchedule(null) }}>
-          <DialogPortal container={container}>
-              {modifyEventForSchedule && (
-                  <EventSelectionDialog
-                    isOpen={!!modifyEventForSchedule}
-                    onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
-                    event={modifyEventForSchedule.event}
-                    onSelect={handleModifyEventForSchedule}
-                    isModification={true}
-                    onRemove={() => {}}
-                    isLoading={false}
-                    container={container}
-                  />
-              )}
-          </DialogPortal>
-        </Dialog>
+          {modifyEventForSchedule && (
+              <EventSelectionDialog
+                isOpen={!!modifyEventForSchedule}
+                onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
+                event={modifyEventForSchedule.event}
+                onSelect={handleModifyEventForSchedule}
+                isModification={true}
+                onRemove={() => {}}
+                isLoading={false}
+              />
+          )}
+      </Dialog>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogPortal container={container}>
           <DialogContent 
               hideClose={true}
               className={cn(
                   "max-w-4xl h-[90vh] flex flex-col p-0 transition-all duration-300",
                    isFullScreen && "w-screen h-screen max-w-none rounded-none"
               )}
-              onCloseAutoFocus={(e) => {
-                  if (isFullScreen) {
-                    e.preventDefault();
-                  }
-              }}
-               onOpenAutoFocus={(e) => e.preventDefault()}
           >
             <DialogHeader className="p-4 border-b flex-shrink-0 flex-row items-center justify-between">
               <div>
@@ -336,7 +325,6 @@ export function ScheduleManager({
               </DialogClose>
             </DialogFooter>
           </DialogContent>
-        </DialogPortal>
       </Dialog>
     </>
   );
