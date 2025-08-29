@@ -54,6 +54,7 @@ interface ScheduleManagerProps {
   setFutureSelection: (selection: (Event | null)[]) => void;
   setFutureOrder: (order: number[]) => void;
   isFullScreenProp?: boolean;
+  container?: HTMLElement | null;
 }
 
 export function ScheduleManager({
@@ -71,6 +72,7 @@ export function ScheduleManager({
   setFutureSelection,
   setFutureOrder,
   isFullScreenProp = false,
+  container,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -177,26 +179,25 @@ export function ScheduleManager({
 
   return (
     <>
-        <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {
-            if(!open) {
-                setModifyEventForSchedule(null)
-            }
-        }}>
-          {modifyEventForSchedule && (
-              <EventSelectionDialog
-                isOpen={!!modifyEventForSchedule}
-                onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
-                event={modifyEventForSchedule.event}
-                onSelect={handleModifyEventForSchedule}
-                isModification={true}
-                onRemove={() => {}}
-                isLoading={false}
-              />
-          )}
+      <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => { if(!open) setModifyEventForSchedule(null) }}>
+          <DialogPortal container={container}>
+              {modifyEventForSchedule && (
+                  <EventSelectionDialog
+                    isOpen={!!modifyEventForSchedule}
+                    onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
+                    event={modifyEventForSchedule.event}
+                    onSelect={handleModifyEventForSchedule}
+                    isModification={true}
+                    onRemove={() => {}}
+                    isLoading={false}
+                    container={container}
+                  />
+              )}
+          </DialogPortal>
         </Dialog>
 
-
       <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogPortal container={container}>
           <DialogContent 
               hideClose={true}
               className={cn(
@@ -335,6 +336,7 @@ export function ScheduleManager({
               </DialogClose>
             </DialogFooter>
           </DialogContent>
+        </DialogPortal>
       </Dialog>
     </>
   );

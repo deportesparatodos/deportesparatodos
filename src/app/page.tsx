@@ -2116,17 +2116,19 @@ export function HomePageContent() {
       )}
 
       {/* Dialogs at top level */}
-      <AddEventsDialog
-          open={addEventsDialogOpen}
-          onOpenChange={setAddEventsDialogOpen}
-          onEventSelect={(event: Event) => openDialogForEvent(event, 'view')}
-          onChannelClick={handleChannelClick}
-          getEventSelection={getEventSelection}
-          events={allSortedEvents}
-          channels={channelsData}
-          isLoading={isAddEventsLoading}
-          onFetch={fetchEvents}
-      />
+      <Dialog open={addEventsDialogOpen} onOpenChange={setAddEventsDialogOpen}>
+        <AddEventsDialog
+            open={addEventsDialogOpen}
+            onOpenChange={setAddEventsDialogOpen}
+            onEventSelect={(event: Event) => openDialogForEvent(event, dialogContext)}
+            onChannelClick={handleChannelClick}
+            getEventSelection={getEventSelection}
+            events={allSortedEvents}
+            channels={channelsData}
+            isLoading={isAddEventsLoading}
+            onFetch={fetchEvents}
+        />
+      </Dialog>
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
           <CalendarDialogContent categories={categories} />
       </Dialog>
@@ -2212,7 +2214,7 @@ export default function Page() {
   );
 }
 
-// Controller View Component - REWRITTEN FROM SCRATCH
+// Controller View Component - REWRITTEN FROM SCRATCH TO FIX DIALOG VISIBILITY
 function ControllingView({
   containerRef,
   onStop,
@@ -2254,7 +2256,7 @@ function ControllingView({
     }
     return { isSelected: false, selectedOption: null };
   };
-
+  
   const handleFetchOptionsAndOpenSelector = async (event: Event) => {
     setIsEventSelectionLoading(true);
     setEventForSelection(event);
@@ -2287,18 +2289,24 @@ function ControllingView({
     }
   };
 
+
   const handleModifyEventInList = (event: Event, index: number) => {
     const currentEventState = appState.selectedEvents[index];
     if (!currentEventState) return;
-
-    const eventWithOptions = allEvents.find((e) => e.id === event.id) || event;
+    
+    // Find the full event data from the main list to ensure we have all sources/options
+    const fullEventData = allEvents.find((e) => e.id === event.id) || event;
     
     setIsModification(true);
     setModificationIndex(index);
-    handleFetchOptionsAndOpenSelector({ ...eventWithOptions, selectedOption: currentEventState.selectedOption });
+    handleFetchOptionsAndOpenSelector({ ...fullEventData, selectedOption: currentEventState.selectedOption });
+    setIsAddEventOpen(false); // Ensure main list is hidden
   };
   
-  const handleOpenAddEvent = () => setIsAddEventOpen(true);
+  const handleOpenAddEvent = () => {
+      setEventForSelection(null);
+      setIsAddEventOpen(true);
+  };
   
   const handleOpenSchedule = () => setIsScheduleOpen(true);
 
@@ -2324,6 +2332,12 @@ function ControllingView({
       setModificationIndex(targetIndex);
       setEventForSelection(event);
       setIsAddEventOpen(false);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Selección Completa',
+            description: 'No hay espacios libres para añadir un canal.',
+        });
     }
   };
 
@@ -2342,50 +2356,22 @@ function ControllingView({
   }
   
   return (
-    <div className="fixed inset-0 bg-background z-[100] flex flex-col" ref={containerRef}>
-        
-        {/* Main UI */}
-        <LayoutConfigurator
-            order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
-            onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
-            eventDetails={appState.selectedEvents}
-            onRemove={(indexToRemove: number) => {
-                const newSelectedEvents = [...appState.selectedEvents];
-                newSelectedEvents[indexToRemove] = null;
-                onAction({ selectedEvents: newSelectedEvents });
-            }}
-            onModify={handleModifyEventInList}
-            isViewPage={true}
-            onAddEvent={handleOpenAddEvent}
-            onSchedule={handleOpenSchedule}
-            onToggleFullscreen={(index) => onAction({ fullscreenIndex: appState.fullscreenIndex === index ? null : index })}
-            fullscreenIndex={appState.fullscreenIndex}
-            gridGap={appState.gridGap}
-            onGridGapChange={(value) => onAction({ gridGap: value })}
-            borderColor={appState.borderColor}
-            onBorderColorChange={(value) => onAction({ borderColor: value })}
-            isChatEnabled={appState.isChatEnabled}
-            onIsChatEnabledChange={(value) => onAction({ isChatEnabled: value })}
-            onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
-            onStopSession={onStop}
-            isRemoteControlView={true}
-        />
-
-        {/* Dialogs rendered here, outside the main UI flow but within the controlling view's portal */}
-        <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
+    <div ref={containerRef} className="fixed inset-0 bg-background z-[200] flex flex-col">
+        {/* Render popups on top of the main UI */}
+        {isAddEventOpen && (
             <RemoteAddEvents
-            onEventSelect={handleSelectEventFromList}
-            onChannelClick={handleChannelClick}
-            getEventSelection={getEventSelection}
-            allEvents={allEvents}
-            allChannels={allChannels}
-            onOpenChange={setIsAddEventOpen}
+                onOpenChange={setIsAddEventOpen}
+                onEventSelect={handleSelectEventFromList}
+                onChannelClick={handleChannelClick}
+                getEventSelection={getEventSelection}
+                allEvents={allEvents}
+                allChannels={allChannels}
             />
-        </Dialog>
-
-        <Dialog open={!!eventForSelection} onOpenChange={(open) => !open && setEventForSelection(null)}>
-            <RemoteEventSelection
-                event={eventForSelection!}
+        )}
+        
+        {eventForSelection && (
+             <RemoteEventSelection
+                event={eventForSelection}
                 isModification={isModification}
                 isLoading={isEventSelectionLoading}
                 onSelect={handleFinalSelectEvent}
@@ -2399,9 +2385,9 @@ function ControllingView({
                 }}
                 onBack={handleBackFromSelection}
             />
-        </Dialog>
+        )}
         
-        <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+        {isScheduleOpen && (
             <ScheduleManager
                 open={isScheduleOpen}
                 onOpenChange={setIsScheduleOpen}
@@ -2412,7 +2398,7 @@ function ControllingView({
                 onModifyEventInView={handleModifyEventInList}
                 onAddEvent={() => {
                     setIsScheduleOpen(false);
-                    setIsAddEventOpen(true);
+                    handleOpenAddEvent();
                 }}
                 initialSelection={appState.selectedEvents}
                 initialOrder={appState.viewOrder}
@@ -2420,10 +2406,38 @@ function ControllingView({
                 setFutureOrder={setFutureOrder}
                 isLoading={false}
                 isFullScreenProp={true}
+                container={containerRef.current}
             />
-        </Dialog>
+        )}
+
+        {/* Main UI - Only visible if no popups are open */}
+        <div className={cn("flex-grow flex flex-col", (isAddEventOpen || !!eventForSelection || isScheduleOpen) && "hidden")}>
+             <LayoutConfigurator
+                order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
+                onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
+                eventDetails={appState.selectedEvents}
+                onRemove={(indexToRemove: number) => {
+                    const newSelectedEvents = [...appState.selectedEvents];
+                    newSelectedEvents[indexToRemove] = null;
+                    onAction({ selectedEvents: newSelectedEvents });
+                }}
+                onModify={handleModifyEventInList}
+                isViewPage={true}
+                onAddEvent={handleOpenAddEvent}
+                onSchedule={handleOpenSchedule}
+                onToggleFullscreen={(index) => onAction({ fullscreenIndex: appState.fullscreenIndex === index ? null : index })}
+                fullscreenIndex={appState.fullscreenIndex}
+                gridGap={appState.gridGap}
+                onGridGapChange={(value) => onAction({ gridGap: value })}
+                borderColor={appState.borderColor}
+                onBorderColorChange={(value) => onAction({ borderColor: value })}
+                isChatEnabled={appState.isChatEnabled}
+                onIsChatEnabledChange={(value) => onAction({ isChatEnabled: value })}
+                onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
+                onStopSession={onStop}
+                isRemoteControlView={true}
+            />
+        </div>
     </div>
   );
 }
-
-    

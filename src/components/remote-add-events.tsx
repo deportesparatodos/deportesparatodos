@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, FC } from 'react';
@@ -15,11 +14,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
-import { 
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 
 interface RemoteAddEventsProps {
   onOpenChange: (open: boolean) => void;
@@ -71,17 +65,16 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
     }, [searchTerm, allEvents, allChannels]);
 
     return (
-        <DialogContent 
-            hideClose={true}
+        <div 
             className={cn(
-                "flex flex-col p-0 transition-all duration-300",
+                "absolute bg-background/95 backdrop-blur-sm inset-0 flex flex-col transition-all duration-300",
                 isFullScreen 
-                    ? "w-screen h-screen max-w-none rounded-none"
-                    : "h-[90vh] sm:max-w-4xl"
+                    ? "w-full h-full"
+                    : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] max-w-4xl rounded-lg border border-border shadow-2xl"
             )}
         >
-            <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0'>
-                <DialogTitle>Añadir Evento/Canal</DialogTitle>
+            <header className='flex-row items-center justify-between p-4 flex-shrink-0 flex'>
+                <h2 className='text-lg font-semibold'>Añadir Evento/Canal</h2>
                  <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
                        {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
@@ -90,7 +83,7 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
                        <X className="h-5 w-5" />
                     </Button>
                 </div>
-            </DialogHeader>
+            </header>
             <Separator className='w-full flex-shrink-0' />
              
             <div className="relative flex-grow flex flex-col min-h-0">
@@ -146,8 +139,6 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
                     </ScrollArea>
                 </Tabs>
             </div>
-        </DialogContent>
+        </div>
     );
 }
-
-    
