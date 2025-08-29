@@ -8,6 +8,9 @@ import type { Schedule } from './schedule-manager';
 import { LayoutConfigurator } from './layout-configurator';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
+import { AddEventsDialog } from './add-events-dialog';
+import { EventSelectionDialog } from './event-selection-dialog';
+import { ScheduleManager } from './schedule-manager';
 
 type AppState = {
   selectedEvents: (Event | null)[];
@@ -253,19 +256,81 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 RemoteControlManager.displayName = 'RemoteControlManager';
 
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: any) {
-    
+    const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+    const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+    const [isEventSelectionOpen, setIsEventSelectionOpen] = useState(false);
+    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+    const [isModification, setIsModification] = useState(false);
+    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+    const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
+    const [futureOrder, setFutureOrder] = useState<number[]>([]);
+
     const handleUpdateState = (newState: Partial<AppState>) => {
-        const fullNewState = { ...appState, ...newState };
-        onAction(fullNewState);
+        if(appState && onAction) {
+            const fullNewState = { ...appState, ...newState };
+            onAction(fullNewState);
+        }
+    };
+    
+    const getEventSelection = (event: Event) => {
+        if (!appState?.selectedEvents) return { isSelected: false, selectedOption: null };
+        const selectionIndex = appState.selectedEvents.findIndex((se: Event | null) => se?.id === event.id);
+        if (selectionIndex !== -1 && appState.selectedEvents[selectionIndex]) {
+            return { isSelected: true, selectedOption: appState.selectedEvents[selectionIndex]!.selectedOption };
+        }
+        return { isSelected: false, selectedOption: null };
     };
 
+    const openEventDialog = (event: Event, isMod: boolean, index: number | null) => {
+        setDialogEvent(event);
+        setIsModification(isMod);
+        setModificationIndex(index);
+        setIsEventSelectionOpen(true);
+    };
+
+    const handleEventSelectFromList = (event: Event) => {
+        openEventDialog(event, false, appState?.selectedEvents.findIndex((e: Event | null) => e === null) ?? -1);
+    };
+    
     const handleModifyEvent = (event: Event, index: number) => {
         const currentEventState = appState.selectedEvents[index];
         if (!currentEventState) return;
         const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
-        // This will now be handled inside LayoutConfigurator
+        openEventDialog(eventForModification, true, index);
     };
-    
+
+    const handleChannelClick = (channel: Channel) => {
+        const targetIndex = appState?.selectedEvents.findIndex((e: any) => e === null);
+        if (targetIndex !== -1) {
+            const event: Event = {
+                id: `${channel.name}-channel-static`,
+                title: channel.name,
+                options: channel.urls.map(u => ({ ...u, hd: false, language: '' })),
+                sources: [], buttons: [], time: 'AHORA', category: 'Canal',
+                language: '', date: '', source: '', status: 'En Vivo', image: channel.logo,
+            };
+            openEventDialog(event, false, targetIndex);
+        }
+    };
+
+    const handleFinalSelectEvent = (event: Event, option: string) => {
+       if (modificationIndex !== null && modificationIndex >= 0 && appState) {
+          const newSelectedEvents = [...appState.selectedEvents];
+          newSelectedEvents[modificationIndex] = { ...event, selectedOption: option };
+          handleUpdateState({ selectedEvents: newSelectedEvents });
+       }
+       setIsEventSelectionOpen(false);
+    };
+  
+    const handleRemoveEventFromSelection = () => {
+        if (modificationIndex !== null && appState) {
+            const newSelectedEvents = [...appState.selectedEvents];
+            newSelectedEvents[modificationIndex] = null;
+            handleUpdateState({ selectedEvents: newSelectedEvents });
+            setIsEventSelectionOpen(false); 
+        }
+    };
+
     const handleToggleFullscreen = (index: number) => {
         const currentFullscreen = appState.fullscreenIndex;
         handleUpdateState({ fullscreenIndex: currentFullscreen === index ? null : index });
@@ -280,46 +345,83 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     }, [allEvents]);
 
     return (
-        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-            <LayoutConfigurator
-                order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
-                onOrderChange={(newOrder: number[]) => handleUpdateState({ viewOrder: newOrder })}
-                eventDetails={appState.selectedEvents}
-                onRemove={(indexToRemove: number) => {
-                    const newSelectedEvents = [...appState.selectedEvents];
-                    newSelectedEvents[indexToRemove] = null;
-                    handleUpdateState({ selectedEvents: newSelectedEvents });
-                }}
-                onModify={handleModifyEvent}
-                isViewPage={true}
-                onAddEvent={() => {}} // Will be handled inside LayoutConfigurator
-                onSchedule={() => {}} // Will be handled inside LayoutConfigurator
-                onToggleFullscreen={handleToggleFullscreen}
-                fullscreenIndex={appState.fullscreenIndex}
-                gridGap={appState.gridGap}
-                onGridGapChange={(value: number) => handleUpdateState({ gridGap: value })}
-                borderColor={appState.borderColor}
-                onBorderColorChange={(value: string) => handleUpdateState({ borderColor: value })}
-                isChatEnabled={appState.isChatEnabled}
-                onIsChatEnabledChange={(value: boolean) => handleUpdateState({ isChatEnabled: value })}
-                categories={allCategories}
-                onRestoreGridSettings={() => handleUpdateState({ gridGap: 0, borderColor: '#000000' })}
-                onOpenTutorial={() => {}}
-                onOpenErrors={() => {}}
-                onOpenCalendar={() => {}}
-                isTutorialOpen={false}
-                onIsTutorialOpenChange={() => {}}
-                isErrorsOpen={false}
-                onIsErrorsOpenChange={() => {}}
-                onStopSession={onStop}
-                isRemoteControlView={true}
-                onNotificationManager={() => {}} 
-                // Props for dialogs inside LayoutConfigurator
-                allEvents={allEvents}
-                allChannels={allChannels}
-                appState={appState}
-                onAction={onAction}
+        <>
+            <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+                <LayoutConfigurator
+                    order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
+                    onOrderChange={(newOrder: number[]) => handleUpdateState({ viewOrder: newOrder })}
+                    eventDetails={appState.selectedEvents}
+                    onRemove={(indexToRemove: number) => {
+                        const newSelectedEvents = [...appState.selectedEvents];
+                        newSelectedEvents[indexToRemove] = null;
+                        handleUpdateState({ selectedEvents: newSelectedEvents });
+                    }}
+                    onModify={handleModifyEvent}
+                    isViewPage={true}
+                    onAddEvent={() => setIsAddEventOpen(true)}
+                    onSchedule={() => setIsScheduleOpen(true)}
+                    onToggleFullscreen={handleToggleFullscreen}
+                    fullscreenIndex={appState.fullscreenIndex}
+                    gridGap={appState.gridGap}
+                    onGridGapChange={(value: number) => handleUpdateState({ gridGap: value })}
+                    borderColor={appState.borderColor}
+                    onBorderColorChange={(value: string) => handleUpdateState({ borderColor: value })}
+                    isChatEnabled={appState.isChatEnabled}
+                    onIsChatEnabledChange={(value: boolean) => handleUpdateState({ isChatEnabled: value })}
+                    categories={allCategories}
+                    onRestoreGridSettings={() => handleUpdateState({ gridGap: 0, borderColor: '#000000' })}
+                    onOpenTutorial={() => {}}
+                    onOpenErrors={() => {}}
+                    onOpenCalendar={() => {}}
+                    isTutorialOpen={false}
+                    onIsTutorialOpenChange={() => {}}
+                    isErrorsOpen={false}
+                    onIsErrorsOpenChange={() => {}}
+                    onStopSession={onStop}
+                    isRemoteControlView={true}
+                    onNotificationManager={() => {}} 
+                />
+            </div>
+
+            <AddEventsDialog
+                open={isAddEventOpen}
+                onOpenChange={setIsAddEventOpen}
+                events={allEvents}
+                channels={allChannels}
+                getEventSelection={getEventSelection}
+                onEventSelect={handleEventSelectFromList}
+                onChannelClick={handleChannelClick}
             />
-        </div>
+            <ScheduleManager
+                open={isScheduleOpen}
+                onOpenChange={setIsScheduleOpen}
+                currentSelection={futureSelection}
+                currentOrder={futureOrder}
+                schedules={appState.schedules}
+                onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
+                onModifyEventInView={() => {}}
+                onAddEvent={() => {
+                    setIsScheduleOpen(false);
+                    setIsAddEventOpen(true);
+                }}
+                initialSelection={appState.selectedEvents}
+                initialOrder={appState.viewOrder}
+                setFutureSelection={setFutureSelection}
+                setFutureOrder={setFutureOrder}
+                isLoading={false}
+            />
+            {dialogEvent && (
+                <EventSelectionDialog
+                    isOpen={isEventSelectionOpen}
+                    onOpenChange={setIsEventSelectionOpen}
+                    event={dialogEvent}
+                    onSelect={handleFinalSelectEvent}
+                    isModification={isModification}
+                    onRemove={handleRemoveEventFromSelection}
+                    isLoading={false}
+                />
+            )}
+        </>
     );
 }
+
