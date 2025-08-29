@@ -2,7 +2,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
@@ -177,7 +176,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        isViewPage, onAddEvent, onSchedule, onRemoteControl,
+        onAddEvent, onSchedule, onRemoteControl,
         onStopSession,
         isRemoteControlView = false,
     } = props;

@@ -40,7 +40,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
   const [mode, setMode] = useState<'inactive' | 'controlled' | 'controlling'>('inactive');
   const [sessionId, setSessionId] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
   
   const ablyClientRef = useRef<Realtime | null>(null);
   const channelRef = useRef<any>(null);
@@ -106,15 +105,14 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
           });
           reject(e);
       }
-  });
-};
+    });
+  };
 
 
  const startControlledSession = (): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
         
-        setIsConnecting(true);
         setError(null);
         
         try {
@@ -124,7 +122,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             ably.connection.once('connected', () => {
                 setSessionId(newSessionId);
                 setMode('controlled');
-                setIsConnecting(false);
                 sessionStorage.setItem('isControlledSession', 'true');
                 
                 const channel = ably.channels.get(newSessionId);
@@ -146,13 +143,11 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
             
             ably.connection.once('failed', (error) => {
                 setError(error.reason.message);
-                setIsConnecting(false);
                 setMode('inactive');
                 reject(new Error(error.reason.message || "No se pudo activar el control remoto."));
             });
 
         } catch (e: any) {
-            setIsConnecting(false);
             setMode('inactive');
             reject(e);
         }
@@ -166,22 +161,11 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
         toast({ variant: 'destructive', title: "Error", description: "Por favor, introduce un código de sesión." });
         return;
     }
-    setIsConnecting(true);
     setError(null);
     try {
         const ably = await initializeAbly(`controller-${code}`);
 
-        const connectionTimeout = setTimeout(() => {
-            if (mode !== 'controlling') {
-                setIsConnecting(false);
-                setMode('inactive');
-                toast({ variant: 'destructive', title: "Error de Conexión", description: "No se pudo conectar a la sesión. Verifica el código e inténtalo de nuevo." });
-                cleanupAbly();
-            }
-        }, 15000); // 15 second timeout
-
         ably.connection.once('connected', () => {
-            clearTimeout(connectionTimeout);
             const channel = ably.channels.get(code);
             channelRef.current = channel;
 
@@ -191,20 +175,16 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 
             channel.publish('sync-request', {});
             setMode('controlling');
-            setIsConnecting(false);
             toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${code}.` });
         });
 
         ably.connection.once('failed', (error) => {
-            clearTimeout(connectionTimeout);
             setError(error.reason.message || "No se pudo conectar a la sesión.");
-            setIsConnecting(false);
             setMode('inactive');
             toast({ variant: 'destructive', title: "Error de Conexión", description: error.reason.message || "No se pudo conectar a la sesión. Verifica el código." });
         });
 
     } catch (e: any) {
-        setIsConnecting(false);
         setMode('inactive');
         toast({ variant: 'destructive', title: "Error", description: e.message || "Ocurrió un error inesperado." });
     }
@@ -221,7 +201,6 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
     setMode('inactive');
     setSessionId('');
     setError(null);
-    setIsConnecting(false);
   };
   
   useImperativeHandle(ref, () => ({
@@ -256,6 +235,7 @@ export const RemoteControlManager = forwardRef((props: RemoteControlManagerProps
 RemoteControlManager.displayName = 'RemoteControlManager';
 
 
+// Simplified view for the controller device.
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: any) {
     const [isAddEventOpen, setIsAddEventOpen] = useState(false);
     const [isScheduleOpen, setIsScheduleOpen] = useState(false);
@@ -353,82 +333,83 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     }, [allEvents]);
 
     return (
-        <>
-            <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-                <LayoutConfigurator
-                    order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
-                    onOrderChange={(newOrder: number[]) => handleUpdateState({ viewOrder: newOrder })}
-                    eventDetails={appState.selectedEvents}
-                    onRemove={(indexToRemove: number) => {
-                        const newSelectedEvents = [...appState.selectedEvents];
-                        newSelectedEvents[indexToRemove] = null;
-                        handleUpdateState({ selectedEvents: newSelectedEvents });
-                    }}
-                    onModify={handleModifyEvent}
-                    isViewPage={true}
-                    onAddEvent={() => setIsAddEventOpen(true)}
-                    onSchedule={() => setIsScheduleOpen(true)}
-                    onToggleFullscreen={handleToggleFullscreen}
-                    fullscreenIndex={appState.fullscreenIndex}
-                    gridGap={appState.gridGap}
-                    onGridGapChange={(value: number) => handleUpdateState({ gridGap: value })}
-                    borderColor={appState.borderColor}
-                    onBorderColorChange={(value: string) => handleUpdateState({ borderColor: value })}
-                    isChatEnabled={appState.isChatEnabled}
-                    onIsChatEnabledChange={(value: boolean) => handleUpdateState({ isChatEnabled: value })}
-                    categories={allCategories}
-                    onRestoreGridSettings={() => handleUpdateState({ gridGap: 0, borderColor: '#000000' })}
-                    onOpenTutorial={() => {}}
-                    onOpenErrors={() => {}}
-                    onOpenCalendar={() => {}}
-                    isTutorialOpen={false}
-                    onIsTutorialOpenChange={() => {}}
-                    isErrorsOpen={false}
-                    onIsErrorsOpenChange={() => {}}
-                    onStopSession={onStop}
-                    isRemoteControlView={true}
-                    onNotificationManager={() => {}} 
-                />
-            </div>
+    <>
+      <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+        <LayoutConfigurator
+          order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
+          onOrderChange={(newOrder: number[]) => handleUpdateState({ viewOrder: newOrder })}
+          eventDetails={appState.selectedEvents}
+          onRemove={(indexToRemove: number) => {
+            const newSelectedEvents = [...appState.selectedEvents];
+            newSelectedEvents[indexToRemove] = null;
+            handleUpdateState({ selectedEvents: newSelectedEvents });
+          }}
+          onModify={handleModifyEvent}
+          isViewPage={true}
+          onAddEvent={() => setIsAddEventOpen(true)}
+          onSchedule={() => setIsScheduleOpen(true)}
+          onToggleFullscreen={handleToggleFullscreen}
+          fullscreenIndex={appState.fullscreenIndex}
+          gridGap={appState.gridGap}
+          onGridGapChange={(value: number) => handleUpdateState({ gridGap: value })}
+          borderColor={appState.borderColor}
+          onBorderColorChange={(value: string) => handleUpdateState({ borderColor: value })}
+          isChatEnabled={appState.isChatEnabled}
+          onIsChatEnabledChange={(value: boolean) => handleUpdateState({ isChatEnabled: value })}
+          categories={allCategories}
+          onRestoreGridSettings={() => handleUpdateState({ gridGap: 0, borderColor: '#000000' })}
+          onOpenTutorial={() => {}}
+          onOpenErrors={() => {}}
+          onOpenCalendar={() => {}}
+          isTutorialOpen={false}
+          onIsTutorialOpenChange={() => {}}
+          isErrorsOpen={false}
+          onIsErrorsOpenChange={() => {}}
+          onStopSession={onStop}
+          isRemoteControlView={true}
+          onNotificationManager={() => {}}
+        />
+      </div>
 
-            <AddEventsDialog
-                open={isAddEventOpen}
-                onOpenChange={setIsAddEventOpen}
-                events={allEvents}
-                channels={allChannels}
-                getEventSelection={getEventSelection}
-                onEventSelect={handleEventSelectFromList}
-                onChannelClick={handleChannelClick}
-            />
-            <ScheduleManager
-                open={isScheduleOpen}
-                onOpenChange={setIsScheduleOpen}
-                currentSelection={futureSelection}
-                currentOrder={futureOrder}
-                schedules={appState.schedules}
-                onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
-                onModifyEventInView={handleModifyEvent}
-                onAddEvent={() => {
-                    setIsScheduleOpen(false);
-                    setIsAddEventOpen(true);
-                }}
-                initialSelection={appState.selectedEvents}
-                initialOrder={appState.viewOrder}
-                setFutureSelection={setFutureSelection}
-                setFutureOrder={setFutureOrder}
-                isLoading={false}
-            />
-            {dialogEvent && (
-                <EventSelectionDialog
-                    isOpen={isEventSelectionOpen}
-                    onOpenChange={setIsEventSelectionOpen}
-                    event={dialogEvent}
-                    onSelect={handleFinalSelectEvent}
-                    isModification={isModification}
-                    onRemove={handleRemoveEventFromSelection}
-                    isLoading={false}
-                />
-            )}
-        </>
-    );
+      {/* Dialogs are rendered here, at the top level of the controller view */}
+      <AddEventsDialog
+        open={isAddEventOpen}
+        onOpenChange={setIsAddEventOpen}
+        events={allEvents}
+        channels={allChannels}
+        getEventSelection={getEventSelection}
+        onEventSelect={handleEventSelectFromList}
+        onChannelClick={handleChannelClick}
+      />
+      <ScheduleManager
+        open={isScheduleOpen}
+        onOpenChange={setIsScheduleOpen}
+        currentSelection={futureSelection}
+        currentOrder={futureOrder}
+        schedules={appState.schedules}
+        onSchedulesChange={(newSchedules) => handleUpdateState({ schedules: newSchedules })}
+        onModifyEventInView={handleModifyEvent}
+        onAddEvent={() => {
+          setIsScheduleOpen(false);
+          setIsAddEventOpen(true);
+        }}
+        initialSelection={appState.selectedEvents}
+        initialOrder={appState.viewOrder}
+        setFutureSelection={setFutureSelection}
+        setFutureOrder={setFutureOrder}
+        isLoading={false}
+      />
+      {dialogEvent && (
+        <EventSelectionDialog
+          isOpen={isEventSelectionOpen}
+          onOpenChange={setIsEventSelectionOpen}
+          event={dialogEvent}
+          onSelect={handleFinalSelectEvent}
+          isModification={isModification}
+          onRemove={handleRemoveEventFromSelection}
+          isLoading={false}
+        />
+      )}
+    </>
+  );
 }
