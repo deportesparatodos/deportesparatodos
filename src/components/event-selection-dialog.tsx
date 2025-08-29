@@ -102,47 +102,49 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
               </DialogHeader>
            </div>
           
-          <ScrollArea className="flex-grow h-0 px-6 pb-6">
-              {isLoading ? (
-                  <div className="flex items-center justify-center h-full min-h-[100px]">
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                  </div>
-              ) : event.options.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-center text-muted-foreground min-h-[100px]">
-                      No se encontraron opciones de transmisión.
-                  </div>
-              ) : (
-                  <TooltipProvider>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {event.options.map((option, index) => {
-                              const domain = getDomainFromUrl(option.url);
-                              const isSelected = selectedOptionUrl === option.url;
-                              return (
-                                  <Tooltip key={index} delayDuration={300}>
-                                      <TooltipTrigger asChild>
-                                          <Button
-                                              variant={isSelected ? 'default' : 'secondary'}
-                                              className={cn(
-                                                  "w-full border border-border hover:scale-105 transition-transform duration-200", 
-                                                  event.options.length === 1 && "sm:col-span-2",
-                                                  isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
-                                              )}
-                                              onClick={() => onSelect(event, option.url)}
-                                          >
-                                              <span className="truncate">{option.label}</span>
-                                          </Button>
-                                      </TooltipTrigger>
-                                      {domain && (
-                                          <TooltipContent>
-                                              <p>{domain}</p>
-                                          </TooltipContent>
-                                      )}
-                                  </Tooltip>
-                              );
-                          })}
+          <ScrollArea className="flex-grow h-0 px-6">
+              <div className="pt-0 pb-4">
+                  {isLoading ? (
+                      <div className="flex items-center justify-center h-full min-h-[100px]">
+                          <Loader2 className="h-8 w-8 animate-spin" />
                       </div>
-                  </TooltipProvider>
-              )}
+                  ) : event.options.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-center text-muted-foreground min-h-[100px]">
+                          No se encontraron opciones de transmisión.
+                      </div>
+                  ) : (
+                      <TooltipProvider>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {event.options.map((option, index) => {
+                                  const domain = getDomainFromUrl(option.url);
+                                  const isSelected = selectedOptionUrl === option.url;
+                                  return (
+                                      <Tooltip key={index} delayDuration={300}>
+                                          <TooltipTrigger asChild>
+                                              <Button
+                                                  variant={isSelected ? 'default' : 'secondary'}
+                                                  className={cn(
+                                                      "w-full border border-border hover:scale-105 transition-transform duration-200", 
+                                                      event.options.length === 1 && "sm:col-span-2",
+                                                      isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                                  )}
+                                                  onClick={() => onSelect(event, option.url)}
+                                              >
+                                                  <span className="truncate">{option.label}</span>
+                                              </Button>
+                                          </TooltipTrigger>
+                                          {domain && (
+                                              <TooltipContent>
+                                                  <p>{domain}</p>
+                                              </TooltipContent>
+                                          )}
+                                      </Tooltip>
+                                  );
+                              })}
+                          </div>
+                      </TooltipProvider>
+                  )}
+              </div>
           </ScrollArea>
           
           {isModification && (
