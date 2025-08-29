@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, Play, Copy, Check, Loader2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -17,25 +17,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { AddEventsDialog } from './add-events-dialog';
-import { ScheduleManager } from './schedule-manager';
-import { EventSelectionDialog } from './event-selection-dialog';
-import type { Channel } from './channel-list';
-
 
 export interface EventListManagementProps {
   order: number[];
@@ -46,8 +30,8 @@ export interface EventListManagementProps {
   onModify: (event: Event, index: number) => void;
   isViewPage: boolean;
   onAddEvent: () => void;
-  onSchedule?: () => void;
-  onNotificationManager?: () => void;
+  onSchedule: () => void;
+  onNotificationManager: () => void;
   onRemoteControl?: () => Promise<string | undefined>;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
