@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogPortal,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Event, StreamOption } from './event-carousel';
@@ -31,6 +32,7 @@ interface EventSelectionDialogProps {
   isModification: boolean;
   onRemove: () => void;
   isLoading: boolean;
+  container?: HTMLElement;
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
@@ -44,6 +46,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   isModification,
   onRemove,
   isLoading,
+  container,
 }) => {
 
   if (!event) return null;
@@ -57,101 +60,103 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="sm:max-w-md bg-secondary border-border text-foreground p-0 flex flex-col max-h-[90vh]"
-        onInteractOutside={(e) => {
-          if ((e.target as HTMLElement)?.closest('[data-radix-popper-content-wrapper]')) {
-            e.preventDefault();
-          }
-        }}
-        >
-         <DialogHeader className="flex-shrink-0 p-0">
-          <div className={cn("relative w-full aspect-video rounded-t-lg overflow-hidden", (isTCChaserEvent || isChannel) && "bg-white p-2")}>
-            <Image
-              src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
-              alt={event.title}
-              fill
-              className={(isTCChaserEvent || isChannel) ? 'object-contain' : 'object-cover'}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null; 
-                target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-              }}
-            />
-          </div>
-          <div className="px-6 pt-4 pb-2">
-            <DialogTitle className="text-center text-lg font-bold">{event.title}</DialogTitle>
-            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1">
-                  {timeDisplay && <p className="font-semibold">{timeDisplay}</p>}
-                  {event.status && (
-                      <Badge className={cn(
-                          "text-xs font-bold border-0 h-5",
-                          event.status.toLowerCase() === 'en vivo' && 'bg-red-600 text-white',
-                          event.status.toLowerCase() === 'próximo' && 'bg-gray-600 text-white',
-                          event.status.toLowerCase() === 'finalizado' && 'bg-black text-white',
-                          event.status.toLowerCase() === 'desconocido' && 'bg-yellow-500 text-black'
-                      )}>{event.status}</Badge>
-                  )}
-              </div>
-          </div>
-        </DialogHeader>
-        
-        <div className="flex-grow overflow-y-auto px-6 pb-6">
-            {isLoading ? (
-                <div className="flex items-center justify-center h-full min-h-[100px]">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-            ) : event.options.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-center text-muted-foreground min-h-[100px]">
-                    No se encontraron opciones de transmisión.
-                </div>
-            ) : (
-                <TooltipProvider>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {event.options.map((option, index) => {
-                            const domain = getDomainFromUrl(option.url);
-                            const isSelected = selectedOptionUrl === option.url;
-                            return (
-                                <Tooltip key={index} delayDuration={300}>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant={isSelected ? 'default' : 'secondary'}
-                                            className={cn(
-                                                "w-full border border-border hover:scale-105 transition-transform duration-200", 
-                                                event.options.length === 1 && "sm:col-span-2",
-                                                isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
-                                            )}
-                                            onClick={() => onSelect(event, option.url)}
-                                        >
-                                            <span className="truncate">{option.label}</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    {domain && (
-                                        <TooltipContent>
-                                            <p>{domain}</p>
-                                        </TooltipContent>
-                                    )}
-                                </Tooltip>
-                            );
-                        })}
-                    </div>
-                </TooltipProvider>
-            )}
-        </div>
-        
-        {isModification && (
-            <div className="px-6 flex-shrink-0 border-t border-border pt-4 pb-4">
-                <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={onRemove}
-                >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Eliminar Selección
-                </Button>
+      <DialogPortal container={container}>
+        <DialogContent 
+          className="sm:max-w-md bg-secondary border-border text-foreground p-0 flex flex-col max-h-[90vh]"
+          onInteractOutside={(e) => {
+            if ((e.target as HTMLElement)?.closest('[data-radix-popper-content-wrapper]')) {
+              e.preventDefault();
+            }
+          }}
+          >
+           <DialogHeader className="flex-shrink-0 p-0">
+            <div className={cn("relative w-full aspect-video rounded-t-lg overflow-hidden", (isTCChaserEvent || isChannel) && "bg-white p-2")}>
+              <Image
+                src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
+                alt={event.title}
+                fill
+                className={(isTCChaserEvent || isChannel) ? 'object-contain' : 'object-cover'}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null; 
+                  target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                }}
+              />
             </div>
-        )}
-      </DialogContent>
+            <div className="px-6 pt-4 pb-2">
+              <DialogTitle className="text-center text-lg font-bold">{event.title}</DialogTitle>
+              <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1">
+                    {timeDisplay && <p className="font-semibold">{timeDisplay}</p>}
+                    {event.status && (
+                        <Badge className={cn(
+                            "text-xs font-bold border-0 h-5",
+                            event.status.toLowerCase() === 'en vivo' && 'bg-red-600 text-white',
+                            event.status.toLowerCase() === 'próximo' && 'bg-gray-600 text-white',
+                            event.status.toLowerCase() === 'finalizado' && 'bg-black text-white',
+                            event.status.toLowerCase() === 'desconocido' && 'bg-yellow-500 text-black'
+                        )}>{event.status}</Badge>
+                    )}
+                </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="flex-grow overflow-y-auto px-6 pb-6">
+              {isLoading ? (
+                  <div className="flex items-center justify-center h-full min-h-[100px]">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+              ) : event.options.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-center text-muted-foreground min-h-[100px]">
+                      No se encontraron opciones de transmisión.
+                  </div>
+              ) : (
+                  <TooltipProvider>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {event.options.map((option, index) => {
+                              const domain = getDomainFromUrl(option.url);
+                              const isSelected = selectedOptionUrl === option.url;
+                              return (
+                                  <Tooltip key={index} delayDuration={300}>
+                                      <TooltipTrigger asChild>
+                                          <Button
+                                              variant={isSelected ? 'default' : 'secondary'}
+                                              className={cn(
+                                                  "w-full border border-border hover:scale-105 transition-transform duration-200", 
+                                                  event.options.length === 1 && "sm:col-span-2",
+                                                  isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                              )}
+                                              onClick={() => onSelect(event, option.url)}
+                                          >
+                                              <span className="truncate">{option.label}</span>
+                                          </Button>
+                                      </TooltipTrigger>
+                                      {domain && (
+                                          <TooltipContent>
+                                              <p>{domain}</p>
+                                          </TooltipContent>
+                                      )}
+                                  </Tooltip>
+                              );
+                          })}
+                      </div>
+                  </TooltipProvider>
+              )}
+          </div>
+          
+          {isModification && (
+              <div className="px-6 flex-shrink-0 border-t border-border pt-4 pb-4">
+                  <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={onRemove}
+                  >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar Selección
+                  </Button>
+              </div>
+          )}
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 };

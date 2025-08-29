@@ -40,14 +40,14 @@ export interface EventListManagementProps {
   onRestoreGridSettings: () => void;
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
-  categories: string[];
-  onOpenTutorial: () => void;
-  onOpenErrors: () => void;
-  onOpenCalendar: () => void;
-  isTutorialOpen: boolean;
-  onIsTutorialOpenChange: (open: boolean) => void;
-  isErrorsOpen: boolean;
-  onIsErrorsOpenChange: (open: boolean) => void;
+  categories?: string[];
+  onOpenTutorial?: () => void;
+  onOpenErrors?: () => void;
+  onOpenCalendar?: () => void;
+  isTutorialOpen?: boolean;
+  onIsTutorialOpenChange?: (open: boolean) => void;
+  isErrorsOpen?: boolean;
+  onIsErrorsOpenChange?: (open: boolean) => void;
   onStopSession?: () => void;
   isRemoteControlView?: boolean;
 }
@@ -204,7 +204,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                       <AccordionContent className="pt-2 pb-4 space-y-4">
                           <>
                               <EventList {...props} />
-                              <div className="space-y-2 pt-2">
+                               <div className="space-y-2 pt-2">
                                   {onAddEvent && (
                                     <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEvent}>
                                         <Plus className="mr-2 h-4 w-4" />
@@ -271,7 +271,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                           {!isRemoteControlView && onNotificationManager && (
+                           {!isRemoteControlView && onNotificationManager && onOpenCalendar && (
                                 <>
                                   <Separator className="my-2"/>
                                   <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
@@ -285,25 +285,23 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                       </AccordionContent>
                   </AccordionItem>
                   
-                  {!isRemoteControlView && (
+                  {!isRemoteControlView && onRemoteControl && onOpenTutorial && onOpenErrors && (
                     <>
-                        {onRemoteControl && (
-                          <AccordionItem value="item-remote" className="border rounded-lg px-4">
-                              <AccordionTrigger>Control Remoto</AccordionTrigger>
-                              <AccordionContent className="pt-4 pb-4 space-y-4">
-                                  <Alert>
-                                      <Airplay className="h-4 w-4" />
-                                      <AlertTitle>Activa el Control Remoto</AlertTitle>
-                                      <AlertDescription>
-                                          Puedes controlar esta vista desde otro dispositivo (como tu teléfono) o dejar que otro dispositivo tome el control.
-                                      </AlertDescription>
-                                  </Alert>
-                                  <Button className="w-full" onClick={onRemoteControl}>
-                                      <Settings className="mr-2 h-4 w-4" /> Activar Control Remoto
-                                  </Button>
-                              </AccordionContent>
-                          </AccordionItem>
-                        )}
+                        <AccordionItem value="item-remote" className="border rounded-lg px-4">
+                            <AccordionTrigger>Control Remoto</AccordionTrigger>
+                            <AccordionContent className="pt-4 pb-4 space-y-4">
+                                <Alert>
+                                    <Airplay className="h-4 w-4" />
+                                    <AlertTitle>Activa el Control Remoto</AlertTitle>
+                                    <AlertDescription>
+                                        Puedes controlar esta vista desde otro dispositivo (como tu teléfono) o dejar que otro dispositivo tome el control.
+                                    </AlertDescription>
+                                </Alert>
+                                <Button className="w-full" onClick={onRemoteControl}>
+                                    <Settings className="mr-2 h-4 w-4" /> Activar Control Remoto
+                                </Button>
+                            </AccordionContent>
+                        </AccordionItem>
                         
                         <AccordionItem value="item-help" className="border rounded-lg px-4">
                             <AccordionTrigger>Ayuda y Soporte</AccordionTrigger>

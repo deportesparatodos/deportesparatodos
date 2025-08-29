@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogPortal,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ interface AddEventsDialogProps {
   getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null };
   events: Event[];
   channels: Channel[];
+  container?: HTMLElement;
 }
 
 export function AddEventsDialog({ 
@@ -37,6 +39,7 @@ export function AddEventsDialog({
     getEventSelection,
     events,
     channels,
+    container,
 }: AddEventsDialogProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -80,6 +83,7 @@ export function AddEventsDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
+          <DialogPortal container={container}>
             <DialogContent 
                 hideClose={true}
                 className={cn(
@@ -154,6 +158,7 @@ export function AddEventsDialog({
                     </Tabs>
                 </div>
             </DialogContent>
+          </DialogPortal>
         </Dialog>
     );
 }

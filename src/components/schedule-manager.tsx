@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
+  DialogPortal,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -52,6 +53,7 @@ interface ScheduleManagerProps {
   initialOrder: number[];
   setFutureSelection: (selection: (Event | null)[]) => void;
   setFutureOrder: (order: number[]) => void;
+  container?: HTMLElement;
 }
 
 export function ScheduleManager({
@@ -68,6 +70,7 @@ export function ScheduleManager({
   initialOrder,
   setFutureSelection,
   setFutureOrder,
+  container,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -173,161 +176,166 @@ export function ScheduleManager({
 
   return (
     <>
-      <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {
-          if(!open) {
-              setModifyEventForSchedule(null)
-          }
-      }}>
-        {modifyEventForSchedule && (
-            <EventSelectionDialog
-              isOpen={!!modifyEventForSchedule}
-              onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
-              event={modifyEventForSchedule.event}
-              onSelect={handleModifyEventForSchedule}
-              isModification={true}
-              onRemove={() => {}}
-              isLoading={false}
-            />
-        )}
-      </Dialog>
+        <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => {
+            if(!open) {
+                setModifyEventForSchedule(null)
+            }
+        }}>
+         <DialogPortal container={container}>
+          {modifyEventForSchedule && (
+              <EventSelectionDialog
+                isOpen={!!modifyEventForSchedule}
+                onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
+                event={modifyEventForSchedule.event}
+                onSelect={handleModifyEventForSchedule}
+                isModification={true}
+                onRemove={() => {}}
+                isLoading={false}
+                container={container}
+              />
+          )}
+          </DialogPortal>
+        </Dialog>
 
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent 
-            hideClose={true}
-            className={cn(
-                "max-w-4xl h-[90vh] flex flex-col p-0 transition-all duration-300",
-                 isFullScreen && "w-screen h-screen max-w-none rounded-none"
-            )}
-            onCloseAutoFocus={(e) => {
-                if (isFullScreen) {
-                  e.preventDefault();
-                }
-            }}
-             onOpenAutoFocus={(e) => e.preventDefault()}
-        >
-          <DialogHeader className="p-4 border-b flex-shrink-0 flex-row items-center justify-between">
-            <div>
-              <DialogTitle>Programar Selección</DialogTitle>
-              <DialogDescription>
-                Configura o modifica una selección de eventos para que se activen en un momento específico.
-              </DialogDescription>
-            </div>
-             <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)} className="h-9 w-9">
-                    {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-9 w-9">
-                    <X className="h-5 w-5" />
-                </Button>
-            </div>
-          </DialogHeader>
-
-          <div className="grid md:grid-cols-2 flex-grow h-0 overflow-hidden">
-              <div className="flex flex-col border-r border-border">
-                   <h3 className="px-4 py-2 text-lg font-semibold flex-shrink-0">Programaciones Activas</h3>
-                   <Separator className="w-full flex-shrink-0" />
-                   <ScrollArea className="flex-grow h-0">
-                      <div className="p-4 space-y-3">
-                      {schedules.length === 0 ? (
-                          <p className="text-muted-foreground text-center p-4">No hay programaciones.</p>
-                      ) : (
-                          schedules
-                              .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
-                              .map((schedule) => (
-                                  <div key={schedule.id} className="flex items-center justify-between p-3 rounded-md border bg-secondary">
-                                  <div className="min-w-0">
-                                      <p className="font-bold truncate">{format(schedule.dateTime, 'EEE, d MMM, p')}</p>
-                                      <p className="text-sm text-muted-foreground truncate">
-                                          Eventos: {schedule.events.filter(Boolean).length}
-                                      </p>
-                                  </div>
-                                  <div className="flex items-center flex-shrink-0">
-                                      <Button variant="ghost" size="icon" onClick={() => handleEditSchedule(schedule)}>
-                                          <Pencil className="h-4 w-4" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleRemoveSchedule(schedule.id)}>
-                                          <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                  </div>
-                                  </div>
-                              ))
-                      )}
-                      </div>
-                   </ScrollArea>
+        <DialogPortal container={container}>
+          <DialogContent 
+              hideClose={true}
+              className={cn(
+                  "max-w-4xl h-[90vh] flex flex-col p-0 transition-all duration-300",
+                   isFullScreen && "w-screen h-screen max-w-none rounded-none"
+              )}
+              onCloseAutoFocus={(e) => {
+                  if (isFullScreen) {
+                    e.preventDefault();
+                  }
+              }}
+               onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <DialogHeader className="p-4 border-b flex-shrink-0 flex-row items-center justify-between">
+              <div>
+                <DialogTitle>Programar Selección</DialogTitle>
+                <DialogDescription>
+                  Configura o modifica una selección de eventos para que se activen en un momento específico.
+                </DialogDescription>
               </div>
-              
-              <div className="flex flex-col">
-                   <div className='flex justify-between items-center px-4 py-2 flex-shrink-0'>
-                     <h3 className="text-lg font-semibold">
-                       {editingScheduleId ? 'Editando Programación' : 'Nueva Programación'}
-                     </h3>
-                     {editingScheduleId && (
-                        <Button variant="outline" size="sm" onClick={resetToCurrentSelection}>Crear Nueva</Button>
-                     )}
-                   </div>
-                   <Separator className="w-full flex-shrink-0" />
-                   <div className="p-4 border-b border-border space-y-2 flex-shrink-0">
-                      <div className="grid grid-cols-2 gap-4">
-                        <Label htmlFor='date-picker'>Fecha</Label>
-                        <Label htmlFor='time-picker'>Hora</Label>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                          <Popover>
-                          <PopoverTrigger asChild>
-                              <Button
-                              id="date-picker"
-                              variant={'outline'}
-                              className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}
-                              >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {date ? format(date, 'PPP') : <span>Elige una fecha</span>}
-                              </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                              <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                          </PopoverContent>
-                          </Popover>
-                          <Input
-                            id="time-picker"
-                            type="time"
-                            value={time}
-                            onChange={(e) => setTime(e.target.value)}
-                            className="w-full"
-                          />
-                      </div>
-                  </div>
-
-                  <ScrollArea className="flex-grow h-0">
-                      <div className="p-4">
-                          <EventList
-                              order={currentOrder ? currentOrder.filter(i => currentSelection[i] !== null) : []}
-                              onOrderChange={handleOrderChange}
-                              eventDetails={currentSelection}
-                              onRemove={handleRemoveEventFromFuture}
-                              onModify={(event, index) => {
-                                const currentEventState = currentSelection[index];
-                                if (!currentEventState) return;
-                                const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
-                                setModifyEventForSchedule({ event: eventForModification, index });
-                              }}
-                              isViewPage={true}
-                          />
-                      </div>
-                  </ScrollArea>
-                   <div className="p-4 border-t border-border mt-auto flex-shrink-0">
-                      <Button className="w-full" onClick={handleSaveOrUpdateSchedule} disabled={activeFutureEventsCount === 0}>
-                          {editingScheduleId ? 'Actualizar Programación' : 'Guardar Programación'}
-                      </Button>
-                   </div>
+               <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)} className="h-9 w-9">
+                      {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-9 w-9">
+                      <X className="h-5 w-5" />
+                  </Button>
               </div>
-          </div>
-          <DialogFooter className="p-4 border-t border-border flex-shrink-0">
-            <DialogClose asChild>
-              <Button variant="outline">Cerrar</Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
+            </DialogHeader>
+
+            <div className="grid md:grid-cols-2 flex-grow h-0 overflow-hidden">
+                <div className="flex flex-col border-r border-border">
+                     <h3 className="px-4 py-2 text-lg font-semibold flex-shrink-0">Programaciones Activas</h3>
+                     <Separator className="w-full flex-shrink-0" />
+                     <ScrollArea className="flex-grow h-0">
+                        <div className="p-4 space-y-3">
+                        {schedules.length === 0 ? (
+                            <p className="text-muted-foreground text-center p-4">No hay programaciones.</p>
+                        ) : (
+                            schedules
+                                .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
+                                .map((schedule) => (
+                                    <div key={schedule.id} className="flex items-center justify-between p-3 rounded-md border bg-secondary">
+                                    <div className="min-w-0">
+                                        <p className="font-bold truncate">{format(schedule.dateTime, 'EEE, d MMM, p')}</p>
+                                        <p className="text-sm text-muted-foreground truncate">
+                                            Eventos: {schedule.events.filter(Boolean).length}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center flex-shrink-0">
+                                        <Button variant="ghost" size="icon" onClick={() => handleEditSchedule(schedule)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleRemoveSchedule(schedule.id)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    </div>
+                                ))
+                        )}
+                        </div>
+                     </ScrollArea>
+                </div>
+                
+                <div className="flex flex-col">
+                     <div className='flex justify-between items-center px-4 py-2 flex-shrink-0'>
+                       <h3 className="text-lg font-semibold">
+                         {editingScheduleId ? 'Editando Programación' : 'Nueva Programación'}
+                       </h3>
+                       {editingScheduleId && (
+                          <Button variant="outline" size="sm" onClick={resetToCurrentSelection}>Crear Nueva</Button>
+                       )}
+                     </div>
+                     <Separator className="w-full flex-shrink-0" />
+                     <div className="p-4 border-b border-border space-y-2 flex-shrink-0">
+                        <div className="grid grid-cols-2 gap-4">
+                          <Label htmlFor='date-picker'>Fecha</Label>
+                          <Label htmlFor='time-picker'>Hora</Label>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                id="date-picker"
+                                variant={'outline'}
+                                className={cn('w-full justify-start text-left font-normal', !date && 'text-muted-foreground')}
+                                >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {date ? format(date, 'PPP') : <span>Elige una fecha</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+                            </PopoverContent>
+                            </Popover>
+                            <Input
+                              id="time-picker"
+                              type="time"
+                              value={time}
+                              onChange={(e) => setTime(e.target.value)}
+                              className="w-full"
+                            />
+                        </div>
+                    </div>
+
+                    <ScrollArea className="flex-grow h-0">
+                        <div className="p-4">
+                            <EventList
+                                order={currentOrder ? currentOrder.filter(i => currentSelection[i] !== null) : []}
+                                onOrderChange={handleOrderChange}
+                                eventDetails={currentSelection}
+                                onRemove={handleRemoveEventFromFuture}
+                                onModify={(event, index) => {
+                                  const currentEventState = currentSelection[index];
+                                  if (!currentEventState) return;
+                                  const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
+                                  setModifyEventForSchedule({ event: eventForModification, index });
+                                }}
+                                isViewPage={true}
+                            />
+                        </div>
+                    </ScrollArea>
+                     <div className="p-4 border-t border-border mt-auto flex-shrink-0">
+                        <Button className="w-full" onClick={handleSaveOrUpdateSchedule} disabled={activeFutureEventsCount === 0}>
+                            {editingScheduleId ? 'Actualizar Programación' : 'Guardar Programación'}
+                        </Button>
+                     </div>
+                </div>
+            </div>
+            <DialogFooter className="p-4 border-t border-border flex-shrink-0">
+              <DialogClose asChild>
+                <Button variant="outline">Cerrar</Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
     </>
   );
