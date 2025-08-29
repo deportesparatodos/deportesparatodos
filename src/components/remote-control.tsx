@@ -354,7 +354,6 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
 
     return (
         <>
-            {/* The UI layer, which is always present but might be overlaid by a dialog */}
             <div className="fixed inset-0 bg-background z-[100] flex flex-col">
                 <LayoutConfigurator
                     order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
@@ -392,7 +391,6 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 />
             </div>
 
-            {/* The Dialogs, rendered at the same level to allow them to correctly overlay the UI */}
             <AddEventsDialog
                 open={isAddEventOpen}
                 onOpenChange={setIsAddEventOpen}
