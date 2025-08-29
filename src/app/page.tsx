@@ -68,6 +68,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { Realtime } from 'ably';
+import { RemoteAddEvents } from '@/components/remote-add-events';
+import { RemoteEventSelection } from '@/components/remote-event-selection';
 
 
 interface StreamedMatch {
@@ -2210,17 +2212,12 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
 }) {
     const [isAddEventOpen, setIsAddEventOpen] = useState(false);
     const [isScheduleOpen, setIsScheduleOpen] = useState(false);
-    const [isEventSelectOpen, setIsEventSelectOpen] = useState(false);
-    
-    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+    const [eventForSelection, setEventForSelection] = useState<Event | null>(null);
     const [isModification, setIsModification] = useState(false);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
 
     const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(appState.selectedEvents);
     const [futureOrder, setFutureOrder] = useState<number[]>(appState.viewOrder);
-
-    const portalContainerRef = useRef<HTMLDivElement>(null);
-
 
     useEffect(() => {
         setFutureSelection(appState.selectedEvents);
@@ -2238,36 +2235,34 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     const handleModifyEventInList = (event: Event, index: number) => {
         const currentEventState = appState.selectedEvents[index];
         if (!currentEventState) return;
-        const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
-        setDialogEvent(eventForModification);
+        
+        const eventWithOptions = allEvents.find(e => e.id === event.id) || event;
+        const eventForModification = { ...eventWithOptions, selectedOption: currentEventState.selectedOption };
+        
+        setEventForSelection(eventForModification);
         setIsModification(true);
         setModificationIndex(index);
-        setIsEventSelectOpen(true);
     };
-    
+
     const handleSelectEventFromList = (event: Event) => {
         const targetIndex = appState.selectedEvents.findIndex((e: Event | null) => e === null);
-        setDialogEvent(event);
+        setEventForSelection(event);
         setIsModification(false);
         setModificationIndex(targetIndex);
-        setIsEventSelectOpen(true);
         setIsAddEventOpen(false);
     };
-    
+
     const handleChannelClick = (channel: Channel) => {
         const targetIndex = appState.selectedEvents.findIndex((e: Event | null) => e === null);
         if (targetIndex !== -1) {
             const event: Event = {
-                id: `${channel.name}-channel-static`,
-                title: channel.name,
-                options: channel.urls.map(u => ({ ...u, hd: false, language: '' })),
+                id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({ ...u, hd: false, language: '' })),
                 sources: [], buttons: [], time: 'AHORA', category: 'Canal',
                 language: '', date: '', source: '', status: 'En Vivo', image: channel.logo,
             };
-            setDialogEvent(event);
+            setEventForSelection(event);
             setIsModification(false);
             setModificationIndex(targetIndex);
-            setIsEventSelectOpen(true);
             setIsAddEventOpen(false);
         }
     };
@@ -2278,21 +2273,63 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
           newSelectedEvents[modificationIndex] = { ...event, selectedOption: option };
           onAction({ selectedEvents: newSelectedEvents });
        }
-       setIsEventSelectOpen(false);
-    };
-    
-    const handleRemoveEventFromSelection = () => {
-        if (modificationIndex !== null) {
-            const newSelectedEvents = [...appState.selectedEvents];
-            newSelectedEvents[modificationIndex] = null;
-            onAction({ selectedEvents: newSelectedEvents });
-            setIsEventSelectOpen(false);
-        }
+       setEventForSelection(null);
     };
 
+    if (isAddEventOpen) {
+        return <RemoteAddEvents
+            allEvents={allEvents}
+            allChannels={allChannels}
+            getEventSelection={getEventSelection}
+            onEventSelect={handleSelectEventFromList}
+            onChannelClick={handleChannelClick}
+            onClose={() => setIsAddEventOpen(false)}
+        />
+    }
+
+    if (eventForSelection) {
+        return <RemoteEventSelection
+            event={eventForSelection}
+            isModification={isModification}
+            onSelect={handleFinalSelectEvent}
+            onRemove={() => {
+                if (modificationIndex !== null) {
+                    const newSelectedEvents = [...appState.selectedEvents];
+                    newSelectedEvents[modificationIndex] = null;
+                    onAction({ selectedEvents: newSelectedEvents });
+                }
+                setEventForSelection(null);
+            }}
+            onClose={() => setEventForSelection(null)}
+        />
+    }
+    
+    if (isScheduleOpen) {
+        // Since ScheduleManager is complex, we render it inside a Dialog for now.
+        // If it also fails, it will need the same "page" treatment.
+        return (
+             <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
+                <ScheduleManager
+                    open={isScheduleOpen}
+                    onOpenChange={setIsScheduleOpen}
+                    currentSelection={futureSelection}
+                    currentOrder={futureOrder}
+                    schedules={appState.schedules}
+                    onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
+                    onModifyEventInView={handleModifyEventInList}
+                    onAddEvent={() => { /* This would open the RemoteAddEvents page */ }}
+                    initialSelection={appState.selectedEvents}
+                    initialOrder={appState.viewOrder}
+                    setFutureSelection={setFutureSelection}
+                    setFutureOrder={setFutureOrder}
+                    isLoading={false}
+                />
+            </Dialog>
+        )
+    }
+
     return (
-        <div ref={portalContainerRef} className="fixed inset-0 bg-background z-[200] flex flex-col">
-            {/* UI Layer */}
+        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
             <LayoutConfigurator
                 order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
                 onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
@@ -2318,51 +2355,6 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 onStopSession={onStop}
                 isRemoteControlView={true}
             />
-
-            {/* Dialogs Layer */}
-            <>
-                <AddEventsDialog
-                    open={isAddEventOpen}
-                    onOpenChange={setIsAddEventOpen}
-                    events={allEvents}
-                    channels={allChannels}
-                    getEventSelection={getEventSelection}
-                    onEventSelect={handleSelectEventFromList}
-                    onChannelClick={handleChannelClick}
-                    container={portalContainerRef.current ?? undefined}
-                />
-                <ScheduleManager
-                    open={isScheduleOpen}
-                    onOpenChange={setIsScheduleOpen}
-                    currentSelection={futureSelection}
-                    currentOrder={futureOrder}
-                    schedules={appState.schedules}
-                    onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
-                    onModifyEventInView={handleModifyEventInList}
-                    onAddEvent={() => {
-                        setIsScheduleOpen(false);
-                        setIsAddEventOpen(true);
-                    }}
-                    initialSelection={appState.selectedEvents}
-                    initialOrder={appState.viewOrder}
-                    setFutureSelection={setFutureSelection}
-                    setFutureOrder={setFutureOrder}
-                    isLoading={false}
-                    container={portalContainerRef.current ?? undefined}
-                />
-                {dialogEvent && (
-                    <EventSelectionDialog
-                        isOpen={isEventSelectOpen}
-                        onOpenChange={setIsEventSelectOpen}
-                        event={dialogEvent}
-                        onSelect={handleFinalSelectEvent}
-                        isModification={isModification}
-                        onRemove={handleRemoveEventFromSelection}
-                        isLoading={false}
-                        container={portalContainerRef.current ?? undefined}
-                    />
-                )}
-            </>
         </div>
     );
 }
