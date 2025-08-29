@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, FC } from 'react';
@@ -15,15 +16,12 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import { 
-    Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogPortal,
 } from '@/components/ui/dialog';
 
 interface RemoteAddEventsProps {
-  open: boolean;
   onOpenChange: (open: boolean) => void;
   onEventSelect: (event: Event) => void;
   onChannelClick: (channel: Channel) => void;
@@ -33,7 +31,6 @@ interface RemoteAddEventsProps {
 }
 
 export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({ 
-    open,
     onOpenChange,
     onEventSelect,
     onChannelClick,
@@ -74,83 +71,83 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
     }, [searchTerm, allEvents, allChannels]);
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent 
-                hideClose={true}
-                className={cn(
-                    "flex flex-col p-0 transition-all duration-300",
-                    isFullScreen 
-                        ? "w-screen h-screen max-w-none rounded-none"
-                        : "h-[90vh] sm:max-w-4xl"
-                )}
-            >
-                <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0'>
-                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
-                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
-                           {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
-                           <X className="h-5 w-5" />
-                        </Button>
-                    </div>
-                </DialogHeader>
-                <Separator className='w-full flex-shrink-0' />
-                 
-                <div className="relative flex-grow flex flex-col min-h-0">
-                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow p-4 min-h-0">
-                        <div className="flex-shrink-0">
-                            <div className="relative mb-4">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                <Input
-                                    type="text"
-                                    placeholder="Buscar..."
-                                    className="w-full pl-10"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="events">Eventos</TabsTrigger>
-                                <TabsTrigger value="channels">Canales</TabsTrigger>
-                            </TabsList>
-                        </div>
-                        
-                        <ScrollArea className="flex-grow h-0 mt-4">
-                            <TabsContent value="events" className="mt-0">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {sortedEvents.map((event, index) => (
-                                        <EventCard key={`dialog-event-${event.id}-${index}`} event={event} selection={getEventSelection(event)} onClick={() => onEventSelect(event)} />
-                                    ))}
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="channels" className="mt-0">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                     {filteredChannels.map((channel, index) => {
-                                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
-                                        const selection = getEventSelection(channelAsEvent);
-                                        return (
-                                            <Card key={`dialog-channel-${index}`} onClick={() => onChannelClick(channel)} className="cursor-pointer group rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border h-full w-full flex flex-col">
-                                                <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white flex-shrink-0">
-                                                     <Image src={channel.logo} alt={channel.name} fill className="object-contain" />
-                                                      {selection.isSelected && (
-                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
-                                                    <h3 className="font-bold text-sm text-center">{channel.name}</h3>
-                                                </div>
-                                            </Card>
-                                        )
-                                     })}
-                                </div>
-                            </TabsContent>
-                        </ScrollArea>
-                    </Tabs>
+        <DialogContent 
+            hideClose={true}
+            className={cn(
+                "flex flex-col p-0 transition-all duration-300",
+                isFullScreen 
+                    ? "w-screen h-screen max-w-none rounded-none"
+                    : "h-[90vh] sm:max-w-4xl"
+            )}
+        >
+            <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0'>
+                <DialogTitle>Añadir Evento/Canal</DialogTitle>
+                 <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
+                       {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                       <X className="h-5 w-5" />
+                    </Button>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </DialogHeader>
+            <Separator className='w-full flex-shrink-0' />
+             
+            <div className="relative flex-grow flex flex-col min-h-0">
+                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow p-4 min-h-0">
+                    <div className="flex-shrink-0">
+                        <div className="relative mb-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Buscar..."
+                                className="w-full pl-10"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="events">Eventos</TabsTrigger>
+                            <TabsTrigger value="channels">Canales</TabsTrigger>
+                        </TabsList>
+                    </div>
+                    
+                    <ScrollArea className="flex-grow h-0 mt-4">
+                        <TabsContent value="events" className="mt-0">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {sortedEvents.map((event, index) => (
+                                    <EventCard key={`dialog-event-${event.id}-${index}`} event={event} selection={getEventSelection(event)} onClick={() => onEventSelect(event)} />
+                                ))}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="channels" className="mt-0">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                 {filteredChannels.map((channel, index) => {
+                                    const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                    const selection = getEventSelection(channelAsEvent);
+                                    return (
+                                        <Card key={`dialog-channel-${index}`} onClick={() => onChannelClick(channel)} className="cursor-pointer group rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border h-full w-full flex flex-col">
+                                            <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white flex-shrink-0">
+                                                 <Image src={channel.logo} alt={channel.name} fill className="object-contain" />
+                                                  {selection.isSelected && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
+                                                <h3 className="font-bold text-sm text-center">{channel.name}</h3>
+                                            </div>
+                                        </Card>
+                                    )
+                                 })}
+                            </div>
+                        </TabsContent>
+                    </ScrollArea>
+                </Tabs>
+            </div>
+        </DialogContent>
     );
 }
+
+    

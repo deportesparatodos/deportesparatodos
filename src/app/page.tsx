@@ -2371,40 +2371,37 @@ function ControllingView({
             isRemoteControlView={true}
         />
 
-        {/* Dialogs Portal Here */}
-        <DialogPortal container={containerRef.current}>
-            {isAddEventOpen && (
-                <RemoteAddEvents
-                open={isAddEventOpen}
-                onOpenChange={setIsAddEventOpen}
-                allEvents={allEvents}
-                allChannels={allChannels}
-                getEventSelection={getEventSelection}
-                onEventSelect={handleSelectEventFromList}
-                onChannelClick={handleChannelClick}
-                />
-            )}
+        {/* Dialogs rendered here, outside the main UI flow but within the controlling view's portal */}
+        <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
+            <RemoteAddEvents
+            onEventSelect={handleSelectEventFromList}
+            onChannelClick={handleChannelClick}
+            getEventSelection={getEventSelection}
+            allEvents={allEvents}
+            allChannels={allChannels}
+            onOpenChange={setIsAddEventOpen}
+            />
+        </Dialog>
 
-            {eventForSelection && (
-                <RemoteEventSelection
-                    open={!!eventForSelection}
-                    onOpenChange={(open) => !open && setEventForSelection(null)}
-                    event={eventForSelection}
-                    isModification={isModification}
-                    isLoading={isEventSelectionLoading}
-                    onSelect={handleFinalSelectEvent}
-                    onRemove={() => {
-                        if (modificationIndex !== null) {
-                        const newSelectedEvents = [...appState.selectedEvents];
-                        newSelectedEvents[modificationIndex] = null;
-                        onAction({ selectedEvents: newSelectedEvents });
-                        }
-                        setEventForSelection(null);
-                    }}
-                    onBack={handleBackFromSelection}
-                />
-            )}
-            
+        <Dialog open={!!eventForSelection} onOpenChange={(open) => !open && setEventForSelection(null)}>
+            <RemoteEventSelection
+                event={eventForSelection!}
+                isModification={isModification}
+                isLoading={isEventSelectionLoading}
+                onSelect={handleFinalSelectEvent}
+                onRemove={() => {
+                    if (modificationIndex !== null) {
+                    const newSelectedEvents = [...appState.selectedEvents];
+                    newSelectedEvents[modificationIndex] = null;
+                    onAction({ selectedEvents: newSelectedEvents });
+                    }
+                    setEventForSelection(null);
+                }}
+                onBack={handleBackFromSelection}
+            />
+        </Dialog>
+        
+        <Dialog open={isScheduleOpen} onOpenChange={setIsScheduleOpen}>
             <ScheduleManager
                 open={isScheduleOpen}
                 onOpenChange={setIsScheduleOpen}
@@ -2424,7 +2421,9 @@ function ControllingView({
                 isLoading={false}
                 isFullScreenProp={true}
             />
-        </DialogPortal>
+        </Dialog>
     </div>
   );
 }
+
+    

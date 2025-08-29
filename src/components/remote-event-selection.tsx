@@ -2,14 +2,12 @@
 
 'use client';
 
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 import Image from 'next/image';
 import {
-  Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogPortal,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Event } from './event-carousel';
@@ -25,8 +23,6 @@ import { Loader2, Trash2, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 
 interface RemoteEventSelectionProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   event: Event;
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
@@ -39,8 +35,6 @@ const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 
 export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
-  open,
-  onOpenChange,
   event,
   onSelect,
   isModification,
@@ -58,7 +52,6 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   const isChannel = event.category === 'Canal';
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
           className="sm:max-w-md bg-secondary border-border text-foreground p-0 flex flex-col max-h-[90vh]"
           onInteractOutside={(e) => {
@@ -152,10 +145,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                 <Button
                     variant="destructive"
                     className="w-full"
-                    onClick={() => {
-                        onRemove();
-                        onOpenChange(false); // Close this view after removing
-                    }}
+                    onClick={onRemove}
                 >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Eliminar Selección
@@ -163,6 +153,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
             </div>
         )}
       </DialogContent>
-    </Dialog>
   );
 };
+
+    
