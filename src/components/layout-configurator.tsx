@@ -27,9 +27,9 @@ export interface EventListManagementProps {
   onRemove: (index: number) => void;
   onModify: (event: Event, index: number) => void;
   isViewPage: boolean;
-  onAddEvent: () => void;
-  onSchedule: () => void;
-  onNotificationManager: () => void;
+  onAddEvent?: () => void;
+  onSchedule?: () => void;
+  onNotificationManager?: () => void;
   onRemoteControl?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
@@ -204,17 +204,19 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                       <AccordionContent className="pt-2 pb-4 space-y-4">
                           <>
                               <EventList {...props} />
-                              {!isRemoteControlView && (
-                                <div className="space-y-2 pt-2">
+                              <div className="space-y-2 pt-2">
+                                  {onAddEvent && (
                                     <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEvent}>
                                         <Plus className="mr-2 h-4 w-4" />
                                         Añadir Evento/Canal
                                     </Button>
+                                  )}
+                                  {onSchedule && (
                                     <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                         <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                     </Button>
-                                </div>
-                              )}
+                                  )}
+                              </div>
                           </>
                       </AccordionContent>
                   </AccordionItem>
