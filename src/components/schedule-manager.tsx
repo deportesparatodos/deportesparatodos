@@ -193,6 +193,7 @@ export function ScheduleManager({
       </Dialog>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogPortal>
           <DialogContent 
               hideClose={true}
               className={cn(
@@ -325,6 +326,7 @@ export function ScheduleManager({
               </DialogClose>
             </DialogFooter>
           </DialogContent>
+        </DialogPortal>
       </Dialog>
     </>
   );

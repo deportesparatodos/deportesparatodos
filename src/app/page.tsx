@@ -59,7 +59,7 @@ import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ScheduleManager, type Schedule } from '@/components/schedule-manager';
+import { ScheduleManager } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription } from '@/components/notification-manager';
@@ -1152,18 +1152,16 @@ export function HomePageContent() {
 
  const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
     setDialogContext(context);
-    setIsOptionsLoading(true);
-    setDialogEvent(event); // Set event immediately to show dialog with existing info
     setEventSelectionDialogOpen(true);
-    
+
     const selection = getEventSelection(event);
-    let eventForDialog = {...event};
-    
+    let eventForDialog = { ...event };
+
     if (selection.isSelected) {
         const originalIndex = selectedEvents.findIndex(se => se?.id === event.id);
         setIsModification(true);
         setModificationIndex(originalIndex);
-        if(selection.selectedOption) {
+        if (selection.selectedOption) {
             eventForDialog.selectedOption = selection.selectedOption;
         }
     } else {
@@ -1171,56 +1169,54 @@ export function HomePageContent() {
         setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
     
-    // If options are already loaded, just update the dialog event and stop loading
-    const mainEvent = events.find(e => e.id === event.id);
-    if (mainEvent && mainEvent.options.length > 0) {
-        setDialogEvent({ ...eventForDialog, options: mainEvent.options });
-        setIsOptionsLoading(false);
+    const mainEventInState = events.find(e => e.id === event.id);
+    const optionsAvailable = mainEventInState && mainEventInState.options.length > 0;
+
+    if (event.source !== 'streamed.pk' || optionsAvailable) {
+        setDialogEvent(eventForDialog);
         return;
     }
-    
-    // Fetch options only if they are missing
-    if (event.source === 'streamed.pk' && event.options.length === 0) {
-        try {
-            const sourcePromises = event.sources.map(async (source) => {
-                try {
-                    const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                    if (response.ok) {
-                        const streams: any[] = await response.json();
-                        if (Array.isArray(streams)) {
-                            return streams.map(stream => ({
-                                url: stream.embedUrl,
-                                label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                                hd: stream.hd,
-                                language: stream.language,
-                            }));
-                        }
+
+    setIsOptionsLoading(true);
+    setDialogEvent(eventForDialog); // Show dialog immediately with a loading state
+
+    try {
+        const sourcePromises = event.sources.map(async (source) => {
+            try {
+                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                if (response.ok) {
+                    const streams: any[] = await response.json();
+                    if (Array.isArray(streams)) {
+                        return streams.map(stream => ({
+                            url: stream.embedUrl,
+                            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                            hd: stream.hd,
+                            language: stream.language,
+                        }));
                     }
-                } catch (e) {
-                    console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
                 }
-                return [];
-            });
+            } catch (e) {
+                console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
+            }
+            return [];
+        });
 
-            const results = await Promise.all(sourcePromises);
-            const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
+        const results = await Promise.all(sourcePromises);
+        const streamOptions: StreamOption[] = results.flat().filter((o): o is StreamOption => !!o);
+        
+        const finalEventForDialog = { ...eventForDialog, options: streamOptions };
 
-            // Update the main events array so we don't fetch again
-            setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? { ...e, options: streamOptions } : e));
-            // Update the event in the dialog with the new options
-            setDialogEvent({ ...eventForDialog, options: streamOptions });
-        } catch (error) {
-            console.error(`Failed to fetch streams for ${event.title}`);
-            setDialogEvent({ ...eventForDialog, options: [] }); // Set empty options on error
-        } finally {
-            setIsOptionsLoading(false);
-        }
-    } else {
-        // For non-streamed.pk events or events with options, just stop loading
-        setDialogEvent(eventForDialog);
+        setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? finalEventForDialog : e));
+        setDialogEvent(finalEventForDialog);
+
+    } catch (error) {
+        console.error(`Failed to fetch streams for ${event.title}`);
+        setDialogEvent({ ...eventForDialog, options: [] });
+    } finally {
         setIsOptionsLoading(false);
     }
-  };
+};
+
 
 
   const handleChannelClick = (channel: Channel) => {
@@ -1530,7 +1526,7 @@ export function HomePageContent() {
     
     return (
         <div className="flex h-screen w-screen bg-background text-foreground group">
-            <ScheduleManager 
+            <ScheduleManager
                 open={scheduleManagerOpen}
                 onOpenChange={setScheduleManagerOpen}
                 currentSelection={futureSelection}
@@ -2231,14 +2227,15 @@ function ControllingView({
   allEvents: Event[];
   allChannels: Channel[];
 }) {
-  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
-  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [view, setView] = useState<'main' | 'add' | 'select' | 'schedule'>('main');
   
   const [eventForSelection, setEventForSelection] = useState<Event | null>(null);
   const [isEventSelectionLoading, setIsEventSelectionLoading] = useState(false);
   
   const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+
+  const { toast } = useToast();
 
   const getEventSelection = (event: Event) => {
     const selectionIndex = appState.selectedEvents.findIndex((se: Event | null) => se?.id === event.id);
@@ -2252,33 +2249,36 @@ function ControllingView({
   };
   
   const handleFetchOptionsAndOpenSelector = async (event: Event) => {
-    setIsEventSelectionLoading(true);
     setEventForSelection(event);
+    setView('select');
 
-    if (event.source === 'streamed.pk' && event.options.length === 0) {
-        try {
-            const sourcePromises = event.sources.map(async (source) => {
-                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                if (response.ok) {
-                    const streams: any[] = await response.json();
-                    return streams.map(stream => ({
-                        url: stream.embedUrl,
-                        label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                        hd: stream.hd, language: stream.language,
-                    }));
-                }
-                return [];
-            });
-            const results = await Promise.all(sourcePromises);
-            const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
-            setEventForSelection(prev => prev ? { ...prev, options: streamOptions } : null);
-        } catch (error) {
-            console.error(`Failed to fetch streams for ${event.title}`);
-            setEventForSelection(prev => prev ? { ...prev, options: [] } : null);
-        } finally {
-            setIsEventSelectionLoading(false);
-        }
-    } else {
+    if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
+        setIsEventSelectionLoading(false);
+        return;
+    }
+
+    setIsEventSelectionLoading(true);
+
+    try {
+        const sourcePromises = event.sources.map(async (source) => {
+            const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+            if (response.ok) {
+                const streams: any[] = await response.json();
+                return streams.map(stream => ({
+                    url: stream.embedUrl,
+                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                    hd: stream.hd, language: stream.language,
+                }));
+            }
+            return [];
+        });
+        const results = await Promise.all(sourcePromises);
+        const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
+        setEventForSelection(prev => prev ? { ...prev, options: streamOptions } : null);
+    } catch (error) {
+        console.error(`Failed to fetch streams for ${event.title}`);
+        setEventForSelection(prev => prev ? { ...prev, options: [] } : null);
+    } finally {
         setIsEventSelectionLoading(false);
     }
   };
@@ -2288,28 +2288,24 @@ function ControllingView({
     const currentEventState = appState.selectedEvents[index];
     if (!currentEventState) return;
     
-    // Find the full event data from the main list to ensure we have all sources/options
     const fullEventData = allEvents.find((e) => e.id === event.id) || event;
     
     setIsModification(true);
     setModificationIndex(index);
     handleFetchOptionsAndOpenSelector({ ...fullEventData, selectedOption: currentEventState.selectedOption });
-    setIsAddEventOpen(false); // Ensure main list is hidden
   };
   
   const handleOpenAddEvent = () => {
-      setEventForSelection(null);
-      setIsAddEventOpen(true);
+      setView('add');
   };
   
-  const handleOpenSchedule = () => setIsScheduleOpen(true);
+  const handleOpenSchedule = () => setView('schedule');
 
   const handleSelectEventFromList = (event: Event) => {
     const targetIndex = appState.selectedEvents.findIndex((e: Event | null) => e === null);
     setIsModification(false);
     setModificationIndex(targetIndex);
     handleFetchOptionsAndOpenSelector(event);
-    setIsAddEventOpen(false); // Close list view, open selection view
   };
 
   const handleChannelClick = (channel: Channel) => {
@@ -2324,8 +2320,7 @@ function ControllingView({
       };
       setIsModification(false);
       setModificationIndex(targetIndex);
-      setEventForSelection(event);
-      setIsAddEventOpen(false);
+      handleFetchOptionsAndOpenSelector(event);
     } else {
         toast({
             variant: 'destructive',
@@ -2341,79 +2336,95 @@ function ControllingView({
       newSelectedEvents[modificationIndex] = { ...event, selectedOption: option };
       onAction({ selectedEvents: newSelectedEvents });
     }
-    setEventForSelection(null);
+    setView('main');
   };
   
   const handleBackFromSelection = () => {
     setEventForSelection(null);
-    setIsAddEventOpen(true); // Go back to the list
+    setView('add');
+  }
+
+  const renderContent = () => {
+    switch (view) {
+        case 'add':
+            return (
+                <RemoteAddEvents
+                    onOpenChange={(isOpen) => !isOpen && setView('main')}
+                    onEventSelect={handleSelectEventFromList}
+                    onChannelClick={handleChannelClick}
+                    getEventSelection={getEventSelection}
+                    allEvents={allEvents}
+                    allChannels={allChannels}
+                />
+            );
+        case 'select':
+            if (!eventForSelection) {
+                setView('main');
+                return null;
+            }
+            return (
+                 <RemoteEventSelection
+                    event={eventForSelection}
+                    isModification={isModification}
+                    isLoading={isEventSelectionLoading}
+                    onSelect={handleFinalSelectEvent}
+                    onRemove={() => {
+                        if (modificationIndex !== null) {
+                            const newSelectedEvents = [...appState.selectedEvents];
+                            newSelectedEvents[modificationIndex] = null;
+                            onAction({ selectedEvents: newSelectedEvents });
+                        }
+                        setView('main');
+                    }}
+                    onBack={handleBackFromSelection}
+                />
+            );
+        case 'schedule':
+            return (
+                <RemoteScheduleManager
+                  onOpenChange={(isOpen) => !isOpen && setView('main')}
+                  initialSelection={appState.selectedEvents}
+                  initialOrder={appState.viewOrder}
+                  schedules={appState.schedules}
+                  onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
+                  onAddEventFromSchedule={handleOpenAddEvent}
+                />
+            );
+        case 'main':
+        default:
+             return (
+                <LayoutConfigurator
+                    order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
+                    onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
+                    eventDetails={appState.selectedEvents}
+                    onRemove={(indexToRemove: number) => {
+                        const newSelectedEvents = [...appState.selectedEvents];
+                        newSelectedEvents[indexToRemove] = null;
+                        onAction({ selectedEvents: newSelectedEvents });
+                    }}
+                    onModify={handleModifyEventInList}
+                    isViewPage={true}
+                    onAddEvent={handleOpenAddEvent}
+                    onSchedule={handleOpenSchedule}
+                    onToggleFullscreen={(index) => onAction({ fullscreenIndex: appState.fullscreenIndex === index ? null : index })}
+                    fullscreenIndex={appState.fullscreenIndex}
+                    gridGap={appState.gridGap}
+                    onGridGapChange={(value) => onAction({ gridGap: value })}
+                    borderColor={appState.borderColor}
+                    onBorderColorChange={(value) => onAction({ borderColor: value })}
+                    isChatEnabled={appState.isChatEnabled}
+                    onIsChatEnabledChange={(value) => onAction({ isChatEnabled: value })}
+                    onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
+                    onStopSession={onStop}
+                    isRemoteControlView={true}
+                />
+            );
+    }
   }
   
   return (
     <div ref={containerRef} className="fixed inset-0 bg-background z-[200] flex flex-col">
-        {/* Render popups or main UI */}
-        {isAddEventOpen ? (
-            <RemoteAddEvents
-                onOpenChange={setIsAddEventOpen}
-                onEventSelect={handleSelectEventFromList}
-                onChannelClick={handleChannelClick}
-                getEventSelection={getEventSelection}
-                allEvents={allEvents}
-                allChannels={allChannels}
-            />
-        ) : eventForSelection ? (
-             <RemoteEventSelection
-                event={eventForSelection}
-                isModification={isModification}
-                isLoading={isEventSelectionLoading}
-                onSelect={handleFinalSelectEvent}
-                onRemove={() => {
-                    if (modificationIndex !== null) {
-                    const newSelectedEvents = [...appState.selectedEvents];
-                    newSelectedEvents[modificationIndex] = null;
-                    onAction({ selectedEvents: newSelectedEvents });
-                    }
-                    setEventForSelection(null);
-                }}
-                onBack={handleBackFromSelection}
-            />
-        ) : isScheduleOpen ? (
-            <RemoteScheduleManager
-              open={isScheduleOpen}
-              onOpenChange={setIsScheduleOpen}
-              initialSelection={appState.selectedEvents}
-              initialOrder={appState.viewOrder}
-              schedules={appState.schedules}
-              onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
-              onAddEventFromSchedule={handleOpenAddEvent}
-            />
-        ) : (
-             <LayoutConfigurator
-                order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
-                onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
-                eventDetails={appState.selectedEvents}
-                onRemove={(indexToRemove: number) => {
-                    const newSelectedEvents = [...appState.selectedEvents];
-                    newSelectedEvents[indexToRemove] = null;
-                    onAction({ selectedEvents: newSelectedEvents });
-                }}
-                onModify={handleModifyEventInList}
-                isViewPage={true}
-                onAddEvent={handleOpenAddEvent}
-                onSchedule={handleOpenSchedule}
-                onToggleFullscreen={(index) => onAction({ fullscreenIndex: appState.fullscreenIndex === index ? null : index })}
-                fullscreenIndex={appState.fullscreenIndex}
-                gridGap={appState.gridGap}
-                onGridGapChange={(value) => onAction({ gridGap: value })}
-                borderColor={appState.borderColor}
-                onBorderColorChange={(value) => onAction({ borderColor: value })}
-                isChatEnabled={appState.isChatEnabled}
-                onIsChatEnabledChange={(value) => onAction({ isChatEnabled: value })}
-                onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
-                onStopSession={onStop}
-                isRemoteControlView={true}
-            />
-        )}
+       {renderContent()}
     </div>
   );
 }

@@ -28,7 +28,6 @@ export interface Schedule {
 }
 
 interface RemoteScheduleManagerProps {
-  open: boolean;
   onOpenChange: (open: boolean) => void;
   initialSelection: (Event | null)[];
   initialOrder: number[];
@@ -38,7 +37,6 @@ interface RemoteScheduleManagerProps {
 }
 
 export function RemoteScheduleManager({
-  open,
   onOpenChange,
   initialSelection,
   initialOrder,
@@ -65,11 +63,9 @@ export function RemoteScheduleManager({
   };
   
   useEffect(() => {
-    if (open) {
-      resetToCurrentSelection();
-    }
+    resetToCurrentSelection();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, []);
 
 
   const handleSaveOrUpdateSchedule = () => {
@@ -141,7 +137,7 @@ export function RemoteScheduleManager({
   const activeFutureEventsCount = currentOrder?.filter(i => currentSelection[i] !== null).length ?? 0;
 
   return (
-    <div className="absolute inset-0 bg-background z-20 flex flex-col">
+    <div className="absolute inset-0 bg-background z-10 flex flex-col">
        <header className="p-4 border-b flex-shrink-0 flex-row items-center justify-between flex">
           <div>
             <h2 className='text-lg font-semibold'>Programar Selección</h2>
@@ -259,4 +255,3 @@ export function RemoteScheduleManager({
     </div>
   );
 }
-
