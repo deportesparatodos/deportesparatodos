@@ -30,7 +30,7 @@ export interface EventListManagementProps {
   onAddEvent: () => void;
   onSchedule: () => void;
   onNotificationManager: () => void;
-  onRemoteControl?: () => Promise<string | undefined>;
+  onRemoteControl?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   gridGap: number;

@@ -2203,7 +2203,7 @@ export default function Page() {
   );
 }
 
-// Controller View Component
+// Controller View Component - REWRITTEN FROM SCRATCH
 function ControllingView({ onStop, appState, onAction, allEvents, allChannels }: {
     onStop: () => void;
     appState: AppState;
@@ -2211,7 +2211,10 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
     allEvents: Event[];
     allChannels: Channel[];
 }) {
-    const [openDialog, setOpenDialog] = useState<'add-event' | 'schedule' | 'event-select' | null>(null);
+    const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+    const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+    const [isEventSelectOpen, setIsEventSelectOpen] = useState(false);
+    
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
     const [isModification, setIsModification] = useState(false);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
@@ -2240,17 +2243,15 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
         setDialogEvent(eventForModification);
         setIsModification(true);
         setModificationIndex(index);
-        setOpenDialog('event-select');
+        setIsEventSelectOpen(true);
     };
     
-    const handleAddEventClick = () => {
-        setOpenDialog('add-event');
-    };
+    const handleAddEventClick = () => setIsAddEventOpen(true);
     
     const handleScheduleClick = () => {
         setFutureSelection([...appState.selectedEvents]);
         setFutureOrder([...appState.viewOrder]);
-        setOpenDialog('schedule');
+        setIsScheduleOpen(true);
     };
 
     const handleSelectEventFromList = (event: Event) => {
@@ -2258,7 +2259,8 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
         setDialogEvent(event);
         setIsModification(false);
         setModificationIndex(targetIndex);
-        setOpenDialog('event-select');
+        setIsEventSelectOpen(true);
+        setIsAddEventOpen(false); // Close the list dialog
     };
     
     const handleChannelClick = (channel: Channel) => {
@@ -2274,7 +2276,8 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
             setDialogEvent(event);
             setIsModification(false);
             setModificationIndex(targetIndex);
-            setOpenDialog('event-select');
+            setIsEventSelectOpen(true);
+            setIsAddEventOpen(false); // Close the list dialog
         }
     };
     
@@ -2284,7 +2287,7 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
           newSelectedEvents[modificationIndex] = { ...event, selectedOption: option };
           onAction({ selectedEvents: newSelectedEvents });
        }
-       setOpenDialog(null);
+       setIsEventSelectOpen(false);
     };
     
     const handleRemoveEventFromSelection = () => {
@@ -2292,13 +2295,12 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
             const newSelectedEvents = [...appState.selectedEvents];
             newSelectedEvents[modificationIndex] = null;
             onAction({ selectedEvents: newSelectedEvents });
-            setOpenDialog(null);
+            setIsEventSelectOpen(false);
         }
     };
 
     return (
         <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-            {/* The Main UI for the controller */}
             <LayoutConfigurator
                 order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
                 onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
@@ -2323,6 +2325,7 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
                 onStopSession={onStop}
                 isRemoteControlView={true}
+                // These are not used in remote view but required by props
                 onNotificationManager={() => {}}
                 onOpenCalendar={() => {}}
                 onOpenErrors={() => {}}
@@ -2332,10 +2335,9 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
                 onIsErrorsOpenChange={() => {}} onIsTutorialOpenChange={() => {}}
             />
 
-            {/* The Dialogs, rendered at the same level */}
             <AddEventsDialog
-                open={openDialog === 'add-event'}
-                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                open={isAddEventOpen}
+                onOpenChange={setIsAddEventOpen}
                 events={allEvents}
                 channels={allChannels}
                 getEventSelection={getEventSelection}
@@ -2344,14 +2346,14 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
             />
 
             <ScheduleManager
-                open={openDialog === 'schedule'}
-                onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                open={isScheduleOpen}
+                onOpenChange={setIsScheduleOpen}
                 currentSelection={futureSelection}
                 currentOrder={futureOrder}
                 schedules={appState.schedules}
                 onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
                 onModifyEventInView={handleModifyEventInList}
-                onAddEvent={() => setOpenDialog('add-event')}
+                onAddEvent={() => setIsAddEventOpen(true)}
                 initialSelection={appState.selectedEvents}
                 initialOrder={appState.viewOrder}
                 setFutureSelection={setFutureSelection}
@@ -2361,8 +2363,8 @@ function ControllingView({ onStop, appState, onAction, allEvents, allChannels }:
 
             {dialogEvent && (
                 <EventSelectionDialog
-                    isOpen={openDialog === 'event-select'}
-                    onOpenChange={(isOpen) => !isOpen && setOpenDialog(null)}
+                    isOpen={isEventSelectOpen}
+                    onOpenChange={setIsEventSelectOpen}
                     event={dialogEvent}
                     onSelect={handleFinalSelectEvent}
                     isModification={isModification}
