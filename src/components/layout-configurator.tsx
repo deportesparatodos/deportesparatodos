@@ -204,15 +204,17 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                       <AccordionContent className="pt-2 pb-4 space-y-4">
                           <>
                               <EventList {...props} />
-                              <div className="space-y-2 pt-2">
-                                  <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEvent}>
-                                      <Plus className="mr-2 h-4 w-4" />
-                                      Añadir Evento/Canal
-                                  </Button>
-                                  <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
-                                      <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                                  </Button>
-                              </div>
+                              {!isRemoteControlView && (
+                                <div className="space-y-2 pt-2">
+                                    <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEvent}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Añadir Evento/Canal
+                                    </Button>
+                                    <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
+                                        <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                                    </Button>
+                                </div>
+                              )}
                           </>
                       </AccordionContent>
                   </AccordionItem>
