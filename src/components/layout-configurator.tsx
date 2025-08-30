@@ -291,44 +291,32 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                       </AccordionContent>
                   </AccordionItem>
                   
-                  {!isViewPage && onRemoteControl && (
-                      <AccordionItem value="item-remote" className="border rounded-lg px-4">
-                            <AccordionTrigger>Control Remoto</AccordionTrigger>
-                            <AccordionContent className="pt-4 pb-4 space-y-2">
-                                <Button variant="outline" className="w-full justify-start" onClick={onRemoteControl}>
-                                    <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
+                  <AccordionItem value="item-help" className="border rounded-lg px-4">
+                        <AccordionTrigger>Ayuda y Soporte</AccordionTrigger>
+                        <AccordionContent className="pt-4 pb-4 space-y-2">
+                            {onOpenTutorial && (
+                            <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
+                                <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
+                            </Button>
+                            )}
+                            {onOpenErrors && (
+                            <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
+                                <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
+                            </Button>
+                            )}
+                            <a href="https://forms.gle/491b1iE9p63s11K39" target="_blank" rel="noopener noreferrer" className="w-full">
+                                <Button variant="outline" className="w-full justify-start">
+                                    <FileText className="mr-2 h-4 w-4" /> Contacto
                                 </Button>
-                            </AccordionContent>
-                      </AccordionItem>
-                  )}
+                            </a>
+                            <a href="https://www.terminos-y-condiciones.com/live/2357d1eb-6062-4235-a743-346779893d56" target="_blank" rel="noopener noreferrer" className="w-full">
+                                <Button variant="outline" className="w-full justify-start">
+                                    <FileText className="mr-2 h-4 w-4" /> Aviso Legal
+                                </Button>
+                            </a>
+                        </AccordionContent>
+                  </AccordionItem>
 
-                  {!isViewPage && (
-                      <AccordionItem value="item-help" className="border rounded-lg px-4">
-                            <AccordionTrigger>Ayuda y Soporte</AccordionTrigger>
-                            <AccordionContent className="pt-4 pb-4 space-y-2">
-                                {onOpenTutorial && (
-                                <Button variant="outline" className="w-full justify-start" onClick={onOpenTutorial}>
-                                    <BookOpen className="mr-2 h-4 w-4" /> Tutorial de Uso
-                                </Button>
-                                )}
-                                {onOpenErrors && (
-                                <Button variant="outline" className="w-full justify-start" onClick={onOpenErrors}>
-                                    <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
-                                </Button>
-                                )}
-                                <a href="https://forms.gle/491b1iE9p63s11K39" target="_blank" rel="noopener noreferrer" className="w-full">
-                                    <Button variant="outline" className="w-full justify-start">
-                                        <FileText className="mr-2 h-4 w-4" /> Contacto
-                                    </Button>
-                                </a>
-                                <a href="https://www.terminos-y-condiciones.com/live/2357d1eb-6062-4235-a743-346779893d56" target="_blank" rel="noopener noreferrer" className="w-full">
-                                    <Button variant="outline" className="w-full justify-start">
-                                        <FileText className="mr-2 h-4 w-4" /> Aviso Legal
-                                    </Button>
-                                </a>
-                            </AccordionContent>
-                      </AccordionItem>
-                  )}
               </Accordion>
           </div>
         </ScrollArea>
