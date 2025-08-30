@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -51,13 +52,11 @@ export function AddEventsDialog({
     const [activeTab, setActiveTab] = useState('events');
 
     useEffect(() => {
-        if (open) {
-            onFetch(true, true);
-        } else {
+        if (!open) {
             setSearchTerm('');
             setIsFullScreen(false);
         }
-    }, [open, onFetch]);
+    }, [open]);
 
     const { sortedEvents, filteredChannels } = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
