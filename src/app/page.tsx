@@ -70,6 +70,7 @@ import { AddEventsDialog } from '@/components/add-events-dialog';
 import { RemoteEventSelection } from '@/components/remote-event-selection';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { RemoteScheduleManager } from '@/components/remote-schedule-manager';
+import { RemoteChat } from '@/components/remote-chat';
 
 
 interface StreamedMatch {
@@ -1462,11 +1463,6 @@ export function HomePageContent() {
                 setControllerAppState(null);
                 toast({ title: "Control Remoto Desconectado" });
             }}
-            onOpenChat={() => {
-                if (channelRef.current) {
-                    channelRef.current.publish('action', { type: 'OPEN_CHAT' });
-                }
-            }}
             allEvents={events}
             allChannels={channelsData}
             getEventSelection={getEventSelection}
@@ -2242,7 +2238,6 @@ type ControllingViewProps = {
     appState: AppState;
     setLiveAppState: (newState: Partial<AppState>) => void;
     onStopSession: () => void;
-    onOpenChat: () => void;
     allEvents: Event[];
     allChannels: Channel[];
     getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number; };
@@ -2254,13 +2249,12 @@ function ControllingView({
   appState,
   setLiveAppState,
   onStopSession,
-  onOpenChat,
   allEvents,
   allChannels,
   getEventSelection,
   fetchEvents,
 }: ControllingViewProps) {
-  type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule';
+  type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
   const [view, setView] = useState<ControllingViewMode>('main');
   
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -2421,6 +2415,12 @@ function ControllingView({
     );
   }
 
+  if (view === 'chat') {
+    return (
+      <RemoteChat onBack={() => setView('main')} />
+    );
+  }
+
   // Main Remote Control UI
   return (
     <div className="fixed inset-0 bg-background z-[100] flex flex-col">
@@ -2451,11 +2451,12 @@ function ControllingView({
             onIsChatEnabledChange={(v: boolean) => setLiveAppState({ isChatEnabled: v })}
             onStopSession={onStopSession}
             isRemoteControlView={true}
-            onOpenChat={onOpenChat}
+            onOpenChat={() => setView('chat')}
         />
     </div>
   );
 }
+
 
 
 
