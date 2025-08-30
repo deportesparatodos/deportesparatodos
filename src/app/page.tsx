@@ -1070,6 +1070,12 @@ export function HomePageContent() {
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
 
+    navigator.clipboard.writeText(optionUrl).then(() => {
+        toast({ title: '¡Enlace copiado!', description: 'El enlace de la transmisión se ha copiado al portapapeles.' });
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+
     if (dialogContext === 'schedule') {
         const newFutureSelection = [...futureSelection];
         const emptyIndex = newFutureSelection.findIndex(e => e === null);
@@ -1547,7 +1553,7 @@ export function HomePageContent() {
                         <DialogModalTitle>Bienvenida</DialogModalTitle>
                     </DialogHeader>
                     <DialogModalClose asChild>
-                    <Button variant="ghost" className="absolute right-2 top-2 rounded-full p-1 bg-black/50 text-white/70 transition-colors hover:bg-black/75 hover:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10" onClick={() => setWelcomePopupOpen(false)}>
+                    <Button variant="ghost" className="absolute right-0 top-0 rounded-bl-lg rounded-tr-lg p-2 bg-background/50 backdrop-blur-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10" onClick={() => setWelcomePopupOpen(false)}>
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close</span>
                     </Button>
@@ -2426,3 +2432,4 @@ function ControllingView({
     </div>
   );
 }
+

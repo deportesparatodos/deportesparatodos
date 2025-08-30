@@ -17,6 +17,7 @@ import {
 import { Loader2, Trash2, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 
 
 interface RemoteEventSelectionProps {
@@ -43,6 +44,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   isLoading,
   onBack,
 }) => {
+  const { toast } = useToast();
   if (!event) return null;
 
   const isLive = event.status?.toLowerCase() === 'en vivo';
@@ -51,6 +53,15 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   const selectedOptionUrl = event.selectedOption;
   const isTCChaserEvent = event.source === 'tc-chaser';
   const isChannel = event.category === 'Canal';
+  
+  const handleSelectAndCopy = (event: Event, optionUrl: string) => {
+    navigator.clipboard.writeText(optionUrl).then(() => {
+        toast({ title: '¡Enlace copiado!', description: 'El enlace de la transmisión se ha copiado al portapapeles.' });
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+    onSelect(event, optionUrl);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,7 +149,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                                                             "w-full border border-border hover:scale-105 transition-transform duration-200",
                                                             isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
                                                         )}
-                                                        onClick={() => onSelect(event, option.url)}
+                                                        onClick={() => handleSelectAndCopy(event, option.url)}
                                                     >
                                                         <span className="truncate">{option.label}</span>
                                                     </Button>
