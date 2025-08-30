@@ -2141,7 +2141,7 @@ export function HomePageContent() {
               event={dialogEvent}
               onSelect={handleEventSelect}
               isModification={isModification}
-              onRemove={() => handleRemoveEventFromDialog(dialogEvent)}
+              onRemove={handleRemoveEventFromDialog}
               isLoading={isOptionsLoading}
           />
       )}
@@ -2379,7 +2379,7 @@ function ControllingView({
 
         {/* --- Dialogs Rendered Here, Outside Main Layout Flow --- */}
         
-        {isAddEventOpen && (
+        <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
             <RemoteAddEvents
                 open={isAddEventOpen}
                 onOpenChange={setIsAddEventOpen}
@@ -2389,27 +2389,29 @@ function ControllingView({
                 allEvents={allEvents}
                 allChannels={allChannels}
             />
-        )}
+        </Dialog>
         
-        {isEventSelectionOpen && eventForSelection && (
-            <RemoteEventSelection
-                open={isEventSelectionOpen}
-                onOpenChange={setIsEventSelectionOpen}
-                event={eventForSelection}
-                isModification={isModification}
-                isLoading={isEventSelectionLoading}
-                onSelect={handleFinalSelectEvent}
-                onRemove={() => {
-                    if (modificationIndex !== null) {
-                        const newSelectedEvents = [...appState.selectedEvents];
-                        newSelectedEvents[modificationIndex] = null;
-                        onAction({ selectedEvents: newSelectedEvents });
-                    }
-                    setIsEventSelectionOpen(false);
-                }}
-                onBack={handleBackFromSelection}
-            />
-        )}
+        <Dialog open={isEventSelectionOpen} onOpenChange={setIsEventSelectionOpen}>
+            {eventForSelection && (
+                <RemoteEventSelection
+                    open={isEventSelectionOpen}
+                    onOpenChange={setIsEventSelectionOpen}
+                    event={eventForSelection}
+                    isModification={isModification}
+                    isLoading={isEventSelectionLoading}
+                    onSelect={handleFinalSelectEvent}
+                    onRemove={() => {
+                        if (modificationIndex !== null) {
+                            const newSelectedEvents = [...appState.selectedEvents];
+                            newSelectedEvents[modificationIndex] = null;
+                            onAction({ selectedEvents: newSelectedEvents });
+                        }
+                        setIsEventSelectionOpen(false);
+                    }}
+                    onBack={handleBackFromSelection}
+                />
+            )}
+        </Dialog>
         
         {isScheduleOpen && (
              <RemoteScheduleManager
