@@ -334,8 +334,8 @@ export function HomePageContent() {
 
 
   // Schedule related states
-  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
-  const [futureOrder, setFutureOrder] = useState<number[]>([]);
+  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(Array(9).fill(null));
+  const [futureOrder, setFutureOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
   const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
   const { toast } = useToast();
 
@@ -1102,13 +1102,18 @@ export function HomePageContent() {
             newFutureSelection[emptyIndex] = eventWithSelection;
             setFutureSelection(newFutureSelection);
         } else {
-            alert("No hay espacios disponibles en la programación.");
+            toast({
+                variant: 'destructive',
+                title: 'Programación Completa',
+                description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
+            });
         }
+        // Do not close the dialog, let the user add more events.
         setEventSelectionDialogOpen(false);
-        setScheduleManagerOpen(true);
         return;
     }
     
+    // This part is for the main view selection
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
 
@@ -1255,6 +1260,24 @@ export function HomePageContent() {
       status: 'En Vivo',
       image: channel.logo,
     };
+    
+    if (dialogContext === 'schedule') {
+        const newFutureSelection = [...futureSelection];
+        const emptyIndex = newFutureSelection.findIndex(e => e === null);
+        if (emptyIndex !== -1) {
+            newFutureSelection[emptyIndex] = { ...channelAsEvent, selectedOption: channel.urls[0].url };
+            setFutureSelection(newFutureSelection);
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Programación Completa',
+                description: 'No puedes añadir más de 9 canales. Elimina uno para añadir otro.',
+            });
+        }
+        setAddEventsDialogOpen(false); 
+        return;
+    }
+
 
     const selection = getEventSelection(channelAsEvent);
     
@@ -1719,7 +1742,6 @@ export function HomePageContent() {
                     onAddEvent={() => setAddEventsDialogOpen(true)}
                     onSchedule={() => setScheduleManagerOpen(true)}
                     onNotificationManager={() => setNotificationManagerOpen(true)}
-                    onRemoteControl={handleStartAndControl}
                     gridGap={gridGap}
                     onGridGapChange={(v) => setLiveAppState({ gridGap: v })}
                     borderColor={borderColor}
@@ -2100,6 +2122,7 @@ export function HomePageContent() {
                                                 onIsTutorialOpenChange={setIsTutorialOpen}
                                                 isErrorsOpen={isErrorsOpen}
                                                 onIsErrorsOpenChange={setIsErrorsOpen}
+                                                onRemoteControl={handleStartAndControl}
                                                 isRemoteControlView={false}
                                                 onAddEvent={() => { setDialogContext('view'); setAddEventsDialogOpen(true); }}
                                                 onSchedule={() => setScheduleManagerOpen(true)}
@@ -2146,6 +2169,7 @@ export function HomePageContent() {
           onFetch={() => fetchEvents(true, true)}
           container={remoteControlContainerRef.current ?? undefined}
           isRemote={false}
+          onBack={() => {}}
       />
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
           <CalendarDialogContent categories={categories} />
@@ -2456,6 +2480,7 @@ function ControllingView({
     </div>
   );
 }
+
 
 
 
