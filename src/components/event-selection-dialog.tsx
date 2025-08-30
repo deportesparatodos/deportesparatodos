@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogPortal,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { Event, StreamOption } from './event-carousel';
@@ -21,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, X } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 
 interface EventSelectionDialogProps {
@@ -30,7 +31,7 @@ interface EventSelectionDialogProps {
   event: Event;
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
-  onRemove: () => void;
+  onRemove: (eventToRemove: Event) => void;
   isLoading: boolean;
   container?: HTMLElement;
 }
@@ -69,6 +70,11 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
             }
           }}
           >
+            <DialogClose className="absolute right-0 top-0 rounded-sm p-1.5 bg-background/50 backdrop-blur-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+
            {/* Left/Top Panel - Event Info */}
            <div className="w-full sm:w-1/2 flex-shrink-0 flex flex-col">
               <div className="relative w-full aspect-video rounded-t-lg sm:rounded-tr-none sm:rounded-l-lg overflow-hidden">
@@ -104,7 +110,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                     <Button
                         variant="destructive"
                         className="w-full"
-                        onClick={onRemove}
+                        onClick={() => onRemove(event)}
                     >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Eliminar Selección
