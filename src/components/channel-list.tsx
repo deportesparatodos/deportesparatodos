@@ -167,7 +167,7 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'Liga 1 MAX', url: 'https://embed.ksdjugfsddeports.fun/embed/liga1max.html', logo: 'https://play-lh.googleusercontent.com/utRBgwflE7hqjt4UvWeNO_AA1MHdP4l9dVD1V38DdRM9GGzxD5xK1iyXRPcnOXV9d6M' },
     { name: 'MLB NETWORK', url: 'https://embed.ksdjugfsddeports.fun/embed/mlbnetwork.html', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/ac/MLBNetworkLogo.svg/1200px-MLBNetworkLogo.svg.png' },
     { name: 'MOVISTAR ACCION', url: 'https://embed.ksdjugfsddeports.fun/embed/movistaraccion.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwQpf3bK8lcZBW6dNMJs5kZ2o-4mpMEdmUXQ&s' },
-    { name: 'MOVISTAR DEPORTES ES', url: 'https://embed.ksdjugfsddeports.fun/embed/movistardeporteses.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSALZ31CSIyN4JwWpMwCiyFw_3-zY_hdxuQQ&s' },
+    { name: 'MOVISTAR DEPORTES ES', url: 'https://embed.ksdjugfsddeports.fun/embed/movistardeporteses.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5Oqp6agg3aiMkjX4JLmhpJ9Ue_My7KZfVLQ&s' },
     { name: 'MOVISTAR DEPORTES PE', url: 'https://embed.ksdjugfsddeports.fun/embed/movistardeportes.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5Oqp6agg3aiMkjX4JLmhpJ9Ue_My7KZfVLQ&s' },
     { name: 'MOVISTAR LA LIGA', url: 'https://embed.ksdjugfsddeports.fun/embed/movistarlaliga.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/LaLiga_por_Movistar_Plus%2B_2022_logo.svg/1200px-LaLiga_por_Movistar_Plus%2B_2022_logo.svg.png' },
     { name: 'MULTIPREMIER', url: 'https://embed.ksdjugfsddeports.fun/embed/multipremier.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Multipremier_logo.svg/1200px-Multipremier_logo.svg.png' },
@@ -284,14 +284,18 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'NFL Network', url: 'https://streamtpglobal.com/global1.php?stream=nfl_network', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/NFL_Network_logo.svg/1200px-NFL_Network_logo.svg.png' },
     { name: 'Sky Sports Golf', url: 'https://streamtpglobal.com/global1.php?stream=sky_sports_golf_gb', logo: 'https://yt3.googleusercontent.com/ytc/AIdro_kDF3C0A6Zxx37_DKSFEXFnjHbd2pKhjqPD7XaOEy97=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'PGA Tour 2025', url: 'https://streamtpglobal.com/global1.php?stream=eventos7', logo: 'https://gwaa.com/wp-content/uploads/2024/08/Screen-Shot-2024-08-09-at-2.01.35-PM.png' },
-    { name: 'NBC Golf Channel', url: 'https://streamtpglobal.com/global1.php?stream=golf_channel_usa', logo: 'https://nbcsports.brightspotcdn.com/dims4/default/a4787f0/2147483647/strip/true/crop/304x171+0+3/resize/1440x810!/quality/90/?url=https%3A%2F%2Fnbc-sports-production-nbc-sports.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fca%2Fb9%2F8521681bbea7ad8b97e57cdcc1f2%2Fnew-golf-channel-logo-304.jpg' },
+    { name: 'NBC Golf Channel', url: 'https://streamtpglobal.com/global1.php?stream=golf_channel_usa', logo: 'https://nbcsports.brightspotcdn.com/dims4/default/a4787f0/2147483647/strip/true/crop/304x171+0+3/resize/1440x810!/quality/90/?url=http%3A%2F%2Fnbc-sports-production-nbc-sports.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fca%2Fb9%2F8521681bbea7ad8b97e57cdcc1f2%2Fnew-golf-channel-logo-304.jpg' },
     { name: 'Fox NRL TV', url: 'https://streamtpglobal.com/global1.php?stream=eventos2', logo: 'https://origin.go.foxsports.com.au/wp-content/uploads/2017/02/aaaa_log_foxl_a-1.png' },
     { name: 'Wimbledon Open', url: 'https://streamtpglobal.com/global1.php?stream=eventos5', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Wimbledon.svg/1200px-Wimbledon.svg.png' },
 ];
 
 const mergedChannels = new Map<string, Channel>();
 
-originalChannels.forEach(channel => {
+const filteredOriginalChannels = originalChannels.filter(channel => 
+    !channel.url.includes('embed.ksdjugfsddeports.fun')
+);
+
+filteredOriginalChannels.forEach(channel => {
     const existing = mergedChannels.get(channel.name);
     if (existing) {
         // Avoid adding duplicate URLs
@@ -307,7 +311,7 @@ originalChannels.forEach(channel => {
     }
 });
 
-export const channels: Channel[] = Array.from(mergedChannels.values());
-    
+const finalChannels = Array.from(mergedChannels.values()).filter(channel => channel.urls.length > 0);
 
-    
+export const channels: Channel[] = finalChannels;
+
