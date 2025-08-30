@@ -2366,6 +2366,7 @@ function ControllingView(props: ControllingViewProps) {
               }}
               isViewPage={true}
               onAddEvent={() => setAddEventsOpen(true)}
+              onSchedule={() => setScheduleOpen(true)}
               gridGap={appState.gridGap}
               onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
               borderColor={appState.borderColor}
@@ -2376,7 +2377,6 @@ function ControllingView(props: ControllingViewProps) {
               onStopSession={onStopSession}
               isRemoteControlView={true}
               onOpenChat={onOpenChat}
-              onSchedule={() => setScheduleOpen(true)}
             />
 
             <RemoteAddEvents
