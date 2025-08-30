@@ -309,7 +309,6 @@ export function HomePageContent() {
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
   
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
-  const [isModification, setIsModification] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -1104,7 +1103,8 @@ export function HomePageContent() {
     
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
-    if (isModification && modificationIndex !== null) {
+
+    if (modificationIndex !== null) {
         targetIndex = modificationIndex;
     } else {
         targetIndex = newSelectedEvents.findIndex(e => e === null);
@@ -1123,7 +1123,6 @@ export function HomePageContent() {
     
     setEventSelectionDialogOpen(false);
     setAddEventsDialogOpen(false);
-    setIsModification(false);
     setModificationIndex(null);
   };
   
@@ -1133,16 +1132,21 @@ export function HomePageContent() {
     setSelectedEvents(newSelectedEvents);
   }, [selectedEvents, setSelectedEvents]);
   
-  const getEventSelection = (event: Event) => {
+  const getEventSelection = useCallback((event: Event): { isSelected: boolean; selectedOption: string | null; index: number } => {
     const sourceState = isControlling ? controllerAppState : appState;
-    if (!sourceState?.selectedEvents) return { isSelected: false, selectedOption: null };
+    if (!sourceState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
 
     const selectionIndex = sourceState.selectedEvents.findIndex(se => se?.id === event.id);
-    if (selectionIndex !== -1 && sourceState.selectedEvents[selectionIndex]) {
-      return { isSelected: true, selectedOption: sourceState.selectedEvents[selectionIndex]!.selectedOption };
+    if (selectionIndex !== -1) {
+      const selectedEvent = sourceState.selectedEvents[selectionIndex];
+      return { 
+        isSelected: true, 
+        selectedOption: selectedEvent?.selectedOption || null, 
+        index: selectionIndex 
+      };
     }
-    return { isSelected: false, selectedOption: null };
-  };
+    return { isSelected: false, selectedOption: null, index: -1 };
+  }, [appState, controllerAppState, isControlling]);
 
   const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
 
@@ -1168,20 +1172,15 @@ export function HomePageContent() {
     const selection = getEventSelection(event);
     let eventForDialog = { ...event };
     
-    let modIndex = -1;
-
     if (selection.isSelected) {
-        const originalIndex = selectedEvents.findIndex(se => se?.id === event.id);
-        modIndex = originalIndex;
-        setIsModification(true);
+        setModificationIndex(selection.index);
         if (selection.selectedOption) {
             eventForDialog.selectedOption = selection.selectedOption;
         }
     } else {
-        modIndex = selectedEvents.findIndex(e => e === null);
-        setIsModification(false);
+        const emptyIndex = selectedEvents.findIndex(e => e === null);
+        setModificationIndex(emptyIndex);
     }
-    setModificationIndex(modIndex);
     
     setDialogEvent(eventForDialog);
 
@@ -1251,30 +1250,27 @@ export function HomePageContent() {
 
     const selection = getEventSelection(channelAsEvent);
     
-    let modIndex = -1;
     if (selection.isSelected) {
-        const originalIndex = selectedEvents.findIndex(se => se?.id === channelAsEvent.id);
-        modIndex = originalIndex;
-        setIsModification(true);
-        const selectedEvent = selectedEvents[originalIndex];
+        setModificationIndex(selection.index);
+        const selectedEvent = selectedEvents[selection.index];
         if (selectedEvent) {
           channelAsEvent.selectedOption = selectedEvent.selectedOption;
         }
     } else {
-        modIndex = selectedEvents.findIndex(e => e === null);
-        setIsModification(false);
+        const emptyIndex = selectedEvents.findIndex(e => e === null);
+        setModificationIndex(emptyIndex);
     }
     
-    setModificationIndex(modIndex);
     setDialogEvent(channelAsEvent);
     setEventSelectionDialogOpen(true);
     setIsOptionsLoading(false);
   };
   
-  const openDialogForModification = (event: Event, index: number) => {
-    const eventWithSelection = { ...event, selectedOption: selectedEvents[index]?.selectedOption };
+  const openDialogForModification = (index: number) => {
+    const event = selectedEvents[index];
+    if (!event) return;
+    const eventWithSelection = { ...event, selectedOption: event.selectedOption };
     setDialogEvent(eventWithSelection);
-    setIsModification(true);
     setModificationIndex(index);
     setEventSelectionDialogOpen(true);
   };
@@ -1542,7 +1538,7 @@ export function HomePageContent() {
                 currentOrder={futureOrder}
                 schedules={schedules}
                 onSchedulesChange={setSchedules}
-                onModifyEventInView={openDialogForModification}
+                onModifyEventInView={(index) => openDialogForModification(index)}
                 isLoading={isAddEventsLoading}
                 onAddEvent={() => { setDialogContext('schedule'); setAddEventsDialogOpen(true); }}
                 initialSelection={selectedEvents}
@@ -1888,7 +1884,6 @@ export function HomePageContent() {
                             event={event}
                             selection={getEventSelection(event)}
                             onClick={() => openDialogForEvent(event)}
-                            displayMode='checkmark'
                         />
                     ))}
                 </div>
@@ -1968,7 +1963,6 @@ export function HomePageContent() {
                       event={item as Event}
                       selection={getEventSelection(item as Event)}
                       onClick={() => openDialogForEvent(item as Event)}
-                      displayMode='checkmark'
                     />
                 );
               }
@@ -2149,7 +2143,7 @@ export function HomePageContent() {
               onOpenChange={setEventSelectionDialogOpen}
               event={dialogEvent}
               onSelect={handleEventSelect}
-              isModification={isModification}
+              isModification={modificationIndex !== null && selectedEvents[modificationIndex] !== null}
               modificationIndex={modificationIndex}
               onRemove={handleEventRemove}
               isLoading={isOptionsLoading}
@@ -2264,5 +2258,3 @@ function ControllingView({
     </div>
   );
 }
-
-    

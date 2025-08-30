@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +15,7 @@ interface CameraConfigurationProps {
   eventDetails: (Event | null)[];
   onReload: (index: number) => void;
   onRemove: (index: number) => void;
-  onModify: (event: Event, index: number) => void;
+  onModify: (index: number) => void;
   onToggleFullscreen: (index: number) => void;
   fullscreenIndex: number | null;
   isViewPage: boolean;

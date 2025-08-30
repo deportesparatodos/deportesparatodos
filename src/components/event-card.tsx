@@ -8,14 +8,13 @@ import type { Event } from './event-carousel';
 
 interface EventCardProps {
   event: Event;
-  selection: { isSelected: boolean; selectedOption: string | null };
+  selection: { isSelected: boolean; selectedOption: string | null; index: number };
   onClick: () => void;
-  displayMode?: 'number' | 'checkmark';
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
-export const EventCard: FC<EventCardProps> = ({ event, selection, onClick, displayMode = 'checkmark' }) => {
+export const EventCard: FC<EventCardProps> = ({ event, selection, onClick }) => {
   const timeDisplay =
     event.status.toLowerCase() === 'en vivo'
       ? 'AHORA'

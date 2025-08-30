@@ -25,7 +25,7 @@ export interface EventListManagementProps {
   eventDetails: (Event | null)[];
   onReload?: (index: number) => void;
   onRemove: (index: number) => void;
-  onModify: (event: Event, index: number) => void;
+  onModify: (index: number) => void;
   isViewPage: boolean;
   onAddEvent?: () => void;
   onSchedule?: () => void;
@@ -135,7 +135,7 @@ export function EventList({
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-7 w-7"
-                                onClick={(e) => { e.stopPropagation(); onModify(event, originalIndex); }}
+                                onClick={(e) => { e.stopPropagation(); onModify(originalIndex); }}
                             >
                                 <Pencil className="h-4 w-4" />
                             </Button>

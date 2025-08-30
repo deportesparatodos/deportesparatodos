@@ -45,7 +45,7 @@ interface EventCarouselProps {
   channels?: Channel[];
   onCardClick?: (event: Event) => void;
   onChannelClick?: (channel: Channel) => void;
-  getEventSelection?: (event: Event) => { isSelected: boolean; selectedOption: string | null };
+  getEventSelection?: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
 }
 
 export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection }) => {
@@ -85,7 +85,6 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                   event={event}
                   selection={getEventSelection(event)}
                   onClick={() => onCardClick(event)}
-                  displayMode="checkmark"
                 />
               </CarouselItem>
             ))}

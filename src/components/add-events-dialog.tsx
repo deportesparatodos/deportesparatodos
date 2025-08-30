@@ -27,7 +27,7 @@ interface AddEventsDialogProps {
   onOpenChange: (open: boolean) => void;
   onEventSelect: (event: Event) => void;
   onChannelClick: (channel: Channel) => void;
-  getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null };
+  getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
   events: Event[];
   channels: Channel[];
   isLoading: boolean;

@@ -46,7 +46,7 @@ interface ScheduleManagerProps {
   currentOrder: number[];
   schedules: Schedule[];
   onSchedulesChange: (schedules: Schedule[]) => void;
-  onModifyEventInView: (event: Event, index: number) => void;
+  onModifyEventInView: (index: number) => void;
   isLoading: boolean;
   onAddEvent: () => void;
   initialSelection: (Event | null)[];
@@ -186,7 +186,8 @@ export function ScheduleManager({
                 event={modifyEventForSchedule.event}
                 onSelect={handleModifyEventForSchedule}
                 isModification={true}
-                onRemove={() => {}}
+                modificationIndex={modifyEventForSchedule.index}
+                onRemove={() => handleRemoveEventFromFuture(modifyEventForSchedule.index)}
                 isLoading={false}
               />
           )}
@@ -300,10 +301,10 @@ export function ScheduleManager({
                                 onOrderChange={handleOrderChange}
                                 eventDetails={currentSelection}
                                 onRemove={handleRemoveEventFromFuture}
-                                onModify={(event, index) => {
+                                onModify={(index) => {
                                   const currentEventState = currentSelection[index];
                                   if (!currentEventState) return;
-                                  const eventForModification = { ...event, selectedOption: currentEventState.selectedOption };
+                                  const eventForModification = { ...currentEventState, selectedOption: currentEventState.selectedOption };
                                   setModifyEventForSchedule({ event: eventForModification, index });
                                 }}
                                 isViewPage={true}
