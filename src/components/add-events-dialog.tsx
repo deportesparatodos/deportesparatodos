@@ -55,6 +55,8 @@ export function AddEventsDialog({
         if (!open) {
             setSearchTerm('');
             setIsFullScreen(false);
+        } else {
+            setIsFullScreen(true); // Default to full screen when opened
         }
     }, [open]);
 

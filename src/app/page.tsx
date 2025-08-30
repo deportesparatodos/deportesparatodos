@@ -1560,6 +1560,7 @@ export function HomePageContent() {
                 initialOrder={viewOrder}
                 setFutureSelection={setFutureSelection}
                 setFutureOrder={setFutureOrder}
+                container={remoteControlContainerRef.current ?? undefined}
             />
             <NotificationManager
             open={notificationManagerOpen}
@@ -2143,6 +2144,7 @@ export function HomePageContent() {
             channels={channelsData}
             isLoading={isAddEventsLoading}
             onFetch={() => fetchEvents(true, true)}
+            container={remoteControlContainerRef.current ?? undefined}
         />
       </Dialog>
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -2264,10 +2266,6 @@ function ControllingView(props: ControllingViewProps) {
     const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
     const [isOptionsLoading, setIsOptionsLoading] = useState(false);
-    const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
-    const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
-    const [futureOrder, setFutureOrder] = useState<number[]>([]);
-    
     const {toast} = useToast();
 
     const handleEventRemove = useCallback((indexToRemove: number) => {
@@ -2350,7 +2348,7 @@ function ControllingView(props: ControllingViewProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-background z-[200] flex flex-col">
+        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
             <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Control Remoto</h2>
                 <Button variant="destructive" size="sm" onClick={onStopSession}>
