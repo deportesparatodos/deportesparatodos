@@ -186,13 +186,18 @@ export function ScheduleManager({
 
   const handleFinalSelectionForSchedule = (event: Event, optionUrl: string) => {
       const newFutureSelection = [...futureSelection];
-      const emptyIndex = newFutureSelection.findIndex(e => e === null);
-      if (emptyIndex !== -1) {
-          newFutureSelection[emptyIndex] = { ...event, selectedOption: optionUrl };
+      let targetIndex = modificationIndex;
+      
+      if (targetIndex === null) {
+        targetIndex = newFutureSelection.findIndex(e => e === null);
+      }
+
+      if (targetIndex !== -1) {
+          newFutureSelection[targetIndex] = { ...event, selectedOption: optionUrl };
           setFutureSelection(newFutureSelection);
       }
-      // Close only the selection dialog, not the add events dialog
       setEventSelectionDialogOpen(false);
+      setModificationIndex(null);
   };
 
   const activeFutureEventsCount = futureOrder?.filter(i => futureSelection[i] !== null).length ?? 0;
@@ -312,7 +317,7 @@ export function ScheduleManager({
                                   if (eventToModify) {
                                     setDialogEvent(eventToModify);
                                     setModificationIndex(index);
-                                    setEventSelectionDialogOpen(true);
+                                    setAddEventsDialogOpen(true);
                                   }
                                 }}
                                 isViewPage={true}
@@ -339,7 +344,14 @@ export function ScheduleManager({
         onOpenChange={setAddEventsDialogOpen}
         onEventSelect={handleSelectEventForSchedule}
         onChannelClick={handleSelectChannelForSchedule}
-        getEventSelection={getEventSelection}
+        getEventSelection={(event) => {
+          const selectionIndex = futureSelection.findIndex(se => se?.id === event.id);
+          if (selectionIndex !== -1) {
+            const selectedEvent = futureSelection[selectionIndex];
+            return { isSelected: true, selectedOption: selectedEvent?.selectedOption || null, index: selectionIndex };
+          }
+          return { isSelected: false, selectedOption: null, index: -1 };
+        }}
         events={allEvents}
         channels={allChannels}
         isLoading={isLoading}
@@ -352,7 +364,12 @@ export function ScheduleManager({
       {dialogEvent && (
         <EventSelectionDialog
           isOpen={eventSelectionDialogOpen}
-          onOpenChange={setEventSelectionDialogOpen}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setModificationIndex(null);
+            }
+            setEventSelectionDialogOpen(isOpen)
+          }}
           event={dialogEvent}
           onSelect={handleFinalSelectionForSchedule}
           isModification={modificationIndex !== null}
