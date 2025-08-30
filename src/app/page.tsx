@@ -1097,7 +1097,6 @@ export function HomePageContent() {
         console.error('Failed to copy: ', err);
     });
 
-    // If context is 'schedule', only update the future selection and do NOT close the dialog.
     if (dialogContext === 'schedule') {
         const newFutureSelection = [...futureSelection];
         const emptyIndex = newFutureSelection.findIndex(e => e === null);
@@ -1112,12 +1111,10 @@ export function HomePageContent() {
                 description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
             });
         }
-        // Crucially, we do NOT close any dialogs here.
-        setEventSelectionDialogOpen(false); // Close just the smallest dialog
+        setEventSelectionDialogOpen(false);
         return;
     }
     
-    // This part is for the main view selection, which should close the dialogs.
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
 
@@ -1139,7 +1136,7 @@ export function HomePageContent() {
     }
     
     setEventSelectionDialogOpen(false);
-    setAddEventsDialogOpen(false); // Close the bigger dialog too for main view context.
+    setAddEventsDialogOpen(false);
     setModificationIndex(null);
   };
   
@@ -2484,6 +2481,7 @@ function ControllingView({
     </div>
   );
 }
+
 
 
 
