@@ -157,39 +157,26 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
 
 const mergedChannels = new Map<string, Channel>();
 
-// Group channels by name and merge their URLs
-originalChannels.forEach(channel => {
-    const urlsToKeep = [{ url: channel.url, label: 'Opción 1' }].filter(
-        u => !u.url.includes('embed.ksdjugfsddeports.fun')
-    );
+// 1. Filter out the unwanted domain from the source
+const filteredOriginalChannels = originalChannels.filter(channel => 
+    !channel.url.includes('embed.ksdjugfsddeports.fun')
+);
 
-    if (urlsToKeep.length > 0) {
-        const existing = mergedChannels.get(channel.name);
-        if (existing) {
-            urlsToKeep.forEach(u => {
-                if (!existing.urls.some(eu => eu.url === u.url)) {
-                    existing.urls.push({ ...u, label: `Opción ${existing.urls.length + 1}` });
-                }
-            });
-        } else {
-            mergedChannels.set(channel.name, {
-                name: channel.name,
-                logo: channel.logo,
-                urls: urlsToKeep.map((u, i) => ({ ...u, label: `Opción ${i + 1}` })),
-            });
+// 2. Group the clean channels by name and merge their URLs
+filteredOriginalChannels.forEach(channel => {
+    const existing = mergedChannels.get(channel.name);
+    if (existing) {
+        // Avoid adding duplicate URLs
+        if (!existing.urls.some(u => u.url === channel.url)) {
+            existing.urls.push({ url: channel.url, label: `Opción ${existing.urls.length + 1}` });
         }
+    } else {
+        mergedChannels.set(channel.name, {
+            name: channel.name,
+            logo: channel.logo,
+            urls: [{ url: channel.url, label: 'Opción 1' }],
+        });
     }
 });
-
-// Final cleanup: ensure no channel is left with zero options after merging
-Array.from(mergedChannels.keys()).forEach(name => {
-    const channel = mergedChannels.get(name)!;
-    channel.urls = channel.urls.filter(u => !u.url.includes('embed.ksdjugfsddeports.fun'));
-    if (channel.urls.length === 0) {
-        mergedChannels.delete(name);
-    }
-});
-
 
 export const channels: Channel[] = Array.from(mergedChannels.values());
-    
