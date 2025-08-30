@@ -53,6 +53,7 @@ interface ScheduleManagerProps {
   initialOrder: number[];
   setFutureSelection: (selection: (Event | null)[]) => void;
   setFutureOrder: (order: number[]) => void;
+  container?: HTMLElement;
 }
 
 export function ScheduleManager({
@@ -69,6 +70,7 @@ export function ScheduleManager({
   initialOrder,
   setFutureSelection,
   setFutureOrder,
+  container,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -181,6 +183,7 @@ export function ScheduleManager({
       <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => { if(!open) setModifyEventForSchedule(null) }}>
           {modifyEventForSchedule && (
               <EventSelectionDialog
+                container={container}
                 isOpen={!!modifyEventForSchedule}
                 onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
                 event={modifyEventForSchedule.event}
@@ -194,7 +197,7 @@ export function ScheduleManager({
       </Dialog>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogPortal>
+        <DialogPortal container={container}>
           <DialogContent 
               hideClose={true}
               className={cn(

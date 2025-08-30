@@ -1444,39 +1444,54 @@ export function HomePageContent() {
   }
 
   if (isControlling && controllerAppState) {
-    const controllerProps = {
-      order: controllerAppState.viewOrder.filter(i => controllerAppState.selectedEvents[i] !== null),
-      onOrderChange: setViewOrder,
-      eventDetails: controllerAppState.selectedEvents,
-      onRemove: handleEventRemove,
-      onModify: (index: number) => {
-        const event = controllerAppState.selectedEvents[index];
-        if (event) openDialogForEvent(event);
-      },
-      isViewPage: true, // Show view-specific controls
-      onAddEvent: () => setAddEventsDialogOpen(true),
-      gridGap: controllerAppState.gridGap,
-      onGridGapChange: (v: number) => setLiveAppState({ gridGap: v }),
-      borderColor: controllerAppState.borderColor,
-      onBorderColorChange: (c: string) => setLiveAppState({ borderColor: c }),
-      onRestoreGridSettings: () => setLiveAppState({ gridGap: 0, borderColor: '#000000' }),
-      isChatEnabled: controllerAppState.isChatEnabled,
-      onIsChatEnabledChange: (v: boolean) => setLiveAppState({ isChatEnabled: v }),
-      onStopSession: () => {
-        cleanupAbly();
-        setIsControlling(false);
-        setRemoteControlMode('inactive');
-        setControllerAppState(null);
-        toast({ title: "Control Remoto Desconectado" });
-      },
-      isRemoteControlView: true,
-      onOpenChat: () => {
-        if (channelRef.current) {
-            channelRef.current.publish('action', { type: 'OPEN_CHAT' });
-        }
-      }
-    };
-    return <ControllingView {...controllerProps} />;
+    return (
+        <ControllingView 
+            appState={controllerAppState}
+            setLiveAppState={setLiveAppState}
+            onStopSession={() => {
+                cleanupAbly();
+                setIsControlling(false);
+                setRemoteControlMode('inactive');
+                setControllerAppState(null);
+                setAddEventsDialogOpen(false);
+                setScheduleManagerOpen(false);
+                toast({ title: "Control Remoto Desconectado" });
+            }}
+            onOpenChat={() => {
+                if (channelRef.current) {
+                    channelRef.current.publish('action', { type: 'OPEN_CHAT' });
+                }
+            }}
+            addEventsDialogOpen={addEventsDialogOpen}
+            setAddEventsDialogOpen={setAddEventsDialogOpen}
+            scheduleManagerOpen={scheduleManagerOpen}
+            setScheduleManagerOpen={setScheduleManagerOpen}
+            openDialogForEvent={openDialogForEvent}
+            handleEventRemove={handleEventRemove}
+            getEventSelection={getEventSelection}
+            allEvents={events}
+            allChannels={channelsData}
+            isAddEventsLoading={isAddEventsLoading}
+            fetchEvents={fetchEvents}
+            handleChannelClick={handleChannelClick}
+            eventSelectionDialogOpen={eventSelectionDialogOpen}
+            setEventSelectionDialogOpen={setEventSelectionDialogOpen}
+            dialogEvent={dialogEvent}
+            handleEventSelect={handleEventSelect}
+            isOptionsLoading={isOptionsLoading}
+            modificationIndex={modificationIndex}
+            futureSelection={futureSelection}
+            setFutureSelection={setFutureSelection}
+            futureOrder={futureOrder}
+            setFutureOrder={setFutureOrder}
+            initialSelection={controllerAppState.selectedEvents}
+            initialOrder={controllerAppState.viewOrder}
+            schedules={controllerAppState.schedules}
+            onSchedulesChange={setSchedules}
+            dialogContext={dialogContext}
+            setDialogContext={setDialogContext}
+        />
+    );
   }
   
   // --- Client-side component to build the webcal:// link ---
@@ -1997,6 +2012,7 @@ export function HomePageContent() {
   
   return (
     <>
+      <div ref={remoteControlContainerRef} />
       {isViewMode ? renderViewContent() : (
         <div className="flex h-screen w-screen flex-col bg-background text-foreground">
            {isDataLoading && !isInitialLoadDone && (
@@ -2240,20 +2256,165 @@ export default function Page() {
 }
 
 // Controller View Component
-function ControllingView(props: Omit<EventListManagementProps, 'isViewPage'> & { onOpenChat: () => void }) {
-  const { onStopSession, onOpenChat } = props;
+type ControllingViewProps = {
+    appState: AppState;
+    setLiveAppState: (newState: Partial<AppState>) => void;
+    onStopSession: () => void;
+    onOpenChat: () => void;
+    addEventsDialogOpen: boolean;
+    setAddEventsDialogOpen: (open: boolean) => void;
+    scheduleManagerOpen: boolean;
+    setScheduleManagerOpen: (open: boolean) => void;
+    openDialogForEvent: (event: Event, context?: 'view' | 'schedule') => void;
+    handleEventRemove: (index: number) => void;
+    getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number; };
+    allEvents: Event[];
+    allChannels: Channel[];
+    isAddEventsLoading: boolean;
+    fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
+    handleChannelClick: (channel: Channel) => void;
+    eventSelectionDialogOpen: boolean;
+    setEventSelectionDialogOpen: (open: boolean) => void;
+    dialogEvent: Event | null;
+    handleEventSelect: (event: Event, optionUrl: string) => void;
+    isOptionsLoading: boolean;
+    modificationIndex: number | null;
+    futureSelection: (Event | null)[];
+    setFutureSelection: (selection: (Event | null)[]) => void;
+    futureOrder: number[];
+    setFutureOrder: (order: number[]) => void;
+    initialSelection: (Event | null)[];
+    initialOrder: number[];
+    schedules: Schedule[];
+    onSchedulesChange: (schedules: Schedule[]) => void;
+    dialogContext: 'view' | 'schedule';
+    setDialogContext: (context: 'view' | 'schedule') => void;
+};
 
-  return (
-    <div className="fixed inset-0 bg-background z-[200] flex flex-col">
-      <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Control Remoto</h2>
-        {onStopSession && (
-          <Button variant="destructive" size="sm" onClick={onStopSession}>
-            <X className="mr-2 h-4 w-4" /> Detener Control
-          </Button>
-        )}
-      </header>
-      <LayoutConfigurator {...props} isViewPage={true} onOpenChat={onOpenChat} />
-    </div>
-  );
+
+function ControllingView(props: ControllingViewProps) {
+    const { 
+        appState, 
+        setLiveAppState,
+        onStopSession, 
+        onOpenChat,
+        addEventsDialogOpen,
+        setAddEventsDialogOpen,
+        scheduleManagerOpen,
+        setScheduleManagerOpen,
+        openDialogForEvent,
+        handleEventRemove,
+        getEventSelection,
+        allEvents,
+        allChannels,
+        isAddEventsLoading,
+        fetchEvents,
+        handleChannelClick,
+        eventSelectionDialogOpen,
+        setEventSelectionDialogOpen,
+        dialogEvent,
+        handleEventSelect,
+        isOptionsLoading,
+        modificationIndex,
+        futureSelection,
+        setFutureSelection,
+        futureOrder,
+        setFutureOrder,
+        initialSelection,
+        initialOrder,
+        schedules,
+        onSchedulesChange,
+        dialogContext,
+        setDialogContext
+    } = props;
+    const containerRef = useRef<HTMLDivElement>(null);
+
+
+    const layoutConfiguratorProps = {
+        order: appState.viewOrder.filter(i => appState.selectedEvents[i] !== null),
+        onOrderChange: (order: number[]) => setLiveAppState({ viewOrder: order }),
+        eventDetails: appState.selectedEvents,
+        onRemove: handleEventRemove,
+        onModify: (index: number) => {
+            const event = appState.selectedEvents[index];
+            if (event) openDialogForEvent(event, 'view');
+        },
+        isViewPage: true,
+        onAddEvent: () => { setDialogContext('view'); setAddEventsDialogOpen(true); },
+        gridGap: appState.gridGap,
+        onGridGapChange: (v: number) => setLiveAppState({ gridGap: v }),
+        borderColor: appState.borderColor,
+        onBorderColorChange: (c: string) => setLiveAppState({ borderColor: c }),
+        onRestoreGridSettings: () => setLiveAppState({ gridGap: 0, borderColor: '#000000' }),
+        isChatEnabled: appState.isChatEnabled,
+        onIsChatEnabledChange: (v: boolean) => setLiveAppState({ isChatEnabled: v }),
+        onStopSession: onStopSession,
+        isRemoteControlView: true,
+        onOpenChat: onOpenChat,
+        onSchedule: () => setScheduleManagerOpen(true),
+    };
+
+    return (
+        <div ref={containerRef} className="fixed inset-0 bg-background z-[200] flex flex-col">
+            <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Control Remoto</h2>
+                {onStopSession && (
+                    <Button variant="destructive" size="sm" onClick={onStopSession}>
+                        <X className="mr-2 h-4 w-4" /> Detener Control
+                    </Button>
+                )}
+            </header>
+            
+            <LayoutConfigurator {...layoutConfiguratorProps} />
+
+            <Dialog open={addEventsDialogOpen} onOpenChange={setAddEventsDialogOpen}>
+                <AddEventsDialog
+                    container={containerRef.current ?? undefined}
+                    open={addEventsDialogOpen}
+                    onOpenChange={setAddEventsDialogOpen}
+                    onEventSelect={(event: Event) => openDialogForEvent(event, dialogContext)}
+                    onChannelClick={handleChannelClick}
+                    getEventSelection={getEventSelection}
+                    events={allEvents}
+                    channels={allChannels}
+                    isLoading={isAddEventsLoading}
+                    onFetch={fetchEvents}
+                />
+            </Dialog>
+
+            <ScheduleManager
+                container={containerRef.current ?? undefined}
+                open={scheduleManagerOpen}
+                onOpenChange={setScheduleManagerOpen}
+                currentSelection={futureSelection}
+                currentOrder={futureOrder}
+                schedules={schedules}
+                onSchedulesChange={onSchedulesChange}
+                onModifyEventInView={(index) => {
+                    const event = futureSelection[index];
+                    if (event) openDialogForEvent(event, 'schedule');
+                }}
+                isLoading={isAddEventsLoading}
+                onAddEvent={() => { setDialogContext('schedule'); setAddEventsDialogOpen(true); }}
+                initialSelection={initialSelection}
+                initialOrder={initialOrder}
+                setFutureSelection={setFutureSelection}
+                setFutureOrder={setFutureOrder}
+            />
+
+            {dialogEvent && (
+                <EventSelectionDialog
+                    container={containerRef.current ?? undefined}
+                    isOpen={eventSelectionDialogOpen}
+                    onOpenChange={setEventSelectionDialogOpen}
+                    event={dialogEvent}
+                    onSelect={handleEventSelect}
+                    isModification={modificationIndex !== null && appState.selectedEvents[modificationIndex] !== null}
+                    modificationIndex={modificationIndex}
+                    onRemove={handleEventRemove}
+                    isLoading={isOptionsLoading}
+                />
+            )}
+        </div>
+    );
 }
