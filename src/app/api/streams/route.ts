@@ -15,31 +15,80 @@ const API_ENDPOINTS: Record<string, string> = {
 
 async function fetchData(url: string, type: string) {
     const scraperApiKey = process.env.SCRAPER_API_KEY;
-    
-    let fetchUrl = url;
     const isStreamedPk = url.includes('streamed.pk');
 
-    if (isStreamedPk && scraperApiKey) {
-        fetchUrl = `http://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
-    }
-    
-    try {
-        const response = await fetch(fetchUrl, {
-            next: { revalidate: isStreamedPk ? 0 : 300 }, // No cache for scraper, 5 min for others
-        });
+    // Strategy for streamed.pk: Try direct fetch first, then fallback to scraper.
+    if (isStreamedPk) {
+        try {
+            console.log(`Attempting direct fetch for: ${url}`);
+            const directResponse = await fetch(url, {
+                next: { revalidate: 60 }, // Cache direct attempts for 1 minute
+            });
 
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`Error fetching from ${url} (via ${fetchUrl}): ${response.status} ${response.statusText}`, {errorBody});
-            throw new Error(`Failed to fetch from ${url} with status ${response.status}`);
+            if (directResponse.ok) {
+                const data = await directResponse.json();
+                // Check if data is a non-empty array, if so, return it.
+                if (Array.isArray(data) && data.length > 0) {
+                    console.log(`Direct fetch successful for: ${url}`);
+                    return data;
+                }
+                 // If data is an object (for single stream), it's also valid
+                if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+                    console.log(`Direct fetch successful for single object from: ${url}`);
+                    return data;
+                }
+                console.log(`Direct fetch for ${url} returned empty or invalid data. Proceeding to scraper.`);
+            } else {
+                 console.warn(`Direct fetch for ${url} failed with status: ${directResponse.status}. Proceeding to scraper.`);
+            }
+        } catch (e) {
+            console.warn(`Direct fetch for ${url} threw an error. Proceeding to scraper.`, e);
         }
-        
-        return response.json();
-    } catch (error) {
-        console.error(`Error in fetchData for ${url}:`, error);
-        return null; // Return null on any fetch error
+
+        // Fallback to Scraper API if direct fetch fails or returns empty array
+        if (scraperApiKey) {
+            const scraperUrl = `http://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
+            console.log(`Falling back to ScraperAPI for: ${url}`);
+            try {
+                const scraperResponse = await fetch(scraperUrl, {
+                    next: { revalidate: 0 }, // Do not cache scraper responses
+                });
+                if (!scraperResponse.ok) {
+                    const errorBody = await scraperResponse.text();
+                    console.error(`ScraperAPI fetch failed for ${url}: ${scraperResponse.status}`, { errorBody });
+                    throw new Error(`ScraperAPI fetch failed with status ${scraperResponse.status}`);
+                }
+                return scraperResponse.json();
+            } catch (error) {
+                console.error(`Error in ScraperAPI fallback for ${url}:`, error);
+                return null;
+            }
+        } else {
+            console.error("ScraperAPI key is not configured. Cannot fall back.");
+            return null;
+        }
+
+    } else {
+        // For other endpoints, use the direct fetch as before.
+        try {
+            const response = await fetch(url, {
+                next: { revalidate: 300 }, // 5 min for others
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                console.error(`Error fetching from ${url}: ${response.status} ${response.statusText}`, {errorBody});
+                throw new Error(`Failed to fetch from ${url} with status ${response.status}`);
+            }
+            
+            return response.json();
+        } catch (error) {
+            console.error(`Error in fetchData for ${url}:`, error);
+            return null; // Return null on any fetch error
+        }
     }
 }
+
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
