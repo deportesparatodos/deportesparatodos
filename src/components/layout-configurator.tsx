@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, MessageSquare } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -50,6 +50,7 @@ export interface EventListManagementProps {
   onIsErrorsOpenChange?: (open: boolean) => void;
   onStopSession?: () => void;
   isRemoteControlView?: boolean;
+  onOpenChat?: () => void;
 }
 
 export function EventList({
@@ -179,22 +180,21 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onAddEvent, onSchedule, onRemoteControl,
         onStopSession,
         isRemoteControlView = false,
+        onOpenChat,
     } = props;
         
     const order = props.order || [];
 
     return (
       <div className="flex flex-col h-full bg-background text-foreground">
-        <div className="p-4 flex-shrink-0 flex items-center justify-between">
-           <h2 className="text-lg font-semibold">Configuración</h2>
-           {onStopSession && (
-              <Button variant="destructive" size="sm" onClick={onStopSession}>
-                  <X className="mr-2 h-4 w-4" /> Desconectar
-              </Button>
-           )}
-        </div>
-        
-        <Separator />
+        {!isRemoteControlView && (
+            <>
+                <div className="p-4 flex-shrink-0 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">Configuración</h2>
+                </div>
+                <Separator />
+            </>
+        )}
 
         <ScrollArea className="flex-grow h-0">
           <div className='p-4 space-y-4'>
@@ -271,6 +271,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
+                          {onOpenChat && (
+                            <Button variant="outline" className="w-full justify-start" onClick={onOpenChat}>
+                                <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
+                            </Button>
+                          )}
                            {!isRemoteControlView && onNotificationManager && onOpenCalendar && (
                                 <>
                                   <Separator className="my-2"/>

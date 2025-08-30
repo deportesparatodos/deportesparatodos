@@ -1179,7 +1179,7 @@ export function HomePageContent() {
         }
     } else {
         const emptyIndex = selectedEvents.findIndex(e => e === null);
-        setModificationIndex(emptyIndex);
+        setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
     }
     
     setDialogEvent(eventForDialog);
@@ -1258,7 +1258,7 @@ export function HomePageContent() {
         }
     } else {
         const emptyIndex = selectedEvents.findIndex(e => e === null);
-        setModificationIndex(emptyIndex);
+        setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
     }
     
     setDialogEvent(channelAsEvent);
@@ -1385,6 +1385,9 @@ export function HomePageContent() {
                     if (message.data.type === 'SET_APP_STATE') {
                        setAppState(message.data.payload);
                     }
+                    if (message.data.type === 'OPEN_CHAT') {
+                        setIsChatOpen(true);
+                    }
                 });
                 
                 resolve(newSessionId); 
@@ -1441,18 +1444,39 @@ export function HomePageContent() {
   }
 
   if (isControlling && controllerAppState) {
-    return (
-        <ControllingView
-            containerRef={remoteControlContainerRef}
-            onStop={() => {
-                cleanupAbly();
-                setIsControlling(false);
-                setRemoteControlMode('inactive');
-                setControllerAppState(null);
-                toast({ title: "Control Remoto Desconectado" });
-            }}
-        />
-    );
+    const controllerProps = {
+      order: controllerAppState.viewOrder.filter(i => controllerAppState.selectedEvents[i] !== null),
+      onOrderChange: setViewOrder,
+      eventDetails: controllerAppState.selectedEvents,
+      onRemove: handleEventRemove,
+      onModify: (index: number) => {
+        const event = controllerAppState.selectedEvents[index];
+        if (event) openDialogForEvent(event);
+      },
+      isViewPage: true, // Show view-specific controls
+      onAddEvent: () => setAddEventsDialogOpen(true),
+      gridGap: controllerAppState.gridGap,
+      onGridGapChange: (v: number) => setLiveAppState({ gridGap: v }),
+      borderColor: controllerAppState.borderColor,
+      onBorderColorChange: (c: string) => setLiveAppState({ borderColor: c }),
+      onRestoreGridSettings: () => setLiveAppState({ gridGap: 0, borderColor: '#000000' }),
+      isChatEnabled: controllerAppState.isChatEnabled,
+      onIsChatEnabledChange: (v: boolean) => setLiveAppState({ isChatEnabled: v }),
+      onStopSession: () => {
+        cleanupAbly();
+        setIsControlling(false);
+        setRemoteControlMode('inactive');
+        setControllerAppState(null);
+        toast({ title: "Control Remoto Desconectado" });
+      },
+      isRemoteControlView: true,
+      onOpenChat: () => {
+        if (channelRef.current) {
+            channelRef.current.publish('action', { type: 'OPEN_CHAT' });
+        }
+      }
+    };
+    return <ControllingView {...controllerProps} />;
   }
   
   // --- Client-side component to build the webcal:// link ---
@@ -2216,45 +2240,20 @@ export default function Page() {
 }
 
 // Controller View Component
-function ControllingView({
-  containerRef,
-  onStop,
-}: {
-  containerRef: React.RefObject<HTMLDivElement>;
-  onStop: () => void;
-}) {
-  const [activeTab, setActiveTab] = useState('layout');
+function ControllingView(props: Omit<EventListManagementProps, 'isViewPage'> & { onOpenChat: () => void }) {
+  const { onStopSession, onOpenChat } = props;
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-background z-[200] flex flex-col">
+    <div className="fixed inset-0 bg-background z-[200] flex flex-col">
       <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Control Remoto</h2>
-        <Button variant="destructive" size="sm" onClick={onStop}>
-          <X className="mr-2 h-4 w-4" /> Detener Control
-        </Button>
+        {onStopSession && (
+          <Button variant="destructive" size="sm" onClick={onStopSession}>
+            <X className="mr-2 h-4 w-4" /> Detener Control
+          </Button>
+        )}
       </header>
-
-      <main className="flex-grow p-4 overflow-y-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="layout">Diseño</TabsTrigger>
-            <TabsTrigger value="events">Eventos</TabsTrigger>
-            <TabsTrigger value="settings">Ajustes</TabsTrigger>
-          </TabsList>
-          <TabsContent value="layout" className="mt-4">
-            {/* Future content for layout control */}
-            <p className='text-center text-muted-foreground pt-8'>Aquí podrás reordenar y gestionar la cuadrícula.</p>
-          </TabsContent>
-          <TabsContent value="events" className="mt-4">
-            {/* Future content for event management */}
-            <p className='text-center text-muted-foreground pt-8'>Aquí podrás añadir o quitar eventos de la vista.</p>
-          </TabsContent>
-          <TabsContent value="settings" className="mt-4">
-            {/* Future content for settings */}
-            <p className='text-center text-muted-foreground pt-8'>Aquí podrás ajustar opciones como el espaciado o el chat.</p>
-          </TabsContent>
-        </Tabs>
-      </main>
+      <LayoutConfigurator {...props} isViewPage={true} onOpenChat={onOpenChat} />
     </div>
   );
 }
