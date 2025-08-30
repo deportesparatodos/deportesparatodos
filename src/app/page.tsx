@@ -2344,6 +2344,7 @@ function ControllingView({
   const handleBackFromSelection = () => {
     setEventForSelection(null);
     setIsEventSelectionOpen(false);
+    setIsAddEventOpen(true);
   }
 
   return (
@@ -2377,6 +2378,7 @@ function ControllingView({
         </div>
 
         {/* --- Dialogs Rendered Here, Outside Main Layout Flow --- */}
+        
         {isAddEventOpen && (
             <RemoteAddEvents
                 open={isAddEventOpen}
@@ -2391,6 +2393,8 @@ function ControllingView({
         
         {isEventSelectionOpen && eventForSelection && (
             <RemoteEventSelection
+                open={isEventSelectionOpen}
+                onOpenChange={setIsEventSelectionOpen}
                 event={eventForSelection}
                 isModification={isModification}
                 isLoading={isEventSelectionLoading}
@@ -2424,5 +2428,3 @@ function ControllingView({
     </div>
   );
 }
-
-    

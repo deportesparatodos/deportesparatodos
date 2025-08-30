@@ -16,10 +16,12 @@ import {
 } from "@/components/ui/tooltip";
 import { Loader2, Trash2, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
-import { DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 
 
 interface RemoteEventSelectionProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   event: Event;
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
@@ -32,6 +34,8 @@ const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 
 export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
+  open,
+  onOpenChange,
   event,
   onSelect,
   isModification,
@@ -49,7 +53,11 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   const isChannel = event.category === 'Canal';
 
   return (
-      <div className="absolute inset-0 bg-background z-20 flex flex-col p-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent 
+        hideClose={true}
+        className="flex flex-col p-0 transition-all duration-300 w-screen h-screen max-w-none rounded-none"
+      >
         <DialogHeader className="p-0 border-b border-border flex-shrink-0 flex items-center gap-2 pb-4">
             <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
                 <ArrowLeft />
@@ -106,7 +114,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
             {/* Right/Bottom Panel */}
             <div className="w-full sm:w-1/2 flex flex-col border-t sm:border-t-0 sm:border-l border-border rounded-lg">
                 <ScrollArea className="flex-grow h-full">
-                    <div className="flex items-center justify-center h-full p-4">
+                    <div className="flex items-center justify-center h-full">
                         {isLoading ? (
                             <div className="flex items-center justify-center h-full">
                                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -117,7 +125,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                             </div>
                         ) : (
                             <TooltipProvider>
-                                <div className="grid grid-cols-1 gap-2 w-full max-w-xs mx-auto">
+                                <div className="grid grid-cols-1 gap-2 w-full max-w-xs mx-auto pt-0 pb-4">
                                     {event.options.map((option, index) => {
                                         const domain = getDomainFromUrl(option.url);
                                         const isSelected = selectedOptionUrl === option.url;
@@ -150,6 +158,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                 </ScrollArea>
             </div>
         </div>
-      </div>
+      </DialogContent>
+    </Dialog>
   );
 };

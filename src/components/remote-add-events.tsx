@@ -73,6 +73,7 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
     }, [searchTerm, allEvents, allChannels]);
 
     return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent 
             hideClose={true}
             className={cn(
@@ -149,5 +150,6 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
                 </Tabs>
             </div>
         </DialogContent>
+      </Dialog>
     );
 }
