@@ -2251,38 +2251,38 @@ function ControllingView({
   };
   
   const handleFetchOptionsAndOpenSelector = async (event: Event) => {
-    setIsEventSelectionOpen(true);
-    if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
-        setEventForSelection(event);
-        setIsEventSelectionLoading(false);
-        return;
-    }
+      setIsEventSelectionOpen(true);
+      if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
+          setEventForSelection(event);
+          setIsEventSelectionLoading(false);
+          return;
+      }
 
-    setEventForSelection(event);
-    setIsEventSelectionLoading(true);
+      setEventForSelection(event);
+      setIsEventSelectionLoading(true);
 
-    try {
-        const sourcePromises = event.sources.map(async (source) => {
-            const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-            if (response.ok) {
-                const streams: any[] = await response.json();
-                return streams.map(stream => ({
-                    url: stream.embedUrl,
-                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                    hd: stream.hd, language: stream.language,
-                }));
-            }
-            return [];
-        });
-        const results = await Promise.all(sourcePromises);
-        const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
-        setEventForSelection(prev => prev ? { ...prev, options: streamOptions } : null);
-    } catch (error) {
-        console.error(`Failed to fetch streams for ${event.title}`);
-        setEventForSelection(prev => prev ? { ...prev, options: [] } : null);
-    } finally {
-        setIsEventSelectionLoading(false);
-    }
+      try {
+          const sourcePromises = event.sources.map(async (source) => {
+              const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+              if (response.ok) {
+                  const streams: any[] = await response.json();
+                  return streams.map(stream => ({
+                      url: stream.embedUrl,
+                      label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                      hd: stream.hd, language: stream.language,
+                  }));
+              }
+              return [];
+          });
+          const results = await Promise.all(sourcePromises);
+          const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
+          setEventForSelection(prev => prev ? { ...prev, options: streamOptions } : null);
+      } catch (error) {
+          console.error(`Failed to fetch streams for ${event.title}`);
+          setEventForSelection(prev => prev ? { ...prev, options: [] } : null);
+      } finally {
+          setIsEventSelectionLoading(false);
+      }
   };
 
 
@@ -2377,7 +2377,7 @@ function ControllingView({
         </div>
 
         {/* --- Dialogs Rendered Here, Outside Main Layout Flow --- */}
-         <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
+        {isAddEventOpen && (
             <RemoteAddEvents
                 open={isAddEventOpen}
                 onOpenChange={setIsAddEventOpen}
@@ -2387,26 +2387,24 @@ function ControllingView({
                 allEvents={allEvents}
                 allChannels={allChannels}
             />
-        </Dialog>
+        )}
         
         {isEventSelectionOpen && eventForSelection && (
-            <Dialog open={isEventSelectionOpen} onOpenChange={setIsEventSelectionOpen}>
-                <RemoteEventSelection
-                    event={eventForSelection}
-                    isModification={isModification}
-                    isLoading={isEventSelectionLoading}
-                    onSelect={handleFinalSelectEvent}
-                    onRemove={() => {
-                        if (modificationIndex !== null) {
-                            const newSelectedEvents = [...appState.selectedEvents];
-                            newSelectedEvents[modificationIndex] = null;
-                            onAction({ selectedEvents: newSelectedEvents });
-                        }
-                        setIsEventSelectionOpen(false);
-                    }}
-                    onBack={handleBackFromSelection}
-                />
-            </Dialog>
+            <RemoteEventSelection
+                event={eventForSelection}
+                isModification={isModification}
+                isLoading={isEventSelectionLoading}
+                onSelect={handleFinalSelectEvent}
+                onRemove={() => {
+                    if (modificationIndex !== null) {
+                        const newSelectedEvents = [...appState.selectedEvents];
+                        newSelectedEvents[modificationIndex] = null;
+                        onAction({ selectedEvents: newSelectedEvents });
+                    }
+                    setIsEventSelectionOpen(false);
+                }}
+                onBack={handleBackFromSelection}
+            />
         )}
         
         {isScheduleOpen && (
@@ -2426,3 +2424,5 @@ function ControllingView({
     </div>
   );
 }
+
+    

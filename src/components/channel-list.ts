@@ -152,7 +152,7 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'NFL Network', url: 'https://streamtpglobal.com/global1.php?stream=nfl_network', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/8/8f/NFL_Network_logo.svg/1200px-NFL_Network_logo.svg.png' },
     { name: 'Sky Sports Golf', url: 'https://streamtpglobal.com/global1.php?stream=sky_sports_golf_gb', logo: 'https://yt3.googleusercontent.com/ytc/AIdro_kDF3C0A6Zxx37_DKSFEXFnjHbd2pKhjqPD7XaOEy97=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'PGA Tour 2025', url: 'https://streamtpglobal.com/global1.php?stream=eventos7', logo: 'https://gwaa.com/wp-content/uploads/2024/08/Screen-Shot-2024-08-09-at-2.01.35-PM.png' },
-    { name: 'NBC Golf Channel', url: 'https://streamtpglobal.com/global1.php?stream=golf_channel_usa', logo: 'https://nbcsports.brightspotcdn.com/dims4/default/a4787f0/2147483647/strip/true/crop/304x171+0+3/resize/1440x810!/quality/90/?url=https%3A%2F%2Fnbc-sports-production-nbc-sports.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fca%2Fb9%2F8521681bbea7ad8b97e57cdcc1f2%2Fnew-golf-channel-logo-304.jpg' },
+    { name: 'NBC Golf Channel', url: 'https://streamtpglobal.com/global1.php?stream=golf_channel_usa', logo: 'https://nbcsports.brightspotcdn.com/dims4/default/a4787f0/2147483647/strip/true/crop/304x171+0+3/resize/1440x810!/quality/90/?url=http%3A%2F%2Fnbc-sports-production-nbc-sports.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fca%2Fb9%2F8521681bbea7ad8b97e57cdcc1f2%2Fnew-golf-channel-logo-304.jpg' },
     { name: 'Fox NRL TV', url: 'https://streamtpglobal.com/global1.php?stream=eventos2', logo: 'https://origin.go.foxsports.com.au/wp-content/uploads/2017/02/aaaa_log_foxl_a-1.png' },
     { name: 'Wimbledon Open', url: 'https://streamtpglobal.com/global1.php?stream=eventos5', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Wimbledon.svg/1200px-Wimbledon.svg.png' },
 ];
@@ -184,3 +184,5 @@ filteredOriginalChannels.forEach(channel => {
 export const channels: Channel[] = Array.from(mergedChannels.values())
     // Final check to ensure no channel is left with zero options, though the pre-filtering should handle this.
     .filter(channel => channel.urls && channel.urls.length > 0);
+
+    
