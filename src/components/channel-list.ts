@@ -143,8 +143,6 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'NHL Network', url: 'https://streamtpglobal.com/global1.php?stream=nhl_network', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/NHL_Network_2012.svg/1200px-NHL_Network_2012.svg.png' },
     { name: 'Sky Sports News | SSN Breaking Sports News', url: 'https://streamtpglobal.com/global1.php?stream=ssn_gb', logo: 'https://yt3.googleusercontent.com/ImUdu6TuUxSZVnPczkhVenR-hQXUhIwoPXUIvh8hrXBzyewK8Lt0q8N50PYqCihgHeimBLIC=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'ESPN First Take', url: 'https://streamtpglobal.com/global1.php?stream=eventos3', logo: 'https://upload.wikimedia.org/wikipedia/en/1/1f/First_Take_2018_logo.png' },
-    { name: 'Sky Sports F1 | Sky F1', url: 'https://embed.ksdjugfsddeports.fun/embed/skysportsf1.html', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQg9vzqbU-z482DKPxItcBGSto52zbdHqP5Mg&s' },
-    { name: 'DAZN Formula 1 | DAZN F1', url: 'https://embed.ksdjugfsddeports.fun/embed/daznf1.html', logo: 'https://upload.wikimedia.org/wikipedia/commons/7/70/DAZN_F1_logo.png' },
     { name: 'WWE Network', url: 'https://play.alangulotv.cloud/?channel=wwe', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/88/WWE_Network_logo.svg' },
     { name: 'Tennis Channel', url: 'https://streamtpglobal.com/global1.php?stream=eventos1', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Tennis_Channel_logo.svg/1200px-Tennis_Channel_logo.svg.png' },
     { name: 'Sky Sports Darts', url: 'https://alangulotv2.com/?channel=darts', logo: 'https://yt3.googleusercontent.com/8ypSbNdhnx7_Za4wVJof0G7kYVWdlVJKdoYmtDH_s9fZPIytZ7JqWKWa48_FxUt4RJ9AzKvXoQ=s900-c-k-c0x00ffffff-no-rj' },
@@ -159,30 +157,39 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
 
 const mergedChannels = new Map<string, Channel>();
 
-// Filter out unwanted domains from the original list first
-const filteredOriginalChannels = originalChannels.filter(channel => 
-    !channel.url.includes('embed.ksdjugfsddeports.fun')
-);
-
 // Group channels by name and merge their URLs
-filteredOriginalChannels.forEach(channel => {
-    const existing = mergedChannels.get(channel.name);
-    if (existing) {
-        // Avoid adding duplicate URLs
-        if (!existing.urls.some(u => u.url === channel.url)) {
-            existing.urls.push({ url: channel.url, label: `Opción ${existing.urls.length + 1}` });
+originalChannels.forEach(channel => {
+    const urlsToKeep = [{ url: channel.url, label: 'Opción 1' }].filter(
+        u => !u.url.includes('embed.ksdjugfsddeports.fun')
+    );
+
+    if (urlsToKeep.length > 0) {
+        const existing = mergedChannels.get(channel.name);
+        if (existing) {
+            urlsToKeep.forEach(u => {
+                if (!existing.urls.some(eu => eu.url === u.url)) {
+                    existing.urls.push({ ...u, label: `Opción ${existing.urls.length + 1}` });
+                }
+            });
+        } else {
+            mergedChannels.set(channel.name, {
+                name: channel.name,
+                logo: channel.logo,
+                urls: urlsToKeep.map((u, i) => ({ ...u, label: `Opción ${i + 1}` })),
+            });
         }
-    } else {
-        mergedChannels.set(channel.name, {
-            name: channel.name,
-            logo: channel.logo,
-            urls: [{ url: channel.url, label: 'Opción 1' }],
-        });
     }
 });
 
-export const channels: Channel[] = Array.from(mergedChannels.values())
-    // Final check to ensure no channel is left with zero options, though the pre-filtering should handle this.
-    .filter(channel => channel.urls && channel.urls.length > 0);
+// Final cleanup: ensure no channel is left with zero options after merging
+Array.from(mergedChannels.keys()).forEach(name => {
+    const channel = mergedChannels.get(name)!;
+    channel.urls = channel.urls.filter(u => !u.url.includes('embed.ksdjugfsddeports.fun'));
+    if (channel.urls.length === 0) {
+        mergedChannels.delete(name);
+    }
+});
 
+
+export const channels: Channel[] = Array.from(mergedChannels.values());
     
