@@ -257,10 +257,10 @@ export function HomePageContent() {
   const setLiveAppState = useCallback((newState: Partial<AppState>) => {
     if (isControlling && channelRef.current && controllerAppState) {
         const updatedState = { ...controllerAppState, ...newState };
-        setControllerAppState(updatedState); // Update local controller state first
+        setControllerAppState(updatedState);
         channelRef.current.publish('action', {
             type: 'SET_APP_STATE',
-            payload: updatedState, // Publish the complete new state
+            payload: updatedState,
         });
     } else {
         setAppState(prevState => {
@@ -2238,198 +2238,200 @@ type ControllingViewProps = {
 };
 
 
-function ControllingView(props: ControllingViewProps) {
-    const { 
-        appState, 
-        setLiveAppState,
-        onStopSession, 
-        onOpenChat,
-        allEvents,
-        allChannels,
-        getEventSelection,
-        fetchEvents,
-    } = props;
+function ControllingView({
+  appState,
+  setLiveAppState,
+  onStopSession,
+  onOpenChat,
+  allEvents,
+  allChannels,
+  getEventSelection,
+  fetchEvents,
+}: ControllingViewProps) {
+  type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule';
+  const [view, setView] = useState<ControllingViewMode>('main');
+  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+  const [isOptionsLoading, setIsOptionsLoading] = useState(false);
+  const { toast } = useToast();
 
-    type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule';
-    const [view, setView] = useState<ControllingViewMode>('main');
-
-    const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
-    const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-    const [isOptionsLoading, setIsOptionsLoading] = useState(false);
-    const {toast} = useToast();
-    
-    const { allSortedEvents, channels247Events } = useMemo(() => {
-        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
-        const live = allEvents.filter(e => e.status === 'En Vivo');
-        const upcoming = allEvents.filter(e => e.status === 'Próximo');
-        const unknown = allEvents.filter(e => e.status === 'Desconocido');
-        const finished = allEvents.filter(e => e.status === 'Finalizado');
-        const channels247 = allEvents.filter(e => e.category === '24/7');
-        return { 
-            allSortedEvents: [...live, ...upcoming, ...unknown, ...finished],
-            channels247Events: channels247
-        };
-    }, [allEvents]);
-
-
-    const handleEventRemove = useCallback((indexToRemove: number) => {
-        const newSelectedEvents = [...appState.selectedEvents];
-        newSelectedEvents[indexToRemove] = null;
-        setLiveAppState({ selectedEvents: newSelectedEvents });
-    }, [appState.selectedEvents, setLiveAppState]);
-    
-    const openDialogForEventRemote = async (event: Event) => {
-        const selection = getEventSelection(event);
-        let eventForDialog = { ...event };
-        
-        if (selection.isSelected) {
-            setModificationIndex(selection.index);
-            if (selection.selectedOption) {
-                eventForDialog.selectedOption = selection.selectedOption;
-            }
-        } else {
-            const emptyIndex = appState.selectedEvents.findIndex(e => e === null);
-            setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
-        }
-        
-        setDialogEvent(eventForDialog);
-        setView('eventSelection');
-
-        const mainEventInState = allEvents.find(e => e.id === event.id);
-        const optionsAvailable = mainEventInState && mainEventInState.options.length > 0;
-
-        if (event.source !== 'streamed.pk' || optionsAvailable) return;
-        
-        setIsOptionsLoading(true);
-        try {
-            const sourcePromises = event.sources.map(async (source) => {
-                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                if (response.ok) {
-                    const streams: any[] = await response.json();
-                    return streams.map(stream => ({ url: stream.embedUrl, label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`, hd: stream.hd, language: stream.language }));
-                }
-                return [];
-            });
-            const results = await Promise.all(sourcePromises);
-            const streamOptions: StreamOption[] = results.flat().filter(Boolean);
-            const finalEventForDialog = { ...eventForDialog, options: streamOptions };
-            setDialogEvent(finalEventForDialog);
-        } finally {
-            setIsOptionsLoading(false);
-        }
+  const { allSortedEvents, channels247Events } = useMemo(() => {
+    const live = allEvents.filter((e) => e.status === 'En Vivo');
+    const upcoming = allEvents.filter((e) => e.status === 'Próximo');
+    const unknown = allEvents.filter((e) => e.status === 'Desconocido');
+    const finished = allEvents.filter((e) => e.status === 'Finalizado');
+    const channels247 = allEvents.filter((e) => e.category === '24/7');
+    return {
+      allSortedEvents: [...live, ...upcoming, ...unknown, ...finished],
+      channels247Events: channels247,
     };
-    
-    const handleChannelClickRemote = (channel: Channel) => {
-      const channelAsEvent: Event = {
-          id: `${channel.name}-channel-static`,
-          title: channel.name,
-          options: channel.urls.map(u => ({...u, hd: false, language: ''})),
-          sources: [], buttons: [], time: 'AHORA', category: 'Canal',
-          language: '', date: '', source: '', status: 'En Vivo', image: channel.logo,
-      };
-      openDialogForEventRemote(channelAsEvent);
-    };
-
-    const handleEventSelectRemote = (event: Event, optionUrl: string) => {
-      const eventWithSelection = { ...event, selectedOption: optionUrl };
-      const newSelectedEvents = [...appState.selectedEvents];
-      let targetIndex = -1;
-
-      if (modificationIndex !== null) {
-          targetIndex = modificationIndex;
-      } else {
-          targetIndex = newSelectedEvents.findIndex(e => e === null);
+  }, [allEvents]);
+  
+  const handleEventRemove = useCallback((indexToRemove: number) => {
+    const newSelectedEvents = [...appState.selectedEvents];
+    newSelectedEvents[indexToRemove] = null;
+    setLiveAppState({ selectedEvents: newSelectedEvents });
+  }, [appState.selectedEvents, setLiveAppState]);
+  
+  const openDialogForEventRemote = async (event: Event) => {
+    const selection = getEventSelection(event);
+    let eventForDialog = { ...event };
+    if (selection.isSelected) {
+      setModificationIndex(selection.index);
+      if (selection.selectedOption) {
+        eventForDialog.selectedOption = selection.selectedOption;
       }
-      
-      if (targetIndex !== -1) {
-          newSelectedEvents[targetIndex] = eventWithSelection;
-          setLiveAppState({ selectedEvents: newSelectedEvents });
-      } else {
-          toast({ variant: 'destructive', title: 'Selección Completa' });
-      }
-      setView('main');
+    } else {
+      const emptyIndex = appState.selectedEvents.findIndex((e) => e === null);
+      setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
+    }
+    setDialogEvent(eventForDialog);
+    setView('eventSelection');
+    
+    if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
+        return;
+    }
+
+    setIsOptionsLoading(true);
+    try {
+      const sourcePromises = event.sources.map(async (source) => {
+        const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+        if (response.ok) {
+          const streams: any[] = await response.json();
+          return streams.map((stream) => ({
+            url: stream.embedUrl,
+            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+            hd: stream.hd,
+            language: stream.language,
+          }));
+        }
+        return [];
+      });
+      const results = await Promise.all(sourcePromises);
+      const streamOptions: StreamOption[] = results.flat().filter(Boolean);
+      setDialogEvent({ ...eventForDialog, options: streamOptions });
+    } finally {
+      setIsOptionsLoading(false);
+    }
+  };
+
+  const handleChannelClickRemote = (channel: Channel) => {
+    const channelAsEvent: Event = {
+      id: `${channel.name}-channel-static`,
+      title: channel.name,
+      options: channel.urls.map((u) => ({ ...u, hd: false, language: '' })),
+      sources: [],
+      buttons: [],
+      time: 'AHORA',
+      category: 'Canal',
+      language: '',
+      date: '',
+      source: '',
+      status: 'En Vivo',
+      image: channel.logo,
     };
+    openDialogForEventRemote(channelAsEvent);
+  };
+  
+  const handleEventSelectRemote = (event: Event, optionUrl: string) => {
+    const eventWithSelection = { ...event, selectedOption: optionUrl };
+    const newSelectedEvents = [...appState.selectedEvents];
+    let targetIndex = -1;
 
-    // Render logic based on view state
-    if (view === 'addEvents') {
-        return (
-            <AddEventsDialog
-                open={true}
-                onOpenChange={(isOpen) => !isOpen && setView('main')}
-                onEventSelect={openDialogForEventRemote}
-                onChannelClick={handleChannelClickRemote}
-                getEventSelection={getEventSelection}
-                events={allSortedEvents}
-                channels={allChannels}
-                isLoading={false}
-                onFetch={fetchEvents}
-                isRemote={true}
-            />
-        );
-    }
-    
-    if (view === 'eventSelection' && dialogEvent) {
-        return (
-             <RemoteEventSelection
-                event={dialogEvent}
-                onBack={() => setView('addEvents')}
-                onSelect={handleEventSelectRemote}
-                isModification={modificationIndex !== null}
-                onRemove={() => {
-                    if(modificationIndex !== null) handleEventRemove(modificationIndex);
-                    setView('main');
-                }}
-                isLoading={isOptionsLoading}
-            />
-        );
-    }
-    
-    if (view === 'schedule') {
-        return (
-            <RemoteScheduleManager
-                onBack={() => setView('main')}
-                initialSelection={appState.selectedEvents}
-                initialOrder={appState.viewOrder}
-                schedules={appState.schedules}
-                onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
-                onAddEventFromSchedule={() => setView('addEvents')}
-             />
-        );
+    if (modificationIndex !== null) {
+      targetIndex = modificationIndex;
+    } else {
+      targetIndex = newSelectedEvents.findIndex((e) => e === null);
     }
 
-    // Default view: main remote control UI
+    if (targetIndex !== -1) {
+      newSelectedEvents[targetIndex] = eventWithSelection;
+      setLiveAppState({ selectedEvents: newSelectedEvents });
+    } else {
+      toast({ variant: 'destructive', title: 'Selección Completa' });
+    }
+    setView('main');
+  };
+
+  if (view === 'addEvents') {
     return (
-        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-            <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Control Remoto</h2>
-                <Button variant="destructive" size="sm" onClick={onStopSession}>
-                    <X className="mr-2 h-4 w-4" /> Detener Control
-                </Button>
-            </header>
-            
-            <LayoutConfigurator
-              order={appState.viewOrder.filter(i => appState.selectedEvents[i] !== null)}
-              onOrderChange={(order: number[]) => setLiveAppState({ viewOrder: order })}
-              eventDetails={appState.selectedEvents}
-              onRemove={handleEventRemove}
-              onModify={(index: number) => {
-                  const event = appState.selectedEvents[index];
-                  if (event) openDialogForEventRemote(event);
-              }}
-              isViewPage={true}
-              onAddEvent={() => setView('addEvents')}
-              onSchedule={() => setView('schedule')}
-              gridGap={appState.gridGap}
-              onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
-              borderColor={appState.borderColor}
-              onBorderColorChange={(c: string) => setLiveAppState({ borderColor: c })}
-              onRestoreGridSettings={() => setLiveAppState({ gridGap: 0, borderColor: '#000000' })}
-              isChatEnabled={appState.isChatEnabled}
-              onIsChatEnabledChange={(v: boolean) => setLiveAppState({ isChatEnabled: v })}
-              onStopSession={onStopSession}
-              isRemoteControlView={true}
-              onOpenChat={onOpenChat}
-            />
-        </div>
+      <AddEventsDialog
+        open={true}
+        onOpenChange={(isOpen) => !isOpen && setView('main')}
+        onEventSelect={openDialogForEventRemote}
+        onChannelClick={handleChannelClickRemote}
+        getEventSelection={getEventSelection}
+        events={allSortedEvents}
+        channels={allChannels}
+        isLoading={false}
+        onFetch={fetchEvents}
+        isRemote={true}
+        onBack={() => setView('main')}
+      />
     );
+  }
+  
+  if (view === 'eventSelection' && dialogEvent) {
+    return (
+      <RemoteEventSelection
+        event={dialogEvent}
+        onBack={() => setView('addEvents')}
+        onSelect={handleEventSelectRemote}
+        isModification={modificationIndex !== null}
+        onRemove={() => {
+          if (modificationIndex !== null) handleEventRemove(modificationIndex);
+          setView('main');
+        }}
+        isLoading={isOptionsLoading}
+      />
+    );
+  }
+  
+  if (view === 'schedule') {
+    return (
+      <RemoteScheduleManager
+        onBack={() => setView('main')}
+        initialSelection={appState.selectedEvents}
+        initialOrder={appState.viewOrder}
+        schedules={appState.schedules}
+        onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
+        onAddEventFromSchedule={() => setView('addEvents')}
+      />
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+      <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Control Remoto</h2>
+        <Button variant="destructive" size="sm" onClick={onStopSession}>
+          <X className="mr-2 h-4 w-4" /> Detener Control
+        </Button>
+      </header>
+      <LayoutConfigurator
+        order={appState.viewOrder.filter((i) => appState.selectedEvents[i] !== null)}
+        onOrderChange={(order: number[]) => setLiveAppState({ viewOrder: order })}
+        eventDetails={appState.selectedEvents}
+        onRemove={handleEventRemove}
+        onModify={(index: number) => {
+          const event = appState.selectedEvents[index];
+          if (event) openDialogForEventRemote(event);
+        }}
+        isViewPage={true}
+        onAddEvent={() => setView('addEvents')}
+        onSchedule={() => setView('schedule')}
+        gridGap={appState.gridGap}
+        onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
+        borderColor={appState.borderColor}
+        onBorderColorChange={(c: string) => setLiveAppState({ borderColor: c })}
+        onRestoreGridSettings={() => setLiveAppState({ gridGap: 0, borderColor: '#000000' })}
+        isChatEnabled={appState.isChatEnabled}
+        onIsChatEnabledChange={(v: boolean) => setLiveAppState({ isChatEnabled: v })}
+        onStopSession={onStopSession}
+        isRemoteControlView={true}
+        onOpenChat={onOpenChat}
+      />
+    </div>
+  );
 }
+

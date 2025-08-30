@@ -35,6 +35,7 @@ interface AddEventsDialogProps {
   onFetch: (manual: boolean, fromDialog: boolean) => void;
   container?: HTMLElement;
   isRemote?: boolean;
+  onBack?: () => void;
 }
 
 export function AddEventsDialog({ 
@@ -49,6 +50,7 @@ export function AddEventsDialog({
     onFetch,
     container,
     isRemote = false,
+    onBack,
 }: AddEventsDialogProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -95,14 +97,14 @@ export function AddEventsDialog({
     
     const Content = () => (
          <div className={cn("bg-background h-full flex flex-col", isRemote && "fixed inset-0 z-[100]")}>
-            <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0 border-b'>
+            <header className='flex-row items-center justify-between p-4 flex-shrink-0 border-b flex'>
                 <div className='flex items-center gap-2'>
-                    {isRemote && (
-                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className='h-9 w-9'>
+                    {isRemote && onBack && (
+                        <Button variant="ghost" size="icon" onClick={onBack} className='h-9 w-9'>
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                     )}
-                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
+                    <h2 className="text-lg font-semibold">Añadir Evento/Canal</h2>
                 </div>
                 <div className="flex items-center gap-2">
                     {!isRemote && (
@@ -110,11 +112,13 @@ export function AddEventsDialog({
                             {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                         </Button>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }} className='h-9 w-9'>
-                        <X className="h-5 w-5" />
-                    </Button>
+                     {!isRemote && (
+                        <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }} className='h-9 w-9'>
+                            <X className="h-5 w-5" />
+                        </Button>
+                     )}
                 </div>
-            </DialogHeader>
+            </header>
                 
             <div className="relative flex-grow flex flex-col min-h-0">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow p-4 min-h-0">
