@@ -255,18 +255,14 @@ export function HomePageContent() {
 
 
   const setLiveAppState = useCallback((newState: Partial<AppState>) => {
-    const isControllingSession = remoteControlMode === 'controlling';
-
-    if (isControllingSession && channelRef.current) {
-        // If we are the controller, we publish the new state to the controlled device
+    if (isControlling && channelRef.current && controllerAppState) {
         const updatedState = { ...controllerAppState, ...newState };
-        setControllerAppState(updatedState as AppState);
+        setControllerAppState(updatedState); // Update local controller state first
         channelRef.current.publish('action', {
             type: 'SET_APP_STATE',
-            payload: updatedState,
+            payload: updatedState, // Publish the complete new state
         });
     } else {
-        // If we are not the controller, we just update our own state
         setAppState(prevState => {
             const validatedState: AppState = { ...prevState, ...newState };
             if (!Array.isArray(validatedState.selectedEvents) || validatedState.selectedEvents === null) {
@@ -281,7 +277,7 @@ export function HomePageContent() {
             return validatedState;
         });
     }
-  }, [remoteControlMode, controllerAppState]);
+  }, [isControlling, controllerAppState]);
 
   const setSelectedEvents = (events: (Event | null)[]) => setLiveAppState({ selectedEvents: events });
   const setViewOrder = (order: number[]) => setLiveAppState({ viewOrder: order });
@@ -1134,8 +1130,8 @@ export function HomePageContent() {
   const getEventSelection = useCallback((event: Event): { isSelected: boolean; selectedOption: string | null; index: number } => {
     const sourceState = isControlling ? controllerAppState : appState;
     if (!sourceState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
-
     const selectionIndex = sourceState.selectedEvents.findIndex(se => se?.id === event.id);
+
     if (selectionIndex !== -1) {
       const selectedEvent = sourceState.selectedEvents[selectionIndex];
       return { 
@@ -2262,13 +2258,17 @@ function ControllingView(props: ControllingViewProps) {
     const [isOptionsLoading, setIsOptionsLoading] = useState(false);
     const {toast} = useToast();
     
-    const { allSortedEvents } = useMemo(() => {
+    const { allSortedEvents, channels247Events } = useMemo(() => {
         const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
         const live = allEvents.filter(e => e.status === 'En Vivo');
         const upcoming = allEvents.filter(e => e.status === 'Próximo');
         const unknown = allEvents.filter(e => e.status === 'Desconocido');
         const finished = allEvents.filter(e => e.status === 'Finalizado');
-        return { allSortedEvents: [...live, ...upcoming, ...unknown, ...finished] };
+        const channels247 = allEvents.filter(e => e.category === '24/7');
+        return { 
+            allSortedEvents: [...live, ...upcoming, ...unknown, ...finished],
+            channels247Events: channels247
+        };
     }, [allEvents]);
 
 
@@ -2347,59 +2347,53 @@ function ControllingView(props: ControllingViewProps) {
       } else {
           toast({ variant: 'destructive', title: 'Selección Completa' });
       }
-      setView('addEvents');
+      setView('main');
     };
 
     // Render logic based on view state
     if (view === 'addEvents') {
         return (
-            <Dialog open={true} onOpenChange={(isOpen) => !isOpen && setView('main')}>
-                 <AddEventsDialog
-                    open={true}
-                    onOpenChange={(isOpen) => !isOpen && setView('main')}
-                    onEventSelect={openDialogForEventRemote}
-                    onChannelClick={handleChannelClickRemote}
-                    getEventSelection={getEventSelection}
-                    events={allSortedEvents}
-                    channels={allChannels}
-                    isLoading={false}
-                    onFetch={fetchEvents}
-                    isRemote={true}
-                />
-            </Dialog>
+            <AddEventsDialog
+                open={true}
+                onOpenChange={(isOpen) => !isOpen && setView('main')}
+                onEventSelect={openDialogForEventRemote}
+                onChannelClick={handleChannelClickRemote}
+                getEventSelection={getEventSelection}
+                events={allSortedEvents}
+                channels={allChannels}
+                isLoading={false}
+                onFetch={fetchEvents}
+                isRemote={true}
+            />
         );
     }
     
     if (view === 'eventSelection' && dialogEvent) {
         return (
-             <Dialog open={true} onOpenChange={(isOpen) => !isOpen && setView('addEvents')}>
-                 <RemoteEventSelection
-                    event={dialogEvent}
-                    onBack={() => setView('addEvents')}
-                    onSelect={handleEventSelectRemote}
-                    isModification={modificationIndex !== null}
-                    onRemove={() => {
-                        if(modificationIndex !== null) handleEventRemove(modificationIndex);
-                        setView('main');
-                    }}
-                    isLoading={isOptionsLoading}
-                />
-            </Dialog>
+             <RemoteEventSelection
+                event={dialogEvent}
+                onBack={() => setView('addEvents')}
+                onSelect={handleEventSelectRemote}
+                isModification={modificationIndex !== null}
+                onRemove={() => {
+                    if(modificationIndex !== null) handleEventRemove(modificationIndex);
+                    setView('main');
+                }}
+                isLoading={isOptionsLoading}
+            />
         );
     }
     
     if (view === 'schedule') {
         return (
-            <Dialog open={true} onOpenChange={(isOpen) => !isOpen && setView('main')}>
-                <RemoteScheduleManager
-                    onBack={() => setView('main')}
-                    initialSelection={appState.selectedEvents}
-                    initialOrder={appState.viewOrder}
-                    schedules={appState.schedules}
-                    onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
-                    onAddEventFromSchedule={() => setView('addEvents')}
-                 />
-            </Dialog>
+            <RemoteScheduleManager
+                onBack={() => setView('main')}
+                initialSelection={appState.selectedEvents}
+                initialOrder={appState.viewOrder}
+                schedules={appState.schedules}
+                onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
+                onAddEventFromSchedule={() => setView('addEvents')}
+             />
         );
     }
 
