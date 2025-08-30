@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -250,7 +251,7 @@ export function HomePageContent() {
   const [controlledSessionCode, setControlledSessionCode] = useState('');
   
   // State for the controlling view specifically
-  const [isControlling, setIsControlling] = useState(isControlling);
+  const [isControlling, setIsControlling] = useState(false);
   const [controllerAppState, setControllerAppState] = useState<AppState | null>(null);
 
 
