@@ -2,6 +2,12 @@
 'use client';
 
 import { useState, useMemo, FC } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, X, Maximize, Minimize } from 'lucide-react';
@@ -16,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 
 interface RemoteAddEventsProps {
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   onEventSelect: (event: Event) => void;
   onChannelClick: (channel: Channel) => void;
@@ -25,6 +32,7 @@ interface RemoteAddEventsProps {
 }
 
 export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({ 
+    open,
     onOpenChange,
     onEventSelect,
     onChannelClick,
@@ -65,25 +73,26 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
     }, [searchTerm, allEvents, allChannels]);
 
     return (
-        <div 
+        <DialogContent 
+            hideClose={true}
             className={cn(
-                "absolute bg-background/95 backdrop-blur-sm inset-0 flex flex-col transition-all duration-300",
+                "flex flex-col p-0 transition-all duration-300",
                 isFullScreen 
-                    ? "w-full h-full"
-                    : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] max-w-4xl rounded-lg border border-border shadow-2xl"
+                    ? "w-screen h-screen max-w-none rounded-none"
+                    : "h-[90vh] sm:max-w-4xl"
             )}
         >
-            <header className='flex-row items-center justify-between p-4 flex-shrink-0 flex'>
-                <h2 className='text-lg font-semibold'>Añadir Evento/Canal</h2>
+            <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0'>
+                <DialogTitle>Añadir Evento/Canal</DialogTitle>
                  <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
                        {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                    <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }}>
                        <X className="h-5 w-5" />
                     </Button>
                 </div>
-            </header>
+            </DialogHeader>
             <Separator className='w-full flex-shrink-0' />
              
             <div className="relative flex-grow flex flex-col min-h-0">
@@ -139,6 +148,6 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
                     </ScrollArea>
                 </Tabs>
             </div>
-        </div>
+        </DialogContent>
     );
 }

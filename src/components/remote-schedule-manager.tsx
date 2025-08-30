@@ -2,9 +2,9 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Trash2, Plus, Pencil, Maximize, Minimize, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2, Plus, Pencil, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -28,6 +28,7 @@ export interface Schedule {
 }
 
 interface RemoteScheduleManagerProps {
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   initialSelection: (Event | null)[];
   initialOrder: number[];
@@ -37,6 +38,7 @@ interface RemoteScheduleManagerProps {
 }
 
 export function RemoteScheduleManager({
+  open,
   onOpenChange,
   initialSelection,
   initialOrder,
@@ -63,9 +65,11 @@ export function RemoteScheduleManager({
   };
   
   useEffect(() => {
-    resetToCurrentSelection();
+    if (open) {
+      resetToCurrentSelection();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [open]);
 
 
   const handleSaveOrUpdateSchedule = () => {
