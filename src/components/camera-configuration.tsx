@@ -22,7 +22,7 @@ interface CameraConfigurationProps {
   onAddEvent: () => void;
   onSchedule?: () => void;
   onNotificationManager: () => void;
-  onRemoteControl?: () => Promise<string | undefined>;
+  onRemoteControl?: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
