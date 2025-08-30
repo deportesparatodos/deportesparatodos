@@ -2262,10 +2262,6 @@ function ControllingView(props: ControllingViewProps) {
     const [modificationIndex, setModificationIndex] = useState<number | null>(null);
     const [isOptionsLoading, setIsOptionsLoading] = useState(false);
     const {toast} = useToast();
-
-    // Schedule specific states
-    const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(appState.selectedEvents);
-    const [futureOrder, setFutureOrder] = useState<number[]>(appState.viewOrder);
     
     const { allSortedEvents } = useMemo(() => {
         const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
@@ -2352,26 +2348,24 @@ function ControllingView(props: ControllingViewProps) {
       } else {
           toast({ variant: 'destructive', title: 'Selección Completa' });
       }
-      setView('main');
+      setView('addEvents');
     };
 
     // Render logic based on view state
     if (view === 'addEvents') {
         return (
-            <Dialog open={true} onOpenChange={(isOpen) => !isOpen && setView('main')}>
-                <AddEventsDialog
-                    open={true}
-                    onOpenChange={(isOpen) => !isOpen && setView('main')}
-                    onEventSelect={openDialogForEventRemote}
-                    onChannelClick={handleChannelClickRemote}
-                    getEventSelection={getEventSelection}
-                    events={allSortedEvents}
-                    channels={allChannels}
-                    isLoading={false}
-                    onFetch={fetchEvents}
-                    isRemote={true}
-                />
-            </Dialog>
+            <AddEventsDialog
+                open={true}
+                onOpenChange={(isOpen) => !isOpen && setView('main')}
+                onEventSelect={openDialogForEventRemote}
+                onChannelClick={handleChannelClickRemote}
+                getEventSelection={getEventSelection}
+                events={allSortedEvents}
+                channels={allChannels}
+                isLoading={false}
+                onFetch={fetchEvents}
+                isRemote={true}
+            />
         );
     }
     
@@ -2399,9 +2393,7 @@ function ControllingView(props: ControllingViewProps) {
                 initialOrder={appState.viewOrder}
                 schedules={appState.schedules}
                 onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
-                onAddEventFromSchedule={() => {
-                    setView('addEvents');
-                }}
+                onAddEventFromSchedule={() => setView('addEvents')}
              />
         );
     }
