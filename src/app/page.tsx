@@ -1142,13 +1142,6 @@ export function HomePageContent() {
     setLiveAppState({ fullscreenIndex: null });
   }, [setLiveAppState]);
 
-  const handleRemoveEventFromDialog = (eventToRemove: Event) => {
-      setSelectedEvents(prevEvents => 
-          prevEvents.map(se => (se?.id === eventToRemove.id ? null : se))
-      );
-      setEventSelectionDialogOpen(false);
-  };
-
 
  const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
     setDialogContext(context);
@@ -1156,18 +1149,21 @@ export function HomePageContent() {
 
     const selection = getEventSelection(event);
     let eventForDialog = { ...event };
+    
+    let modIndex = -1;
 
     if (selection.isSelected) {
         const originalIndex = selectedEvents.findIndex(se => se?.id === event.id);
+        modIndex = originalIndex;
         setIsModification(true);
-        setModificationIndex(originalIndex);
         if (selection.selectedOption) {
             eventForDialog.selectedOption = selection.selectedOption;
         }
     } else {
+        modIndex = selectedEvents.findIndex(e => e === null);
         setIsModification(false);
-        setModificationIndex(selectedEvents.findIndex(e => e === null));
     }
+    setModificationIndex(modIndex);
     
     setDialogEvent(eventForDialog);
 
@@ -1236,26 +1232,25 @@ export function HomePageContent() {
     };
 
     const selection = getEventSelection(channelAsEvent);
+    
+    let modIndex = -1;
     if (selection.isSelected) {
-        const selectedEvent = selectedEvents.find(se => se?.id === channelAsEvent.id);
+        const originalIndex = selectedEvents.findIndex(se => se?.id === channelAsEvent.id);
+        modIndex = originalIndex;
+        setIsModification(true);
+        const selectedEvent = selectedEvents[originalIndex];
         if (selectedEvent) {
           channelAsEvent.selectedOption = selectedEvent.selectedOption;
         }
+    } else {
+        modIndex = selectedEvents.findIndex(e => e === null);
+        setIsModification(false);
     }
-
+    
+    setModificationIndex(modIndex);
     setDialogEvent(channelAsEvent);
     setEventSelectionDialogOpen(true);
     setIsOptionsLoading(false);
-
-
-    if (selection.isSelected) {
-        setIsModification(true);
-        const originalIndex = selectedEvents.findIndex(se => se?.id === channelAsEvent.id);
-        setModificationIndex(originalIndex);
-    } else {
-        setIsModification(false);
-        setModificationIndex(selectedEvents.findIndex(e => e === null));
-    }
   };
   
   const openDialogForModification = (event: Event, index: number) => {
@@ -2123,7 +2118,7 @@ export function HomePageContent() {
             events={allSortedEvents}
             channels={channelsData}
             isLoading={isAddEventsLoading}
-            onFetch={fetchEvents}
+            onFetch={() => fetchEvents(true, true)}
         />
       </Dialog>
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -2141,7 +2136,8 @@ export function HomePageContent() {
               event={dialogEvent}
               onSelect={handleEventSelect}
               isModification={isModification}
-              onRemove={handleRemoveEventFromDialog}
+              modificationIndex={modificationIndex}
+              onRemove={handleEventRemove}
               isLoading={isOptionsLoading}
           />
       )}
