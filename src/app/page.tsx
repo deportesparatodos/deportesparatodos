@@ -67,7 +67,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Realtime } from 'ably';
 import { AddEventsDialog } from '@/components/add-events-dialog';
-import { RemoteAddEvents } from '@/components/remote-add-events';
 import { RemoteEventSelection } from '@/components/remote-event-selection';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { RemoteScheduleManager } from '@/components/remote-schedule-manager';
@@ -2253,6 +2252,7 @@ function ControllingView(props: ControllingViewProps) {
         allEvents,
         allChannels,
         getEventSelection,
+        fetchEvents,
     } = props;
 
     type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule';
@@ -2266,6 +2266,16 @@ function ControllingView(props: ControllingViewProps) {
     // Schedule specific states
     const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(appState.selectedEvents);
     const [futureOrder, setFutureOrder] = useState<number[]>(appState.viewOrder);
+    
+    const { allSortedEvents } = useMemo(() => {
+        const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
+        const live = allEvents.filter(e => e.status === 'En Vivo');
+        const upcoming = allEvents.filter(e => e.status === 'Próximo');
+        const unknown = allEvents.filter(e => e.status === 'Desconocido');
+        const finished = allEvents.filter(e => e.status === 'Finalizado');
+        return { allSortedEvents: [...live, ...upcoming, ...unknown, ...finished] };
+    }, [allEvents]);
+
 
     const handleEventRemove = useCallback((indexToRemove: number) => {
         const newSelectedEvents = [...appState.selectedEvents];
@@ -2348,14 +2358,20 @@ function ControllingView(props: ControllingViewProps) {
     // Render logic based on view state
     if (view === 'addEvents') {
         return (
-            <RemoteAddEvents
-                onBack={() => setView('main')}
-                onEventSelect={openDialogForEventRemote}
-                onChannelClick={handleChannelClickRemote}
-                getEventSelection={getEventSelection}
-                allEvents={allEvents}
-                allChannels={allChannels}
-            />
+            <Dialog open={true} onOpenChange={(isOpen) => !isOpen && setView('main')}>
+                <AddEventsDialog
+                    open={true}
+                    onOpenChange={(isOpen) => !isOpen && setView('main')}
+                    onEventSelect={openDialogForEventRemote}
+                    onChannelClick={handleChannelClickRemote}
+                    getEventSelection={getEventSelection}
+                    events={allSortedEvents}
+                    channels={allChannels}
+                    isLoading={false}
+                    onFetch={fetchEvents}
+                    isRemote={true}
+                />
+            </Dialog>
         );
     }
     

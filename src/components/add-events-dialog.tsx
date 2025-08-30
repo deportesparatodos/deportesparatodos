@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -11,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, X, Maximize, Minimize, Loader2 } from 'lucide-react';
+import { Search, X, Maximize, Minimize, Loader2, ArrowLeft } from 'lucide-react';
 import { EventCard } from './event-card';
 import type { Event } from './event-carousel';
 import { Card } from './ui/card';
@@ -33,6 +34,7 @@ interface AddEventsDialogProps {
   isLoading: boolean;
   onFetch: (manual: boolean, fromDialog: boolean) => void;
   container?: HTMLElement;
+  isRemote?: boolean;
 }
 
 export function AddEventsDialog({ 
@@ -46,6 +48,7 @@ export function AddEventsDialog({
     isLoading,
     onFetch,
     container,
+    isRemote = false,
 }: AddEventsDialogProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -87,26 +90,36 @@ export function AddEventsDialog({
 
         return { sortedEvents: filteredEvents, filteredChannels: filteredCh };
     }, [searchTerm, events, channels]);
+    
+    const DialogContentWrapper = isRemote ? 'div' : DialogContent;
+    const dialogProps = isRemote ? {} : {
+        hideClose: true,
+        className: cn(
+            "flex flex-col p-0 transition-all duration-300",
+            isFullScreen 
+                ? "w-screen h-screen max-w-none rounded-none"
+                : "h-[90vh] sm:max-w-4xl"
+        )
+    };
 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
           <DialogPortal container={container}>
-            <DialogContent 
-                hideClose={true}
-                className={cn(
-                    "flex flex-col p-0 transition-all duration-300",
-                    isFullScreen 
-                        ? "w-screen h-screen max-w-none rounded-none"
-                        : "h-[90vh] sm:max-w-4xl"
-                )}
-            >
+            <DialogContentWrapper {...dialogProps}>
                 <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0'>
+                    {isRemote && (
+                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                    )}
                     <DialogTitle>Añadir Evento/Canal</DialogTitle>
                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
-                           {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                        </Button>
+                        {!isRemote && (
+                            <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
+                                {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                            </Button>
+                        )}
                         <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }}>
                            <X className="h-5 w-5" />
                         </Button>
@@ -175,7 +188,7 @@ export function AddEventsDialog({
                         </div>
                     </Tabs>
                 </div>
-            </DialogContent>
+            </DialogContentWrapper>
           </DialogPortal>
         </Dialog>
     );
