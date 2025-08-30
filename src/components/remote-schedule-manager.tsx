@@ -9,6 +9,13 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription
+} from '@/components/ui/dialog';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -69,7 +76,7 @@ export function RemoteScheduleManager({
       resetToCurrentSelection();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, initialSelection, initialOrder]);
 
 
   const handleSaveOrUpdateSchedule = () => {
@@ -141,20 +148,21 @@ export function RemoteScheduleManager({
   const activeFutureEventsCount = currentOrder?.filter(i => currentSelection[i] !== null).length ?? 0;
 
   return (
-    <div className="absolute inset-0 bg-background z-10 flex flex-col">
-       <header className="p-4 border-b flex-shrink-0 flex-row items-center justify-between flex">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent hideClose className="w-screen h-screen max-w-none rounded-none flex flex-col p-0">
+       <DialogHeader className="p-4 border-b flex-shrink-0 flex-row items-center justify-between">
           <div>
-            <h2 className='text-lg font-semibold'>Programar Selección</h2>
-            <p className="text-sm text-muted-foreground">
+            <DialogTitle>Programar Selección</DialogTitle>
+            <DialogDescription>
               Configura o modifica una selección de eventos para que se activen en un momento específico.
-            </p>
+            </DialogDescription>
           </div>
            <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-9 w-9">
                   <X className="h-5 w-5" />
               </Button>
           </div>
-        </header>
+        </DialogHeader>
 
         <div className="grid md:grid-cols-2 flex-grow h-0 overflow-hidden">
             <div className="flex flex-col border-r border-border">
@@ -238,7 +246,10 @@ export function RemoteScheduleManager({
                             onOrderChange={handleOrderChange}
                             eventDetails={currentSelection}
                             onRemove={handleRemoveEventFromFuture}
-                            onModify={(event, index) => { /* This is complex to implement remotely, can be added later */ }}
+                            onModify={(index) => {
+                              // This is complex. For now, users can remove and re-add.
+                              alert("Para modificar un evento en una programación, por favor elimínalo y vuelve a añadirlo.");
+                            }}
                             isViewPage={true}
                         />
                     </div>
@@ -253,9 +264,7 @@ export function RemoteScheduleManager({
                  </div>
             </div>
         </div>
-        <footer className="p-4 border-t border-border flex-shrink-0 flex justify-end">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
-        </footer>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

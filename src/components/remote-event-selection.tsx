@@ -5,7 +5,7 @@
 import { FC } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import type { Event } from './event-carousel';
+import type { Event, StreamOption } from './event-carousel';
 import { Badge } from './ui/badge';
 import { cn, getDomainFromUrl } from '@/lib/utils';
 import {
@@ -69,14 +69,14 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
         hideClose={true}
         className="flex flex-col p-0 transition-all duration-300 w-screen h-screen max-w-none rounded-none"
       >
-        <DialogHeader className="p-0 border-b border-border flex-shrink-0 flex items-center gap-2 pb-4">
-            <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
+        <DialogHeader className="p-4 border-b border-border flex-shrink-0 flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={onBack} className="h-9 w-9">
                 <ArrowLeft />
             </Button>
             <DialogTitle className="text-lg font-bold truncate">{event.title}</DialogTitle>
         </DialogHeader>
         
-        <div className="flex-grow flex flex-col sm:flex-row gap-4 pt-4 overflow-hidden">
+        <div className="flex-grow flex flex-col sm:flex-row gap-4 p-4 overflow-hidden">
 
             {/* Left/Top Panel */}
             <div className="w-full sm:w-1/2 flex-shrink-0 flex flex-col">
@@ -109,7 +109,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                   </div>
                 </div>
                 {isModification && (
-                    <div className="mt-auto">
+                    <div className="mt-auto p-4">
                         <Button
                             variant="destructive"
                             className="w-full"
@@ -125,7 +125,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
             {/* Right/Bottom Panel */}
             <div className="w-full sm:w-1/2 flex flex-col border-t sm:border-t-0 sm:border-l border-border rounded-lg">
                 <ScrollArea className="flex-grow h-full">
-                    <div className="flex items-center justify-center h-full">
+                    <div className="flex items-center justify-center h-full p-4">
                         {isLoading ? (
                             <div className="flex items-center justify-center h-full">
                                 <Loader2 className="h-8 w-8 animate-spin" />
