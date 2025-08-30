@@ -2255,7 +2255,6 @@ function ControllingView(props: ControllingViewProps) {
         allEvents,
         allChannels,
         getEventSelection,
-        fetchEvents,
     } = props;
 
     // State for the remote dialogs
