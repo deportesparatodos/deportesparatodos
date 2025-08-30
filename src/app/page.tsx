@@ -2130,20 +2130,19 @@ export function HomePageContent() {
       )}
 
       {/* Dialogs at top level */}
-      <Dialog open={addEventsDialogOpen} onOpenChange={setAddEventsDialogOpen}>
-        <AddEventsDialog
-            open={addEventsDialogOpen}
-            onOpenChange={setAddEventsDialogOpen}
-            onEventSelect={(event: Event) => openDialogForEvent(event, dialogContext)}
-            onChannelClick={handleChannelClick}
-            getEventSelection={getEventSelection}
-            events={allSortedEvents}
-            channels={channelsData}
-            isLoading={isAddEventsLoading}
-            onFetch={() => fetchEvents(true, true)}
-            container={remoteControlContainerRef.current ?? undefined}
-        />
-      </Dialog>
+      <AddEventsDialog
+          open={addEventsDialogOpen}
+          onOpenChange={setAddEventsDialogOpen}
+          onEventSelect={(event: Event) => openDialogForEvent(event, dialogContext)}
+          onChannelClick={handleChannelClick}
+          getEventSelection={getEventSelection}
+          events={allSortedEvents}
+          channels={channelsData}
+          isLoading={isAddEventsLoading}
+          onFetch={() => fetchEvents(true, true)}
+          container={remoteControlContainerRef.current ?? undefined}
+          isRemote={false}
+      />
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
           <CalendarDialogContent categories={categories} />
       </Dialog>
@@ -2354,47 +2353,53 @@ function ControllingView(props: ControllingViewProps) {
     // Render logic based on view state
     if (view === 'addEvents') {
         return (
-            <AddEventsDialog
-                open={true}
-                onOpenChange={(isOpen) => !isOpen && setView('main')}
-                onEventSelect={openDialogForEventRemote}
-                onChannelClick={handleChannelClickRemote}
-                getEventSelection={getEventSelection}
-                events={allSortedEvents}
-                channels={allChannels}
-                isLoading={false}
-                onFetch={fetchEvents}
-                isRemote={true}
-            />
+            <Dialog open={true} onOpenChange={(isOpen) => !isOpen && setView('main')}>
+                 <AddEventsDialog
+                    open={true}
+                    onOpenChange={(isOpen) => !isOpen && setView('main')}
+                    onEventSelect={openDialogForEventRemote}
+                    onChannelClick={handleChannelClickRemote}
+                    getEventSelection={getEventSelection}
+                    events={allSortedEvents}
+                    channels={allChannels}
+                    isLoading={false}
+                    onFetch={fetchEvents}
+                    isRemote={true}
+                />
+            </Dialog>
         );
     }
     
     if (view === 'eventSelection' && dialogEvent) {
         return (
-             <RemoteEventSelection
-                event={dialogEvent}
-                onBack={() => setView('addEvents')}
-                onSelect={handleEventSelectRemote}
-                isModification={modificationIndex !== null}
-                onRemove={() => {
-                    if(modificationIndex !== null) handleEventRemove(modificationIndex);
-                    setView('main');
-                }}
-                isLoading={isOptionsLoading}
-            />
+             <Dialog open={true} onOpenChange={(isOpen) => !isOpen && setView('addEvents')}>
+                 <RemoteEventSelection
+                    event={dialogEvent}
+                    onBack={() => setView('addEvents')}
+                    onSelect={handleEventSelectRemote}
+                    isModification={modificationIndex !== null}
+                    onRemove={() => {
+                        if(modificationIndex !== null) handleEventRemove(modificationIndex);
+                        setView('main');
+                    }}
+                    isLoading={isOptionsLoading}
+                />
+            </Dialog>
         );
     }
     
     if (view === 'schedule') {
         return (
-            <RemoteScheduleManager
-                onBack={() => setView('main')}
-                initialSelection={appState.selectedEvents}
-                initialOrder={appState.viewOrder}
-                schedules={appState.schedules}
-                onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
-                onAddEventFromSchedule={() => setView('addEvents')}
-             />
+            <Dialog open={true} onOpenChange={(isOpen) => !isOpen && setView('main')}>
+                <RemoteScheduleManager
+                    onBack={() => setView('main')}
+                    initialSelection={appState.selectedEvents}
+                    initialOrder={appState.viewOrder}
+                    schedules={appState.schedules}
+                    onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
+                    onAddEventFromSchedule={() => setView('addEvents')}
+                 />
+            </Dialog>
         );
     }
 

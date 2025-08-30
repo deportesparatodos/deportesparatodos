@@ -59,9 +59,11 @@ export function AddEventsDialog({
             setSearchTerm('');
             setIsFullScreen(false);
         } else {
-            setIsFullScreen(true); // Default to full screen when opened
+             if (isRemote) {
+                setIsFullScreen(true);
+            }
         }
-    }, [open]);
+    }, [open, isRemote]);
 
     const { sortedEvents, filteredChannels } = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
@@ -91,104 +93,112 @@ export function AddEventsDialog({
         return { sortedEvents: filteredEvents, filteredChannels: filteredCh };
     }, [searchTerm, events, channels]);
     
-    const DialogContentWrapper = isRemote ? 'div' : DialogContent;
-    const dialogProps = isRemote ? {} : {
-        hideClose: true,
-        className: cn(
-            "flex flex-col p-0 transition-all duration-300",
-            isFullScreen 
-                ? "w-screen h-screen max-w-none rounded-none"
-                : "h-[90vh] sm:max-w-4xl"
-        )
-    };
-
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-          <DialogPortal container={container}>
-            <DialogContentWrapper {...dialogProps}>
-                <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0'>
+    const Content = () => (
+         <div className={cn("bg-background h-full flex flex-col", isRemote && "fixed inset-0 z-[100]")}>
+            <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0 border-b'>
+                <div className='flex items-center gap-2'>
                     {isRemote && (
-                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                        <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className='h-9 w-9'>
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                     )}
                     <DialogTitle>Añadir Evento/Canal</DialogTitle>
-                     <div className="flex items-center gap-2">
-                        {!isRemote && (
-                            <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
-                                {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                            </Button>
-                        )}
-                        <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }}>
-                           <X className="h-5 w-5" />
-                        </Button>
-                    </div>
-                </DialogHeader>
-                <Separator className='w-full flex-shrink-0' />
-                 
-                <div className="relative flex-grow flex flex-col min-h-0">
-                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow p-4 min-h-0">
-                        <div className="flex-shrink-0">
-                            <div className="relative mb-4">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                <Input
-                                    type="text"
-                                    placeholder="Buscar..."
-                                    className="w-full pl-10"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="events">Eventos</TabsTrigger>
-                                <TabsTrigger value="channels">Canales</TabsTrigger>
-                            </TabsList>
-                        </div>
-                        
-                        <div className="flex-grow h-0 mt-4">
-                          {isLoading ? (
-                            <div className="flex items-center justify-center h-full">
-                              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            </div>
-                          ) : (
-                            <ScrollArea className="h-full">
-                                <TabsContent value="events" className="mt-0">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                        {sortedEvents.map((event, index) => (
-                                            <EventCard key={`dialog-event-${event.id}-${index}`} event={event} selection={getEventSelection(event)} onClick={() => onEventSelect(event)} />
-                                        ))}
-                                    </div>
-                                </TabsContent>
-                                <TabsContent value="channels" className="mt-0">
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                         {filteredChannels.map((channel, index) => {
-                                            const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
-                                            const selection = getEventSelection(channelAsEvent);
-                                            return (
-                                                <Card key={`dialog-channel-${index}`} onClick={() => onChannelClick(channel)} className="cursor-pointer group rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border h-full w-full flex flex-col">
-                                                    <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white flex-shrink-0">
-                                                         <Image src={channel.logo} alt={channel.name} fill className="object-contain" />
-                                                          {selection.isSelected && (
-                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
-                                                        <h3 className="font-bold text-sm text-center">{channel.name}</h3>
-                                                    </div>
-                                                </Card>
-                                            )
-                                         })}
-                                    </div>
-                                </TabsContent>
-                            </ScrollArea>
-                          )}
-                        </div>
-                    </Tabs>
                 </div>
-            </DialogContentWrapper>
+                <div className="flex items-center gap-2">
+                    {!isRemote && (
+                        <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)} className='h-9 w-9'>
+                            {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                        </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }} className='h-9 w-9'>
+                        <X className="h-5 w-5" />
+                    </Button>
+                </div>
+            </DialogHeader>
+                
+            <div className="relative flex-grow flex flex-col min-h-0">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow p-4 min-h-0">
+                    <div className="flex-shrink-0">
+                        <div className="relative mb-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Buscar..."
+                                className="w-full pl-10"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="events">Eventos</TabsTrigger>
+                            <TabsTrigger value="channels">Canales</TabsTrigger>
+                        </TabsList>
+                    </div>
+                    
+                    <div className="flex-grow h-0 mt-4">
+                        {isLoading ? (
+                        <div className="flex items-center justify-center h-full">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                        ) : (
+                        <ScrollArea className="h-full">
+                            <TabsContent value="events" className="mt-0">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    {sortedEvents.map((event, index) => (
+                                        <EventCard key={`dialog-event-${event.id}-${index}`} event={event} selection={getEventSelection(event)} onClick={() => onEventSelect(event)} />
+                                    ))}
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="channels" className="mt-0">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                        {filteredChannels.map((channel, index) => {
+                                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                                        const selection = getEventSelection(channelAsEvent);
+                                        return (
+                                            <Card key={`dialog-channel-${index}`} onClick={() => onChannelClick(channel)} className="cursor-pointer group rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border border-border h-full w-full flex flex-col">
+                                                <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white flex-shrink-0">
+                                                        <Image src={channel.logo} alt={channel.name} fill className="object-contain" />
+                                                        {selection.isSelected && (
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
+                                                    <h3 className="font-bold text-sm text-center">{channel.name}</h3>
+                                                </div>
+                                            </Card>
+                                        )
+                                        })}
+                                </div>
+                            </TabsContent>
+                        </ScrollArea>
+                        )}
+                    </div>
+                </Tabs>
+            </div>
+        </div>
+    );
+
+
+    if (isRemote) {
+        return <Content />;
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+          <DialogPortal container={container}>
+            <DialogContent 
+                hideClose={true}
+                className={cn(
+                    "flex flex-col p-0 transition-all duration-300 bg-background",
+                    isFullScreen 
+                        ? "w-screen h-screen max-w-none rounded-none"
+                        : "h-[90vh] sm:max-w-4xl"
+                )}
+            >
+               <Content />
+            </DialogContent>
           </DialogPortal>
         </Dialog>
     );
