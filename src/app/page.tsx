@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -251,7 +250,7 @@ export function HomePageContent() {
   const [controlledSessionCode, setControlledSessionCode] = useState('');
   
   // State for the controlling view specifically
-  const [isControlling, setIsControlling] = useState(false);
+  const [isControlling, setIsControlling] = useState(isControlling);
   const [controllerAppState, setControllerAppState] = useState<AppState | null>(null);
 
 
@@ -387,17 +386,29 @@ export function HomePageContent() {
         { name: 'tc-chaser', url: '/api/streams?type=tc-chaser' },
       ];
 
-      // Fetch scraped endpoints sequentially
+      // Fetch scraped endpoints with error handling
       const scrapedResults: Record<string, any> = {};
-      for (const endpoint of endpointsToScrape) {
-          const response = await fetch(`/api/streams?type=${endpoint.name}`);
-          if (response.ok) {
-              scrapedResults[endpoint.name] = await response.json();
-          } else {
-              console.error(`Error fetching ${endpoint.name}: ${response.status} ${response.statusText}`);
-              scrapedResults[endpoint.name] = [];
-          }
+      try {
+        const scrapePromises = endpointsToScrape.map(endpoint => 
+          fetch(`/api/streams?type=${endpoint.name}`).then(async res => {
+            if (!res.ok) {
+              const errorText = await res.text();
+              console.error(`Error fetching ${endpoint.name}: ${res.status} ${res.statusText}`, errorText);
+              return { name: endpoint.name, data: [] }; // Return empty on error
+            }
+            return { name: endpoint.name, data: await res.json() };
+          })
+        );
+        const results = await Promise.all(scrapePromises);
+        results.forEach(result => {
+          scrapedResults[result.name] = result.data;
+        });
+
+      } catch (scrapeError) {
+          console.error("Critical error during scraping, continuing with empty data:", scrapeError);
+          endpointsToScrape.forEach(ep => scrapedResults[ep.name] = []);
       }
+
 
       // Fetch other endpoints in parallel
       const otherResults = await Promise.allSettled(
@@ -1115,9 +1126,9 @@ export function HomePageContent() {
     setModificationIndex(null);
   };
   
-  const handleEventRemove = useCallback((windowIndex: number) => {
+  const handleEventRemove = useCallback((indexToRemove: number) => {
     const newSelectedEvents = [...selectedEvents];
-    newSelectedEvents[windowIndex] = null;
+    newSelectedEvents[indexToRemove] = null;
     setSelectedEvents(newSelectedEvents);
   }, [selectedEvents, setSelectedEvents]);
   
@@ -1436,10 +1447,6 @@ export function HomePageContent() {
     return (
         <ControllingView
             containerRef={remoteControlContainerRef}
-            appState={controllerAppState}
-            onAction={setLiveAppState}
-            allEvents={events}
-            allChannels={channelsData}
             onStop={() => {
                 cleanupAbly();
                 setIsControlling(false);
@@ -1596,7 +1603,7 @@ export function HomePageContent() {
                                     <p>Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) en la esquina superior derecha. Se abrirá un panel donde podrás ver tu selección, reordenar las ventanas o eliminarlas.</p>
                                     
                                     <h3 className="font-bold text-foreground mt-4">3. Inicia la Transmisión</h3>
-                                    <p>Una vez que estés listo, presiona el botón de "Play" (<Play className="inline-block h-4 w-4" />). Tu pantalla se dividirá para mostrar todos los eventos que elegiste.</p>
+                                    <p>Once you are ready, press the "Play" button (<Play className="inline-block h-4 w-4" />). Your screen will split to show all the events you chose.</p>
 
                                     <h3 className="font-bold text-foreground mt-4">4. Control Remoto y Programación</h3>
                                     <p>Puedes controlar la vista desde otro dispositivo activando el <strong>Control Remoto</strong> en el menú de configuración. También puedes <strong>Programar</strong> una selección de eventos para que se active a una hora específica.</p>
@@ -2217,219 +2224,44 @@ export default function Page() {
 function ControllingView({
   containerRef,
   onStop,
-  appState,
-  onAction,
-  allEvents,
-  allChannels,
 }: {
   containerRef: React.RefObject<HTMLDivElement>;
   onStop: () => void;
-  appState: AppState;
-  onAction: (newState: Partial<AppState>) => void;
-  allEvents: Event[];
-  allChannels: Channel[];
 }) {
-  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
-  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
-  const [isEventSelectionOpen, setIsEventSelectionOpen] = useState(false);
-  
-  const [eventForSelection, setEventForSelection] = useState<Event | null>(null);
-  const [isEventSelectionLoading, setIsEventSelectionLoading] = useState(false);
-  
-  const [isModification, setIsModification] = useState(false);
-  const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-
-  const { toast } = useToast();
-
-  const getEventSelection = (event: Event) => {
-    const selectionIndex = appState.selectedEvents.findIndex((se: Event | null) => se?.id === event.id);
-    if (selectionIndex !== -1 && appState.selectedEvents[selectionIndex]) {
-      return {
-        isSelected: true,
-        selectedOption: appState.selectedEvents[selectionIndex]!.selectedOption,
-      };
-    }
-    return { isSelected: false, selectedOption: null };
-  };
-  
-  const handleFetchOptionsAndOpenSelector = async (event: Event) => {
-      setIsEventSelectionOpen(true);
-      if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
-          setEventForSelection(event);
-          setIsEventSelectionLoading(false);
-          return;
-      }
-
-      setEventForSelection(event);
-      setIsEventSelectionLoading(true);
-
-      try {
-          const sourcePromises = event.sources.map(async (source) => {
-              const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-              if (response.ok) {
-                  const streams: any[] = await response.json();
-                  return streams.map(stream => ({
-                      url: stream.embedUrl,
-                      label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                      hd: stream.hd, language: stream.language,
-                  }));
-              }
-              return [];
-          });
-          const results = await Promise.all(sourcePromises);
-          const streamOptions: StreamOption[] = results.flat().filter(Boolean) as StreamOption[];
-          setEventForSelection(prev => prev ? { ...prev, options: streamOptions } : null);
-      } catch (error) {
-          console.error(`Failed to fetch streams for ${event.title}`);
-          setEventForSelection(prev => prev ? { ...prev, options: [] } : null);
-      } finally {
-          setIsEventSelectionLoading(false);
-      }
-  };
-
-
-  const handleModifyEventInList = (event: Event, index: number) => {
-    const currentEventState = appState.selectedEvents[index];
-    if (!currentEventState) return;
-    
-    const fullEventData = allEvents.find((e) => e.id === event.id) || event;
-    
-    setIsModification(true);
-    setModificationIndex(index);
-    handleFetchOptionsAndOpenSelector({ ...fullEventData, selectedOption: currentEventState.selectedOption });
-  };
-  
-  const handleOpenAddEvent = () => {
-      setIsAddEventOpen(true);
-  };
-  
-  const handleOpenSchedule = () => setIsScheduleOpen(true);
-
-  const handleSelectEventFromList = (event: Event) => {
-    const targetIndex = appState.selectedEvents.findIndex((e: Event | null) => e === null);
-    setIsModification(false);
-    setModificationIndex(targetIndex);
-    handleFetchOptionsAndOpenSelector(event);
-  };
-
-  const handleChannelClick = (channel: Channel) => {
-    const targetIndex = appState.selectedEvents.findIndex((e: Event | null) => e === null);
-    if (targetIndex !== -1) {
-      const event: Event = {
-        id: `${channel.name}-channel-static`,
-        title: channel.name,
-        options: channel.urls.map((u) => ({ ...u, hd: false, language: '' })),
-        sources: [], buttons: [], time: 'AHORA', category: 'Canal',
-        language: '', date: '', source: '', status: 'En Vivo', image: channel.logo,
-      };
-      setIsModification(false);
-      setModificationIndex(targetIndex);
-      handleFetchOptionsAndOpenSelector(event);
-    } else {
-        toast({
-            variant: 'destructive',
-            title: 'Selección Completa',
-            description: 'No hay espacios libres para añadir un canal.',
-        });
-    }
-  };
-
-  const handleFinalSelectEvent = (event: Event, option: string) => {
-    if (modificationIndex !== null && modificationIndex >= 0) {
-      const newSelectedEvents = [...appState.selectedEvents];
-      newSelectedEvents[modificationIndex] = { ...event, selectedOption: option };
-      onAction({ selectedEvents: newSelectedEvents });
-    }
-    setIsEventSelectionOpen(false);
-  };
-  
-  const handleBackFromSelection = () => {
-    setEventForSelection(null);
-    setIsEventSelectionOpen(false);
-    setIsAddEventOpen(true);
-  }
+  const [activeTab, setActiveTab] = useState('layout');
 
   return (
     <div ref={containerRef} className="fixed inset-0 bg-background z-[200] flex flex-col">
-       <div className="h-full w-full">
-            <LayoutConfigurator
-                order={appState.viewOrder.filter((i: number) => appState.selectedEvents[i] !== null)}
-                onOrderChange={(newOrder: number[]) => onAction({ viewOrder: newOrder })}
-                eventDetails={appState.selectedEvents}
-                onRemove={(indexToRemove: number) => {
-                    const newSelectedEvents = [...appState.selectedEvents];
-                    newSelectedEvents[indexToRemove] = null;
-                    onAction({ selectedEvents: newSelectedEvents });
-                }}
-                onModify={handleModifyEventInList}
-                isViewPage={true}
-                onAddEvent={handleOpenAddEvent}
-                onSchedule={handleOpenSchedule}
-                onToggleFullscreen={(index) => onAction({ fullscreenIndex: appState.fullscreenIndex === index ? null : index })}
-                fullscreenIndex={appState.fullscreenIndex}
-                gridGap={appState.gridGap}
-                onGridGapChange={(value) => onAction({ gridGap: value })}
-                borderColor={appState.borderColor}
-                onBorderColorChange={(value) => onAction({ borderColor: value })}
-                isChatEnabled={appState.isChatEnabled}
-                onIsChatEnabledChange={(value) => onAction({ isChatEnabled: value })}
-                onRestoreGridSettings={() => onAction({ gridGap: 0, borderColor: '#000000' })}
-                onStopSession={onStop}
-                isRemoteControlView={true}
-            />
-        </div>
+      <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Control Remoto</h2>
+        <Button variant="destructive" size="sm" onClick={onStop}>
+          <X className="mr-2 h-4 w-4" /> Detener Control
+        </Button>
+      </header>
 
-        {/* --- Dialogs Rendered Here, Outside Main Layout Flow --- */}
-        
-        <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-            <RemoteAddEvents
-                open={isAddEventOpen}
-                onOpenChange={setIsAddEventOpen}
-                onEventSelect={handleSelectEventFromList}
-                onChannelClick={handleChannelClick}
-                getEventSelection={getEventSelection}
-                allEvents={allEvents}
-                allChannels={allChannels}
-            />
-        </Dialog>
-        
-        <Dialog open={isEventSelectionOpen} onOpenChange={setIsEventSelectionOpen}>
-            {eventForSelection && (
-                <RemoteEventSelection
-                    open={isEventSelectionOpen}
-                    onOpenChange={setIsEventSelectionOpen}
-                    event={eventForSelection}
-                    isModification={isModification}
-                    isLoading={isEventSelectionLoading}
-                    onSelect={handleFinalSelectEvent}
-                    onRemove={() => {
-                        if (modificationIndex !== null) {
-                            const newSelectedEvents = [...appState.selectedEvents];
-                            newSelectedEvents[modificationIndex] = null;
-                            onAction({ selectedEvents: newSelectedEvents });
-                        }
-                        setIsEventSelectionOpen(false);
-                    }}
-                    onBack={handleBackFromSelection}
-                />
-            )}
-        </Dialog>
-        
-        {isScheduleOpen && (
-             <RemoteScheduleManager
-              open={isScheduleOpen}
-              onOpenChange={setIsScheduleOpen}
-              initialSelection={appState.selectedEvents}
-              initialOrder={appState.viewOrder}
-              schedules={appState.schedules}
-              onSchedulesChange={(newSchedules) => onAction({ schedules: newSchedules })}
-              onAddEventFromSchedule={() => {
-                  setIsScheduleOpen(false);
-                  setIsAddEventOpen(true);
-              }}
-            />
-        )}
+      <main className="flex-grow p-4 overflow-y-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="layout">Diseño</TabsTrigger>
+            <TabsTrigger value="events">Eventos</TabsTrigger>
+            <TabsTrigger value="settings">Ajustes</TabsTrigger>
+          </TabsList>
+          <TabsContent value="layout" className="mt-4">
+            {/* Future content for layout control */}
+            <p className='text-center text-muted-foreground pt-8'>Aquí podrás reordenar y gestionar la cuadrícula.</p>
+          </TabsContent>
+          <TabsContent value="events" className="mt-4">
+            {/* Future content for event management */}
+            <p className='text-center text-muted-foreground pt-8'>Aquí podrás añadir o quitar eventos de la vista.</p>
+          </TabsContent>
+          <TabsContent value="settings" className="mt-4">
+            {/* Future content for settings */}
+            <p className='text-center text-muted-foreground pt-8'>Aquí podrás ajustar opciones como el espaciado o el chat.</p>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 }
 
+    
