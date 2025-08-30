@@ -2,15 +2,9 @@
 'use client';
 
 import { useState, useMemo, FC } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, X, Maximize, Minimize } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import { EventCard } from './event-card';
 import type { Event } from './event-carousel';
 import { Card } from './ui/card';
@@ -19,11 +13,9 @@ import type { Channel } from './channel-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Separator } from './ui/separator';
 
 interface RemoteAddEventsProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onBack: () => void;
   onEventSelect: (event: Event) => void;
   onChannelClick: (channel: Channel) => void;
   getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
@@ -32,8 +24,7 @@ interface RemoteAddEventsProps {
 }
 
 export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({ 
-    open,
-    onOpenChange,
+    onBack,
     onEventSelect,
     onChannelClick,
     getEventSelection,
@@ -41,7 +32,6 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
     allChannels,
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [isFullScreen, setIsFullScreen] = useState(false);
     const [activeTab, setActiveTab] = useState('events');
 
     const { sortedEvents, filteredChannels } = useMemo(() => {
@@ -73,28 +63,13 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
     }, [searchTerm, allEvents, allChannels]);
 
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent 
-            hideClose={true}
-            className={cn(
-                "flex flex-col p-0 transition-all duration-300",
-                isFullScreen 
-                    ? "w-screen h-screen max-w-none rounded-none"
-                    : "h-[90vh] sm:max-w-4xl"
-            )}
-        >
-            <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0'>
-                <DialogTitle>Añadir Evento/Canal</DialogTitle>
-                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)}>
-                       {isFullScreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => { onOpenChange(false); }}>
-                       <X className="h-5 w-5" />
-                    </Button>
-                </div>
-            </DialogHeader>
-            <Separator className='w-full flex-shrink-0' />
+        <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+            <header className='p-4 border-b border-border flex-shrink-0 flex items-center gap-2'>
+                <Button variant="ghost" size="icon" onClick={onBack}>
+                   <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h2 className="text-lg font-semibold">Añadir Evento/Canal</h2>
+            </header>
              
             <div className="relative flex-grow flex flex-col min-h-0">
                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow p-4 min-h-0">
@@ -149,7 +124,6 @@ export const RemoteAddEvents: FC<RemoteAddEventsProps> = ({
                     </ScrollArea>
                 </Tabs>
             </div>
-        </DialogContent>
-      </Dialog>
+        </div>
     );
 }

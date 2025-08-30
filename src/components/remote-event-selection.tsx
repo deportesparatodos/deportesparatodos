@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { FC } from 'react';
@@ -16,33 +15,26 @@ import {
 } from "@/components/ui/tooltip";
 import { Loader2, Trash2, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
-
 interface RemoteEventSelectionProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   event: Event;
+  onBack: () => void;
   onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
   onRemove: () => void;
   isLoading: boolean;
-  onBack: () => void;
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
-
 export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
-  open,
-  onOpenChange,
   event,
+  onBack,
   onSelect,
   isModification,
   onRemove,
   isLoading,
-  onBack,
 }) => {
   const { toast } = useToast();
   if (!event) return null;
@@ -64,23 +56,18 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        hideClose={true}
-        className="flex flex-col p-0 transition-all duration-300 w-screen h-screen max-w-none rounded-none"
-      >
-        <DialogHeader className="p-4 border-b border-border flex-shrink-0 flex items-center gap-2">
+    <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+        <header className="p-4 border-b border-border flex-shrink-0 flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={onBack} className="h-9 w-9">
                 <ArrowLeft />
             </Button>
-            <DialogTitle className="text-lg font-bold truncate">{event.title}</DialogTitle>
-        </DialogHeader>
-        
+            <h2 className="text-lg font-bold truncate">{event.title}</h2>
+        </header>
+      
         <div className="flex-grow flex flex-col sm:flex-row gap-4 p-4 overflow-hidden">
-
             {/* Left/Top Panel */}
-            <div className="w-full sm:w-1/2 flex-shrink-0 flex flex-col">
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+            <div className="w-full sm:w-1/2 flex-shrink-0 flex flex-col bg-card rounded-lg border border-border">
+                <div className="relative w-full aspect-video rounded-t-lg overflow-hidden">
                     <Image
                         src={event.image || 'https://i.ibb.co/dHPWxr8/depete.jpg'}
                         alt={event.title}
@@ -93,7 +80,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                         }}
                     />
                 </div>
-                <div className="p-4 text-center">
+                <div className="p-4 text-center flex-grow flex flex-col">
                   <h3 className="text-lg font-bold">{event.title}</h3>
                   <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mt-1">
                       {timeDisplay && <p className="font-semibold">{timeDisplay}</p>}
@@ -107,9 +94,8 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                           )}>{event.status}</Badge>
                       )}
                   </div>
-                </div>
-                {isModification && (
-                    <div className="mt-auto p-4">
+                   {isModification && (
+                    <div className="mt-auto pt-4">
                         <Button
                             variant="destructive"
                             className="w-full"
@@ -120,10 +106,11 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                         </Button>
                     </div>
                 )}
+                </div>
             </div>
 
             {/* Right/Bottom Panel */}
-            <div className="w-full sm:w-1/2 flex flex-col border-t sm:border-t-0 sm:border-l border-border rounded-lg">
+            <div className="w-full sm:w-1/2 flex flex-col bg-card rounded-lg border border-border">
                 <ScrollArea className="flex-grow h-full">
                     <div className="flex items-center justify-center h-full p-4">
                         {isLoading ? (
@@ -169,7 +156,6 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                 </ScrollArea>
             </div>
         </div>
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 };

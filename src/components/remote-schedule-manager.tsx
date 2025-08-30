@@ -1,25 +1,13 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Trash2, Plus, Pencil, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2, Plus, Pencil, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription
-} from '@/components/ui/dialog';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from './ui/label';
 import type { Event } from './event-carousel';
@@ -35,8 +23,7 @@ export interface Schedule {
 }
 
 interface RemoteScheduleManagerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onBack: () => void;
   initialSelection: (Event | null)[];
   initialOrder: number[];
   schedules: Schedule[];
@@ -45,8 +32,7 @@ interface RemoteScheduleManagerProps {
 }
 
 export function RemoteScheduleManager({
-  open,
-  onOpenChange,
+  onBack,
   initialSelection,
   initialOrder,
   schedules,
@@ -72,12 +58,9 @@ export function RemoteScheduleManager({
   };
   
   useEffect(() => {
-    if (open) {
-      resetToCurrentSelection();
-    }
+    resetToCurrentSelection();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialSelection, initialOrder]);
-
+  }, [initialSelection, initialOrder]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -148,21 +131,13 @@ export function RemoteScheduleManager({
   const activeFutureEventsCount = currentOrder?.filter(i => currentSelection[i] !== null).length ?? 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideClose className="w-screen h-screen max-w-none rounded-none flex flex-col p-0">
-       <DialogHeader className="p-4 border-b flex-shrink-0 flex-row items-center justify-between">
-          <div>
-            <DialogTitle>Programar Selección</DialogTitle>
-            <DialogDescription>
-              Configura o modifica una selección de eventos para que se activen en un momento específico.
-            </DialogDescription>
-          </div>
-           <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="h-9 w-9">
-                  <X className="h-5 w-5" />
-              </Button>
-          </div>
-        </DialogHeader>
+    <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+        <header className="p-4 border-b flex-shrink-0 flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={onBack} className="h-9 w-9">
+                <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h2 className="text-lg font-semibold">Programar Selección</h2>
+        </header>
 
         <div className="grid md:grid-cols-2 flex-grow h-0 overflow-hidden">
             <div className="flex flex-col border-r border-border">
@@ -247,7 +222,6 @@ export function RemoteScheduleManager({
                             eventDetails={currentSelection}
                             onRemove={handleRemoveEventFromFuture}
                             onModify={(index) => {
-                              // This is complex. For now, users can remove and re-add.
                               alert("Para modificar un evento en una programación, por favor elimínalo y vuelve a añadirlo.");
                             }}
                             isViewPage={true}
@@ -264,7 +238,6 @@ export function RemoteScheduleManager({
                  </div>
             </div>
         </div>
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 }
