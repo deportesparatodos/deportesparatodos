@@ -62,7 +62,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationManager } from '@/components/notification-manager';
-import type { Subscription } from '@/components/notification-manager';
+import type { Subscription, Schedule } from '@/components/notification-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Realtime } from 'ably';
@@ -257,17 +257,19 @@ export function HomePageContent() {
 
   const setLiveAppState = useCallback((newState: Partial<AppState>) => {
     if (isControlling) {
-        setControllerAppState(prevState => {
-            const updatedState = { ...(prevState || appState), ...newState };
-            if (channelRef.current) {
-                channelRef.current.publish('action', {
-                    type: 'SET_APP_STATE',
-                    payload: updatedState,
-                });
-            }
-            return updatedState;
-        });
+        // When controlling, we update the local state of the controller first,
+        // then publish the entire new state to the controlled device.
+        const updatedState = { ...(controllerAppState ?? appState), ...newState };
+        setControllerAppState(updatedState);
+        
+        if (channelRef.current) {
+            channelRef.current.publish('action', {
+                type: 'SET_APP_STATE',
+                payload: updatedState,
+            });
+        }
     } else {
+        // When not controlling, just update the normal app state.
         setAppState(prevState => {
             const validatedState: AppState = { ...prevState, ...newState };
             if (!Array.isArray(validatedState.selectedEvents) || validatedState.selectedEvents === null) {
@@ -282,7 +284,7 @@ export function HomePageContent() {
             return validatedState;
         });
     }
-  }, [isControlling, appState]);
+  }, [isControlling, appState, controllerAppState]);
 
 
   const setSelectedEvents = (events: (Event | null)[]) => setLiveAppState({ selectedEvents: events });
@@ -690,7 +692,7 @@ export function HomePageContent() {
     }, 30000); 
 
     return () => clearInterval(interval);
-  }, [isViewMode, schedules, setSelectedEvents, setViewOrder]);
+  }, [isViewMode, schedules, setSchedules, setSelectedEvents, setViewOrder]);
 
 
   useEffect(() => {
@@ -703,7 +705,7 @@ export function HomePageContent() {
     if (addEventsDialogOpen) {
       // Logic inside EventSelectionDialog now
     }
-  }, [addEventsDialogOpen, fetchEvents]);
+  }, [addEventsDialogOpen]);
 
   // Centralized state persistence
   useEffect(() => {
@@ -1088,16 +1090,18 @@ export function HomePageContent() {
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
-
+    
     navigator.clipboard.writeText(optionUrl).then(() => {
         toast({ title: '¡Enlace copiado!', description: 'El enlace de la transmisión se ha copiado al portapapeles.' });
     }).catch(err => {
         console.error('Failed to copy: ', err);
     });
 
+    // If context is 'schedule', only update the future selection and do NOT close the dialog.
     if (dialogContext === 'schedule') {
         const newFutureSelection = [...futureSelection];
         const emptyIndex = newFutureSelection.findIndex(e => e === null);
+        
         if (emptyIndex !== -1) {
             newFutureSelection[emptyIndex] = eventWithSelection;
             setFutureSelection(newFutureSelection);
@@ -1108,12 +1112,12 @@ export function HomePageContent() {
                 description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
             });
         }
-        // Do not close the dialog, let the user add more events.
-        setEventSelectionDialogOpen(false);
+        // Crucially, we do NOT close any dialogs here.
+        setEventSelectionDialogOpen(false); // Close just the smallest dialog
         return;
     }
     
-    // This part is for the main view selection
+    // This part is for the main view selection, which should close the dialogs.
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
 
@@ -1135,7 +1139,7 @@ export function HomePageContent() {
     }
     
     setEventSelectionDialogOpen(false);
-    setAddEventsDialogOpen(false);
+    setAddEventsDialogOpen(false); // Close the bigger dialog too for main view context.
     setModificationIndex(null);
   };
   
@@ -1274,7 +1278,7 @@ export function HomePageContent() {
                 description: 'No puedes añadir más de 9 canales. Elimina uno para añadir otro.',
             });
         }
-        setAddEventsDialogOpen(false); 
+        setEventSelectionDialogOpen(false);
         return;
     }
 
@@ -1577,7 +1581,7 @@ export function HomePageContent() {
                 currentOrder={futureOrder}
                 schedules={schedules}
                 onSchedulesChange={setSchedules}
-                onModifyEventInView={(index) => openDialogForModification(index)}
+                onModifyEventInView={openDialogForModification}
                 isLoading={isAddEventsLoading}
                 onAddEvent={() => { setDialogContext('schedule'); setAddEventsDialogOpen(true); }}
                 initialSelection={selectedEvents}
@@ -2161,7 +2165,7 @@ export function HomePageContent() {
           open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
           onEventSelect={(event: Event) => openDialogForEvent(event, dialogContext)}
-          onChannelClick={handleChannelClick}
+          onChannelClick={(channel: Channel) => handleChannelClick(channel)}
           getEventSelection={getEventSelection}
           events={allSortedEvents}
           channels={channelsData}
@@ -2480,6 +2484,7 @@ function ControllingView({
     </div>
   );
 }
+
 
 
 
