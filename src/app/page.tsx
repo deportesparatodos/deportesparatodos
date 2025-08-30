@@ -62,7 +62,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScheduleManager } from '@/components/schedule-manager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationManager } from '@/components/notification-manager';
-import type { Subscription, Schedule } from '@/components/notification-manager';
+import type { Subscription, Schedule } from '@/components/schedule-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Realtime } from 'ably';
@@ -318,9 +318,9 @@ export function HomePageContent() {
   const [currentView, setCurrentView] = useState<string>('home');
   
   // Dialog/Popup states
+  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
-  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -334,11 +334,6 @@ export function HomePageContent() {
   const [isControlledSessionDialog, setIsControlledSessionDialog] = useState(false);
   const [copied, setCopied] = useState(false);
 
-
-  // Schedule related states
-  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>(Array(9).fill(null));
-  const [futureOrder, setFutureOrder] = useState<number[]>(Array.from({ length: 9 }, (_, i) => i));
-  const [dialogContext, setDialogContext] = useState<'view' | 'schedule'>('view');
   const { toast } = useToast();
 
   const getGridClasses = useCallback((count: number) => {
@@ -1096,24 +1091,6 @@ export function HomePageContent() {
     }).catch(err => {
         console.error('Failed to copy: ', err);
     });
-
-    if (dialogContext === 'schedule') {
-        const newFutureSelection = [...futureSelection];
-        const emptyIndex = newFutureSelection.findIndex(e => e === null);
-        
-        if (emptyIndex !== -1) {
-            newFutureSelection[emptyIndex] = eventWithSelection;
-            setFutureSelection(newFutureSelection);
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Programación Completa',
-                description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
-            });
-        }
-        setEventSelectionDialogOpen(false);
-        return;
-    }
     
     const newSelectedEvents = [...selectedEvents];
     let targetIndex = -1;
@@ -1179,8 +1156,7 @@ export function HomePageContent() {
   }, [setLiveAppState]);
 
 
- const openDialogForEvent = async (event: Event, context: 'view' | 'schedule' = 'view') => {
-    setDialogContext(context);
+ const openDialogForEvent = async (event: Event) => {
     setEventSelectionDialogOpen(true);
 
     const selection = getEventSelection(event);
@@ -1261,24 +1237,6 @@ export function HomePageContent() {
       status: 'En Vivo',
       image: channel.logo,
     };
-    
-    if (dialogContext === 'schedule') {
-        const newFutureSelection = [...futureSelection];
-        const emptyIndex = newFutureSelection.findIndex(e => e === null);
-        if (emptyIndex !== -1) {
-            newFutureSelection[emptyIndex] = { ...channelAsEvent, selectedOption: channel.urls[0].url };
-            setFutureSelection(newFutureSelection);
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Programación Completa',
-                description: 'No puedes añadir más de 9 canales. Elimina uno para añadir otro.',
-            });
-        }
-        setEventSelectionDialogOpen(false);
-        return;
-    }
-
 
     const selection = getEventSelection(channelAsEvent);
     
@@ -1574,17 +1532,14 @@ export function HomePageContent() {
             <ScheduleManager
                 open={scheduleManagerOpen}
                 onOpenChange={setScheduleManagerOpen}
-                currentSelection={futureSelection}
-                currentOrder={futureOrder}
                 schedules={schedules}
                 onSchedulesChange={setSchedules}
-                onModifyEventInView={openDialogForModification}
                 isLoading={isAddEventsLoading}
-                onAddEvent={() => { setDialogContext('schedule'); setAddEventsDialogOpen(true); }}
                 initialSelection={selectedEvents}
                 initialOrder={viewOrder}
-                setFutureSelection={setFutureSelection}
-                setFutureOrder={setFutureOrder}
+                allEvents={allSortedEvents}
+                allChannels={channelsData}
+                getEventSelection={getEventSelection}
                 container={remoteControlContainerRef.current ?? undefined}
             />
             <NotificationManager
@@ -2125,7 +2080,7 @@ export function HomePageContent() {
                                                 onIsErrorsOpenChange={setIsErrorsOpen}
                                                 onRemoteControl={handleStartAndControl}
                                                 isRemoteControlView={false}
-                                                onAddEvent={() => { setDialogContext('view'); setAddEventsDialogOpen(true); }}
+                                                onAddEvent={() => setAddEventsDialogOpen(true)}
                                                 onSchedule={() => setScheduleManagerOpen(true)}
                                             />
                                       </SheetContent>
@@ -2161,8 +2116,8 @@ export function HomePageContent() {
       <AddEventsDialog
           open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
-          onEventSelect={(event: Event) => openDialogForEvent(event, dialogContext)}
-          onChannelClick={(channel: Channel) => handleChannelClick(channel)}
+          onEventSelect={openDialogForEvent}
+          onChannelClick={handleChannelClick}
           getEventSelection={getEventSelection}
           events={allSortedEvents}
           channels={channelsData}
@@ -2481,10 +2436,3 @@ function ControllingView({
     </div>
   );
 }
-
-
-
-
-
-
-

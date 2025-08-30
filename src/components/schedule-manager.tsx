@@ -31,6 +31,7 @@ import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import type { Channel } from './channel-list';
 import { EventSelectionDialog } from './event-selection-dialog';
+import { AddEventsDialog } from './add-events-dialog'; // Import AddEventsDialog
 
 export interface Schedule {
   id: string;
@@ -42,42 +43,45 @@ export interface Schedule {
 interface ScheduleManagerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentSelection: (Event | null)[];
-  currentOrder: number[];
   schedules: Schedule[];
   onSchedulesChange: (schedules: Schedule[]) => void;
-  onModifyEventInView: (index: number) => void;
   isLoading: boolean;
-  onAddEvent: () => void;
   initialSelection: (Event | null)[];
   initialOrder: number[];
-  setFutureSelection: (selection: (Event | null)[]) => void;
-  setFutureOrder: (order: number[]) => void;
+  allEvents: Event[];
+  allChannels: Channel[];
+  getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
   container?: HTMLElement;
 }
 
 export function ScheduleManager({
   open,
   onOpenChange,
-  currentSelection,
-  currentOrder,
   schedules,
   onSchedulesChange,
-  onModifyEventInView,
   isLoading,
-  onAddEvent,
   initialSelection,
   initialOrder,
-  setFutureSelection,
-  setFutureOrder,
+  allEvents,
+  allChannels,
+  getEventSelection,
   container,
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
   const [isFullScreen, setIsFullScreen] = useState(false);
-  
-  const [modifyEventForSchedule, setModifyEventForSchedule] = useState<{ event: Event, index: number } | null>(null);
+
+  // State for the selection being built/edited in the scheduler
+  const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
+  const [futureOrder, setFutureOrder] = useState<number[]>([]);
+
+  // Dialog states managed locally
+  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
+  const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
+  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+  const [isOptionsLoading, setIsOptionsLoading] = useState(false);
 
   const resetToCurrentSelection = () => {
     setFutureSelection([...initialSelection]);
@@ -93,7 +97,7 @@ export function ScheduleManager({
   useEffect(() => {
     if (open) {
       resetToCurrentSelection();
-      setIsFullScreen(true);
+      setIsFullScreen(true); // Default to fullscreen when opened
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -105,28 +109,25 @@ export function ScheduleManager({
     const combinedDateTime = new Date(date);
     combinedDateTime.setHours(hours, minutes, 0, 0);
 
-    const activeOrder = currentOrder.filter(i => currentSelection[i] !== null);
+    const activeOrder = futureOrder.filter(i => futureSelection[i] !== null);
 
     if (editingScheduleId) {
-      // Update existing schedule
       const updatedSchedules = schedules.map(s => 
         s.id === editingScheduleId 
-          ? { ...s, dateTime: combinedDateTime, events: currentSelection, order: activeOrder }
+          ? { ...s, dateTime: combinedDateTime, events: futureSelection, order: activeOrder }
           : s
       );
       onSchedulesChange(updatedSchedules);
     } else {
-      // Add new schedule
       const newSchedule: Schedule = {
         id: new Date().toISOString(),
         dateTime: combinedDateTime,
-        events: currentSelection,
+        events: futureSelection,
         order: activeOrder,
       };
       onSchedulesChange([...schedules, newSchedule]);
     }
     
-    // Reset form to allow creating a new schedule
     resetToCurrentSelection();
   };
   
@@ -149,12 +150,12 @@ export function ScheduleManager({
   };
   
   const handleRemoveEventFromFuture = (indexToRemove: number) => {
-    const newSelection = [...currentSelection];
+    const newSelection = [...futureSelection];
     newSelection[indexToRemove] = null;
     setFutureSelection(newSelection);
   };
   
-  const handleOrderChange = (newOrder: number[]) => {
+  const handleOrderChangeInFuture = (newOrder: number[]) => {
     if(newOrder) {
       const fullNewOrder = [...newOrder];
       const presentIndexes = new Set(newOrder);
@@ -165,37 +166,39 @@ export function ScheduleManager({
       }
       setFutureOrder(fullNewOrder);
     }
-  }
-  
-  const handleModifyEventForSchedule = (event: Event, option: string) => {
-    if (modifyEventForSchedule) {
-      const newFutureSelection = [...currentSelection];
-      newFutureSelection[modifyEventForSchedule.index] = { ...event, selectedOption: option };
-      setFutureSelection(newFutureSelection);
-      setModifyEventForSchedule(null);
-    }
   };
 
-  const activeFutureEventsCount = currentOrder?.filter(i => currentSelection[i] !== null).length ?? 0;
+  const handleSelectEventForSchedule = (event: Event) => {
+      setDialogEvent(event);
+      setEventSelectionDialogOpen(true);
+  };
+  
+  const handleSelectChannelForSchedule = (channel: Channel) => {
+      const channelAsEvent: Event = {
+          id: `${channel.name}-channel-static-schedule`,
+          title: channel.name,
+          options: channel.urls.map(u => ({...u, hd: false, language: ''})),
+          sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
+      };
+      setDialogEvent(channelAsEvent);
+      setEventSelectionDialogOpen(true);
+  };
+
+  const handleFinalSelectionForSchedule = (event: Event, optionUrl: string) => {
+      const newFutureSelection = [...futureSelection];
+      const emptyIndex = newFutureSelection.findIndex(e => e === null);
+      if (emptyIndex !== -1) {
+          newFutureSelection[emptyIndex] = { ...event, selectedOption: optionUrl };
+          setFutureSelection(newFutureSelection);
+      }
+      // Close only the selection dialog, not the add events dialog
+      setEventSelectionDialogOpen(false);
+  };
+
+  const activeFutureEventsCount = futureOrder?.filter(i => futureSelection[i] !== null).length ?? 0;
 
   return (
     <>
-      <Dialog open={!!modifyEventForSchedule} onOpenChange={(open) => { if(!open) setModifyEventForSchedule(null) }}>
-          {modifyEventForSchedule && (
-              <EventSelectionDialog
-                container={container}
-                isOpen={!!modifyEventForSchedule}
-                onOpenChange={(open) => {if(!open) setModifyEventForSchedule(null)}}
-                event={modifyEventForSchedule.event}
-                onSelect={handleModifyEventForSchedule}
-                isModification={true}
-                modificationIndex={modifyEventForSchedule.index}
-                onRemove={() => handleRemoveEventFromFuture(modifyEventForSchedule.index)}
-                isLoading={false}
-              />
-          )}
-      </Dialog>
-
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogPortal container={container}>
           <DialogContent 
@@ -300,22 +303,24 @@ export function ScheduleManager({
                     <ScrollArea className="flex-grow h-0">
                         <div className="p-4">
                             <EventList
-                                order={currentOrder ? currentOrder.filter(i => currentSelection[i] !== null) : []}
-                                onOrderChange={handleOrderChange}
-                                eventDetails={currentSelection}
+                                order={futureOrder ? futureOrder.filter(i => futureSelection[i] !== null) : []}
+                                onOrderChange={handleOrderChangeInFuture}
+                                eventDetails={futureSelection}
                                 onRemove={handleRemoveEventFromFuture}
-                                onModify={(index) => {
-                                  const currentEventState = currentSelection[index];
-                                  if (!currentEventState) return;
-                                  const eventForModification = { ...currentEventState, selectedOption: currentEventState.selectedOption };
-                                  setModifyEventForSchedule({ event: eventForModification, index });
+                                onModify={(index: number) => {
+                                  const eventToModify = futureSelection[index];
+                                  if (eventToModify) {
+                                    setDialogEvent(eventToModify);
+                                    setModificationIndex(index);
+                                    setEventSelectionDialogOpen(true);
+                                  }
                                 }}
                                 isViewPage={true}
                             />
                         </div>
                     </ScrollArea>
                      <div className="p-4 border-t border-border mt-auto flex-shrink-0 space-y-2">
-                        <Button variant="outline" className="w-full" onClick={onAddEvent}>
+                        <Button variant="outline" className="w-full" onClick={() => setAddEventsDialogOpen(true)}>
                             <Plus className="mr-2 h-4 w-4"/> Añadir Evento/Canal a Programación
                         </Button>
                         <Button className="w-full" onClick={handleSaveOrUpdateSchedule} disabled={activeFutureEventsCount === 0}>
@@ -324,14 +329,42 @@ export function ScheduleManager({
                      </div>
                 </div>
             </div>
-            <DialogFooter className="p-4 border-t border-border flex-shrink-0">
-              <DialogClose asChild>
-                <Button variant="outline">Cerrar</Button>
-              </DialogClose>
-            </DialogFooter>
           </DialogContent>
         </DialogPortal>
       </Dialog>
+      
+      {/* Dialogs managed locally by the Schedule Manager */}
+      <AddEventsDialog
+        open={addEventsDialogOpen}
+        onOpenChange={setAddEventsDialogOpen}
+        onEventSelect={handleSelectEventForSchedule}
+        onChannelClick={handleSelectChannelForSchedule}
+        getEventSelection={getEventSelection}
+        events={allEvents}
+        channels={allChannels}
+        isLoading={isLoading}
+        onFetch={() => {}}
+        container={container}
+        isRemote={false}
+        onBack={() => {}}
+      />
+      
+      {dialogEvent && (
+        <EventSelectionDialog
+          isOpen={eventSelectionDialogOpen}
+          onOpenChange={setEventSelectionDialogOpen}
+          event={dialogEvent}
+          onSelect={handleFinalSelectionForSchedule}
+          isModification={modificationIndex !== null}
+          modificationIndex={modificationIndex}
+          onRemove={(index) => {
+            handleRemoveEventFromFuture(index);
+            setEventSelectionDialogOpen(false);
+          }}
+          isLoading={isOptionsLoading}
+          container={container}
+        />
+      )}
     </>
   );
 }
