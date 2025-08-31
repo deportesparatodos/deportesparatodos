@@ -337,17 +337,13 @@ export function PresetsDialog({
   
   if(isRemote) {
     return (
-        <div className="h-full flex flex-col">
-            <DialogHeader className="p-4 border-b flex-row items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onOpenChange(false)}>
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <DialogTitle>Presets</DialogTitle>
-            </DialogHeader>
-            <div className="flex-grow overflow-hidden">
-                {dialogContent}
-            </div>
-        </div>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogPortal container={container}>
+                <DialogContent className="sm:max-w-md p-0 h-[70vh] flex flex-col">
+                    {dialogContent}
+                </DialogContent>
+            </DialogPortal>
+        </Dialog>
     )
   }
 
