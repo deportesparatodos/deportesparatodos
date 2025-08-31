@@ -1195,8 +1195,6 @@ export function HomePageContent() {
 
   const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
   
-  // --- Remote Control Logic ---
-  
   const cleanupAbly = useCallback(() => {
     if (channelRef.current) {
         try { channelRef.current.detach(); } catch (e) { console.error("Error detaching from Ably channel:", e); }
@@ -1212,19 +1210,6 @@ export function HomePageContent() {
     channelRef.current = null;
     ablyClientRef.current = null;
   }, []);
-
-  const handleStartView = (isControlledStart = false) => {
-    if (selectedEventsCount === 0) return;
-    if (isControlledStart) {
-      sessionStorage.setItem('isControlledStart', 'true');
-    } else {
-      sessionStorage.removeItem('isControlledStart');
-      cleanupAbly();
-      setRemoteControlMode('inactive');
-      setControlledSessionCode('');
-    }
-    setIsViewMode(true);
-  };
   
   const handleStopView = useCallback(() => {
     setIsViewMode(false);
@@ -1236,7 +1221,19 @@ export function HomePageContent() {
     sessionStorage.removeItem('isControlledSession');
     sessionStorage.removeItem('isControlledStart');
   }, [setLiveAppState, cleanupAbly]);
-
+  
+  // --- Remote Control Logic ---
+  const handleStartView = (isControlledStart = false) => {
+    if (selectedEventsCount === 0) return;
+    if (isControlledStart) {
+      sessionStorage.setItem('isControlledStart', 'true');
+    } else {
+      sessionStorage.removeItem('isControlledStart');
+      handleStopView();
+    }
+    setIsViewMode(true);
+  };
+  
   const handleViewChange = (view: string) => {
     setSearchTerm('');
     setCurrentView(view);
@@ -2305,13 +2302,14 @@ function ControllingView({
   allChannels,
   toast,
 }: ControllingViewProps) {
-  type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
+  type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat' | 'presets';
   const [view, setView] = useState<ControllingViewMode>('main');
   
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
   const [showScheduleFailureMessage, setShowScheduleFailureMessage] = useState(false);
+  const remoteControlContainerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (!appState.schedules || appState.schedules.length === 0) {
@@ -2454,6 +2452,71 @@ function ControllingView({
         setModificationIndex(null);
     };
 
+    const handlePresetSelect = (preset: Preset) => {
+        const newSelectedEvents: (Event | null)[] = Array(9).fill(null);
+        let count = 0;
+
+        for (const presetChannel of preset.channels) {
+            if (count >= 9) break;
+
+            let foundItem: Event | Channel | undefined;
+            if (presetChannel.isEvent) {
+                foundItem = allSortedEvents.find(e => e.id === presetChannel.id);
+            } else {
+                foundItem = allChannels.find(c => c.name === presetChannel.name);
+            }
+            
+            if (foundItem) {
+                let event: Event;
+                if ('urls' in foundItem) {
+                    event = {
+                        id: `${foundItem.name}-channel-static`,
+                        title: foundItem.name,
+                        options: foundItem.urls.map(u => ({ ...u, hd: false, language: '' })),
+                        selectedOption: foundItem.urls[presetChannel.optionIndex ?? 0]?.url,
+                        sources: [], buttons: [], time: 'AHORA', category: 'Canal',
+                        language: '', date: '', source: '', status: 'En Vivo', image: foundItem.logo
+                    };
+                } else {
+                    event = { ...foundItem, selectedOption: foundItem.options[presetChannel.optionIndex ?? 0]?.url };
+                }
+                newSelectedEvents[count] = event;
+                count++;
+            }
+        }
+        setLiveAppState({ selectedEvents: newSelectedEvents });
+        setView('main');
+    };
+
+    const [customPresets, setCustomPresets] = useState<Preset[]>([]);
+    useEffect(() => {
+        const storedPresets = localStorage.getItem('customPresets');
+        if (storedPresets) {
+            setCustomPresets(JSON.parse(storedPresets));
+        }
+    }, []);
+
+    const savePresets = (presets: Preset[]) => {
+        setCustomPresets(presets);
+        localStorage.setItem('customPresets', JSON.stringify(presets));
+    };
+
+    const addPreset = (newPreset: Omit<Preset, 'id'>) => {
+        const presetWithId = { ...newPreset, id: crypto.randomUUID() };
+        savePresets([...customPresets, presetWithId]);
+    };
+
+    const updatePreset = (updatedPreset: Preset) => {
+        const newPresets = customPresets.map(p => p.id === updatedPreset.id ? updatedPreset : p);
+        savePresets(newPresets);
+    };
+
+    const deletePreset = (presetId: string) => {
+        const newPresets = customPresets.filter(p => p.id !== presetId);
+        savePresets(newPresets);
+    };
+
+
   if (showScheduleFailureMessage) {
     return (
       <div className="fixed inset-0 z-[100] bg-destructive text-destructive-foreground flex flex-col items-center justify-center text-center p-4">
@@ -2472,7 +2535,6 @@ function ControllingView({
       </div>
     );
   }
-
 
   if (view === 'addEvents') {
     return (
@@ -2526,6 +2588,28 @@ function ControllingView({
       <RemoteChat onBack={() => setView('main')} />
     );
   }
+  
+  if (view === 'presets') {
+    return (
+        <div className="fixed inset-0 z-[101] bg-background">
+            <div ref={remoteControlContainerRef}></div>
+            <PresetsDialog
+                open={true}
+                onOpenChange={(isOpen) => !isOpen && setView('main')}
+                onSelectPreset={handlePresetSelect}
+                container={remoteControlContainerRef.current ?? undefined}
+                customPresets={customPresets}
+                onSavePreset={addPreset}
+                onUpdatePreset={updatePreset}
+                onDeletePreset={deletePreset}
+                allEvents={allSortedEvents}
+                allChannels={allChannels}
+                isRemote={true}
+            />
+        </div>
+    );
+  }
+
 
   // Main Remote Control UI
   return (
@@ -2552,8 +2636,8 @@ function ControllingView({
             onAddEvent={() => {
                 setView('addEvents');
             }}
-            onSchedule={() => {
-                setView('schedule');
+            onOpenPresets={() => {
+                setView('presets');
             }}
             gridGap={appState.gridGap}
             onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
@@ -2572,3 +2656,4 @@ function ControllingView({
     </div>
   );
 }
+

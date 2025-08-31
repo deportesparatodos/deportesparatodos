@@ -211,12 +211,16 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full bg-background text-foreground relative">
-        <div className="p-4 flex-shrink-0 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Configuración</h2>
-        </div>
-        <Separator />
+        {!isRemoteControlView && (
+            <>
+                <div className="p-4 flex-shrink-0 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">Configuración</h2>
+                </div>
+                <Separator />
+            </>
+        )}
 
-        {isSessionActive && (
+        {isSessionActive && !isRemoteControlView && (
              <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4">
                 <p className="font-semibold text-foreground">Sesión de control remoto activa.</p>
                 <p className="text-sm text-muted-foreground mb-2">Realice las modificaciones desde ahí.</p>
@@ -225,7 +229,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         )}
 
         <ScrollArea className="flex-grow h-0">
-          <div className='p-4 space-y-4' style={{ opacity: isSessionActive ? 0.2 : 1, pointerEvents: isSessionActive ? 'none' : 'auto' }}>
+          <div className='p-4 space-y-4' style={{ opacity: isSessionActive && !isRemoteControlView ? 0.2 : 1, pointerEvents: isSessionActive && !isRemoteControlView ? 'none' : 'auto' }}>
               <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="item-events">
                   <AccordionItem value="item-events" className="border rounded-lg px-4">
                       <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
@@ -238,14 +242,14 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   Añadir Evento/Canal
                               </Button>
                             )}
+                            {onOpenPresets && (
+                                <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
+                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
+                                </Button>
+                            )}
                             {onSchedule && !isRemoteControlView && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                     <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                                </Button>
-                            )}
-                            {onOpenPresets && !isRemoteControlView && (
-                                <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
-                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
                                 </Button>
                             )}
                             {onActivateRemoteControl && !isRemoteControlView && remoteControlMode !== 'controlled' && (

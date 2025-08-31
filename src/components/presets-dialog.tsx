@@ -48,6 +48,7 @@ interface PresetsDialogProps {
   onDeletePreset: (presetId: string) => void;
   allEvents: Event[];
   allChannels: Channel[];
+  isRemote?: boolean;
 }
 
 const staticPresets: Preset[] = [
@@ -233,7 +234,8 @@ export function PresetsDialog({
     onUpdatePreset,
     onDeletePreset,
     allEvents,
-    allChannels
+    allChannels,
+    isRemote = false,
 }: PresetsDialogProps) {
     const [view, setView] = useState<'list' | 'editor'>('list');
     const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
@@ -263,76 +265,97 @@ export function PresetsDialog({
         }
     };
 
+  const dialogContent = (
+     <>
+        {view === 'list' && (
+            <>
+                <DialogHeader className="p-4 border-b">
+                    <DialogTitle>Seleccionar un Preset</DialogTitle>
+                    <DialogDescription>
+                    Carga una selección guardada o crea una nueva.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="p-4">
+                     <Button className="w-full" onClick={handleCreateClick}>
+                        <Plus className="mr-2 h-4 w-4"/>
+                        Crear Nuevo Preset
+                    </Button>
+                </div>
+
+                <ScrollArea className="flex-grow px-4">
+                    <div className="grid grid-cols-1 gap-2 p-1">
+                        <h3 className="text-sm font-semibold text-muted-foreground px-1 pt-2 pb-1">Presets Estándar</h3>
+                        {staticPresets.map((preset) => (
+                            <Button
+                            key={preset.id}
+                            variant="secondary"
+                            className="w-full justify-start"
+                            onClick={() => onSelectPreset(preset)}
+                            >
+                            {preset.name}
+                            </Button>
+                        ))}
+
+                        {customPresets.length > 0 && (
+                            <h3 className="text-sm font-semibold text-muted-foreground px-1 pt-4 pb-1">Mis Presets</h3>
+                        )}
+                        {customPresets.map((preset) => (
+                            <div key={preset.id} className="flex items-center gap-2">
+                                 <Button
+                                    variant="secondary"
+                                    className="w-full justify-start"
+                                    onClick={() => onSelectPreset(preset)}
+                                    >
+                                    {preset.name}
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleEditClick(preset)}>
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+                 <DialogFooter className="p-4 border-t">
+                    <DialogClose asChild>
+                        <Button variant="outline">Cerrar</Button>
+                    </DialogClose>
+                </DialogFooter>
+            </>
+        )}
+        {view === 'editor' && (
+            <PresetEditor 
+                onBack={() => setView('list')}
+                onSave={handleSave}
+                onDelete={onDeletePreset}
+                existingPreset={editingPreset}
+                allEvents={allEvents}
+                allChannels={allChannels}
+            />
+        )}
+    </>
+  );
+  
+  if(isRemote) {
+    return (
+        <div className="h-full flex flex-col">
+            <DialogHeader className="p-4 border-b flex-row items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onOpenChange(false)}>
+                    <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <DialogTitle>Presets</DialogTitle>
+            </DialogHeader>
+            <div className="flex-grow overflow-hidden">
+                {dialogContent}
+            </div>
+        </div>
+    )
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal container={container}>
         <DialogContent className="sm:max-w-md p-0 h-[70vh] flex flex-col">
-            {view === 'list' && (
-                <>
-                    <DialogHeader className="p-4 border-b">
-                        <DialogTitle>Seleccionar un Preset</DialogTitle>
-                        <DialogDescription>
-                        Carga una selección guardada o crea una nueva.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="p-4">
-                         <Button className="w-full" onClick={handleCreateClick}>
-                            <Plus className="mr-2 h-4 w-4"/>
-                            Crear Nuevo Preset
-                        </Button>
-                    </div>
-
-                    <ScrollArea className="flex-grow px-4">
-                        <div className="grid grid-cols-1 gap-2 p-1">
-                            <h3 className="text-sm font-semibold text-muted-foreground px-1 pt-2 pb-1">Presets Estándar</h3>
-                            {staticPresets.map((preset) => (
-                                <Button
-                                key={preset.id}
-                                variant="secondary"
-                                className="w-full justify-start"
-                                onClick={() => onSelectPreset(preset)}
-                                >
-                                {preset.name}
-                                </Button>
-                            ))}
-
-                            {customPresets.length > 0 && (
-                                <h3 className="text-sm font-semibold text-muted-foreground px-1 pt-4 pb-1">Mis Presets</h3>
-                            )}
-                            {customPresets.map((preset) => (
-                                <div key={preset.id} className="flex items-center gap-2">
-                                     <Button
-                                        variant="secondary"
-                                        className="w-full justify-start"
-                                        onClick={() => onSelectPreset(preset)}
-                                        >
-                                        {preset.name}
-                                    </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(preset)}>
-                                        <Pencil className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    </ScrollArea>
-                     <DialogFooter className="p-4 border-t">
-                        <DialogClose asChild>
-                            <Button variant="outline">Cerrar</Button>
-                        </DialogClose>
-                    </DialogFooter>
-                </>
-            )}
-            {view === 'editor' && (
-                <PresetEditor 
-                    onBack={() => setView('list')}
-                    onSave={handleSave}
-                    onDelete={onDeletePreset}
-                    existingPreset={editingPreset}
-                    allEvents={allEvents}
-                    allChannels={allChannels}
-                />
-            )}
+            {dialogContent}
         </DialogContent>
       </DialogPortal>
     </Dialog>
