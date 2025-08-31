@@ -16,13 +16,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
-import { Plus, Pencil, Trash2, ArrowLeft, X } from 'lucide-react';
+import { Plus, Pencil, ArrowLeft, X } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import type { Event } from './event-carousel';
 import type { Channel } from './channel-list';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
+import { Trash2 } from 'lucide-react';
 
 export interface PresetChannel {
   id: string; // event id or channel name
@@ -271,16 +272,20 @@ export function PresetsDialog({
             <>
                 <DialogHeader className="p-4 border-b">
                     <DialogTitle>Seleccionar un Preset</DialogTitle>
-                    <DialogDescription>
-                    Carga una selección guardada o crea una nueva.
-                    </DialogDescription>
+                    {!isRemote && (
+                      <DialogDescription>
+                        Carga una selección guardada o crea una nueva.
+                      </DialogDescription>
+                    )}
                 </DialogHeader>
-                <div className="p-4">
-                     <Button className="w-full" onClick={handleCreateClick}>
-                        <Plus className="mr-2 h-4 w-4"/>
-                        Crear Nuevo Preset
-                    </Button>
-                </div>
+                {!isRemote && (
+                  <div className="p-4">
+                      <Button className="w-full" onClick={handleCreateClick}>
+                          <Plus className="mr-2 h-4 w-4"/>
+                          Crear Nuevo Preset
+                      </Button>
+                  </div>
+                )}
 
                 <ScrollArea className="flex-grow px-4">
                     <div className="grid grid-cols-1 gap-2 p-1">
@@ -308,9 +313,11 @@ export function PresetsDialog({
                                     >
                                     {preset.name}
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleEditClick(preset)}>
-                                    <Pencil className="h-4 w-4" />
-                                </Button>
+                                {!isRemote && (
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditClick(preset)}>
+                                      <Pencil className="h-4 w-4" />
+                                  </Button>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -335,18 +342,6 @@ export function PresetsDialog({
     </>
   );
   
-  if(isRemote) {
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogPortal container={container}>
-                <DialogContent className="sm:max-w-md p-0 h-[70vh] flex flex-col">
-                    {dialogContent}
-                </DialogContent>
-            </DialogPortal>
-        </Dialog>
-    )
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal container={container}>

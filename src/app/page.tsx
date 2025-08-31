@@ -1228,7 +1228,7 @@ export function HomePageContent() {
     if (isControlledStart) {
       sessionStorage.setItem('isControlledStart', 'true');
     } else {
-      sessionStorage.removeItem('isControlledStart');
+      // If it's a normal view start, ensure any previous session is cleaned up.
       handleStopView();
     }
     setIsViewMode(true);
@@ -1470,6 +1470,7 @@ export function HomePageContent() {
             allEvents={events}
             allChannels={channelsData}
             toast={toast}
+            customPresets={customPresets}
         />
     );
   }
@@ -2291,6 +2292,7 @@ type ControllingViewProps = {
     allEvents: Event[];
     allChannels: Channel[];
     toast: any;
+    customPresets: Preset[];
 };
 
 
@@ -2301,6 +2303,7 @@ function ControllingView({
   allEvents,
   allChannels,
   toast,
+  customPresets,
 }: ControllingViewProps) {
   type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat' | 'presets';
   const [view, setView] = useState<ControllingViewMode>('main');
@@ -2488,35 +2491,6 @@ function ControllingView({
         setView('main');
     };
 
-    const [customPresets, setCustomPresets] = useState<Preset[]>([]);
-    useEffect(() => {
-        const storedPresets = localStorage.getItem('customPresets');
-        if (storedPresets) {
-            setCustomPresets(JSON.parse(storedPresets));
-        }
-    }, []);
-
-    const savePresets = (presets: Preset[]) => {
-        setCustomPresets(presets);
-        localStorage.setItem('customPresets', JSON.stringify(presets));
-    };
-
-    const addPreset = (newPreset: Omit<Preset, 'id'>) => {
-        const presetWithId = { ...newPreset, id: crypto.randomUUID() };
-        savePresets([...customPresets, presetWithId]);
-    };
-
-    const updatePreset = (updatedPreset: Preset) => {
-        const newPresets = customPresets.map(p => p.id === updatedPreset.id ? updatedPreset : p);
-        savePresets(newPresets);
-    };
-
-    const deletePreset = (presetId: string) => {
-        const newPresets = customPresets.filter(p => p.id !== presetId);
-        savePresets(newPresets);
-    };
-
-
   if (showScheduleFailureMessage) {
     return (
       <div className="fixed inset-0 z-[100] bg-destructive text-destructive-foreground flex flex-col items-center justify-center text-center p-4">
@@ -2538,7 +2512,7 @@ function ControllingView({
 
   if (view === 'addEvents') {
     return (
-        <div className="fixed inset-0 z-[100] bg-background">
+        <div className="fixed inset-0 z-[101] bg-background">
              <AddEventsDialogContent
                 onOpenChange={() => setView('main')}
                 onEventSelect={openDialogForEventRemote}
@@ -2591,21 +2565,22 @@ function ControllingView({
   
   if (view === 'presets') {
     return (
-        <div className="fixed inset-0 z-[101] bg-background">
-            <div ref={remoteControlContainerRef}></div>
+        <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/50">
+          <div ref={remoteControlContainerRef} className="w-full h-full">
             <PresetsDialog
                 open={true}
                 onOpenChange={(isOpen) => !isOpen && setView('main')}
                 onSelectPreset={handlePresetSelect}
                 container={remoteControlContainerRef.current ?? undefined}
                 customPresets={customPresets}
-                onSavePreset={addPreset}
-                onUpdatePreset={updatePreset}
-                onDeletePreset={deletePreset}
                 allEvents={allSortedEvents}
                 allChannels={allChannels}
                 isRemote={true}
+                onSavePreset={() => {}} // No-op in remote view
+                onUpdatePreset={() => {}} // No-op in remote view
+                onDeletePreset={() => {}} // No-op in remote view
             />
+          </div>
         </div>
     );
   }
@@ -2656,4 +2631,3 @@ function ControllingView({
     </div>
   );
 }
-
