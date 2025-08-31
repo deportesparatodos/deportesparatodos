@@ -19,7 +19,6 @@ import { AddEventsDialogContent } from './add-events-dialog';
 import { RemoteEventSelection } from './remote-event-selection';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
-import type { AppState, HomePageContent } from '@/app/page';
 
 export interface Schedule {
   id: string;
@@ -30,18 +29,22 @@ export interface Schedule {
 
 interface RemoteScheduleManagerProps {
   onBack: () => void;
-  appState: AppState;
+  schedules: Schedule[];
+  onSchedulesChange: (schedules: Schedule[]) => void;
+  initialSelection: (Event | null)[];
+  initialOrder: number[];
   allEvents: Event[];
   allChannels: Channel[];
-  setLiveAppState: (newState: Partial<AppState>) => void;
 }
 
 export function RemoteScheduleManager({
   onBack,
-  appState,
+  schedules,
+  onSchedulesChange,
+  initialSelection,
+  initialOrder,
   allEvents,
   allChannels,
-  setLiveAppState,
 }: RemoteScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -58,8 +61,8 @@ export function RemoteScheduleManager({
   const { toast } = useToast();
 
   const resetToCurrentSelection = () => {
-    setCurrentSelection([...appState.selectedEvents]);
-    const activeCurrentOrder = appState.viewOrder.filter(i => appState.selectedEvents[i] !== null);
+    setCurrentSelection([...initialSelection]);
+    const activeCurrentOrder = initialOrder.filter(i => initialSelection[i] !== null);
     const fullOrder = Array.from({ length: 9 }, (_, i) => i);
     const finalOrder = [...activeCurrentOrder, ...fullOrder.filter(i => !activeCurrentOrder.includes(i))];
     setCurrentOrder(finalOrder);
@@ -71,7 +74,7 @@ export function RemoteScheduleManager({
   useEffect(() => {
     resetToCurrentSelection();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appState.selectedEvents, appState.viewOrder]);
+  }, [initialSelection, initialOrder]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -84,7 +87,7 @@ export function RemoteScheduleManager({
     let newSchedules: Schedule[];
 
     if (editingScheduleId) {
-      newSchedules = appState.schedules.map(s => 
+      newSchedules = schedules.map(s => 
         s.id === editingScheduleId 
           ? { ...s, dateTime: combinedDateTime, events: currentSelection, order: activeOrder }
           : s
@@ -96,10 +99,10 @@ export function RemoteScheduleManager({
         events: currentSelection,
         order: activeOrder,
       };
-      newSchedules = [...appState.schedules, newSchedule];
+      newSchedules = [...schedules, newSchedule];
     }
     
-    setLiveAppState({ schedules: newSchedules });
+    onSchedulesChange(newSchedules);
     resetToCurrentSelection();
   };
   
@@ -115,8 +118,8 @@ export function RemoteScheduleManager({
   };
 
   const handleRemoveSchedule = (id: string) => {
-    const newSchedules = appState.schedules.filter(s => s.id !== id);
-    setLiveAppState({ schedules: newSchedules });
+    const newSchedules = schedules.filter(s => s.id !== id);
+    onSchedulesChange(newSchedules);
     if (editingScheduleId === id) {
        resetToCurrentSelection();
     }
@@ -260,10 +263,10 @@ export function RemoteScheduleManager({
                  <Separator className="w-full flex-shrink-0" />
                  <ScrollArea className="flex-grow h-0">
                     <div className="p-4 space-y-3">
-                    {appState.schedules.length === 0 ? (
+                    {schedules.length === 0 ? (
                         <p className="text-muted-foreground text-center p-4">No hay programaciones.</p>
                     ) : (
-                        appState.schedules
+                        schedules
                             .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
                             .map((schedule) => (
                                 <div key={schedule.id} className="flex items-center justify-between p-3 rounded-md border bg-secondary">

@@ -697,7 +697,7 @@ export function HomePageContent() {
       }, 30000); 
   
       return () => clearInterval(interval);
-  }, [isViewMode, schedules, appState, remoteControlMode]);
+  }, [isViewMode, schedules, appState, remoteControlMode, setAppState]);
 
 
   useEffect(() => {
@@ -1121,9 +1121,9 @@ export function HomePageContent() {
     });
 
     const newSelectedEvents = [...selectedEvents];
-    const targetIndex = modificationIndex;
+    const targetIndex = modificationIndex !== null ? modificationIndex : newSelectedEvents.findIndex(e => e === null);
     
-    if (targetIndex !== null && targetIndex !== -1) {
+    if (targetIndex !== -1) {
         newSelectedEvents[targetIndex] = eventWithSelection;
         setSelectedEvents(newSelectedEvents);
     } else {
@@ -1143,13 +1143,15 @@ export function HomePageContent() {
   
   const openDialogForEvent = async (event: Event) => {
       setDialogContext('main');
-      
       const emptyIndex = selectedEvents.findIndex(e => e === null);
+
       if (emptyIndex === -1 && !getEventSelection(event).isSelected) {
           toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
           return;
       }
-      setModificationIndex(emptyIndex);
+      
+      const existingSelection = getEventSelection(event);
+      setModificationIndex(existingSelection.isSelected ? existingSelection.index : emptyIndex);
       
       setDialogEvent(event);
       setEventSelectionDialogOpen(true);
@@ -1414,7 +1416,6 @@ export function HomePageContent() {
             }}
             allEvents={events}
             allChannels={channelsData}
-            ablyChannel={channelRef.current}
             toast={toast}
         />
     );
@@ -2214,7 +2215,6 @@ type ControllingViewProps = {
     onStopSession: () => void;
     allEvents: Event[];
     allChannels: Channel[];
-    ablyChannel: any;
     toast: any;
 };
 
@@ -2225,7 +2225,6 @@ function ControllingView({
   onStopSession,
   allEvents,
   allChannels,
-  ablyChannel,
   toast,
 }: ControllingViewProps) {
   type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
@@ -2237,17 +2236,30 @@ function ControllingView({
   const [showScheduleFailureMessage, setShowScheduleFailureMessage] = useState(false);
   
   useEffect(() => {
-    if (ablyChannel) {
-      const scheduleAppliedHandler = () => {
-        setShowScheduleFailureMessage(true);
-      };
-      ablyChannel.subscribe('schedule-applied', scheduleAppliedHandler);
-
-      return () => {
-        ablyChannel.unsubscribe('schedule-applied', scheduleAppliedHandler);
-      };
+    if (!appState.schedules || appState.schedules.length === 0) {
+      return;
     }
-  }, [ablyChannel]);
+  
+    const now = new Date().getTime();
+    const timeouts: NodeJS.Timeout[] = [];
+  
+    appState.schedules.forEach(schedule => {
+      const scheduleTime = new Date(schedule.dateTime).getTime();
+      const delay = scheduleTime - now;
+  
+      if (delay > 0) {
+        const timeoutId = setTimeout(() => {
+          setShowScheduleFailureMessage(true);
+        }, delay);
+        timeouts.push(timeoutId);
+      }
+    });
+  
+    // Cleanup timers on component unmount or when schedules change
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [appState.schedules]);
 
 
   const { allSortedEvents } = useMemo(() => {
@@ -2286,18 +2298,15 @@ function ControllingView({
   };
 
   const openDialogForEventRemote = async (event: Event) => {
+    // Always find the first empty slot when adding a new event
     const targetIndex = appState.selectedEvents.findIndex(e => e === null);
 
-    if (targetIndex === -1 && !getEventSelectionRemote(event).isSelected) {
+    if (targetIndex === -1) {
       toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
       return;
     }
     
-    const finalIndex = getEventSelectionRemote(event).isSelected 
-        ? getEventSelectionRemote(event).index 
-        : targetIndex;
-
-    setModificationIndex(finalIndex);
+    setModificationIndex(targetIndex);
     setDialogEvent(event);
     setView('eventSelection');
       
@@ -2340,16 +2349,10 @@ function ControllingView({
   
   const handleChannelClickRemote = (channel: Channel) => {
         const targetIndex = appState.selectedEvents.findIndex(e => e === null);
-        const eventRepresentation = { ...channel, id: `${channel.name}-channel-static` } as any;
-
-        if(targetIndex === -1 && !getEventSelectionRemote(eventRepresentation).isSelected) {
+        if(targetIndex === -1) {
             toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 canales.' });
             return;
         }
-        
-        const finalIndex = getEventSelectionRemote(eventRepresentation).isSelected 
-            ? getEventSelectionRemote(eventRepresentation).index
-            : targetIndex;
 
         const channelAsEvent: Event = {
             id: `${channel.name}-channel-static`,
@@ -2359,7 +2362,7 @@ function ControllingView({
             language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
         };
         
-        setModificationIndex(finalIndex);
+        setModificationIndex(targetIndex);
         setDialogEvent(channelAsEvent);
         setView('eventSelection');
     };
@@ -2398,10 +2401,7 @@ function ControllingView({
     return (
         <div className="fixed inset-0 z-[100] bg-background">
              <AddEventsDialogContent
-                onOpenChange={() => {
-                  ablyChannel?.publish('sync-request', {}); // Sync state on close
-                  setView('main')
-                }}
+                onOpenChange={() => setView('main')}
                 onEventSelect={openDialogForEventRemote}
                 onChannelClick={handleChannelClickRemote}
                 getEventSelection={getEventSelectionRemote}
@@ -2436,10 +2436,12 @@ function ControllingView({
     return (
        <RemoteScheduleManager
             onBack={() => setView('main')}
-            appState={appState}
+            schedules={appState.schedules}
+            onSchedulesChange={(newSchedules) => setLiveAppState({schedules: newSchedules})}
+            initialSelection={appState.selectedEvents}
+            initialOrder={appState.viewOrder}
             allEvents={allEvents}
             allChannels={allChannels}
-            setLiveAppState={setLiveAppState}
         />
     );
   }
@@ -2473,7 +2475,6 @@ function ControllingView({
             }}
             isViewPage={true}
             onAddEvent={() => {
-                ablyChannel?.publish('sync-request', {}); // Sync state before adding
                 setView('addEvents');
             }}
             onSchedule={() => setView('schedule')}
@@ -2486,7 +2487,7 @@ function ControllingView({
             onIsChatEnabledChange={(v: boolean) => setLiveAppState({ isChatEnabled: v })}
             isRemoteControlView={true}
             onOpenChat={() => {
-                ablyChannel?.publish('action', { type: 'OPEN_CHAT' });
+                setLiveAppState({ isChatEnabled: true });
                 setView('chat')
             }}
             onStopSession={onStopSession}
