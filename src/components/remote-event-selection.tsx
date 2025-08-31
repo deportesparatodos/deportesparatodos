@@ -17,7 +17,7 @@ import {
 import { Loader2, Trash2, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { DialogHeader, DialogTitle } from './ui/dialog';
+import { DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 
 interface RemoteEventSelectionProps {
   event: Event;
@@ -64,6 +64,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                 <ArrowLeft />
             </Button>
             <DialogTitle className="text-lg font-bold truncate">{event.title}</DialogTitle>
+             <DialogDescription className="sr-only">Selecciona una opción para {event.title}</DialogDescription>
         </DialogHeader>
       
         <div className="flex-grow flex flex-col sm:flex-row gap-4 p-4 overflow-hidden">

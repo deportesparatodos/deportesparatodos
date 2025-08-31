@@ -38,8 +38,7 @@ interface AddEventsDialogProps {
   onBack?: () => void;
 }
 
-export function AddEventsDialog({ 
-    open, 
+export function AddEventsDialogContent({ 
     onOpenChange,
     onEventSelect,
     onChannelClick,
@@ -47,25 +46,18 @@ export function AddEventsDialog({
     events,
     channels,
     isLoading,
-    onFetch,
-    container,
     isRemote = false,
     onBack,
-}: AddEventsDialogProps) {
+}: Omit<AddEventsDialogProps, 'open' | 'container' | 'onFetch'> & { onFetch?: (manual: boolean, fromDialog: boolean) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [activeTab, setActiveTab] = useState('events');
 
     useEffect(() => {
-        if (!open) {
-            setSearchTerm('');
-            setIsFullScreen(false);
-        } else {
-             if (isRemote) {
-                setIsFullScreen(true);
-            }
+        if (isRemote) {
+            setIsFullScreen(true);
         }
-    }, [open, isRemote]);
+    }, [isRemote]);
 
     const { sortedEvents, filteredChannels } = useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
@@ -95,8 +87,8 @@ export function AddEventsDialog({
         return { sortedEvents: filteredEvents, filteredChannels: filteredCh };
     }, [searchTerm, events, channels]);
     
-    const Content = () => (
-         <div className={cn("bg-background h-full flex flex-col", isRemote && "fixed inset-0 z-[100]")}>
+    return (
+         <div className={cn("bg-background h-full flex flex-col")}>
             <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0 border-b flex'>
                 <div className='flex items-center gap-2'>
                     {isRemote && onBack && (
@@ -183,11 +175,22 @@ export function AddEventsDialog({
             </div>
         </div>
     );
+}
 
 
-    if (isRemote) {
-        return <Content />;
-    }
+export function AddEventsDialog({ 
+    open, 
+    onOpenChange,
+    container,
+    ...props
+}: AddEventsDialogProps) {
+    const [isFullScreen, setIsFullScreen] = useState(false);
+
+    useEffect(() => {
+        if (!open) {
+            setIsFullScreen(false);
+        }
+    }, [open]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -201,7 +204,7 @@ export function AddEventsDialog({
                         : "h-[90vh] sm:max-w-4xl"
                 )}
             >
-               <Content />
+               <AddEventsDialogContent {...props} onOpenChange={onOpenChange} />
             </DialogContent>
           </DialogPortal>
         </Dialog>

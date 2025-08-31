@@ -66,7 +66,7 @@ import type { Subscription, Schedule } from '@/components/schedule-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Realtime } from 'ably';
-import { AddEventsDialog } from '@/components/add-events-dialog';
+import { AddEventsDialog, AddEventsDialogContent } from '@/components/add-events-dialog';
 import { RemoteEventSelection } from '@/components/remote-event-selection';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { RemoteScheduleManager } from '@/components/remote-schedule-manager';
@@ -1582,6 +1582,9 @@ export function HomePageContent() {
                         <DialogContent className="max-w-2xl">
                             <DialogHeader>
                                 <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
+                                <DialogDescription className="sr-only">
+                                Guía de uso de la aplicación
+                                </DialogDescription>
                             </DialogHeader>
                             <ScrollArea className="h-96 pr-6">
                                 <div className="text-sm text-muted-foreground space-y-4">
@@ -1616,6 +1619,9 @@ export function HomePageContent() {
                             <DialogContent className="max-w-2xl">
                                 <DialogHeader>
                                     <DialogModalTitle>Solución de Errores Comunes</DialogModalTitle>
+                                    <DialogDescription className="sr-only">
+                                     Guía para solucionar errores comunes.
+                                    </DialogDescription>
                                 </DialogHeader>
                                 <ScrollArea className="h-96 pr-6">
                                     <div className="text-sm text-muted-foreground space-y-4">
@@ -2076,7 +2082,6 @@ export function HomePageContent() {
                                                 onIsTutorialOpenChange={setIsTutorialOpen}
                                                 isErrorsOpen={isErrorsOpen}
                                                 onIsErrorsOpenChange={setIsErrorsOpen}
-                                                onRemoteControl={handleStartAndControl}
                                                 isRemoteControlView={false}
                                                 onAddEvent={() => {
                                                     setDialogContext('main');
@@ -2354,19 +2359,20 @@ function ControllingView({
 
   if (view === 'addEvents') {
     return (
-      <AddEventsDialog
-          open={true}
-          onOpenChange={(isOpen) => !isOpen && setView('main')}
-          onEventSelect={openDialogForEventRemote}
-          onChannelClick={handleChannelClickRemote}
-          getEventSelection={getEventSelection}
-          events={allSortedEvents}
-          channels={allChannels}
-          isLoading={false}
-          onFetch={fetchEvents}
-          isRemote={true}
-          onBack={() => setView('main')}
-      />
+        <div className="fixed inset-0 z-[100]">
+            <AddEventsDialogContent
+                onOpenChange={(isOpen) => !isOpen && setView('main')}
+                onEventSelect={openDialogForEventRemote}
+                onChannelClick={handleChannelClickRemote}
+                getEventSelection={getEventSelection}
+                events={allSortedEvents}
+                channels={allChannels}
+                isLoading={false}
+                onFetch={fetchEvents}
+                isRemote={true}
+                onBack={() => setView('main')}
+            />
+        </div>
     );
   }
 
