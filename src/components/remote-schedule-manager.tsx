@@ -19,6 +19,7 @@ import { AddEventsDialogContent } from './add-events-dialog';
 import { RemoteEventSelection } from './remote-event-selection';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
+import type { AppState } from '@/app/page';
 
 export interface Schedule {
   id: string;
@@ -29,9 +30,7 @@ export interface Schedule {
 
 interface RemoteScheduleManagerProps {
   onBack: () => void;
-  initialSelection: (Event | null)[];
-  initialOrder: number[];
-  schedules: Schedule[];
+  appState: AppState;
   onSchedulesChange: (schedules: Schedule[]) => void;
   allEvents: Event[];
   allChannels: Channel[];
@@ -40,9 +39,7 @@ interface RemoteScheduleManagerProps {
 
 export function RemoteScheduleManager({
   onBack,
-  initialSelection,
-  initialOrder,
-  schedules,
+  appState,
   onSchedulesChange,
   allEvents,
   allChannels,
@@ -52,11 +49,9 @@ export function RemoteScheduleManager({
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
   
-  // State for managing the selection within the scheduler
   const [currentSelection, setCurrentSelection] = useState<(Event|null)[]>([]);
   const [currentOrder, setCurrentOrder] = useState<number[]>([]);
   
-  // State for dialogs managed by this component
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -65,8 +60,8 @@ export function RemoteScheduleManager({
   const { toast } = useToast();
 
   const resetToCurrentSelection = () => {
-    setCurrentSelection([...initialSelection]);
-    const activeCurrentOrder = initialOrder.filter(i => initialSelection[i] !== null);
+    setCurrentSelection([...appState.selectedEvents]);
+    const activeCurrentOrder = appState.viewOrder.filter(i => appState.selectedEvents[i] !== null);
     const fullOrder = Array.from({ length: 9 }, (_, i) => i);
     const finalOrder = [...activeCurrentOrder, ...fullOrder.filter(i => !activeCurrentOrder.includes(i))];
     setCurrentOrder(finalOrder);
@@ -78,7 +73,7 @@ export function RemoteScheduleManager({
   useEffect(() => {
     resetToCurrentSelection();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSelection, initialOrder]);
+  }, [appState.selectedEvents, appState.viewOrder]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -90,7 +85,7 @@ export function RemoteScheduleManager({
     const activeOrder = currentOrder.filter(i => currentSelection[i] !== null);
 
     if (editingScheduleId) {
-      const updatedSchedules = schedules.map(s => 
+      const updatedSchedules = appState.schedules.map(s => 
         s.id === editingScheduleId 
           ? { ...s, dateTime: combinedDateTime, events: currentSelection, order: activeOrder }
           : s
@@ -103,7 +98,7 @@ export function RemoteScheduleManager({
         events: currentSelection,
         order: activeOrder,
       };
-      onSchedulesChange([...schedules, newSchedule]);
+      onSchedulesChange([...appState.schedules, newSchedule]);
     }
     
     resetToCurrentSelection();
@@ -121,7 +116,7 @@ export function RemoteScheduleManager({
   };
 
   const handleRemoveSchedule = (id: string) => {
-    onSchedulesChange(schedules.filter(s => s.id !== id));
+    onSchedulesChange(appState.schedules.filter(s => s.id !== id));
     if (editingScheduleId === id) {
        resetToCurrentSelection();
     }
@@ -165,8 +160,8 @@ export function RemoteScheduleManager({
     }
 
     setDialogEvent(eventForDialog);
+    setAddEventsDialogOpen(false);
     setEventSelectionDialogOpen(true);
-    setAddEventsDialogOpen(false); // Hide the add events dialog
 
     if (event.source !== 'streamed.pk' || event.options.length > 0) return;
     
@@ -205,7 +200,7 @@ export function RemoteScheduleManager({
           setCurrentSelection(newFutureSelection);
       }
       setEventSelectionDialogOpen(false);
-      setAddEventsDialogOpen(true); // Show the add events dialog again
+      setAddEventsDialogOpen(true);
       setModificationIndex(null);
   };
 
@@ -228,7 +223,6 @@ export function RemoteScheduleManager({
                 events={allEvents}
                 channels={allChannels}
                 isLoading={false}
-                onFetch={fetchEvents}
                 isRemote={true}
                 onBack={() => setAddEventsDialogOpen(false)}
             />
@@ -243,7 +237,7 @@ export function RemoteScheduleManager({
             event={dialogEvent}
             onBack={() => {
                 setEventSelectionDialogOpen(false);
-                setAddEventsDialogOpen(true); // Go back to the add events list
+                setAddEventsDialogOpen(true);
                 setModificationIndex(null);
             }}
             onSelect={handleFinalSelectionForSchedule}
@@ -251,7 +245,7 @@ export function RemoteScheduleManager({
             onRemove={() => {
               if (modificationIndex !== null) handleRemoveEventFromFuture(modificationIndex);
               setEventSelectionDialogOpen(false);
-              setAddEventsDialogOpen(true); // Go back to the add events list
+              setAddEventsDialogOpen(true);
               setModificationIndex(null);
             }}
             isLoading={isOptionsLoading}
@@ -275,10 +269,10 @@ export function RemoteScheduleManager({
                  <Separator className="w-full flex-shrink-0" />
                  <ScrollArea className="flex-grow h-0">
                     <div className="p-4 space-y-3">
-                    {schedules.length === 0 ? (
+                    {appState.schedules.length === 0 ? (
                         <p className="text-muted-foreground text-center p-4">No hay programaciones.</p>
                     ) : (
-                        schedules
+                        appState.schedules
                             .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
                             .map((schedule) => (
                                 <div key={schedule.id} className="flex items-center justify-between p-3 rounded-md border bg-secondary">
