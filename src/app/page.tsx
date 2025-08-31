@@ -607,6 +607,34 @@ export function HomePageContent() {
     }
   }, [isInitialLoadDone, lastFetchTimestamp]);
 
+  const cleanupAbly = useCallback(() => {
+    if (channelRef.current) {
+        try { channelRef.current.detach(); } catch (e) { console.error("Error detaching from Ably channel:", e); }
+    }
+    if (ablyClientRef.current) {
+        try {
+            const state = ablyClientRef.current.connection.state;
+            if (state === 'connecting' || state === 'connected' || state === 'suspended') {
+                ablyClientRef.current.close();
+            }
+        } catch (e) { console.error("Error closing Ably connection:", e); }
+    }
+    channelRef.current = null;
+    ablyClientRef.current = null;
+  }, []);
+
+  const handleStopView = useCallback(() => {
+    setIsViewMode(false);
+    setLiveAppState({ fullscreenIndex: null });
+    // Fully reset remote control state when exiting view
+    cleanupAbly();
+    setRemoteControlMode('inactive');
+    setControlledSessionCode('');
+    sessionStorage.removeItem('isControlledSession');
+    sessionStorage.removeItem('isControlledStart');
+  }, [setLiveAppState, cleanupAbly]);
+
+
   // Load state from localStorage on initial mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1194,33 +1222,6 @@ export function HomePageContent() {
   };
 
   const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
-  
-  const cleanupAbly = useCallback(() => {
-    if (channelRef.current) {
-        try { channelRef.current.detach(); } catch (e) { console.error("Error detaching from Ably channel:", e); }
-    }
-    if (ablyClientRef.current) {
-        try {
-            const state = ablyClientRef.current.connection.state;
-            if (state === 'connecting' || state === 'connected' || state === 'suspended') {
-                ablyClientRef.current.close();
-            }
-        } catch (e) { console.error("Error closing Ably connection:", e); }
-    }
-    channelRef.current = null;
-    ablyClientRef.current = null;
-  }, []);
-  
-  const handleStopView = useCallback(() => {
-    setIsViewMode(false);
-    setLiveAppState({ fullscreenIndex: null });
-    // Fully reset remote control state when exiting view
-    cleanupAbly();
-    setRemoteControlMode('inactive');
-    setControlledSessionCode('');
-    sessionStorage.removeItem('isControlledSession');
-    sessionStorage.removeItem('isControlledStart');
-  }, [setLiveAppState, cleanupAbly]);
   
   // --- Remote Control Logic ---
   const handleStartView = (isControlledStart = false) => {
@@ -2168,18 +2169,22 @@ export function HomePageContent() {
       )}
 
       {/* Dialogs at top level */}
-      <PresetsDialog
-        open={presetsDialogOpen}
-        onOpenChange={setPresetsDialogOpen}
-        onSelectPreset={handlePresetSelect}
-        container={remoteControlContainerRef.current ?? undefined}
-        customPresets={customPresets}
-        onSavePreset={addPreset}
-        onUpdatePreset={updatePreset}
-        onDeletePreset={deletePreset}
-        allEvents={allSortedEvents}
-        allChannels={channelsData}
-      />
+      <Dialog open={presetsDialogOpen} onOpenChange={setPresetsDialogOpen}>
+        <DialogPortal container={remoteControlContainerRef.current ?? undefined}>
+          <PresetsDialog
+            open={presetsDialogOpen}
+            onOpenChange={setPresetsDialogOpen}
+            onSelectPreset={handlePresetSelect}
+            container={remoteControlContainerRef.current ?? undefined}
+            customPresets={customPresets}
+            onSavePreset={addPreset}
+            onUpdatePreset={updatePreset}
+            onDeletePreset={deletePreset}
+            allEvents={allSortedEvents}
+            allChannels={channelsData}
+          />
+        </DialogPortal>
+      </Dialog>
       <AddEventsDialog
           open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
@@ -2565,22 +2570,22 @@ function ControllingView({
   
   if (view === 'presets') {
     return (
-        <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/50">
-          <div ref={remoteControlContainerRef} className="w-full h-full">
-            <PresetsDialog
-                open={true}
-                onOpenChange={(isOpen) => !isOpen && setView('main')}
-                onSelectPreset={handlePresetSelect}
-                container={remoteControlContainerRef.current ?? undefined}
-                customPresets={customPresets}
-                allEvents={allSortedEvents}
-                allChannels={allChannels}
-                isRemote={true}
-                onSavePreset={() => {}} // No-op in remote view
-                onUpdatePreset={() => {}} // No-op in remote view
-                onDeletePreset={() => {}} // No-op in remote view
-            />
-          </div>
+        <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div ref={remoteControlContainerRef} className='w-full h-full max-w-md max-h-[70vh]'>
+                <PresetsDialog
+                    open={true}
+                    onOpenChange={(isOpen) => !isOpen && setView('main')}
+                    onSelectPreset={handlePresetSelect}
+                    container={remoteControlContainerRef.current ?? undefined}
+                    customPresets={customPresets}
+                    allEvents={allSortedEvents}
+                    allChannels={allChannels}
+                    isRemote={true}
+                    onSavePreset={() => {}} // No-op in remote view
+                    onUpdatePreset={() => {}} // No-op in remote view
+                    onDeletePreset={() => {}} // No-op in remote view
+                />
+            </div>
         </div>
     );
   }
