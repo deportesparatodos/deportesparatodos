@@ -10,10 +10,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from './ui/label';
-import type { Event } from './event-carousel';
+import type { Event, StreamOption } from './event-carousel';
 import { EventList } from './layout-configurator';
 import { Separator } from './ui/separator';
 import { Input } from './ui/input';
+import { AddEventsDialogContent } from './add-events-dialog';
+import { RemoteEventSelection } from './remote-event-selection';
+import type { Channel } from './channel-list';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Schedule {
   id: string;
@@ -28,7 +32,9 @@ interface RemoteScheduleManagerProps {
   initialOrder: number[];
   schedules: Schedule[];
   onSchedulesChange: (schedules: Schedule[]) => void;
-  onAddEventFromSchedule: () => void;
+  allEvents: Event[];
+  allChannels: Channel[];
+  fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
 }
 
 export function RemoteScheduleManager({
@@ -37,14 +43,25 @@ export function RemoteScheduleManager({
   initialOrder,
   schedules,
   onSchedulesChange,
-  onAddEventFromSchedule,
+  allEvents,
+  allChannels,
+  fetchEvents
 }: RemoteScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState<string>('12:00');
   
-  const [currentSelection, setCurrentSelection] = useState<(Event|null)[]>(initialSelection);
-  const [currentOrder, setCurrentOrder] = useState<number[]>(initialOrder);
+  // State for managing the selection within the scheduler
+  const [currentSelection, setCurrentSelection] = useState<(Event|null)[]>([]);
+  const [currentOrder, setCurrentOrder] = useState<number[]>([]);
+  
+  // State for dialogs managed by this component
+  const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
+  const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
+  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  const [modificationIndex, setModificationIndex] = useState<number | null>(null);
+  const [isOptionsLoading, setIsOptionsLoading] = useState(false);
+  const { toast } = useToast();
 
   const resetToCurrentSelection = () => {
     setCurrentSelection([...initialSelection]);
@@ -127,8 +144,116 @@ export function RemoteScheduleManager({
       setCurrentOrder(fullNewOrder);
     }
   }
+
+  const openDialogForEventSchedule = async (event: Event) => {
+    const selectionIndex = currentSelection.findIndex(se => se?.id === event.id);
+    let eventForDialog = { ...event };
+    
+    if (selectionIndex !== -1) {
+        setModificationIndex(selectionIndex);
+        if (currentSelection[selectionIndex]?.selectedOption) {
+            eventForDialog.selectedOption = currentSelection[selectionIndex]?.selectedOption;
+        }
+    } else {
+        const emptyIndex = currentSelection.findIndex(e => e === null);
+        if (emptyIndex === -1) {
+            toast({ variant: 'destructive', title: "Programación llena", description: "No puedes programar más de 9 eventos."});
+            return;
+        }
+        setModificationIndex(emptyIndex);
+    }
+
+    setDialogEvent(eventForDialog);
+    setEventSelectionDialogOpen(true);
+
+    if (event.source !== 'streamed.pk' || event.options.length > 0) return;
+    
+    setIsOptionsLoading(true);
+    try {
+      const sourcePromises = event.sources.map(async (source) => {
+        const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+        if (response.ok) {
+          const streams: any[] = await response.json();
+          return streams.map((stream) => ({ url: stream.embedUrl, label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`, hd: stream.hd, language: stream.language, }));
+        }
+        return [];
+      });
+      const results = await Promise.all(sourcePromises);
+      const streamOptions: StreamOption[] = results.flat().filter(Boolean);
+      setDialogEvent({ ...eventForDialog, options: streamOptions });
+    } finally {
+        setIsOptionsLoading(false);
+    }
+  };
+
+  const handleSelectChannelForSchedule = (channel: Channel) => {
+    const channelAsEvent: Event = {
+        id: `${channel.name}-channel-static-schedule`,
+        title: channel.name,
+        options: channel.urls.map(u => ({...u, hd: false, language: ''})),
+        sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
+    };
+    openDialogForEventSchedule(channelAsEvent);
+  };
   
+  const handleFinalSelectionForSchedule = (event: Event, optionUrl: string) => {
+      const newFutureSelection = [...currentSelection];
+      if (modificationIndex !== null) {
+          newFutureSelection[modificationIndex] = { ...event, selectedOption: optionUrl };
+          setCurrentSelection(newFutureSelection);
+      }
+      setEventSelectionDialogOpen(false);
+      setModificationIndex(null);
+  };
+
   const activeFutureEventsCount = currentOrder?.filter(i => currentSelection[i] !== null).length ?? 0;
+  
+  if (addEventsDialogOpen) {
+      return (
+          <div className="fixed inset-0 z-[101] bg-background">
+             <AddEventsDialogContent
+                onOpenChange={setAddEventsDialogOpen}
+                onEventSelect={openDialogForEventSchedule}
+                onChannelClick={handleSelectChannelForSchedule}
+                getEventSelection={(event) => {
+                    const selectionIndex = currentSelection.findIndex(se => se?.id === event.id);
+                    if (selectionIndex !== -1) {
+                        return { isSelected: true, selectedOption: currentSelection[selectionIndex]?.selectedOption || null, index: selectionIndex };
+                    }
+                    return { isSelected: false, selectedOption: null, index: -1 };
+                }}
+                events={allEvents}
+                channels={allChannels}
+                isLoading={false}
+                onFetch={fetchEvents}
+                isRemote={true}
+                onBack={() => setAddEventsDialogOpen(false)}
+            />
+          </div>
+      )
+  }
+
+  if (eventSelectionDialogOpen && dialogEvent) {
+    return (
+       <div className="fixed inset-0 z-[102] bg-background">
+        <RemoteEventSelection
+            event={dialogEvent}
+            onBack={() => {
+                setEventSelectionDialogOpen(false);
+                setModificationIndex(null);
+            }}
+            onSelect={handleFinalSelectionForSchedule}
+            isModification={modificationIndex !== null}
+            onRemove={() => {
+              if (modificationIndex !== null) handleRemoveEventFromFuture(modificationIndex);
+              setEventSelectionDialogOpen(false);
+              setModificationIndex(null);
+            }}
+            isLoading={isOptionsLoading}
+        />
+       </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-background z-[100] flex flex-col">
@@ -222,14 +347,17 @@ export function RemoteScheduleManager({
                             eventDetails={currentSelection}
                             onRemove={handleRemoveEventFromFuture}
                             onModify={(index) => {
-                              alert("Para modificar un evento en una programación, por favor elimínalo y vuelve a añadirlo.");
+                              const eventToModify = currentSelection[index];
+                              if (eventToModify) {
+                                openDialogForEventSchedule(eventToModify);
+                              }
                             }}
                             isViewPage={true}
                         />
                     </div>
                 </ScrollArea>
                  <div className="p-4 border-t border-border mt-auto flex-shrink-0 space-y-2">
-                    <Button variant="outline" className="w-full" onClick={onAddEventFromSchedule}>
+                    <Button variant="outline" className="w-full" onClick={() => setAddEventsDialogOpen(true)}>
                         <Plus className="mr-2 h-4 w-4"/> Añadir Evento/Canal a Programación
                     </Button>
                     <Button className="w-full" onClick={handleSaveOrUpdateSchedule} disabled={activeFutureEventsCount === 0}>

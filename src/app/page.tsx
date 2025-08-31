@@ -1490,7 +1490,7 @@ export function HomePageContent() {
       <DialogContent>
           <DialogHeader>
               <DialogModalTitle>Suscripción a Calendario</DialogModalTitle>
-              <DialogDescription>
+              <DialogDescription className="sr-only">
                   Elige una categoría para suscribirte. Tu calendario se actualizará automáticamente.
               </DialogDescription>
           </DialogHeader>
@@ -2400,7 +2400,9 @@ function ControllingView({
             initialOrder={appState.viewOrder}
             schedules={appState.schedules}
             onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
-            onAddEventFromSchedule={() => setView('addEvents')}
+            allEvents={allEvents}
+            allChannels={allChannels}
+            fetchEvents={fetchEvents}
         />
     );
   }
