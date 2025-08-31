@@ -33,6 +33,7 @@ interface CameraConfigurationProps {
   onOpenTutorial: () => void;
   onOpenErrors: () => void;
   onOpenCalendar: () => void;
+  onOpenPresets: () => void;
   isTutorialOpen: boolean;
   onIsTutorialOpenChange: (open: boolean) => void;
   isErrorsOpen: boolean;

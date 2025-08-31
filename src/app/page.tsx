@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays, Copy, Check } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays, Copy, Check, LayoutGrid } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -71,6 +71,7 @@ import { RemoteEventSelection } from '@/components/remote-event-selection';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { RemoteScheduleManager } from '@/components/remote-schedule-manager';
 import { RemoteChat } from '@/components/remote-chat';
+import { PresetsDialog } from '@/components/presets-dialog';
 
 
 interface StreamedMatch {
@@ -313,6 +314,7 @@ export function HomePageContent() {
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
   const [remoteControlOptionsOpen, setRemoteControlOptionsOpen] = useState(false);
+  const [presetsDialogOpen, setPresetsDialogOpen] = useState(false);
   
   const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
   const [controllerCode, setControllerCode] = useState('');
@@ -1383,6 +1385,40 @@ export function HomePageContent() {
       }
   };
 
+  const handlePresetSelect = (presetChannels: { name: string; optionIndex: number }[]) => {
+    const newSelectedEvents: (Event | null)[] = Array(9).fill(null);
+    let count = 0;
+
+    for (const presetChannel of presetChannels) {
+        if (count >= 9) break;
+
+        const channelData = channels.find(c => c.name === presetChannel.name);
+        if (channelData && channelData.urls.length > presetChannel.optionIndex) {
+            const selectedOption = channelData.urls[presetChannel.optionIndex];
+            const event: Event = {
+                id: `${channelData.name}-channel-static`,
+                title: channelData.name,
+                options: channelData.urls.map(u => ({ ...u, hd: false, language: '' })),
+                selectedOption: selectedOption.url,
+                sources: [],
+                buttons: [],
+                time: 'AHORA',
+                category: 'Canal',
+                language: '',
+                date: '',
+                source: '',
+                status: 'En Vivo',
+                image: channelData.logo
+            };
+            newSelectedEvents[count] = event;
+            count++;
+        }
+    }
+    setSelectedEvents(newSelectedEvents);
+    setPresetsDialogOpen(false);
+};
+
+
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
@@ -1497,10 +1533,8 @@ export function HomePageContent() {
                 allChannels={channelsData}
                 getEventSelection={(event) => getEventSelection(event)}
                 container={remoteControlContainerRef.current ?? undefined}
-                onAddEvent={() => setAddEventsDialogOpen(true)}
                 remoteControlMode={remoteControlMode}
                 controlledSessionCode={controlledSessionCode}
-                onActivateRemoteControl={handleActivateRemoteControl}
             />
             <NotificationManager
             open={notificationManagerOpen}
@@ -1689,6 +1723,7 @@ export function HomePageContent() {
                     remoteControlMode={remoteControlMode}
                     controlledSessionCode={controlledSessionCode}
                     onActivateRemoteControl={handleActivateRemoteControl}
+                    onOpenPresets={() => setPresetsDialogOpen(true)}
                 />
 
                 {isChatEnabled && (
@@ -2067,6 +2102,7 @@ export function HomePageContent() {
                                                 remoteControlMode={remoteControlMode}
                                                 controlledSessionCode={controlledSessionCode}
                                                 onActivateRemoteControl={handleActivateRemoteControl}
+                                                onOpenPresets={() => setPresetsDialogOpen(true)}
                                             />
                                       </SheetContent>
                                       </Sheet>
@@ -2098,6 +2134,12 @@ export function HomePageContent() {
       )}
 
       {/* Dialogs at top level */}
+      <PresetsDialog
+        open={presetsDialogOpen}
+        onOpenChange={setPresetsDialogOpen}
+        onSelectPreset={handlePresetSelect}
+        container={remoteControlContainerRef.current ?? undefined}
+      />
       <AddEventsDialog
           open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
@@ -2482,7 +2524,7 @@ function ControllingView({
                 setLiveAppState({ isChatEnabled: true });
                 setView('chat')
             }}
-            onSchedule={() => setView('schedule')}
+            onStopSession={onStopSession}
         />
     </div>
   );

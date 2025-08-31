@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, MessageSquare } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, MessageSquare, LayoutGrid } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -44,6 +44,7 @@ export interface EventListManagementProps {
   onOpenTutorial?: () => void;
   onOpenErrors?: () => void;
   onOpenCalendar?: () => void;
+  onOpenPresets?: () => void;
   isTutorialOpen?: boolean;
   onIsTutorialOpenChange?: (open: boolean) => void;
   isErrorsOpen?: boolean;
@@ -196,7 +197,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         borderColor, onBorderColorChange,
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
-        onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
+        onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar, onOpenPresets,
         onAddEvent, onSchedule,
         isRemoteControlView = false,
         onOpenChat,
@@ -210,14 +211,10 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
     return (
       <div className="flex flex-col h-full bg-background text-foreground relative">
-        {!isRemoteControlView && (
-            <>
-                <div className="p-4 flex-shrink-0 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">Configuración</h2>
-                </div>
-                <Separator />
-            </>
-        )}
+        <div className="p-4 flex-shrink-0 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Configuración</h2>
+        </div>
+        <Separator />
 
         {isSessionActive && (
              <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4">
@@ -241,12 +238,17 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   Añadir Evento/Canal
                               </Button>
                             )}
-                            {!isSessionActive && onSchedule && !isRemoteControlView && (
+                            {onSchedule && !isRemoteControlView && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                     <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                 </Button>
                             )}
-                            {!isSessionActive && onActivateRemoteControl && !isRemoteControlView && (
+                            {onOpenPresets && !isRemoteControlView && (
+                                <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
+                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
+                                </Button>
+                            )}
+                            {onActivateRemoteControl && !isRemoteControlView && remoteControlMode !== 'controlled' && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onActivateRemoteControl}>
                                     <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
                                 </Button>
