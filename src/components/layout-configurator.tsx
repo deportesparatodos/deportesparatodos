@@ -204,6 +204,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         remoteControlMode,
         controlledSessionCode,
         onActivateRemoteControl,
+        isViewPage,
     } = props;
         
     const order = props.order || [];
@@ -247,12 +248,12 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                     <LayoutGrid className="mr-2 h-4 w-4" /> Presets
                                 </Button>
                             )}
-                            {onSchedule && !isRemoteControlView && (
+                            {isViewPage && onSchedule && !isRemoteControlView && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                     <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                 </Button>
                             )}
-                            {onActivateRemoteControl && !isRemoteControlView && remoteControlMode !== 'controlled' && (
+                            {isViewPage && onActivateRemoteControl && !isRemoteControlView && remoteControlMode !== 'controlled' && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onActivateRemoteControl}>
                                     <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
                                 </Button>
@@ -300,17 +301,19 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                   <AccordionItem value="item-features" className="border rounded-lg px-4">
                       <AccordionTrigger>Funciones Adicionales</AccordionTrigger>
                       <AccordionContent className="pt-4 pb-4 space-y-2">
-                          <div className="flex items-center justify-between">
-                              <Label htmlFor="chat-switch" className="flex flex-col gap-1">
-                                  <span>Activar Chat en Vivo</span>
-                                  <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
-                              </Label>
-                              <Switch
-                                  id="chat-switch"
-                                  checked={isChatEnabled}
-                                  onCheckedChange={onIsChatEnabledChange}
-                              />
-                          </div>
+                          {isViewPage && (
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="chat-switch" className="flex flex-col gap-1">
+                                    <span>Activar Chat en Vivo</span>
+                                    <span className="text-xs text-muted-foreground">Muestra el botón de chat en la vista de transmisión.</span>
+                                </Label>
+                                <Switch
+                                    id="chat-switch"
+                                    checked={isChatEnabled}
+                                    onCheckedChange={onIsChatEnabledChange}
+                                />
+                            </div>
+                          )}
                           {onOpenChat && (
                             <Button variant="outline" className="w-full justify-start" onClick={onOpenChat}>
                                 <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
