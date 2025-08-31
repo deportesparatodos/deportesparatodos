@@ -1544,9 +1544,9 @@ export function HomePageContent() {
             />
             <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
                 <DialogContent className="sm:max-w-md p-0" hideClose={true}>
-                    <DialogHeader>
-                        <DialogModalTitle className='sr-only'>Bienvenida</DialogModalTitle>
-                        <DialogDescription className="sr-only">¡Bienvenido a Deportes para Todos!</DialogDescription>
+                    <DialogHeader className="sr-only">
+                        <DialogModalTitle>Bienvenida</DialogModalTitle>
+                        <DialogDescription>¡Bienvenido a Deportes para Todos!</DialogDescription>
                     </DialogHeader>
                     <DialogModalClose asChild>
                     <Button variant="ghost" className="absolute right-0 top-0 rounded-bl-lg rounded-tr-lg p-2 bg-background/50 backdrop-blur-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10" onClick={() => setWelcomePopupOpen(false)}>
@@ -2302,18 +2302,16 @@ function ControllingView({
 
   const openDialogForEventRemote = async (event: Event) => {
       const selection = getEventSelectionRemote(event);
-      const emptyIndex = appState.selectedEvents.findIndex((e) => e === null);
-      
       let targetIndex: number | null;
+
       if (selection.isSelected) {
           targetIndex = selection.index;
       } else {
-          targetIndex = emptyIndex;
-      }
-
-      if (targetIndex === -1) {
-          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
-          return;
+          targetIndex = appState.selectedEvents.findIndex((e) => e === null);
+          if (targetIndex === -1) {
+              toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
+              return;
+          }
       }
       
       setModificationIndex(targetIndex);
@@ -2324,7 +2322,7 @@ function ControllingView({
       }
       
       setDialogEvent(eventForDialog);
-      setDialogChannel(null); // Ensure channel is null
+      setDialogChannel(null);
       setView('eventSelection');
       
       if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
@@ -2355,24 +2353,29 @@ function ControllingView({
   };
 
   const handleChannelClickRemote = (channel: Channel) => {
-      const selection = getEventSelectionRemote({ id: `${channel.name}-channel-static`, title: channel.name } as Event);
-      const emptyIndex = appState.selectedEvents.findIndex((e) => e === null);
-      
+      const channelAsEvent: Event = {
+          id: `${channel.name}-channel-static`,
+          title: channel.name,
+          options: channel.urls.map(u => ({...u, hd: false, language: ''})),
+          sources: [], buttons: [], time: 'AHORA', category: 'Canal',
+          language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
+      };
+      const selection = getEventSelectionRemote(channelAsEvent);
       let targetIndex: number | null;
+
       if (selection.isSelected) {
           targetIndex = selection.index;
       } else {
-          targetIndex = emptyIndex;
+          targetIndex = appState.selectedEvents.findIndex((e) => e === null);
+          if (targetIndex === -1) {
+              toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
+              return;
+          }
       }
-
-      if (targetIndex === -1) {
-          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
-          return;
-      }
-
+      
       setModificationIndex(targetIndex);
       setDialogChannel(channel);
-      setDialogEvent(null); // Ensure event is null
+      setDialogEvent(null);
       setView('eventSelection');
   };
   
