@@ -220,18 +220,18 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         )}
 
         {isSessionActive && (
-            <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4 rounded-lg">
+             <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4">
                 <p className="font-semibold text-foreground">Sesión de control remoto activa.</p>
-                <p className="text-sm text-muted-foreground mb-2">Realice las modificaciones desde el mando.</p>
-                <p className="text-sm text-muted-foreground">Su código es: <span className="font-bold text-lg text-primary tracking-widest">{controlledSessionCode}</span></p>
-            </div>
+                <p className="text-sm text-muted-foreground mb-2">Realice las modificaciones desde ahí.</p>
+                <p className="text-sm text-muted-foreground">Su código de control remoto es: <span className="font-bold text-lg text-primary tracking-widest">{controlledSessionCode}</span></p>
+             </div>
         )}
 
-        <ScrollArea className="flex-grow h-0" style={{ opacity: isSessionActive ? 0.2 : 1 }}>
-          <div className='p-4 space-y-4'>
+        <ScrollArea className="flex-grow h-0">
+          <div className='p-4 space-y-4' style={{ opacity: isSessionActive ? 0.2 : 1, pointerEvents: isSessionActive ? 'none' : 'auto' }}>
               <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="item-events">
-                  <AccordionItem value="item-events" className="border rounded-lg px-4" disabled={isSessionActive}>
-                      <AccordionTrigger disabled={isSessionActive}>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
+                  <AccordionItem value="item-events" className="border rounded-lg px-4">
+                      <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
                       <AccordionContent className="pt-2 pb-4 space-y-4">
                           <EventList {...props} />
                           <div className="space-y-2 pt-2">
@@ -241,6 +241,16 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   Añadir Evento/Canal
                               </Button>
                             )}
+                            {!isSessionActive && onSchedule && !isRemoteControlView && (
+                                <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
+                                    <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                                </Button>
+                            )}
+                            {!isSessionActive && onActivateRemoteControl && !isRemoteControlView && (
+                                <Button variant="outline" className="w-full justify-center" onClick={onActivateRemoteControl}>
+                                    <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
+                                </Button>
+                             )}
                           </div>
                       </AccordionContent>
                   </AccordionItem>
@@ -342,16 +352,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                     </AccordionItem>
                   )}
               </Accordion>
-                {!isSessionActive && onSchedule && !isRemoteControlView && (
-                    <Button variant="outline" className="w-full justify-center mt-4" onClick={onSchedule}>
-                        <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                    </Button>
-                )}
-                {!isSessionActive && onActivateRemoteControl && !isRemoteControlView && (
-                    <Button variant="outline" className="w-full justify-center mt-2" onClick={onActivateRemoteControl}>
-                        <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
-                    </Button>
-                 )}
           </div>
         </ScrollArea>
       </div>
