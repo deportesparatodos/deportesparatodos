@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -165,6 +166,7 @@ export function RemoteScheduleManager({
 
     setDialogEvent(eventForDialog);
     setEventSelectionDialogOpen(true);
+    setAddEventsDialogOpen(false); // Hide the add events dialog
 
     if (event.source !== 'streamed.pk' || event.options.length > 0) return;
     
@@ -203,6 +205,7 @@ export function RemoteScheduleManager({
           setCurrentSelection(newFutureSelection);
       }
       setEventSelectionDialogOpen(false);
+      setAddEventsDialogOpen(true); // Show the add events dialog again
       setModificationIndex(null);
   };
 
@@ -240,6 +243,7 @@ export function RemoteScheduleManager({
             event={dialogEvent}
             onBack={() => {
                 setEventSelectionDialogOpen(false);
+                setAddEventsDialogOpen(true); // Go back to the add events list
                 setModificationIndex(null);
             }}
             onSelect={handleFinalSelectionForSchedule}
@@ -247,6 +251,7 @@ export function RemoteScheduleManager({
             onRemove={() => {
               if (modificationIndex !== null) handleRemoveEventFromFuture(modificationIndex);
               setEventSelectionDialogOpen(false);
+              setAddEventsDialogOpen(true); // Go back to the add events list
               setModificationIndex(null);
             }}
             isLoading={isOptionsLoading}
