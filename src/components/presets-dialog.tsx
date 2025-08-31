@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
-import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowLeft, X } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import type { Event } from './event-carousel';
@@ -95,7 +95,7 @@ function PresetEditor({
     onDelete?: (presetId: string) => void,
     existingPreset?: Preset | null,
     allEvents: Event[],
-    allChannels: Channel[]
+    allChannels: Channel[] 
 }) {
     const [name, setName] = useState(existingPreset?.name || '');
     const [selectedItems, setSelectedItems] = useState<PresetChannel[]>(existingPreset?.channels || []);
