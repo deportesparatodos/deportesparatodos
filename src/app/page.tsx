@@ -1074,15 +1074,11 @@ export function HomePageContent() {
     return sortedCategories;
   }, [events]);
 
-  // --- Centralized Selection Logic ---
-
-  const getEventSelection = useCallback((event: Event, sourceEvents: (Event|null)[]): { isSelected: boolean; selectedOption: string | null; index: number } => {
-    if (!sourceEvents) return { isSelected: false, selectedOption: null, index: -1 };
-    
-    const selectionIndex = sourceEvents.findIndex(se => se?.id === event.id);
+  const getEventSelection = useCallback((event: Event): { isSelected: boolean; selectedOption: string | null; index: number } => {
+    const selectionIndex = selectedEvents.findIndex(se => se?.id === event.id);
 
     if (selectionIndex !== -1) {
-      const selectedEvent = sourceEvents[selectionIndex];
+      const selectedEvent = selectedEvents[selectionIndex];
       return { 
         isSelected: true, 
         selectedOption: selectedEvent?.selectedOption || null, 
@@ -1090,26 +1086,18 @@ export function HomePageContent() {
       };
     }
     return { isSelected: false, selectedOption: null, index: -1 };
-  }, []);
+  }, [selectedEvents]);
   
-    // Finds the correct index for a new or existing event.
-  const findTargetIndex = useCallback((event: Event | null, sourceEvents: (Event|null)[]) => {
-      // For a new event, find the first empty slot.
-      if (!event) {
-          return sourceEvents.findIndex(e => e === null);
-      }
-      
-      const existingIndex = sourceEvents.findIndex(e => e?.id === event.id);
-      if (existingIndex !== -1) {
-          return existingIndex; // Found existing event, return its index for modification
-      }
-
-      // Fallback for new event if `event` is provided
-      return sourceEvents.findIndex(e => e === null);
+  const findTargetIndex = useCallback((event: Event | null, sourceEvents: (Event|null)[]): number => {
+    if (event) {
+        const existingIndex = sourceEvents.findIndex(e => e?.id === event.id);
+        if (existingIndex !== -1) {
+            return existingIndex; 
+        }
+    }
+    return sourceEvents.findIndex(e => e === null);
   }, []);
 
-  // --- Main View Handlers ---
-  
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
     
@@ -1120,9 +1108,13 @@ export function HomePageContent() {
     });
 
     const newSelectedEvents = [...selectedEvents];
-    if (modificationIndex !== null && modificationIndex >= 0) {
-      newSelectedEvents[modificationIndex] = eventWithSelection;
-      setSelectedEvents(newSelectedEvents);
+    const targetIndex = modificationIndex !== null ? modificationIndex : findTargetIndex(null, newSelectedEvents);
+    
+    if (targetIndex !== -1) {
+        newSelectedEvents[targetIndex] = eventWithSelection;
+        setSelectedEvents(newSelectedEvents);
+    } else {
+         toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
     }
     
     setEventSelectionDialogOpen(false);
@@ -1137,17 +1129,11 @@ export function HomePageContent() {
   }, [selectedEvents, setSelectedEvents]);
   
   const openDialogForEvent = async (event: Event) => {
-      // Modification path: find the existing event
-      const existingIndex = findTargetIndex(event, selectedEvents);
-      
-      // Addition path: find the first empty slot
-      const newIndex = findTargetIndex(null, selectedEvents);
+      const targetIndex = findTargetIndex(event, selectedEvents);
 
-      const targetIndex = existingIndex !== -1 ? existingIndex : newIndex;
-      
-      if (targetIndex === -1) {
-          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
-          return;
+      if (targetIndex === -1 && getEventSelection(event).isSelected === false) {
+           toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
+           return;
       }
       
       setDialogContext('main');
@@ -1208,14 +1194,13 @@ export function HomePageContent() {
           sources: [], buttons: [], time: 'AHORA', category: 'Canal',
           language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
       };
-      
       openDialogForEvent(channelAsEvent);
   };
   
   const openDialogForModification = (index: number) => {
     const event = selectedEvents[index];
     if (!event) return;
-    
+    setModificationIndex(index);
     openDialogForEvent(event);
   };
 
@@ -1419,8 +1404,6 @@ export function HomePageContent() {
             fetchEvents={fetchEvents}
             ablyChannel={channelRef.current}
             toast={toast}
-            findTargetIndex={findTargetIndex}
-            getEventSelection={getEventSelection}
             onOpenAddEvents={() => {
                 if (channelRef.current) {
                     channelRef.current.publish('sync-request', {});
@@ -1519,7 +1502,7 @@ export function HomePageContent() {
                 initialOrder={viewOrder}
                 allEvents={allSortedEvents}
                 allChannels={channelsData}
-                getEventSelection={(event) => getEventSelection(event, appState.selectedEvents)}
+                getEventSelection={(event) => getEventSelection(event)}
                 container={remoteControlContainerRef.current ?? undefined}
                 onAddEvent={() => setAddEventsDialogOpen(true)}
             />
@@ -1871,7 +1854,7 @@ export function HomePageContent() {
                         <EventCard
                             key={`mobile-event-${event.id}-${index}`}
                             event={event}
-                            selection={getEventSelection(event, selectedEvents)}
+                            selection={getEventSelection(event)}
                             onClick={() => openDialogForEvent(event)}
                         />
                     ))}
@@ -1879,22 +1862,22 @@ export function HomePageContent() {
             ) : (
                 <>
                     <div className="mb-8">
-                        <EventCarousel title="Canales" channels={channelsData} onChannelClick={handleChannelClick} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
+                        <EventCarousel title="Canales" channels={channelsData} onChannelClick={handleChannelClick} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                      <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
+                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
+                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
+                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                 </>
             )}
@@ -1914,7 +1897,7 @@ export function HomePageContent() {
               const isChannel = 'urls' in item;
               if (isChannel) {
                 const channelAsEvent: Event = { id: `${(item as Channel).name}-channel-static`, title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: (item as Channel).logo };
-                const selection = getEventSelection(channelAsEvent, selectedEvents);
+                const selection = getEventSelection(channelAsEvent);
                 return (
                     <Card 
                         key={`search-channel-${index}`}
@@ -1950,7 +1933,7 @@ export function HomePageContent() {
                     <EventCard
                       key={`search-event-${(item as Event).id}-${index}`}
                       event={item as Event}
-                      selection={getEventSelection(item as Event, selectedEvents)}
+                      selection={getEventSelection(item as Event)}
                       onClick={() => openDialogForEvent(item as Event)}
                     />
                 );
@@ -2118,7 +2101,7 @@ export function HomePageContent() {
           onOpenChange={setAddEventsDialogOpen}
           onEventSelect={openDialogForEvent}
           onChannelClick={handleChannelClick}
-          getEventSelection={(event) => getEventSelection(event, selectedEvents)}
+          getEventSelection={(event) => getEventSelection(event)}
           events={allSortedEvents}
           channels={channelsData}
           isLoading={isAddEventsLoading}
@@ -2227,8 +2210,6 @@ type ControllingViewProps = {
     fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
     ablyChannel: any;
     toast: any;
-    findTargetIndex: (event: Event | null, sourceEvents: (Event|null)[]) => number;
-    getEventSelection: (event: Event, sourceState: (Event|null)[]) => { isSelected: boolean; selectedOption: string | null; index: number };
     onOpenAddEvents: () => void;
 };
 
@@ -2242,8 +2223,6 @@ function ControllingView({
   fetchEvents,
   ablyChannel,
   toast,
-  findTargetIndex,
-  getEventSelection,
   onOpenAddEvents
 }: ControllingViewProps) {
   type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
@@ -2279,61 +2258,72 @@ function ControllingView({
     setLiveAppState({ selectedEvents: newSelectedEvents });
   }, [appState.selectedEvents, setLiveAppState]);
   
-    const openDialogForEventRemote = async (event: Event) => {
-        const targetIndex = findTargetIndex(null, appState.selectedEvents);
+  const getEventSelectionRemote = (event: Event): { isSelected: boolean; selectedOption: string | null; index: number } => {
+    const selectionIndex = appState.selectedEvents.findIndex(se => se?.id === event.id);
+    if (selectionIndex !== -1) {
+      const selectedEvent = appState.selectedEvents[selectionIndex];
+      return { isSelected: true, selectedOption: selectedEvent?.selectedOption || null, index: selectionIndex };
+    }
+    return { isSelected: false, selectedOption: null, index: -1 };
+  };
 
-        if (targetIndex === -1 && findTargetIndex(event, appState.selectedEvents) === -1) {
-            toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
-            return;
-        }
-        
-        const finalIndex = findTargetIndex(event, appState.selectedEvents) !== -1 
-            ? findTargetIndex(event, appState.selectedEvents) 
-            : targetIndex;
+  const openDialogForEventRemote = async (event: Event) => {
+    const existingIndex = appState.selectedEvents.findIndex(e => e?.id === event.id);
+    const targetIndex = (existingIndex !== -1) ? existingIndex : appState.selectedEvents.findIndex(e => e === null);
 
-        setModificationIndex(finalIndex);
-        setDialogEvent(event);
-        setView('eventSelection');
+    if (targetIndex === -1) {
+        toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
+        return;
+    }
 
-        if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
-            return;
-        }
-  
-      setIsOptionsLoading(true);
-      try {
+    setModificationIndex(targetIndex);
+    setDialogEvent(event);
+    setView('eventSelection');
+    
+    if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
+        return;
+    }
+
+    setIsOptionsLoading(true);
+    try {
         const sourcePromises = event.sources.map(async (source) => {
-          const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-          if (response.ok) {
-            const streams: any[] = await response.json();
-            return streams.map((stream) => ({
-              url: stream.embedUrl,
-              label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-              hd: stream.hd,
-              language: stream.language,
-            }));
-          }
-          return [];
+            const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+            if (response.ok) {
+                const streams: any[] = await response.json();
+                return streams.map((stream) => ({
+                    url: stream.embedUrl,
+                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                    hd: stream.hd,
+                    language: stream.language,
+                }));
+            }
+            return [];
         });
         const results = await Promise.all(sourcePromises);
         const streamOptions: StreamOption[] = results.flat().filter(Boolean);
         setDialogEvent({ ...event, options: streamOptions });
-      } finally {
+    } finally {
         setIsOptionsLoading(false);
-      }
+    }
   };
 
-    const handleEventSelectRemote = (event: Event, optionUrl: string) => {
-        if (modificationIndex === null) return;
-        const eventWithSelection = { ...event, selectedOption: optionUrl };
-        const newSelectedEvents = [...appState.selectedEvents];
-        newSelectedEvents[modificationIndex] = eventWithSelection;
-        setLiveAppState({ selectedEvents: newSelectedEvents });
-        setView('addEvents');
-        setDialogEvent(null);
-        setModificationIndex(null);
-    };
+  const handleEventSelectRemote = (event: Event, optionUrl: string) => {
+      if (modificationIndex === null) return;
+      const newSelectedEvents = [...appState.selectedEvents];
+      newSelectedEvents[modificationIndex] = { ...event, selectedOption: optionUrl };
+      setLiveAppState({ selectedEvents: newSelectedEvents });
+      setView('addEvents');
+      setDialogEvent(null);
+      setModificationIndex(null);
+  };
+  
+  const handleChannelClickRemote = (channel: Channel) => {
+        const targetIndex = appState.selectedEvents.findIndex(e => e === null);
+        if (targetIndex === -1) {
+            toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
+            return;
+        }
 
-    const handleChannelClickRemote = (channel: Channel) => {
         const channelAsEvent: Event = {
             id: `${channel.name}-channel-static`,
             title: channel.name,
@@ -2341,7 +2331,20 @@ function ControllingView({
             sources: [], buttons: [], time: 'AHORA', category: 'Canal',
             language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
         };
-        openDialogForEventRemote(channelAsEvent);
+
+        setModificationIndex(targetIndex);
+        setDialogEvent(channelAsEvent);
+        setView('eventSelection');
+    };
+
+    const handleSelectChannelRemote = (event: Event, optionUrl: string) => {
+        if (modificationIndex === null) return;
+        const newSelectedEvents = [...appState.selectedEvents];
+        newSelectedEvents[modificationIndex] = { ...event, selectedOption: optionUrl };
+        setLiveAppState({ selectedEvents: newSelectedEvents });
+        setView('addEvents');
+        setDialogEvent(null);
+        setModificationIndex(null);
     };
 
   if (view === 'addEvents') {
@@ -2351,7 +2354,7 @@ function ControllingView({
                 onOpenChange={() => setView('main')}
                 onEventSelect={openDialogForEventRemote}
                 onChannelClick={handleChannelClickRemote}
-                getEventSelection={(e) => getEventSelection(e, appState.selectedEvents)}
+                getEventSelection={getEventSelectionRemote}
                 events={allSortedEvents}
                 channels={allChannels}
                 isLoading={false}
@@ -2367,7 +2370,7 @@ function ControllingView({
       <RemoteEventSelection
         event={dialogEvent}
         onBack={() => { setView('addEvents'); setDialogEvent(null); }}
-        onSelect={handleEventSelectRemote}
+        onSelect={dialogEvent.category === 'Canal' ? handleSelectChannelRemote : handleEventSelectRemote}
         isModification={modificationIndex !== null && appState.selectedEvents[modificationIndex] !== null}
         onRemove={() => {
           if (modificationIndex !== null) handleEventRemove(modificationIndex);
@@ -2384,7 +2387,7 @@ function ControllingView({
        <RemoteScheduleManager
             onBack={() => setView('main')}
             appState={appState}
-            onSchedulesChange={(s) => setLiveAppState({ schedules: s })}
+            onSchedulesChange={(schedules) => setLiveAppState({ schedules })}
             allEvents={allEvents}
             allChannels={allChannels}
             fetchEvents={fetchEvents}

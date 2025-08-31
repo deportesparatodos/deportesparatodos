@@ -142,24 +142,15 @@ export function RemoteScheduleManager({
   }
 
   const openDialogForEventSchedule = async (event: Event) => {
-    const selectionIndex = currentSelection.findIndex(se => se?.id === event.id);
-    let eventForDialog = { ...event };
+    const targetIndex = currentSelection.findIndex(e => e === null);
     
-    if (selectionIndex !== -1) {
-        setModificationIndex(selectionIndex);
-        if (currentSelection[selectionIndex]?.selectedOption) {
-            eventForDialog.selectedOption = currentSelection[selectionIndex]?.selectedOption;
-        }
-    } else {
-        const emptyIndex = currentSelection.findIndex(e => e === null);
-        if (emptyIndex === -1) {
-            toast({ variant: 'destructive', title: "Programación llena", description: "No puedes programar más de 9 eventos."});
-            return;
-        }
-        setModificationIndex(emptyIndex);
+    if (targetIndex === -1) {
+        toast({ variant: 'destructive', title: "Programación llena", description: "No puedes programar más de 9 eventos."});
+        return;
     }
-
-    setDialogEvent(eventForDialog);
+    
+    setModificationIndex(targetIndex);
+    setDialogEvent(event);
     setAddEventsDialogOpen(false);
     setEventSelectionDialogOpen(true);
 
@@ -177,7 +168,7 @@ export function RemoteScheduleManager({
       });
       const results = await Promise.all(sourcePromises);
       const streamOptions: StreamOption[] = results.flat().filter(Boolean);
-      setDialogEvent({ ...eventForDialog, options: streamOptions });
+      setDialogEvent({ ...event, options: streamOptions });
     } finally {
         setIsOptionsLoading(false);
     }
@@ -241,7 +232,7 @@ export function RemoteScheduleManager({
                 setModificationIndex(null);
             }}
             onSelect={handleFinalSelectionForSchedule}
-            isModification={modificationIndex !== null}
+            isModification={modificationIndex !== null && currentSelection[modificationIndex!] !== null}
             onRemove={() => {
               if (modificationIndex !== null) handleRemoveEventFromFuture(modificationIndex);
               setEventSelectionDialogOpen(false);
