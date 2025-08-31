@@ -1535,6 +1535,7 @@ export function HomePageContent() {
                 allChannels={channelsData}
                 getEventSelection={getEventSelection}
                 container={remoteControlContainerRef.current ?? undefined}
+                onAddEvent={() => setAddEventsDialogOpen(true)}
             />
             <NotificationManager
             open={notificationManagerOpen}
@@ -2300,81 +2301,95 @@ function ControllingView({
   }, [appState]);
 
   const openDialogForEventRemote = async (event: Event) => {
-    const selection = getEventSelectionRemote(event);
-    let eventForDialog = { ...event };
-    if (selection.isSelected) {
-      setModificationIndex(selection.index);
-      if (selection.selectedOption) {
-        eventForDialog.selectedOption = selection.selectedOption;
-      }
-    } else {
+      const selection = getEventSelectionRemote(event);
       const emptyIndex = appState.selectedEvents.findIndex((e) => e === null);
-      setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
-    }
-    setDialogEvent(eventForDialog);
-    setView('eventSelection');
-    
-    if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
-        return;
-    }
+      
+      let targetIndex: number | null;
+      if (selection.isSelected) {
+          targetIndex = selection.index;
+      } else {
+          targetIndex = emptyIndex;
+      }
 
-    setIsOptionsLoading(true);
-    try {
-      const sourcePromises = event.sources.map(async (source) => {
-        const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-        if (response.ok) {
-          const streams: any[] = await response.json();
-          return streams.map((stream) => ({
-            url: stream.embedUrl,
-            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-            hd: stream.hd,
-            language: stream.language,
-          }));
-        }
-        return [];
-      });
-      const results = await Promise.all(sourcePromises);
-      const streamOptions: StreamOption[] = results.flat().filter(Boolean);
-      setDialogEvent({ ...eventForDialog, options: streamOptions });
-    } finally {
-      setIsOptionsLoading(false);
-    }
+      if (targetIndex === -1) {
+          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
+          return;
+      }
+      
+      setModificationIndex(targetIndex);
+
+      let eventForDialog = { ...event };
+      if (selection.isSelected && selection.selectedOption) {
+          eventForDialog.selectedOption = selection.selectedOption;
+      }
+      
+      setDialogEvent(eventForDialog);
+      setDialogChannel(null); // Ensure channel is null
+      setView('eventSelection');
+      
+      if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
+          return;
+      }
+  
+      setIsOptionsLoading(true);
+      try {
+        const sourcePromises = event.sources.map(async (source) => {
+          const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+          if (response.ok) {
+            const streams: any[] = await response.json();
+            return streams.map((stream) => ({
+              url: stream.embedUrl,
+              label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+              hd: stream.hd,
+              language: stream.language,
+            }));
+          }
+          return [];
+        });
+        const results = await Promise.all(sourcePromises);
+        const streamOptions: StreamOption[] = results.flat().filter(Boolean);
+        setDialogEvent({ ...eventForDialog, options: streamOptions });
+      } finally {
+        setIsOptionsLoading(false);
+      }
   };
 
   const handleChannelClickRemote = (channel: Channel) => {
-    const selection = getEventSelectionRemote({ id: `${channel.name}-channel-static`, title: channel.name } as Event);
-    if (selection.isSelected) {
-        setModificationIndex(selection.index);
-    } else {
-        const emptyIndex = appState.selectedEvents.findIndex((e) => e === null);
-        setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
-    }
-    setDialogChannel(channel);
-    setView('eventSelection');
+      const selection = getEventSelectionRemote({ id: `${channel.name}-channel-static`, title: channel.name } as Event);
+      const emptyIndex = appState.selectedEvents.findIndex((e) => e === null);
+      
+      let targetIndex: number | null;
+      if (selection.isSelected) {
+          targetIndex = selection.index;
+      } else {
+          targetIndex = emptyIndex;
+      }
+
+      if (targetIndex === -1) {
+          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
+          return;
+      }
+
+      setModificationIndex(targetIndex);
+      setDialogChannel(channel);
+      setDialogEvent(null); // Ensure event is null
+      setView('eventSelection');
   };
   
   const handleEventSelectRemote = (event: Event, optionUrl: string) => {
+    if (modificationIndex === null) return;
     const eventWithSelection = { ...event, selectedOption: optionUrl };
     const newSelectedEvents = [...appState.selectedEvents];
-    let targetIndex = -1;
-
-    if (modificationIndex !== null) {
-      targetIndex = modificationIndex;
-    } else {
-      targetIndex = newSelectedEvents.findIndex((e) => e === null);
-    }
-
-    if (targetIndex !== -1) {
-      newSelectedEvents[targetIndex] = eventWithSelection;
-      setLiveAppState({ selectedEvents: newSelectedEvents });
-    } else {
-      toast({ variant: 'destructive', title: 'Selección Completa' });
-    }
+    newSelectedEvents[modificationIndex] = eventWithSelection;
+    setLiveAppState({ selectedEvents: newSelectedEvents });
     setView('main');
     setDialogEvent(null);
+    setDialogChannel(null);
+    setModificationIndex(null);
   };
   
   const handleSelectChannelRemote = (channel: Channel, optionUrl: string) => {
+    if (modificationIndex === null) return;
     const channelAsEvent: Event = {
       id: `${channel.name}-channel-static`,
       title: channel.name,
@@ -2392,22 +2407,12 @@ function ControllingView({
     };
     
     const newSelectedEvents = [...appState.selectedEvents];
-    let targetIndex = -1;
-
-    if (modificationIndex !== null) {
-      targetIndex = modificationIndex;
-    } else {
-      targetIndex = newSelectedEvents.findIndex((e) => e === null);
-    }
-
-    if (targetIndex !== -1) {
-      newSelectedEvents[targetIndex] = channelAsEvent;
-      setLiveAppState({ selectedEvents: newSelectedEvents });
-    } else {
-      toast({ variant: 'destructive', title: 'Selección Completa' });
-    }
+    newSelectedEvents[modificationIndex] = channelAsEvent;
+    setLiveAppState({ selectedEvents: newSelectedEvents });
     setView('main');
+    setDialogEvent(null);
     setDialogChannel(null);
+    setModificationIndex(null);
   };
 
 
@@ -2454,7 +2459,7 @@ function ControllingView({
         onBack={() => { setView('addEvents'); setDialogEvent(null); setDialogChannel(null); }}
         onSelectEvent={handleEventSelectRemote}
         onSelectChannel={handleSelectChannelRemote}
-        isModification={modificationIndex !== null}
+        isModification={modificationIndex !== null && appState.selectedEvents[modificationIndex] !== null}
         onRemove={() => {
           if (modificationIndex !== null) handleEventRemove(modificationIndex);
           setView('main');
