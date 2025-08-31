@@ -6,7 +6,6 @@ import { FC } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import type { Event, StreamOption } from './event-carousel';
-import type { Channel } from './channel-list';
 import { Badge } from './ui/badge';
 import { cn, getDomainFromUrl } from '@/lib/utils';
 import {
@@ -20,10 +19,8 @@ import { useToast } from '@/hooks/use-toast';
 
 interface RemoteEventSelectionProps {
   event: Event;
-  channel: Channel | null;
   onBack: () => void;
-  onSelectEvent: (event: Event, optionUrl: string) => void;
-  onSelectChannel: (channel: Channel, optionUrl: string) => void;
+  onSelect: (event: Event, optionUrl: string) => void;
   isModification: boolean;
   onRemove: () => void;
   isLoading: boolean;
@@ -33,10 +30,8 @@ const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   event,
-  channel,
   onBack,
-  onSelectEvent,
-  onSelectChannel,
+  onSelect,
   isModification,
   onRemove,
   isLoading,
@@ -52,23 +47,19 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   const isChannel = event.category === 'Canal';
   
   const handleSelect = (optionUrl: string) => {
-    if (channel) {
-        onSelectChannel(channel, optionUrl);
-    } else {
-        onSelectEvent(event, optionUrl);
-    }
+    onSelect(event, optionUrl);
   };
 
 
   return (
     <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-        <div className="p-4 border-b flex-shrink-0 flex flex-row items-center gap-2">
+        <header className="p-4 border-b flex-shrink-0 flex flex-row items-center gap-2">
             <Button variant="ghost" size="icon" onClick={onBack} className="h-9 w-9">
                 <ArrowLeft />
             </Button>
             <h2 className="text-lg font-bold truncate">{event.title}</h2>
              <p className="sr-only">Selecciona una opción para {event.title}</p>
-        </div>
+        </header>
       
         <div className="flex-grow flex flex-col sm:flex-row gap-4 p-4 overflow-hidden">
             {/* Left/Top Panel */}

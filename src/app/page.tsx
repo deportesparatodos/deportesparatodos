@@ -1091,16 +1091,6 @@ export function HomePageContent() {
     }
     return { isSelected: false, selectedOption: null, index: -1 };
   }, []);
-
-  const findTargetIndex = useCallback((event: Event, sourceState: AppState): number => {
-    const { isSelected, index } = getEventSelection(event, sourceState);
-    if (isSelected) {
-      return index; // If it's already selected, we'll modify it in its current place
-    }
-    // Otherwise, find the first empty slot
-    return sourceState.selectedEvents.findIndex(e => e === null);
-  }, [getEventSelection]);
-
   
   // --- Main View Handlers ---
   
@@ -1131,7 +1121,8 @@ export function HomePageContent() {
   }, [selectedEvents, setSelectedEvents]);
   
   const openDialogForEvent = async (event: Event) => {
-    const targetIndex = findTargetIndex(event, appState);
+    // When adding a new event, always find the first empty slot.
+    const targetIndex = selectedEvents.findIndex(e => e === null);
 
     if (targetIndex === -1) {
         toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
@@ -1197,7 +1188,8 @@ export function HomePageContent() {
           sources: [], buttons: [], time: 'AHORA', category: 'Canal',
           language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
       };
-      const targetIndex = findTargetIndex(channelAsEvent, appState);
+      
+      const targetIndex = selectedEvents.findIndex(e => e === null);
       
       if (targetIndex === -1) {
         toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 canales. Elimina uno para añadir otro.' });
@@ -1216,7 +1208,7 @@ export function HomePageContent() {
     if (!event) return;
 
     setDialogEvent(event);
-    setModificationIndex(index);
+    setModificationIndex(index); // Set the specific index for modification
     setEventSelectionDialogOpen(true);
     setDialogContext('main');
   };
@@ -1419,8 +1411,6 @@ export function HomePageContent() {
             allEvents={events}
             allChannels={channelsData}
             fetchEvents={fetchEvents}
-            getEventSelection={(event) => getEventSelection(event, controllerAppState)}
-            findTargetIndex={(event) => findTargetIndex(event, controllerAppState)}
             ablyChannel={channelRef.current}
         />
     );
@@ -1527,7 +1517,7 @@ export function HomePageContent() {
             <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
                 <DialogContent className="sm:max-w-md p-0" hideClose={true}>
                     <DialogHeader>
-                        <DialogModalTitle>Bienvenida</DialogModalTitle>
+                        <DialogModalTitle className='sr-only'>Bienvenida</DialogModalTitle>
                         <DialogDescription className="sr-only">¡Bienvenido a Deportes para Todos!</DialogDescription>
                     </DialogHeader>
                     <DialogModalClose asChild>
@@ -2221,8 +2211,6 @@ type ControllingViewProps = {
     allEvents: Event[];
     allChannels: Channel[];
     fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
-    getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
-    findTargetIndex: (event: Event) => number;
     ablyChannel: any;
 };
 
@@ -2234,15 +2222,12 @@ function ControllingView({
   allEvents,
   allChannels,
   fetchEvents,
-  getEventSelection,
-  findTargetIndex,
   ablyChannel,
 }: ControllingViewProps) {
   type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
   const [view, setView] = useState<ControllingViewMode>('main');
   
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
-  const [dialogChannel, setDialogChannel] = useState<Channel | null>(null);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
   const { toast } = useToast();
@@ -2273,7 +2258,29 @@ function ControllingView({
     setLiveAppState({ selectedEvents: newSelectedEvents });
   }, [appState.selectedEvents, setLiveAppState]);
   
+  const getEventSelection = useCallback((event: Event): { isSelected: boolean; selectedOption: string | null; index: number } => {
+    if (!appState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
+    const selectionIndex = appState.selectedEvents.findIndex(se => se?.id === event.id);
+
+    if (selectionIndex !== -1) {
+      const selectedEvent = appState.selectedEvents[selectionIndex];
+      return { isSelected: true, selectedOption: selectedEvent?.selectedOption || null, index: selectionIndex };
+    }
+    return { isSelected: false, selectedOption: null, index: -1 };
+  }, [appState]);
+
+  const findTargetIndex = useCallback((event: Event): number => {
+      const { isSelected, index } = getEventSelection(event);
+      // If it's already selected, return its index for modification.
+      if (isSelected) {
+        return index;
+      }
+      // Otherwise, find the first empty slot for a new addition.
+      return appState.selectedEvents.findIndex(e => e === null);
+  }, [appState, getEventSelection]);
+  
   const openDialogForEventRemote = async (event: Event) => {
+      // Logic is now unified: find the correct slot for modification or addition.
       const targetIndex = findTargetIndex(event);
       if (targetIndex === -1) {
           toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
@@ -2282,7 +2289,6 @@ function ControllingView({
       
       setModificationIndex(targetIndex);
       setDialogEvent(event);
-      setDialogChannel(null);
       setView('eventSelection');
       
       if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
@@ -2313,13 +2319,6 @@ function ControllingView({
   };
 
   const handleChannelClickRemote = (channel: Channel) => {
-      const targetIndex = findTargetIndex({ id: `${channel.name}-channel-static` } as Event);
-      if (targetIndex === -1) {
-          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
-          return;
-      }
-      
-      setModificationIndex(targetIndex);
       const channelAsEvent: Event = {
           id: `${channel.name}-channel-static`,
           title: channel.name,
@@ -2327,12 +2326,18 @@ function ControllingView({
           sources: [], buttons: [], time: 'AHORA', category: 'Canal',
           language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
       };
-      setDialogChannel(channel);
+      const targetIndex = findTargetIndex(channelAsEvent);
+      if (targetIndex === -1) {
+          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
+          return;
+      }
+      
+      setModificationIndex(targetIndex);
       setDialogEvent(channelAsEvent);
       setView('eventSelection');
   };
   
-  const handleEventSelectRemote = (event: Event, optionUrl: string) => {
+  const handleSelectRemote = (event: Event, optionUrl: string) => {
     if (modificationIndex === null) return;
     const eventWithSelection = { ...event, selectedOption: optionUrl };
     const newSelectedEvents = [...appState.selectedEvents];
@@ -2340,61 +2345,30 @@ function ControllingView({
     setLiveAppState({ selectedEvents: newSelectedEvents });
     setView('main');
     setDialogEvent(null);
-    setDialogChannel(null);
-    setModificationIndex(null);
-  };
-  
-  const handleSelectChannelRemote = (channel: Channel, optionUrl: string) => {
-    if (modificationIndex === null) return;
-    const channelAsEvent: Event = {
-      id: `${channel.name}-channel-static`,
-      title: channel.name,
-      options: channel.urls.map(u => ({...u, hd: false, language: ''})),
-      sources: [],
-      buttons: [],
-      time: 'AHORA',
-      category: 'Canal',
-      language: '',
-      date: '',
-      source: '',
-      status: 'En Vivo',
-      image: channel.logo,
-      selectedOption: optionUrl,
-    };
-    
-    const newSelectedEvents = [...appState.selectedEvents];
-    newSelectedEvents[modificationIndex] = channelAsEvent;
-    setLiveAppState({ selectedEvents: newSelectedEvents });
-    setView('main');
-    setDialogEvent(null);
-    setDialogChannel(null);
     setModificationIndex(null);
   };
 
   const handleOpenAddEvents = () => {
-    // Force a state sync before opening the dialog
     if (ablyChannel) {
-        ablyChannel.publish('sync-request', {});
-    }
-    // We'll open the dialog once the state-update is received.
-    // To handle cases where the controlled device is offline, we'll use a timeout.
-    const timeout = setTimeout(() => {
-        setView('addEvents');
-    }, 1000); // 1-second timeout as a fallback
-
-    const tempSub = (message: AblyMessage) => {
-        if(message.data.appState) {
-            clearTimeout(timeout);
-            setLiveAppState(message.data.appState); // update local controller state
-            setView('addEvents');
-            ablyChannel.unsubscribe('state-update', tempSub);
-        }
-    };
-    
-    if (ablyChannel) {
+        const tempSub = (message: AblyMessage) => {
+            if (message.data.appState) {
+                // Update controller's state to match controlled device *before* opening dialog
+                setLiveAppState(message.data.appState); 
+                ablyChannel.unsubscribe('state-update', tempSub);
+                setView('addEvents');
+            }
+        };
         ablyChannel.subscribe('state-update', tempSub);
+        ablyChannel.publish('sync-request', {});
+
+        // Fallback timeout in case the controlled device doesn't respond
+        setTimeout(() => {
+            ablyChannel.unsubscribe('state-update', tempSub);
+            if (view !== 'addEvents') {
+                setView('addEvents');
+            }
+        }, 1500);
     } else {
-        // if ably is not ready, just open after timeout
         setView('addEvents');
     }
   };
@@ -2411,7 +2385,6 @@ function ControllingView({
                 events={allSortedEvents}
                 channels={allChannels}
                 isLoading={false}
-                onFetch={fetchEvents}
                 isRemote={true}
                 onBack={() => setView('main')}
             />
@@ -2423,16 +2396,13 @@ function ControllingView({
     return (
       <RemoteEventSelection
         event={dialogEvent}
-        channel={dialogChannel}
-        onBack={() => { setView('addEvents'); setDialogEvent(null); setDialogChannel(null); }}
-        onSelectEvent={handleEventSelectRemote}
-        onSelectChannel={handleSelectChannelRemote}
+        onBack={() => { setView('addEvents'); setDialogEvent(null); }}
+        onSelect={handleSelectRemote}
         isModification={modificationIndex !== null && appState.selectedEvents[modificationIndex] !== null}
         onRemove={() => {
           if (modificationIndex !== null) handleEventRemove(modificationIndex);
           setView('main');
           setDialogEvent(null);
-          setDialogChannel(null);
         }}
         isLoading={isOptionsLoading}
       />
