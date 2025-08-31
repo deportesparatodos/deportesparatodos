@@ -1351,7 +1351,9 @@ export function HomePageContent() {
             channelRef.current = channel;
 
             channel.subscribe('state-update', (message: AblyMessage) => {
-                setControllerAppState(message.data.appState);
+                if (message.data.appState) {
+                    setControllerAppState(message.data.appState);
+                }
             });
             
             channel.subscribe('schedule-applied', () => {
@@ -2373,6 +2375,7 @@ function ControllingView({
   }, [appState.selectedEvents, setLiveAppState]);
   
   const getEventSelectionRemote = (event: Event): { isSelected: boolean; selectedOption: string | null; index: number } => {
+    if (!appState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
     const selectionIndex = appState.selectedEvents.findIndex(se => se?.id === event.id);
     if (selectionIndex !== -1) {
       const selectedEvent = appState.selectedEvents[selectionIndex];
@@ -2570,22 +2573,20 @@ function ControllingView({
   
   if (view === 'presets') {
     return (
-        <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div ref={remoteControlContainerRef} className='w-full h-full max-w-md max-h-[70vh]'>
-                <PresetsDialog
-                    open={true}
-                    onOpenChange={(isOpen) => !isOpen && setView('main')}
-                    onSelectPreset={handlePresetSelect}
-                    container={remoteControlContainerRef.current ?? undefined}
-                    customPresets={customPresets}
-                    allEvents={allSortedEvents}
-                    allChannels={allChannels}
-                    isRemote={true}
-                    onSavePreset={() => {}} // No-op in remote view
-                    onUpdatePreset={() => {}} // No-op in remote view
-                    onDeletePreset={() => {}} // No-op in remote view
-                />
-            </div>
+        <div ref={remoteControlContainerRef}>
+            <PresetsDialog
+                open={true}
+                onOpenChange={(isOpen) => !isOpen && setView('main')}
+                onSelectPreset={handlePresetSelect}
+                container={remoteControlContainerRef.current ?? undefined}
+                customPresets={customPresets}
+                allEvents={allSortedEvents}
+                allChannels={allChannels}
+                isRemote={true}
+                onSavePreset={() => {}} // No-op in remote view
+                onUpdatePreset={() => {}} // No-op in remote view
+                onDeletePreset={() => {}} // No-op in remote view
+            />
         </div>
     );
   }

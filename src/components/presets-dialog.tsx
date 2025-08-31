@@ -342,6 +342,18 @@ export function PresetsDialog({
     </>
   );
   
+  if (isRemote) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogPortal container={container}>
+          <DialogContent className="sm:max-w-md p-0 h-[70vh] flex flex-col">
+              {dialogContent}
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+    );
+  }
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPortal container={container}>
