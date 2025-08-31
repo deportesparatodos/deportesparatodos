@@ -2280,15 +2280,12 @@ function ControllingView({
   };
 
   const openDialogForEventRemote = async (event: Event) => {
-      // Logic to add a new event or modify an existing one in the remote controller.
       const existingSelection = getEventSelectionRemote(event);
       let targetIndex: number;
 
       if (existingSelection.isSelected) {
-          // If it's already selected, we are modifying it at its current index.
           targetIndex = existingSelection.index;
       } else {
-          // If it's a new event, find the first empty slot.
           targetIndex = appState.selectedEvents.findIndex(e => e === null);
           if (targetIndex === -1) {
               toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
@@ -2338,10 +2335,17 @@ function ControllingView({
   };
   
   const handleChannelClickRemote = (channel: Channel) => {
-        const targetIndex = appState.selectedEvents.findIndex(e => e === null);
-        if (targetIndex === -1) {
-            toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
-            return;
+        const existingSelection = getEventSelectionRemote({ ...channel, id: `${channel.name}-channel-static` } as any);
+        let targetIndex: number;
+
+        if(existingSelection.isSelected) {
+            targetIndex = existingSelection.index;
+        } else {
+            targetIndex = appState.selectedEvents.findIndex(e => e === null);
+            if (targetIndex === -1) {
+                toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
+                return;
+            }
         }
 
         const channelAsEvent: Event = {
@@ -2380,7 +2384,6 @@ function ControllingView({
                 isLoading={false}
                 isRemote={true}
                 onBack={() => {
-                  ablyChannel?.publish('sync-request', {}); // Sync on return
                   setView('main');
                 }}
             />

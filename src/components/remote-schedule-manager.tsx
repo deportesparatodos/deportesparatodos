@@ -31,7 +31,6 @@ export interface Schedule {
 interface RemoteScheduleManagerProps {
   onBack: () => void;
   appState: AppState;
-  onSchedulesChange: (schedules: Schedule[]) => void;
   allEvents: Event[];
   allChannels: Channel[];
   setLiveAppState: (newState: Partial<AppState>) => void;
@@ -40,7 +39,6 @@ interface RemoteScheduleManagerProps {
 export function RemoteScheduleManager({
   onBack,
   appState,
-  onSchedulesChange,
   allEvents,
   allChannels,
   setLiveAppState,
