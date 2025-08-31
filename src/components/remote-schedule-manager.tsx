@@ -19,7 +19,7 @@ import { AddEventsDialogContent } from './add-events-dialog';
 import { RemoteEventSelection } from './remote-event-selection';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
-import type { AppState } from '@/app/page';
+import type { AppState, HomePageContent } from '@/app/page';
 
 export interface Schedule {
   id: string;
@@ -34,7 +34,7 @@ interface RemoteScheduleManagerProps {
   onSchedulesChange: (schedules: Schedule[]) => void;
   allEvents: Event[];
   allChannels: Channel[];
-  fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
+  setLiveAppState: (newState: Partial<AppState>) => void;
 }
 
 export function RemoteScheduleManager({
@@ -43,7 +43,7 @@ export function RemoteScheduleManager({
   onSchedulesChange,
   allEvents,
   allChannels,
-  fetchEvents
+  setLiveAppState,
 }: RemoteScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -83,14 +83,14 @@ export function RemoteScheduleManager({
     combinedDateTime.setHours(hours, minutes, 0, 0);
 
     const activeOrder = currentOrder.filter(i => currentSelection[i] !== null);
+    let newSchedules: Schedule[];
 
     if (editingScheduleId) {
-      const updatedSchedules = appState.schedules.map(s => 
+      newSchedules = appState.schedules.map(s => 
         s.id === editingScheduleId 
           ? { ...s, dateTime: combinedDateTime, events: currentSelection, order: activeOrder }
           : s
       );
-      onSchedulesChange(updatedSchedules);
     } else {
       const newSchedule: Schedule = {
         id: new Date().toISOString(),
@@ -98,9 +98,10 @@ export function RemoteScheduleManager({
         events: currentSelection,
         order: activeOrder,
       };
-      onSchedulesChange([...appState.schedules, newSchedule]);
+      newSchedules = [...appState.schedules, newSchedule];
     }
     
+    setLiveAppState({ schedules: newSchedules });
     resetToCurrentSelection();
   };
   
@@ -116,7 +117,8 @@ export function RemoteScheduleManager({
   };
 
   const handleRemoveSchedule = (id: string) => {
-    onSchedulesChange(appState.schedules.filter(s => s.id !== id));
+    const newSchedules = appState.schedules.filter(s => s.id !== id);
+    setLiveAppState({ schedules: newSchedules });
     if (editingScheduleId === id) {
        resetToCurrentSelection();
     }

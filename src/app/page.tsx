@@ -1089,14 +1089,23 @@ export function HomePageContent() {
   }, [selectedEvents]);
   
   const findTargetIndex = useCallback((event: Event | null, sourceEvents: (Event|null)[]): number => {
-    if (event) {
-        const existingIndex = sourceEvents.findIndex(e => e?.id === event.id);
-        if (existingIndex !== -1) {
-            return existingIndex; 
-        }
+    // If we are trying to add a new event (not modifying an existing one)
+    if (event && modificationIndex === null) {
+      const existingIndex = sourceEvents.findIndex(e => e?.id === event.id);
+      // If it already exists, we are modifying it.
+      if (existingIndex !== -1) {
+        return existingIndex;
+      }
+      // Otherwise, find the first empty slot for a new event.
+      return sourceEvents.findIndex(e => e === null);
     }
+    // If we are explicitly modifying an event.
+    if (modificationIndex !== null) {
+      return modificationIndex;
+    }
+    // Fallback to find the first empty slot if no event is provided.
     return sourceEvents.findIndex(e => e === null);
-  }, []);
+  }, [modificationIndex]);
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
@@ -1108,7 +1117,7 @@ export function HomePageContent() {
     });
 
     const newSelectedEvents = [...selectedEvents];
-    const targetIndex = modificationIndex !== null ? modificationIndex : findTargetIndex(null, newSelectedEvents);
+    const targetIndex = modificationIndex !== null ? modificationIndex : findTargetIndex(event, newSelectedEvents);
     
     if (targetIndex !== -1) {
         newSelectedEvents[targetIndex] = eventWithSelection;
@@ -1129,9 +1138,18 @@ export function HomePageContent() {
   }, [selectedEvents, setSelectedEvents]);
   
   const openDialogForEvent = async (event: Event) => {
-      const targetIndex = findTargetIndex(event, selectedEvents);
+      // Always find the first empty slot when adding a new event.
+      // Do not use modificationIndex unless it's an explicit modification action.
+      const existingSelection = getEventSelection(event);
+      let targetIndex: number;
 
-      if (targetIndex === -1 && getEventSelection(event).isSelected === false) {
+      if (existingSelection.isSelected) {
+          targetIndex = existingSelection.index;
+      } else {
+          targetIndex = selectedEvents.findIndex(e => e === null);
+      }
+      
+      if (targetIndex === -1) {
            toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
            return;
       }
@@ -1401,14 +1419,8 @@ export function HomePageContent() {
             }}
             allEvents={events}
             allChannels={channelsData}
-            fetchEvents={fetchEvents}
             ablyChannel={channelRef.current}
             toast={toast}
-            onOpenAddEvents={() => {
-                if (channelRef.current) {
-                    channelRef.current.publish('sync-request', {});
-                }
-            }}
         />
     );
   }
@@ -2207,10 +2219,8 @@ type ControllingViewProps = {
     onStopSession: () => void;
     allEvents: Event[];
     allChannels: Channel[];
-    fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
     ablyChannel: any;
     toast: any;
-    onOpenAddEvents: () => void;
 };
 
 
@@ -2220,10 +2230,8 @@ function ControllingView({
   onStopSession,
   allEvents,
   allChannels,
-  fetchEvents,
   ablyChannel,
   toast,
-  onOpenAddEvents
 }: ControllingViewProps) {
   type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
   const [view, setView] = useState<ControllingViewMode>('main');
@@ -2271,12 +2279,13 @@ function ControllingView({
     const existingIndex = appState.selectedEvents.findIndex(e => e?.id === event.id);
     const targetIndex = (existingIndex !== -1) ? existingIndex : appState.selectedEvents.findIndex(e => e === null);
 
-    if (targetIndex === -1) {
+    if (targetIndex === -1 && existingIndex === -1) {
         toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
         return;
     }
 
-    setModificationIndex(targetIndex);
+    const finalIndex = existingIndex !== -1 ? existingIndex : targetIndex;
+    setModificationIndex(finalIndex);
     setDialogEvent(event);
     setView('eventSelection');
     
@@ -2387,10 +2396,10 @@ function ControllingView({
        <RemoteScheduleManager
             onBack={() => setView('main')}
             appState={appState}
-            onSchedulesChange={(schedules) => setLiveAppState({ schedules })}
+            onSchedulesChange={(schedules) => setLiveAppState({ schedules: schedules })}
             allEvents={allEvents}
             allChannels={allChannels}
-            fetchEvents={fetchEvents}
+            setLiveAppState={setLiveAppState}
         />
     );
   }
@@ -2416,9 +2425,9 @@ function ControllingView({
             eventDetails={appState.selectedEvents}
             onRemove={handleEventRemove}
             onModify={(index: number) => {
+                ablyChannel?.publish('sync-request', {});
                 const event = appState.selectedEvents[index];
                 if (event) {
-                    onOpenAddEvents();
                     setModificationIndex(index);
                     setDialogEvent(event);
                     setView('eventSelection');
@@ -2426,7 +2435,7 @@ function ControllingView({
             }}
             isViewPage={true}
             onAddEvent={() => {
-                onOpenAddEvents();
+                ablyChannel?.publish('sync-request', {});
                 setView('addEvents');
             }}
             onSchedule={() => setView('schedule')}
