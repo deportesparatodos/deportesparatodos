@@ -654,30 +654,31 @@ export function HomePageContent() {
 
   // Schedule activation checker
   useEffect(() => {
-      if (!isViewMode || !schedules || schedules.length === 0) return;
+    if (!isViewMode || !schedules || schedules.length === 0) return;
   
-      const interval = setInterval(() => {
-          const now = new Date();
-          const dueSchedules = schedules.filter(s => isBefore(s.dateTime, now));
+    const interval = setInterval(() => {
+        const now = new Date();
+        const dueSchedules = schedules.filter(s => isBefore(s.dateTime, now));
+
+        if (dueSchedules.length > 0) {
+            const scheduleToApply = dueSchedules.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())[0];
+            
+            const newAppState: Partial<AppState> = {
+                selectedEvents: scheduleToApply.events,
+                viewOrder: scheduleToApply.order,
+                schedules: schedules.filter(s => s.id !== scheduleToApply.id)
+            };
+
+            setLiveAppState(newAppState);
+
+            if (remoteControlMode === 'controlled' && channelRef.current) {
+                // This message now notifies the controller that an auto-update happened.
+                channelRef.current.publish('state-update', { appState: { ...appState, ...newAppState } });
+            }
+        }
+    }, 30000); 
   
-          if (dueSchedules.length > 0) {
-              const scheduleToApply = dueSchedules.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())[0];
-              
-              const newAppState: Partial<AppState> = {
-                  selectedEvents: scheduleToApply.events,
-                  viewOrder: scheduleToApply.order,
-                  schedules: schedules.filter(s => s.id !== scheduleToApply.id)
-              };
-  
-              setLiveAppState(newAppState);
-  
-              if (remoteControlMode === 'controlled' && channelRef.current) {
-                  channelRef.current.publish('schedule-applied', {});
-              }
-          }
-      }, 30000); 
-  
-      return () => clearInterval(interval);
+    return () => clearInterval(interval);
   }, [isViewMode, schedules, appState, remoteControlMode, setLiveAppState]);
 
 
@@ -1181,6 +1182,24 @@ export function HomePageContent() {
   };
 
   const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
+  
+  // --- Remote Control Logic ---
+  
+  const cleanupAbly = useCallback(() => {
+    if (channelRef.current) {
+        try { channelRef.current.detach(); } catch (e) { console.error("Error detaching from Ably channel:", e); }
+    }
+    if (ablyClientRef.current) {
+        try {
+            const state = ablyClientRef.current.connection.state;
+            if (state === 'connecting' || state === 'connected' || state === 'suspended') {
+                ablyClientRef.current.close();
+            }
+        } catch (e) { console.error("Error closing Ably connection:", e); }
+    }
+    channelRef.current = null;
+    ablyClientRef.current = null;
+  }, []);
 
   const handleStartView = (isControlledStart = false) => {
     if (selectedEventsCount === 0) return;
@@ -1251,23 +1270,6 @@ export function HomePageContent() {
     setTimeout(() => setCopied(false), 2000);
   };
   
-  // --- Remote Control Logic ---
-  
-  const cleanupAbly = useCallback(() => {
-    if (channelRef.current) {
-        try { channelRef.current.detach(); } catch (e) { console.error("Error detaching from Ably channel:", e); }
-    }
-    if (ablyClientRef.current) {
-        try {
-            const state = ablyClientRef.current.connection.state;
-            if (state === 'connecting' || state === 'connected' || state === 'suspended') {
-                ablyClientRef.current.close();
-            }
-        } catch (e) { console.error("Error closing Ably connection:", e); }
-    }
-    channelRef.current = null;
-    ablyClientRef.current = null;
-  }, []);
 
   useEffect(() => {
     return () => { cleanupAbly(); };
@@ -2480,6 +2482,7 @@ function ControllingView({
                 setLiveAppState({ isChatEnabled: true });
                 setView('chat')
             }}
+            onSchedule={() => setView('schedule')}
         />
     </div>
   );
