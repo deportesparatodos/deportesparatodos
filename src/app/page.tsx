@@ -667,25 +667,36 @@ export function HomePageContent() {
 
   // Schedule activation checker
   useEffect(() => {
-    if (!isViewMode || !schedules || schedules.length === 0) return;
-
-    const interval = setInterval(() => {
-        const now = new Date();
-        const dueSchedules = schedules.filter(s => isBefore(s.dateTime, now));
-
-        if (dueSchedules.length > 0) {
-            const scheduleToApply = dueSchedules.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())[0];
-            
-            setSelectedEvents(scheduleToApply.events);
-            setViewOrder(scheduleToApply.order);
-
-            const remainingSchedules = schedules.filter(s => s.id !== scheduleToApply.id);
-            setSchedules(remainingSchedules);
-        }
-    }, 30000); 
-
-    return () => clearInterval(interval);
-  }, [isViewMode, schedules, setSchedules, setSelectedEvents, setViewOrder]);
+      if (!isViewMode || !schedules || schedules.length === 0) return;
+  
+      const interval = setInterval(() => {
+          const now = new Date();
+          const dueSchedules = schedules.filter(s => isBefore(s.dateTime, now));
+  
+          if (dueSchedules.length > 0) {
+              const scheduleToApply = dueSchedules.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())[0];
+              
+              const newAppState: Partial<AppState> = {
+                  selectedEvents: scheduleToApply.events,
+                  viewOrder: scheduleToApply.order,
+                  schedules: schedules.filter(s => s.id !== scheduleToApply.id)
+              };
+  
+              setAppState(prevState => ({ ...prevState, ...newAppState }));
+  
+              // If this is a controlled session, notify the controller of the state change
+              if (remoteControlMode === 'controlled' && channelRef.current) {
+                  const updatedStateForSync = {
+                      ...appState,
+                      ...newAppState
+                  };
+                  channelRef.current.publish('state-update', { appState: updatedStateForSync });
+              }
+          }
+      }, 30000); 
+  
+      return () => clearInterval(interval);
+  }, [isViewMode, schedules, appState, remoteControlMode]);
 
 
   useEffect(() => {
@@ -1089,23 +1100,17 @@ export function HomePageContent() {
   }, [selectedEvents]);
   
   const findTargetIndex = useCallback((event: Event | null, sourceEvents: (Event|null)[]): number => {
-    // If we are modifying an event, use its explicit index
+    if (event === null) {
+      // If no event, we're not adding, return -1.
+      return -1;
+    }
+  
+    // If we are modifying an event, its index is already set.
     if (modificationIndex !== null) {
       return modificationIndex;
     }
     
-    // If an event is provided, and we are NOT modifying, find the first empty slot.
-    if (event) {
-        const existingIndex = sourceEvents.findIndex(e => e?.id === event.id);
-        // If it already exists, treat it as a modification.
-        if (existingIndex !== -1) {
-            return existingIndex;
-        }
-        // Otherwise, find the first empty slot for the new event.
-        return sourceEvents.findIndex(e => e === null);
-    }
-    
-    // Fallback: find the first empty slot if no event is provided.
+    // For adding a new event, find the first empty slot.
     return sourceEvents.findIndex(e => e === null);
   }, [modificationIndex]);
 
@@ -1119,9 +1124,11 @@ export function HomePageContent() {
     });
 
     const newSelectedEvents = [...selectedEvents];
-    const targetIndex = findTargetIndex(event, newSelectedEvents);
+    // We get the target index JUST BEFORE adding the event.
+    // modificationIndex will have been set by openDialogForEvent.
+    const targetIndex = modificationIndex;
     
-    if (targetIndex !== -1) {
+    if (targetIndex !== null && targetIndex !== -1) {
         newSelectedEvents[targetIndex] = eventWithSelection;
         setSelectedEvents(newSelectedEvents);
     } else {
@@ -1130,7 +1137,7 @@ export function HomePageContent() {
     
     setEventSelectionDialogOpen(false);
     setAddEventsDialogOpen(false);
-    setModificationIndex(null);
+    setModificationIndex(null); // Reset after use
   };
   
   const handleEventRemove = useCallback((indexToRemove: number) => {
@@ -1140,25 +1147,22 @@ export function HomePageContent() {
   }, [selectedEvents, setSelectedEvents]);
   
   const openDialogForEvent = async (event: Event) => {
-      // Logic to add a new event or modify an existing one.
+      setDialogContext('main');
+      
       const existingSelection = getEventSelection(event);
-      let targetIndex: number;
-
       if (existingSelection.isSelected) {
-          // If it's already selected, we are modifying it at its current index.
-          targetIndex = existingSelection.index;
+          // If it's already selected, we are modifying it.
+          setModificationIndex(existingSelection.index);
       } else {
-          // If it's a new event, find the first empty slot.
-          targetIndex = selectedEvents.findIndex(e => e === null);
-          if (targetIndex === -1) {
+          // If it's new, find the first empty slot.
+          const emptyIndex = selectedEvents.findIndex(e => e === null);
+          if (emptyIndex === -1) {
               toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
               return;
           }
+          setModificationIndex(emptyIndex);
       }
       
-      setDialogContext('main');
-      // Set modificationIndex to prepare for the selection.
-      setModificationIndex(targetIndex);
       setDialogEvent(event);
       setEventSelectionDialogOpen(true);
 
@@ -1221,7 +1225,6 @@ export function HomePageContent() {
   const openDialogForModification = (index: number) => {
     const event = selectedEvents[index];
     if (!event) return;
-    // Explicitly set the modification index for this event.
     setModificationIndex(index);
     openDialogForEvent(event);
   };
@@ -2384,7 +2387,8 @@ function ControllingView({
                 isLoading={false}
                 isRemote={true}
                 onBack={() => {
-                  setView('main');
+                    ablyChannel?.publish('sync-request', {}); // Request latest state on back
+                    setView('main');
                 }}
             />
         </div>
@@ -2413,7 +2417,6 @@ function ControllingView({
        <RemoteScheduleManager
             onBack={() => setView('main')}
             appState={appState}
-            onSchedulesChange={(schedules) => setLiveAppState({ schedules: schedules })}
             allEvents={allEvents}
             allChannels={allChannels}
             setLiveAppState={setLiveAppState}
