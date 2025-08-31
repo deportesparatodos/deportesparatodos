@@ -1001,7 +1001,7 @@ export function HomePageContent() {
     const mobileLiveCustom = allLiveEvents.filter(e => e.image && e.image !== placeholderImage).sort(liveSortLogic);
     const mobileLiveDefault = allLiveEvents.filter(e => !e.image || e.image === placeholderImage).sort(liveSortLogic);
     const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
-    const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(upcomingSortLogic);
+    const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(unknownSortLogic);
     const mobileFinished = finished;
     const mobileSorted = [...mobileLiveCustom, ...mobileLiveDefault, ...channels247FromEvents, ...mobileUpcoming, ...mobileUnknown, ...mobileFinished];
 
@@ -2617,9 +2617,6 @@ function ControllingView({
             onAddEvent={() => {
                 setView('addEvents');
             }}
-            onOpenPresets={() => {
-                setView('presets');
-            }}
             gridGap={appState.gridGap}
             onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
             borderColor={appState.borderColor}
@@ -2637,3 +2634,4 @@ function ControllingView({
     </div>
   );
 }
+
