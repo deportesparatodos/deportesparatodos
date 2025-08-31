@@ -1093,12 +1093,14 @@ export function HomePageContent() {
   }, []);
 
   const findTargetIndex = useCallback((event: Event, sourceState: AppState): number => {
-      const { isSelected, index } = getEventSelection(event, sourceState);
-      if (isSelected) {
-          return index;
-      }
-      return sourceState.selectedEvents.findIndex(e => e === null);
+    const { isSelected, index } = getEventSelection(event, sourceState);
+    if (isSelected) {
+      return index; // If it's already selected, we'll modify it in its current place
+    }
+    // Otherwise, find the first empty slot
+    return sourceState.selectedEvents.findIndex(e => e === null);
   }, [getEventSelection]);
+
   
   // --- Main View Handlers ---
   
@@ -1419,6 +1421,7 @@ export function HomePageContent() {
             fetchEvents={fetchEvents}
             getEventSelection={(event) => getEventSelection(event, controllerAppState)}
             findTargetIndex={(event) => findTargetIndex(event, controllerAppState)}
+            ablyChannel={channelRef.current}
         />
     );
   }
@@ -1524,7 +1527,7 @@ export function HomePageContent() {
             <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
                 <DialogContent className="sm:max-w-md p-0" hideClose={true}>
                     <DialogHeader>
-                        <DialogModalTitle className="sr-only">Bienvenida</DialogModalTitle>
+                        <DialogModalTitle>Bienvenida</DialogModalTitle>
                         <DialogDescription className="sr-only">¡Bienvenido a Deportes para Todos!</DialogDescription>
                     </DialogHeader>
                     <DialogModalClose asChild>
@@ -2220,6 +2223,7 @@ type ControllingViewProps = {
     fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
     getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
     findTargetIndex: (event: Event) => number;
+    ablyChannel: any;
 };
 
 
@@ -2232,6 +2236,7 @@ function ControllingView({
   fetchEvents,
   getEventSelection,
   findTargetIndex,
+  ablyChannel,
 }: ControllingViewProps) {
   type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
   const [view, setView] = useState<ControllingViewMode>('main');
@@ -2308,6 +2313,13 @@ function ControllingView({
   };
 
   const handleChannelClickRemote = (channel: Channel) => {
+      const targetIndex = findTargetIndex({ id: `${channel.name}-channel-static` } as Event);
+      if (targetIndex === -1) {
+          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
+          return;
+      }
+      
+      setModificationIndex(targetIndex);
       const channelAsEvent: Event = {
           id: `${channel.name}-channel-static`,
           title: channel.name,
@@ -2315,13 +2327,6 @@ function ControllingView({
           sources: [], buttons: [], time: 'AHORA', category: 'Canal',
           language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
       };
-      const targetIndex = findTargetIndex(channelAsEvent);
-      if (targetIndex === -1) {
-          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
-          return;
-      }
-      
-      setModificationIndex(targetIndex);
       setDialogChannel(channel);
       setDialogEvent(channelAsEvent);
       setView('eventSelection');
@@ -2364,6 +2369,34 @@ function ControllingView({
     setDialogEvent(null);
     setDialogChannel(null);
     setModificationIndex(null);
+  };
+
+  const handleOpenAddEvents = () => {
+    // Force a state sync before opening the dialog
+    if (ablyChannel) {
+        ablyChannel.publish('sync-request', {});
+    }
+    // We'll open the dialog once the state-update is received.
+    // To handle cases where the controlled device is offline, we'll use a timeout.
+    const timeout = setTimeout(() => {
+        setView('addEvents');
+    }, 1000); // 1-second timeout as a fallback
+
+    const tempSub = (message: AblyMessage) => {
+        if(message.data.appState) {
+            clearTimeout(timeout);
+            setLiveAppState(message.data.appState); // update local controller state
+            setView('addEvents');
+            ablyChannel.unsubscribe('state-update', tempSub);
+        }
+    };
+    
+    if (ablyChannel) {
+        ablyChannel.subscribe('state-update', tempSub);
+    } else {
+        // if ably is not ready, just open after timeout
+        setView('addEvents');
+    }
   };
 
 
@@ -2455,7 +2488,7 @@ function ControllingView({
                 }
             }}
             isViewPage={true}
-            onAddEvent={() => setView('addEvents')}
+            onAddEvent={handleOpenAddEvents}
             onSchedule={() => setView('schedule')}
             gridGap={appState.gridGap}
             onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
