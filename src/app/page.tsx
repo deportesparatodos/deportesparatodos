@@ -669,22 +669,16 @@ export function HomePageContent() {
                   schedules: schedules.filter(s => s.id !== scheduleToApply.id)
               };
   
-              setAppState(prevState => ({ ...prevState, ...newAppState }));
+              setLiveAppState(newAppState);
   
-              // If this is a controlled session, notify the controller of the state change
               if (remoteControlMode === 'controlled' && channelRef.current) {
-                  const updatedStateForSync = {
-                      ...appState,
-                      ...newAppState
-                  };
-                  channelRef.current.publish('state-update', { appState: updatedStateForSync });
                   channelRef.current.publish('schedule-applied', {});
               }
           }
       }, 30000); 
   
       return () => clearInterval(interval);
-  }, [isViewMode, schedules, appState, remoteControlMode]);
+  }, [isViewMode, schedules, appState, remoteControlMode, setLiveAppState]);
 
 
   useEffect(() => {
@@ -1192,6 +1186,11 @@ export function HomePageContent() {
     if (selectedEventsCount === 0) return;
     if (isControlledStart) {
       sessionStorage.setItem('isControlledStart', 'true');
+    } else {
+      sessionStorage.removeItem('isControlledStart');
+      cleanupAbly();
+      setRemoteControlMode('inactive');
+      setControlledSessionCode('');
     }
     setIsViewMode(true);
   };
@@ -1199,7 +1198,12 @@ export function HomePageContent() {
   const handleStopView = useCallback(() => {
     setIsViewMode(false);
     setLiveAppState({ fullscreenIndex: null });
-  }, [setLiveAppState]);
+    // Fully reset remote control state when exiting view
+    cleanupAbly();
+    setRemoteControlMode('inactive');
+    setControlledSessionCode('');
+    sessionStorage.removeItem('isControlledSession');
+  }, [setLiveAppState, cleanupAbly]);
 
   const handleViewChange = (view: string) => {
     setSearchTerm('');
@@ -1335,6 +1339,10 @@ export function HomePageContent() {
 
             channel.subscribe('state-update', (message: AblyMessage) => {
                 setControllerAppState(message.data.appState);
+            });
+            
+            channel.subscribe('schedule-applied', () => {
+                channel.publish('sync-request', {});
             });
 
             channel.publish('sync-request', {});
@@ -2472,7 +2480,6 @@ function ControllingView({
                 setLiveAppState({ isChatEnabled: true });
                 setView('chat')
             }}
-            onStopSession={onStopSession}
         />
     </div>
   );
