@@ -1074,11 +1074,35 @@ export function HomePageContent() {
     return sortedCategories;
   }, [events]);
 
+  // --- Centralized Selection Logic ---
 
-  const handleEventSelect = (event: Event, optionUrl: string) => {
-    if (dialogContext === 'schedule') {
-        return; 
+  const getEventSelection = useCallback((event: Event, sourceState: AppState): { isSelected: boolean; selectedOption: string | null; index: number } => {
+    if (!sourceState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
+    
+    const selectionIndex = sourceState.selectedEvents.findIndex(se => se?.id === event.id);
+
+    if (selectionIndex !== -1) {
+      const selectedEvent = sourceState.selectedEvents[selectionIndex];
+      return { 
+        isSelected: true, 
+        selectedOption: selectedEvent?.selectedOption || null, 
+        index: selectionIndex 
+      };
     }
+    return { isSelected: false, selectedOption: null, index: -1 };
+  }, []);
+
+  const findTargetIndex = useCallback((event: Event, sourceState: AppState): number => {
+      const { isSelected, index } = getEventSelection(event, sourceState);
+      if (isSelected) {
+          return index;
+      }
+      return sourceState.selectedEvents.findIndex(e => e === null);
+  }, [getEventSelection]);
+  
+  // --- Main View Handlers ---
+  
+  const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
     
     navigator.clipboard.writeText(optionUrl).then(() => {
@@ -1088,17 +1112,9 @@ export function HomePageContent() {
     });
 
     const newSelectedEvents = [...selectedEvents];
-    let targetIndex = modificationIndex !== null ? modificationIndex : newSelectedEvents.findIndex(e => e === null);
-    
-    if (targetIndex !== -1) {
-        newSelectedEvents[targetIndex] = eventWithSelection;
-        setSelectedEvents(newSelectedEvents);
-    } else {
-        toast({
-            variant: 'destructive',
-            title: 'Selección Completa',
-            description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
-        });
+    if (modificationIndex !== null && modificationIndex >= 0) {
+      newSelectedEvents[modificationIndex] = eventWithSelection;
+      setSelectedEvents(newSelectedEvents);
     }
     
     setEventSelectionDialogOpen(false);
@@ -1112,57 +1128,18 @@ export function HomePageContent() {
     setSelectedEvents(newSelectedEvents);
   }, [selectedEvents, setSelectedEvents]);
   
-  const getEventSelection = useCallback((event: Event): { isSelected: boolean; selectedOption: string | null; index: number } => {
-    const sourceState = isControlling ? controllerAppState : appState;
-    if (!sourceState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
-    const selectionIndex = sourceState.selectedEvents.findIndex(se => se?.id === event.id);
+  const openDialogForEvent = async (event: Event) => {
+    const targetIndex = findTargetIndex(event, appState);
 
-    if (selectionIndex !== -1) {
-      const selectedEvent = sourceState.selectedEvents[selectionIndex];
-      return { 
-        isSelected: true, 
-        selectedOption: selectedEvent?.selectedOption || null, 
-        index: selectionIndex 
-      };
+    if (targetIndex === -1) {
+        toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
+        return;
     }
-    return { isSelected: false, selectedOption: null, index: -1 };
-  }, [appState, controllerAppState, isControlling]);
-
-  const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
-
-
-  const handleStartView = (isControlledStart = false) => {
-    if (selectedEventsCount === 0) return;
-    if (isControlledStart) {
-      sessionStorage.setItem('isControlledStart', 'true');
-    }
-    setIsViewMode(true);
-  };
-  
-  const handleStopView = useCallback(() => {
-    setIsViewMode(false);
-    setLiveAppState({ fullscreenIndex: null });
-  }, [setLiveAppState]);
-
-
- const openDialogForEvent = async (event: Event) => {
-    setEventSelectionDialogOpen(true);
+    
     setDialogContext('main');
-
-    const selection = getEventSelection(event);
-    let eventForDialog = { ...event };
-    
-    if (selection.isSelected) {
-        setModificationIndex(selection.index);
-        if (selection.selectedOption) {
-            eventForDialog.selectedOption = selection.selectedOption;
-        }
-    } else {
-        const emptyIndex = selectedEvents.findIndex(e => e === null);
-        setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
-    }
-    
-    setDialogEvent(eventForDialog);
+    setModificationIndex(targetIndex);
+    setDialogEvent(event);
+    setEventSelectionDialogOpen(true);
 
     const mainEventInState = events.find(e => e.id === event.id);
     const optionsAvailable = mainEventInState && mainEventInState.options.length > 0;
@@ -1197,65 +1174,65 @@ export function HomePageContent() {
         const results = await Promise.all(sourcePromises);
         const streamOptions: StreamOption[] = results.flat().filter((o): o is StreamOption => !!o);
         
-        const finalEventForDialog = { ...eventForDialog, options: streamOptions };
+        const finalEventForDialog = { ...event, options: streamOptions };
 
         setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? finalEventForDialog : e));
         setDialogEvent(finalEventForDialog);
 
     } catch (error) {
         console.error(`Failed to fetch streams for ${event.title}`);
-        setDialogEvent({ ...eventForDialog, options: [] });
+        setDialogEvent({ ...event, options: [] });
     } finally {
         setIsOptionsLoading(false);
     }
-};
-
-
+  };
 
   const handleChannelClick = (channel: Channel) => {
-    const channelAsEvent: Event = {
-      id: `${channel.name}-channel-static`,
-      title: channel.name,
-      options: channel.urls.map(u => ({...u, hd: false, language: ''})),
-      sources: [],
-      buttons: [],
-      time: 'AHORA',
-      category: 'Canal',
-      language: '',
-      date: '',
-      source: '',
-      status: 'En Vivo',
-      image: channel.logo,
-    };
-    setDialogContext('main');
-
-    const selection = getEventSelection(channelAsEvent);
-    
-    if (selection.isSelected) {
-        setModificationIndex(selection.index);
-        const selectedEvent = selectedEvents[selection.index];
-        if (selectedEvent) {
-          channelAsEvent.selectedOption = selectedEvent.selectedOption;
-        }
-    } else {
-        const emptyIndex = selectedEvents.findIndex(e => e === null);
-        setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
-    }
-    
-    setDialogEvent(channelAsEvent);
-    setEventSelectionDialogOpen(true);
-    setIsOptionsLoading(false);
+      const channelAsEvent: Event = {
+          id: `${channel.name}-channel-static`,
+          title: channel.name,
+          options: channel.urls.map(u => ({...u, hd: false, language: ''})),
+          sources: [], buttons: [], time: 'AHORA', category: 'Canal',
+          language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
+      };
+      const targetIndex = findTargetIndex(channelAsEvent, appState);
+      
+      if (targetIndex === -1) {
+        toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 canales. Elimina uno para añadir otro.' });
+        return;
+      }
+      
+      setDialogContext('main');
+      setModificationIndex(targetIndex);
+      setDialogEvent(channelAsEvent);
+      setEventSelectionDialogOpen(true);
+      setIsOptionsLoading(false);
   };
   
   const openDialogForModification = (index: number) => {
     const event = selectedEvents[index];
     if (!event) return;
-    const eventWithSelection = { ...event, selectedOption: event.selectedOption };
-    setDialogEvent(eventWithSelection);
+
+    setDialogEvent(event);
     setModificationIndex(index);
     setEventSelectionDialogOpen(true);
     setDialogContext('main');
   };
+
+  const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
+
+  const handleStartView = (isControlledStart = false) => {
+    if (selectedEventsCount === 0) return;
+    if (isControlledStart) {
+      sessionStorage.setItem('isControlledStart', 'true');
+    }
+    setIsViewMode(true);
+  };
+  
+  const handleStopView = useCallback(() => {
+    setIsViewMode(false);
+    setLiveAppState({ fullscreenIndex: null });
+  }, [setLiveAppState]);
 
   const handleViewChange = (view: string) => {
     setSearchTerm('');
@@ -1440,6 +1417,8 @@ export function HomePageContent() {
             allEvents={events}
             allChannels={channelsData}
             fetchEvents={fetchEvents}
+            getEventSelection={(event) => getEventSelection(event, controllerAppState)}
+            findTargetIndex={(event) => findTargetIndex(event, controllerAppState)}
         />
     );
   }
@@ -1533,7 +1512,7 @@ export function HomePageContent() {
                 initialOrder={viewOrder}
                 allEvents={allSortedEvents}
                 allChannels={channelsData}
-                getEventSelection={getEventSelection}
+                getEventSelection={(event) => getEventSelection(event, appState)}
                 container={remoteControlContainerRef.current ?? undefined}
                 onAddEvent={() => setAddEventsDialogOpen(true)}
             />
@@ -1544,9 +1523,9 @@ export function HomePageContent() {
             />
             <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
                 <DialogContent className="sm:max-w-md p-0" hideClose={true}>
-                    <DialogHeader className="sr-only">
-                        <DialogModalTitle>Bienvenida</DialogModalTitle>
-                        <DialogDescription>¡Bienvenido a Deportes para Todos!</DialogDescription>
+                    <DialogHeader>
+                        <DialogModalTitle className="sr-only">Bienvenida</DialogModalTitle>
+                        <DialogDescription className="sr-only">¡Bienvenido a Deportes para Todos!</DialogDescription>
                     </DialogHeader>
                     <DialogModalClose asChild>
                     <Button variant="ghost" className="absolute right-0 top-0 rounded-bl-lg rounded-tr-lg p-2 bg-background/50 backdrop-blur-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10" onClick={() => setWelcomePopupOpen(false)}>
@@ -1885,7 +1864,7 @@ export function HomePageContent() {
                         <EventCard
                             key={`mobile-event-${event.id}-${index}`}
                             event={event}
-                            selection={getEventSelection(event)}
+                            selection={getEventSelection(event, appState)}
                             onClick={() => openDialogForEvent(event)}
                         />
                     ))}
@@ -1893,22 +1872,22 @@ export function HomePageContent() {
             ) : (
                 <>
                     <div className="mb-8">
-                        <EventCarousel title="Canales" channels={channelsData} onChannelClick={handleChannelClick} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales" channels={channelsData} onChannelClick={handleChannelClick} getEventSelection={(e) => getEventSelection(e, appState)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
                     </div>
                      <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={getEventSelection} />
+                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
                     </div>
                 </>
             )}
@@ -1928,7 +1907,7 @@ export function HomePageContent() {
               const isChannel = 'urls' in item;
               if (isChannel) {
                 const channelAsEvent: Event = { id: `${(item as Channel).name}-channel-static`, title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: (item as Channel).logo };
-                const selection = getEventSelection(channelAsEvent);
+                const selection = getEventSelection(channelAsEvent, appState);
                 return (
                     <Card 
                         key={`search-channel-${index}`}
@@ -1964,7 +1943,7 @@ export function HomePageContent() {
                     <EventCard
                       key={`search-event-${(item as Event).id}-${index}`}
                       event={item as Event}
-                      selection={getEventSelection(item as Event)}
+                      selection={getEventSelection(item as Event, appState)}
                       onClick={() => openDialogForEvent(item as Event)}
                     />
                 );
@@ -2132,7 +2111,7 @@ export function HomePageContent() {
           onOpenChange={setAddEventsDialogOpen}
           onEventSelect={openDialogForEvent}
           onChannelClick={handleChannelClick}
-          getEventSelection={getEventSelection}
+          getEventSelection={(event) => getEventSelection(event, appState)}
           events={allSortedEvents}
           channels={channelsData}
           isLoading={isAddEventsLoading}
@@ -2239,6 +2218,8 @@ type ControllingViewProps = {
     allEvents: Event[];
     allChannels: Channel[];
     fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
+    getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
+    findTargetIndex: (event: Event) => number;
 };
 
 
@@ -2249,6 +2230,8 @@ function ControllingView({
   allEvents,
   allChannels,
   fetchEvents,
+  getEventSelection,
+  findTargetIndex,
 }: ControllingViewProps) {
   type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
   const [view, setView] = useState<ControllingViewMode>('main');
@@ -2285,43 +2268,15 @@ function ControllingView({
     setLiveAppState({ selectedEvents: newSelectedEvents });
   }, [appState.selectedEvents, setLiveAppState]);
   
-  const getEventSelectionRemote = useCallback((event: Event): { isSelected: boolean; selectedOption: string | null; index: number; } => {
-    if (!appState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
-    const selectionIndex = appState.selectedEvents.findIndex(se => se?.id === event.id);
-
-    if (selectionIndex !== -1) {
-      const selectedEvent = appState.selectedEvents[selectionIndex];
-      return { 
-        isSelected: true, 
-        selectedOption: selectedEvent?.selectedOption || null, 
-        index: selectionIndex 
-      };
-    }
-    return { isSelected: false, selectedOption: null, index: -1 };
-  }, [appState]);
-
   const openDialogForEventRemote = async (event: Event) => {
-      const selection = getEventSelectionRemote(event);
-      let targetIndex: number | null;
-
-      if (selection.isSelected) {
-          targetIndex = selection.index;
-      } else {
-          targetIndex = appState.selectedEvents.findIndex((e) => e === null);
-          if (targetIndex === -1) {
-              toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
-              return;
-          }
+      const targetIndex = findTargetIndex(event);
+      if (targetIndex === -1) {
+          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
+          return;
       }
       
       setModificationIndex(targetIndex);
-
-      let eventForDialog = { ...event };
-      if (selection.isSelected && selection.selectedOption) {
-          eventForDialog.selectedOption = selection.selectedOption;
-      }
-      
-      setDialogEvent(eventForDialog);
+      setDialogEvent(event);
       setDialogChannel(null);
       setView('eventSelection');
       
@@ -2346,7 +2301,7 @@ function ControllingView({
         });
         const results = await Promise.all(sourcePromises);
         const streamOptions: StreamOption[] = results.flat().filter(Boolean);
-        setDialogEvent({ ...eventForDialog, options: streamOptions });
+        setDialogEvent({ ...event, options: streamOptions });
       } finally {
         setIsOptionsLoading(false);
       }
@@ -2360,22 +2315,15 @@ function ControllingView({
           sources: [], buttons: [], time: 'AHORA', category: 'Canal',
           language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
       };
-      const selection = getEventSelectionRemote(channelAsEvent);
-      let targetIndex: number | null;
-
-      if (selection.isSelected) {
-          targetIndex = selection.index;
-      } else {
-          targetIndex = appState.selectedEvents.findIndex((e) => e === null);
-          if (targetIndex === -1) {
-              toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
-              return;
-          }
+      const targetIndex = findTargetIndex(channelAsEvent);
+      if (targetIndex === -1) {
+          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
+          return;
       }
       
       setModificationIndex(targetIndex);
       setDialogChannel(channel);
-      setDialogEvent(null);
+      setDialogEvent(channelAsEvent);
       setView('eventSelection');
   };
   
@@ -2426,7 +2374,7 @@ function ControllingView({
                 onOpenChange={() => setView('main')}
                 onEventSelect={openDialogForEventRemote}
                 onChannelClick={handleChannelClickRemote}
-                getEventSelection={getEventSelectionRemote}
+                getEventSelection={getEventSelection}
                 events={allSortedEvents}
                 channels={allChannels}
                 isLoading={false}
@@ -2438,26 +2386,10 @@ function ControllingView({
     );
   }
 
-  if (view === 'eventSelection' && (dialogEvent || dialogChannel)) {
-    const eventForDialog: Event | undefined = dialogEvent ?? (dialogChannel ? {
-      id: `${dialogChannel.name}-channel-static`,
-      title: dialogChannel.name,
-      options: dialogChannel.urls.map(u => ({ ...u, hd: false, language: '' })),
-      sources: [],
-      buttons: [],
-      time: 'AHORA',
-      category: 'Canal',
-      language: '',
-      date: '',
-      source: '',
-      status: 'En Vivo',
-      image: dialogChannel.logo,
-      selectedOption: appState.selectedEvents[modificationIndex ?? -1]?.selectedOption
-    } : undefined);
-    
+  if (view === 'eventSelection' && dialogEvent) {
     return (
       <RemoteEventSelection
-        event={eventForDialog!}
+        event={dialogEvent}
         channel={dialogChannel}
         onBack={() => { setView('addEvents'); setDialogEvent(null); setDialogChannel(null); }}
         onSelectEvent={handleEventSelectRemote}
