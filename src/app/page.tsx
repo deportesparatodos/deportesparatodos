@@ -1140,68 +1140,77 @@ export function HomePageContent() {
   }, [selectedEvents, setSelectedEvents]);
   
   const openDialogForEvent = async (event: Event) => {
-      setDialogContext('main');
-      const emptyIndex = selectedEvents.findIndex(e => e === null);
+    setDialogContext('main');
+    const emptyIndex = selectedEvents.findIndex(e => e === null);
 
-      if (emptyIndex === -1 && !getEventSelection(event).isSelected) {
-          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
-          return;
-      }
-      
-      const existingSelection = getEventSelection(event);
-      if (existingSelection.isSelected) {
-          setModificationIndex(existingSelection.index);
-      } else {
-          setModificationIndex(emptyIndex);
-      }
-      
-      setDialogEvent(event);
-      setEventSelectionDialogOpen(true);
+    if (emptyIndex === -1 && !getEventSelection(event).isSelected) {
+        toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
+        return;
+    }
 
-      const mainEventInState = events.find(e => e.id === event.id);
-      const optionsAvailable = mainEventInState && mainEventInState.options.length > 0;
+    const existingSelection = getEventSelection(event);
+    let eventForDialog = { ...event };
+    
+    if (existingSelection.isSelected) {
+        setModificationIndex(existingSelection.index);
+        const selectedEventFromState = selectedEvents[existingSelection.index];
+        if (selectedEventFromState?.selectedOption) {
+            eventForDialog.selectedOption = selectedEventFromState.selectedOption;
+        }
+    } else {
+        setModificationIndex(emptyIndex);
+    }
+    
+    setDialogEvent(eventForDialog);
+    setEventSelectionDialogOpen(true);
 
-      if (event.source !== 'streamed.pk' || optionsAvailable) {
-          return;
-      }
+    const mainEventInState = events.find(e => e.id === event.id);
+    const optionsAvailable = mainEventInState && mainEventInState.options.length > 0;
 
-      setIsOptionsLoading(true);
-      try {
-          const sourcePromises = event.sources.map(async (source) => {
-              try {
-                  const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                  if (response.ok) {
-                      const streams: any[] = await response.json();
-                      if (Array.isArray(streams)) {
-                          return streams.map(stream => ({
-                              url: stream.embedUrl,
-                              label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                              hd: stream.hd,
-                              language: stream.language,
-                          }));
-                      }
-                  }
-              } catch (e) {
-                  console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
-              }
-              return [];
-          });
+    if (event.source !== 'streamed.pk' || optionsAvailable) {
+        if (optionsAvailable) {
+            setDialogEvent({ ...eventForDialog, options: mainEventInState.options });
+        }
+        return;
+    }
 
-          const results = await Promise.all(sourcePromises);
-          const streamOptions: StreamOption[] = results.flat().filter((o): o is StreamOption => !!o);
-          
-          const finalEventForDialog = { ...event, options: streamOptions };
+    setIsOptionsLoading(true);
+    try {
+        const sourcePromises = event.sources.map(async (source) => {
+            try {
+                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                if (response.ok) {
+                    const streams: any[] = await response.json();
+                    if (Array.isArray(streams)) {
+                        return streams.map(stream => ({
+                            url: stream.embedUrl,
+                            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                            hd: stream.hd,
+                            language: stream.language,
+                        }));
+                    }
+                }
+            } catch (e) {
+                console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
+            }
+            return [];
+        });
 
-          setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? finalEventForDialog : e));
-          setDialogEvent(finalEventForDialog);
+        const results = await Promise.all(sourcePromises);
+        const streamOptions: StreamOption[] = results.flat().filter((o): o is StreamOption => !!o);
+        
+        const finalEventForDialog = { ...eventForDialog, options: streamOptions };
 
-      } catch (error) {
-          console.error(`Failed to fetch streams for ${event.title}`);
-          setDialogEvent({ ...event, options: [] });
-      } finally {
-          setIsOptionsLoading(false);
-      }
-  };
+        setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? finalEventForDialog : e));
+        setDialogEvent(finalEventForDialog);
+
+    } catch (error) {
+        console.error(`Failed to fetch streams for ${event.title}`);
+        setDialogEvent({ ...eventForDialog, options: [] });
+    } finally {
+        setIsOptionsLoading(false);
+    }
+};
 
   const handleChannelClick = (channel: Channel) => {
       const channelAsEvent: Event = {
@@ -2630,8 +2639,9 @@ function ControllingView({
                 setView('chat')
             }}
             onStopSession={onStopSession}
+            onSchedule={() => setView('schedule')}
+            onOpenPresets={() => setView('presets')}
         />
     </div>
   );
 }
-
