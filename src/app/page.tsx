@@ -1076,13 +1076,13 @@ export function HomePageContent() {
 
   // --- Centralized Selection Logic ---
 
-  const getEventSelection = useCallback((event: Event, sourceState: AppState): { isSelected: boolean; selectedOption: string | null; index: number } => {
-    if (!sourceState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
+  const getEventSelection = useCallback((event: Event, sourceEvents: (Event|null)[]): { isSelected: boolean; selectedOption: string | null; index: number } => {
+    if (!sourceEvents) return { isSelected: false, selectedOption: null, index: -1 };
     
-    const selectionIndex = sourceState.selectedEvents.findIndex(se => se?.id === event.id);
+    const selectionIndex = sourceEvents.findIndex(se => se?.id === event.id);
 
     if (selectionIndex !== -1) {
-      const selectedEvent = sourceState.selectedEvents[selectionIndex];
+      const selectedEvent = sourceEvents[selectionIndex];
       return { 
         isSelected: true, 
         selectedOption: selectedEvent?.selectedOption || null, 
@@ -1093,10 +1093,16 @@ export function HomePageContent() {
   }, []);
   
     // Finds the correct index for a new or existing event.
-    const findTargetIndex = useCallback((sourceEvents: (Event|null)[]) => {
-        // Find the first empty slot for a new addition.
-        return sourceEvents.findIndex(e => e === null);
-    }, []);
+  const findTargetIndex = useCallback((event: Event | null, sourceEvents: (Event|null)[]) => {
+      if (event) {
+          const existingIndex = sourceEvents.findIndex(e => e?.id === event.id);
+          if (existingIndex !== -1) {
+              return existingIndex; // Found existing event, return its index for modification
+          }
+      }
+      // For a new event, find the first empty slot.
+      return sourceEvents.findIndex(e => e === null);
+  }, []);
 
   // --- Main View Handlers ---
   
@@ -1127,63 +1133,62 @@ export function HomePageContent() {
   }, [selectedEvents, setSelectedEvents]);
   
   const openDialogForEvent = async (event: Event) => {
-    // When adding a new event, always find the first empty slot.
-    const targetIndex = findTargetIndex(selectedEvents);
+      // For adding new events, find the first empty slot.
+      const targetIndex = findTargetIndex(null, selectedEvents);
 
-    if (targetIndex === -1) {
-        toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
-        return;
-    }
-    
-    setDialogContext('main');
-    setModificationIndex(targetIndex);
-    setDialogEvent(event);
-    setEventSelectionDialogOpen(true);
+      if (targetIndex === -1) {
+          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
+          return;
+      }
+      
+      setDialogContext('main');
+      setModificationIndex(targetIndex);
+      setDialogEvent(event);
+      setEventSelectionDialogOpen(true);
 
-    const mainEventInState = events.find(e => e.id === event.id);
-    const optionsAvailable = mainEventInState && mainEventInState.options.length > 0;
+      const mainEventInState = events.find(e => e.id === event.id);
+      const optionsAvailable = mainEventInState && mainEventInState.options.length > 0;
 
-    if (event.source !== 'streamed.pk' || optionsAvailable) {
-        return;
-    }
+      if (event.source !== 'streamed.pk' || optionsAvailable) {
+          return;
+      }
 
-    setIsOptionsLoading(true);
+      setIsOptionsLoading(true);
+      try {
+          const sourcePromises = event.sources.map(async (source) => {
+              try {
+                  const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+                  if (response.ok) {
+                      const streams: any[] = await response.json();
+                      if (Array.isArray(streams)) {
+                          return streams.map(stream => ({
+                              url: stream.embedUrl,
+                              label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                              hd: stream.hd,
+                              language: stream.language,
+                          }));
+                      }
+                  }
+              } catch (e) {
+                  console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
+              }
+              return [];
+          });
 
-    try {
-        const sourcePromises = event.sources.map(async (source) => {
-            try {
-                const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-                if (response.ok) {
-                    const streams: any[] = await response.json();
-                    if (Array.isArray(streams)) {
-                        return streams.map(stream => ({
-                            url: stream.embedUrl,
-                            label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                            hd: stream.hd,
-                            language: stream.language,
-                        }));
-                    }
-                }
-            } catch (e) {
-                console.error(`Failed to fetch stream source: ${source.source}/${source.id}`, e);
-            }
-            return [];
-        });
+          const results = await Promise.all(sourcePromises);
+          const streamOptions: StreamOption[] = results.flat().filter((o): o is StreamOption => !!o);
+          
+          const finalEventForDialog = { ...event, options: streamOptions };
 
-        const results = await Promise.all(sourcePromises);
-        const streamOptions: StreamOption[] = results.flat().filter((o): o is StreamOption => !!o);
-        
-        const finalEventForDialog = { ...event, options: streamOptions };
+          setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? finalEventForDialog : e));
+          setDialogEvent(finalEventForDialog);
 
-        setEvents(prevEvents => prevEvents.map(e => e.id === event.id ? finalEventForDialog : e));
-        setDialogEvent(finalEventForDialog);
-
-    } catch (error) {
-        console.error(`Failed to fetch streams for ${event.title}`);
-        setDialogEvent({ ...event, options: [] });
-    } finally {
-        setIsOptionsLoading(false);
-    }
+      } catch (error) {
+          console.error(`Failed to fetch streams for ${event.title}`);
+          setDialogEvent({ ...event, options: [] });
+      } finally {
+          setIsOptionsLoading(false);
+      }
   };
 
   const handleChannelClick = (channel: Channel) => {
@@ -1195,7 +1200,7 @@ export function HomePageContent() {
           language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
       };
       
-      const targetIndex = findTargetIndex(selectedEvents);
+      const targetIndex = findTargetIndex(null, selectedEvents);
       
       if (targetIndex === -1) {
         toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 canales. Elimina uno para añadir otro.' });
@@ -1214,7 +1219,7 @@ export function HomePageContent() {
     if (!event) return;
 
     setDialogEvent(event);
-    setModificationIndex(index); // Set the specific index for modification
+    setModificationIndex(index);
     setEventSelectionDialogOpen(true);
     setDialogContext('main');
   };
@@ -1514,7 +1519,7 @@ export function HomePageContent() {
                 initialOrder={viewOrder}
                 allEvents={allSortedEvents}
                 allChannels={channelsData}
-                getEventSelection={(event) => getEventSelection(event, appState)}
+                getEventSelection={(event) => getEventSelection(event, appState.selectedEvents)}
                 container={remoteControlContainerRef.current ?? undefined}
                 onAddEvent={() => setAddEventsDialogOpen(true)}
             />
@@ -1525,9 +1530,9 @@ export function HomePageContent() {
             />
             <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
                 <DialogContent className="sm:max-w-md p-0" hideClose={true}>
-                    <DialogHeader>
-                        <DialogModalTitle className='sr-only'>Bienvenida</DialogModalTitle>
-                        <DialogDescription className="sr-only">¡Bienvenido a Deportes para Todos!</DialogDescription>
+                    <DialogHeader className="sr-only">
+                        <DialogModalTitle>Bienvenida</DialogModalTitle>
+                        <DialogDescription>¡Bienvenido a Deportes para Todos!</DialogDescription>
                     </DialogHeader>
                     <DialogModalClose asChild>
                     <Button variant="ghost" className="absolute right-0 top-0 rounded-bl-lg rounded-tr-lg p-2 bg-background/50 backdrop-blur-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10" onClick={() => setWelcomePopupOpen(false)}>
@@ -1866,7 +1871,7 @@ export function HomePageContent() {
                         <EventCard
                             key={`mobile-event-${event.id}-${index}`}
                             event={event}
-                            selection={getEventSelection(event, appState)}
+                            selection={getEventSelection(event, selectedEvents)}
                             onClick={() => openDialogForEvent(event)}
                         />
                     ))}
@@ -1874,22 +1879,22 @@ export function HomePageContent() {
             ) : (
                 <>
                     <div className="mb-8">
-                        <EventCarousel title="Canales" channels={channelsData} onChannelClick={handleChannelClick} getEventSelection={(e) => getEventSelection(e, appState)} />
+                        <EventCarousel title="Canales" channels={channelsData} onChannelClick={handleChannelClick} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
+                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
                     </div>
                      <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
+                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
+                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, appState)} />
+                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e, selectedEvents)} />
                     </div>
                 </>
             )}
@@ -1909,7 +1914,7 @@ export function HomePageContent() {
               const isChannel = 'urls' in item;
               if (isChannel) {
                 const channelAsEvent: Event = { id: `${(item as Channel).name}-channel-static`, title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: (item as Channel).logo };
-                const selection = getEventSelection(channelAsEvent, appState);
+                const selection = getEventSelection(channelAsEvent, selectedEvents);
                 return (
                     <Card 
                         key={`search-channel-${index}`}
@@ -1945,7 +1950,7 @@ export function HomePageContent() {
                     <EventCard
                       key={`search-event-${(item as Event).id}-${index}`}
                       event={item as Event}
-                      selection={getEventSelection(item as Event, appState)}
+                      selection={getEventSelection(item as Event, selectedEvents)}
                       onClick={() => openDialogForEvent(item as Event)}
                     />
                 );
@@ -2113,7 +2118,7 @@ export function HomePageContent() {
           onOpenChange={setAddEventsDialogOpen}
           onEventSelect={openDialogForEvent}
           onChannelClick={handleChannelClick}
-          getEventSelection={(event) => getEventSelection(event, appState)}
+          getEventSelection={(event) => getEventSelection(event, selectedEvents)}
           events={allSortedEvents}
           channels={channelsData}
           isLoading={isAddEventsLoading}
@@ -2222,8 +2227,8 @@ type ControllingViewProps = {
     fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
     ablyChannel: any;
     toast: any;
-    findTargetIndex: (sourceEvents: (Event|null)[]) => number;
-    getEventSelection: (event: Event, sourceState: AppState) => { isSelected: boolean; selectedOption: string | null; index: number };
+    findTargetIndex: (event: Event | null, sourceEvents: (Event|null)[]) => number;
+    getEventSelection: (event: Event, sourceState: (Event|null)[]) => { isSelected: boolean; selectedOption: string | null; index: number };
 };
 
 
@@ -2272,22 +2277,21 @@ function ControllingView({
     setLiveAppState({ selectedEvents: newSelectedEvents });
   }, [appState.selectedEvents, setLiveAppState]);
   
-  const openDialogForEventRemote = async (event: Event) => {
-      // For adding new events from the remote, always find the first empty slot.
-      const targetIndex = findTargetIndex(appState.selectedEvents);
+    const openDialogForEventRemote = async (event: Event) => {
+        const targetIndex = findTargetIndex(null, appState.selectedEvents);
 
-      if (targetIndex === -1) {
-          toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
-          return;
-      }
-      
-      setModificationIndex(targetIndex);
-      setDialogEvent(event);
-      setView('eventSelection');
-      
-      if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
-          return;
-      }
+        if (targetIndex === -1) {
+            toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más eventos.' });
+            return;
+        }
+
+        setModificationIndex(targetIndex);
+        setDialogEvent(event);
+        setView('eventSelection');
+
+        if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
+            return;
+        }
   
       setIsOptionsLoading(true);
       try {
@@ -2312,19 +2316,19 @@ function ControllingView({
       }
   };
 
-    const handleSelectEventRemote = (event: Event, optionUrl: string) => {
+    const handleEventSelectRemote = (event: Event, optionUrl: string) => {
         if (modificationIndex === null) return;
         const eventWithSelection = { ...event, selectedOption: optionUrl };
         const newSelectedEvents = [...appState.selectedEvents];
         newSelectedEvents[modificationIndex] = eventWithSelection;
         setLiveAppState({ selectedEvents: newSelectedEvents });
-        setView('addEvents'); // Return to the list view
+        setView('addEvents');
         setDialogEvent(null);
         setModificationIndex(null);
     };
 
     const handleChannelClickRemote = (channel: Channel) => {
-        const targetIndex = findTargetIndex(appState.selectedEvents);
+        const targetIndex = findTargetIndex(null, appState.selectedEvents);
         if (targetIndex === -1) {
             toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más canales.' });
             return;
@@ -2349,36 +2353,14 @@ function ControllingView({
         const newSelectedEvents = [...appState.selectedEvents];
         newSelectedEvents[modificationIndex] = eventWithSelection;
         setLiveAppState({ selectedEvents: newSelectedEvents });
-        setView('addEvents'); // Return to the list view
+        setView('addEvents');
         setDialogEvent(null);
         setModificationIndex(null);
     };
 
   
   const handleOpenAddEvents = () => {
-    if (ablyChannel) {
-        const tempSub = (message: AblyMessage) => {
-            if (message.data.appState) {
-                // IMPORTANT: Sync state before opening the dialog
-                setControllerAppState(message.data.appState);
-                ablyChannel.unsubscribe('state-update', tempSub);
-                setView('addEvents');
-            }
-        };
-        ablyChannel.subscribe('state-update', tempSub);
-        ablyChannel.publish('sync-request', {});
-
-        // Fallback timeout in case the controlled device doesn't respond
-        setTimeout(() => {
-            ablyChannel.unsubscribe('state-update', tempSub);
-            // Open the view regardless of response, but state might be stale
-            if (view !== 'addEvents') {
-                setView('addEvents');
-            }
-        }, 1500);
-    } else {
-        setView('addEvents');
-    }
+    setView('addEvents');
   };
 
 
@@ -2389,7 +2371,7 @@ function ControllingView({
                 onOpenChange={() => setView('main')}
                 onEventSelect={openDialogForEventRemote}
                 onChannelClick={handleChannelClickRemote}
-                getEventSelection={(e) => getEventSelection(e, appState)}
+                getEventSelection={(e) => getEventSelection(e, appState.selectedEvents)}
                 events={allSortedEvents}
                 channels={allChannels}
                 isLoading={false}
@@ -2401,8 +2383,7 @@ function ControllingView({
   }
 
   if (view === 'eventSelection' && dialogEvent) {
-    // Determine if it's a channel or event to call the correct select handler
-    const onSelectHandler = dialogEvent.category === 'Canal' ? handleSelectChannelRemote : handleSelectEventRemote;
+    const onSelectHandler = dialogEvent.category === 'Canal' ? handleSelectChannelRemote : handleEventSelectRemote;
     return (
       <RemoteEventSelection
         event={dialogEvent}
@@ -2457,14 +2438,9 @@ function ControllingView({
             onModify={(index: number) => {
                 const event = appState.selectedEvents[index];
                 if (event) {
-                  if (event.category === 'Canal') {
-                    const channel = allChannels.find(c => c.name === event.title);
-                    if (channel) {
-                      handleChannelClickRemote(channel);
-                    }
-                  } else {
-                    openDialogForEventRemote(event);
-                  }
+                    setModificationIndex(index);
+                    setDialogEvent(event);
+                    setView('eventSelection');
                 }
             }}
             isViewPage={true}
