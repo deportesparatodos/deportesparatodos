@@ -317,7 +317,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                 <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
                             </Button>
                           )}
-                           {!isRemoteControlView && onNotificationManager && onOpenCalendar && (
+                           {!isRemoteControlView && (
                                 <>
                                   <Separator className="my-2"/>
                                   <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>

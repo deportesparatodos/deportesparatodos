@@ -2133,6 +2133,7 @@ export function HomePageContent() {
                                                 onOpenErrors={() => setIsErrorsOpen(true)}
                                                 onOpenCalendar={() => setCalendarOpen(true)}
                                                 onOpenPresets={() => setPresetsDialogOpen(true)}
+                                                onNotificationManager={() => setNotificationManagerOpen(true)}
                                                 isTutorialOpen={isTutorialOpen}
                                                 onIsTutorialOpenChange={setIsTutorialOpen}
                                                 isErrorsOpen={isErrorsOpen}
@@ -2321,7 +2322,7 @@ function ControllingView({
   toast,
   customPresets,
 }: ControllingViewProps) {
-  type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat' | 'presets';
+  type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
   const [view, setView] = useState<ControllingViewMode>('main');
   
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -2472,42 +2473,6 @@ function ControllingView({
         setModificationIndex(null);
     };
 
-    const handlePresetSelect = (preset: Preset) => {
-        const newSelectedEvents: (Event | null)[] = Array(9).fill(null);
-        let count = 0;
-
-        for (const presetChannel of preset.channels) {
-            if (count >= 9) break;
-
-            let foundItem: Event | Channel | undefined;
-            if (presetChannel.isEvent) {
-                foundItem = allSortedEvents.find(e => e.id === presetChannel.id);
-            } else {
-                foundItem = allChannels.find(c => c.name === presetChannel.name);
-            }
-            
-            if (foundItem) {
-                let event: Event;
-                if ('urls' in foundItem) {
-                    event = {
-                        id: `${foundItem.name}-channel-static`,
-                        title: foundItem.name,
-                        options: foundItem.urls.map(u => ({ ...u, hd: false, language: '' })),
-                        selectedOption: foundItem.urls[presetChannel.optionIndex ?? 0]?.url,
-                        sources: [], buttons: [], time: 'AHORA', category: 'Canal',
-                        language: '', date: '', source: '', status: 'En Vivo', image: foundItem.logo
-                    };
-                } else {
-                    event = { ...foundItem, selectedOption: foundItem.options[presetChannel.optionIndex ?? 0]?.url };
-                }
-                newSelectedEvents[count] = event;
-                count++;
-            }
-        }
-        setLiveAppState({ selectedEvents: newSelectedEvents });
-        setView('main');
-    };
-
   if (showScheduleFailureMessage) {
     return (
       <div className="fixed inset-0 z-[100] bg-destructive text-destructive-foreground flex flex-col items-center justify-center text-center p-4">
@@ -2579,27 +2544,6 @@ function ControllingView({
       <RemoteChat onBack={() => setView('main')} />
     );
   }
-  
-  if (view === 'presets') {
-    return (
-        <div ref={remoteControlContainerRef}>
-            <PresetsDialog
-                open={true}
-                onOpenChange={(isOpen) => !isOpen && setView('main')}
-                onSelectPreset={handlePresetSelect}
-                container={remoteControlContainerRef.current ?? undefined}
-                customPresets={customPresets}
-                allEvents={allSortedEvents}
-                allChannels={allChannels}
-                isRemote={true}
-                onSavePreset={() => {}} // No-op in remote view
-                onUpdatePreset={() => {}} // No-op in remote view
-                onDeletePreset={() => {}} // No-op in remote view
-            />
-        </div>
-    );
-  }
-
 
   // Main Remote Control UI
   return (
@@ -2640,7 +2584,6 @@ function ControllingView({
             }}
             onStopSession={onStopSession}
             onSchedule={() => setView('schedule')}
-            onOpenPresets={() => setView('presets')}
         />
     </div>
   );
