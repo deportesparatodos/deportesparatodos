@@ -2253,6 +2253,7 @@ function ControllingView({
   const [view, setView] = useState<ControllingViewMode>('main');
   
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
+  const [dialogChannel, setDialogChannel] = useState<Channel | null>(null);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
   const { toast } = useToast();
@@ -2341,21 +2342,15 @@ function ControllingView({
   };
 
   const handleChannelClickRemote = (channel: Channel) => {
-    const channelAsEvent: Event = {
-      id: `${channel.name}-channel-static`,
-      title: channel.name,
-      options: channel.urls.map((u) => ({ ...u, hd: false, language: '' })),
-      sources: [],
-      buttons: [],
-      time: 'AHORA',
-      category: 'Canal',
-      language: '',
-      date: '',
-      source: '',
-      status: 'En Vivo',
-      image: channel.logo,
-    };
-    openDialogForEventRemote(channelAsEvent);
+    const selection = getEventSelectionRemote({ id: `${channel.name}-channel-static`, title: channel.name } as Event);
+    if (selection.isSelected) {
+        setModificationIndex(selection.index);
+    } else {
+        const emptyIndex = appState.selectedEvents.findIndex((e) => e === null);
+        setModificationIndex(emptyIndex !== -1 ? emptyIndex : null);
+    }
+    setDialogChannel(channel);
+    setView('eventSelection');
   };
   
   const handleEventSelectRemote = (event: Event, optionUrl: string) => {
@@ -2376,7 +2371,45 @@ function ControllingView({
       toast({ variant: 'destructive', title: 'Selección Completa' });
     }
     setView('main');
+    setDialogEvent(null);
   };
+  
+  const handleSelectChannelRemote = (channel: Channel, optionUrl: string) => {
+    const channelAsEvent: Event = {
+      id: `${channel.name}-channel-static`,
+      title: channel.name,
+      options: channel.urls.map(u => ({...u, hd: false, language: ''})),
+      sources: [],
+      buttons: [],
+      time: 'AHORA',
+      category: 'Canal',
+      language: '',
+      date: '',
+      source: '',
+      status: 'En Vivo',
+      image: channel.logo,
+      selectedOption: optionUrl,
+    };
+    
+    const newSelectedEvents = [...appState.selectedEvents];
+    let targetIndex = -1;
+
+    if (modificationIndex !== null) {
+      targetIndex = modificationIndex;
+    } else {
+      targetIndex = newSelectedEvents.findIndex((e) => e === null);
+    }
+
+    if (targetIndex !== -1) {
+      newSelectedEvents[targetIndex] = channelAsEvent;
+      setLiveAppState({ selectedEvents: newSelectedEvents });
+    } else {
+      toast({ variant: 'destructive', title: 'Selección Completa' });
+    }
+    setView('main');
+    setDialogChannel(null);
+  };
+
 
   if (view === 'addEvents') {
     return (
@@ -2397,16 +2430,36 @@ function ControllingView({
     );
   }
 
-  if (view === 'eventSelection' && dialogEvent) {
+  if (view === 'eventSelection' && (dialogEvent || dialogChannel)) {
+    const eventForDialog: Event | undefined = dialogEvent ?? (dialogChannel ? {
+      id: `${dialogChannel.name}-channel-static`,
+      title: dialogChannel.name,
+      options: dialogChannel.urls.map(u => ({ ...u, hd: false, language: '' })),
+      sources: [],
+      buttons: [],
+      time: 'AHORA',
+      category: 'Canal',
+      language: '',
+      date: '',
+      source: '',
+      status: 'En Vivo',
+      image: dialogChannel.logo,
+      selectedOption: appState.selectedEvents[modificationIndex ?? -1]?.selectedOption
+    } : undefined);
+    
     return (
       <RemoteEventSelection
-        event={dialogEvent}
-        onBack={() => setView('addEvents')}
-        onSelect={handleEventSelectRemote}
+        event={eventForDialog!}
+        channel={dialogChannel}
+        onBack={() => { setView('addEvents'); setDialogEvent(null); setDialogChannel(null); }}
+        onSelectEvent={handleEventSelectRemote}
+        onSelectChannel={handleSelectChannelRemote}
         isModification={modificationIndex !== null}
         onRemove={() => {
           if (modificationIndex !== null) handleEventRemove(modificationIndex);
           setView('main');
+          setDialogEvent(null);
+          setDialogChannel(null);
         }}
         isLoading={isOptionsLoading}
       />
@@ -2450,7 +2503,16 @@ function ControllingView({
             onRemove={handleEventRemove}
             onModify={(index: number) => {
                 const event = appState.selectedEvents[index];
-                if (event) openDialogForEventRemote(event);
+                if (event) {
+                  if (event.category === 'Canal') {
+                    const channel = allChannels.find(c => c.name === event.title);
+                    if (channel) {
+                      handleChannelClickRemote(channel);
+                    }
+                  } else {
+                    openDialogForEventRemote(event);
+                  }
+                }
             }}
             isViewPage={true}
             onAddEvent={() => setView('addEvents')}

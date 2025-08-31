@@ -6,6 +6,7 @@ import { FC } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import type { Event, StreamOption } from './event-carousel';
+import type { Channel } from './channel-list';
 import { Badge } from './ui/badge';
 import { cn, getDomainFromUrl } from '@/lib/utils';
 import {
@@ -15,13 +16,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Loader2, Trash2, ArrowLeft } from 'lucide-react';
-import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 
 interface RemoteEventSelectionProps {
   event: Event;
+  channel: Channel | null;
   onBack: () => void;
-  onSelect: (event: Event, optionUrl: string) => void;
+  onSelectEvent: (event: Event, optionUrl: string) => void;
+  onSelectChannel: (channel: Channel, optionUrl: string) => void;
   isModification: boolean;
   onRemove: () => void;
   isLoading: boolean;
@@ -31,8 +33,10 @@ const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   event,
+  channel,
   onBack,
-  onSelect,
+  onSelectEvent,
+  onSelectChannel,
   isModification,
   onRemove,
   isLoading,
@@ -47,14 +51,14 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
   const isTCChaserEvent = event.source === 'tc-chaser';
   const isChannel = event.category === 'Canal';
   
-  const handleSelectAndCopy = (event: Event, optionUrl: string) => {
-    navigator.clipboard.writeText(optionUrl).then(() => {
-        toast({ title: '¡Enlace copiado!', description: 'El enlace de la transmisión se ha copiado al portapapeles.' });
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-    });
-    onSelect(event, optionUrl);
+  const handleSelect = (optionUrl: string) => {
+    if (channel) {
+        onSelectChannel(channel, optionUrl);
+    } else {
+        onSelectEvent(event, optionUrl);
+    }
   };
+
 
   return (
     <div className="fixed inset-0 bg-background z-[100] flex flex-col">
@@ -113,7 +117,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
 
             {/* Right/Bottom Panel */}
             <div className="w-full sm:w-1/2 flex flex-col bg-card rounded-lg border border-border">
-                <ScrollArea className="flex-grow h-full">
+                <div className="flex-grow h-full overflow-y-auto">
                     <div className="flex items-center justify-center h-full p-4">
                         {isLoading ? (
                             <div className="flex items-center justify-center h-full">
@@ -138,7 +142,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                                                             "w-full border border-border hover:scale-105 transition-transform duration-200",
                                                             isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
                                                         )}
-                                                        onClick={() => handleSelectAndCopy(event, option.url)}
+                                                        onClick={() => handleSelect(option.url)}
                                                     >
                                                         <span className="truncate">{option.label}</span>
                                                     </Button>
@@ -155,7 +159,7 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
                             </TooltipProvider>
                         )}
                     </div>
-                </ScrollArea>
+                </div>
             </div>
         </div>
     </div>
