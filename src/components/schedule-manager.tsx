@@ -31,7 +31,8 @@ import { Separator } from './ui/separator';
 import { Input } from './ui/input';
 import type { Channel } from './channel-list';
 import { EventSelectionDialog } from './event-selection-dialog';
-import { AddEventsDialog } from './add-events-dialog'; // Import AddEventsDialog
+import { AddEventsDialog } from './add-events-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Schedule {
   id: string;
@@ -82,6 +83,7 @@ export function ScheduleManager({
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
+  const { toast } = useToast();
 
   const resetToCurrentSelection = () => {
     setFutureSelection([...initialSelection]);
@@ -168,9 +170,50 @@ export function ScheduleManager({
     }
   };
 
-  const handleSelectEventForSchedule = (event: Event) => {
-      setDialogEvent(event);
-      setEventSelectionDialogOpen(true);
+  const openDialogForEventSchedule = async (event: Event) => {
+    // This logic opens the selection dialog for an event to be added to the schedule.
+    const selectionIndex = futureSelection.findIndex(se => se?.id === event.id);
+    let eventForDialog = { ...event };
+    
+    if (selectionIndex !== -1) {
+        // Event is already in the future selection, treat as modification
+        setModificationIndex(selectionIndex);
+        if (futureSelection[selectionIndex]?.selectedOption) {
+            eventForDialog.selectedOption = futureSelection[selectionIndex]?.selectedOption;
+        }
+    } else {
+        // Event is new, find first empty slot
+        const emptyIndex = futureSelection.findIndex(e => e === null);
+        if (emptyIndex === -1) {
+            toast({ variant: 'destructive', title: "Programación llena", description: "No puedes programar más de 9 eventos."});
+            return;
+        }
+        setModificationIndex(emptyIndex);
+    }
+
+    setDialogEvent(eventForDialog);
+    setEventSelectionDialogOpen(true);
+
+    if (event.source !== 'streamed.pk' || event.options.length > 0) {
+        return;
+    }
+    
+    setIsOptionsLoading(true);
+    try {
+      const sourcePromises = event.sources.map(async (source) => {
+        const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+        if (response.ok) {
+          const streams: any[] = await response.json();
+          return streams.map((stream) => ({ url: stream.embedUrl, label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`, hd: stream.hd, language: stream.language, }));
+        }
+        return [];
+      });
+      const results = await Promise.all(sourcePromises);
+      const streamOptions = results.flat().filter(Boolean);
+      setDialogEvent({ ...eventForDialog, options: streamOptions });
+    } finally {
+        setIsOptionsLoading(false);
+    }
   };
   
   const handleSelectChannelForSchedule = (channel: Channel) => {
@@ -180,24 +223,20 @@ export function ScheduleManager({
           options: channel.urls.map(u => ({...u, hd: false, language: ''})),
           sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
       };
-      setDialogEvent(channelAsEvent);
-      setEventSelectionDialogOpen(true);
+      openDialogForEventSchedule(channelAsEvent);
   };
 
   const handleFinalSelectionForSchedule = (event: Event, optionUrl: string) => {
       const newFutureSelection = [...futureSelection];
       let targetIndex = modificationIndex;
       
-      if (targetIndex === null) {
-        targetIndex = newFutureSelection.findIndex(e => e === null);
-      }
-
-      if (targetIndex !== -1) {
+      if (targetIndex !== null) {
           newFutureSelection[targetIndex] = { ...event, selectedOption: optionUrl };
           setFutureSelection(newFutureSelection);
       }
       setEventSelectionDialogOpen(false);
       setModificationIndex(null);
+      // DO NOT close the addEventsDialogOpen here
   };
 
   const activeFutureEventsCount = futureOrder?.filter(i => futureSelection[i] !== null).length ?? 0;
@@ -315,9 +354,7 @@ export function ScheduleManager({
                                 onModify={(index: number) => {
                                   const eventToModify = futureSelection[index];
                                   if (eventToModify) {
-                                    setDialogEvent(eventToModify);
-                                    setModificationIndex(index);
-                                    setAddEventsDialogOpen(true);
+                                    openDialogForEventSchedule(eventToModify);
                                   }
                                 }}
                                 isViewPage={true}
@@ -338,11 +375,11 @@ export function ScheduleManager({
         </DialogPortal>
       </Dialog>
       
-      {/* Dialogs managed locally by the Schedule Manager */}
+      {/* Dialogs managed LOCALLY by the Schedule Manager */}
       <AddEventsDialog
         open={addEventsDialogOpen}
         onOpenChange={setAddEventsDialogOpen}
-        onEventSelect={handleSelectEventForSchedule}
+        onEventSelect={openDialogForEventSchedule}
         onChannelClick={handleSelectChannelForSchedule}
         getEventSelection={(event) => {
           const selectionIndex = futureSelection.findIndex(se => se?.id === event.id);
