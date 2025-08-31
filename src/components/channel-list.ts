@@ -153,6 +153,12 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'NBC Golf Channel', url: 'https://streamtpglobal.com/global1.php?stream=golf_channel_usa', logo: 'https://nbcsports.brightspotcdn.com/dims4/default/a4787f0/2147483647/strip/true/crop/304x171+0+3/resize/1440x810!/quality/90/?url=http%3A%2F%2Fnbc-sports-production-nbc-sports.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fca%2Fb9%2F8521681bbea7ad8b97e57cdcc1f2%2Fnew-golf-channel-logo-304.jpg' },
     { name: 'Fox NRL TV', url: 'https://streamtpglobal.com/global1.php?stream=eventos2', logo: 'https://origin.go.foxsports.com.au/wp-content/uploads/2017/02/aaaa_log_foxl_a-1.png' },
     { name: 'Wimbledon Open', url: 'https://streamtpglobal.com/global1.php?stream=eventos5', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Wimbledon.svg/1200px-Wimbledon.svg.png' },
+    { name: 'MOTORPLAY', url: 'https://motorplay.tv/ar', logo: 'https://images.sftcdn.net/images/t_app-icon-s/p/4f3aa64f-acc9-4554-8cb9-682c6fa7ea47/2151507078/motorplay-logo.' },
+    { name: 'DEPORTV', url: 'https://tvlibreonline.org/html/fl/?get=RGVwb3JUVkhE', logo: 'https://imgs.search.brave.com/HcBQTT6eqM33DDQLI1fZ2TfeIByiUGPVgYEPmD5m-vY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9ibG9n/Z2VyLmdvb2dsZXVz/ZXJjb250ZW50LmNv/bS9pbWcvYi9SMjl2/WjJ4bC9BVnZYc0Vn/M1JsSWtwcTdFdkFZ/Sl9zTHpIMHcwTWZt/c2Q2NFZtcU5PZVhO/NENNQWZ5S01PaGoz/RnloaHZtSkcwd0RY/Ml9PU25zdG0ybVBC/UmhoS1ZyQjdsN2JH/cVE3d1p1dXYxZ1RU/ZE9ndlhwTGlBRXZL/OG1rcjhfSmFaWVlQ/SUtlX0NCVDhqTlhU/QjJaZGEyMGcvczMy/MC9kZXBvcnR2LTIw/MjAucG5n' },
+    { name: 'TyC Sports', url: 'https://rereyano.ru/player/3/77', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
+    { name: 'TyC Sports', url: 'https://elcanaldeportivo.com/tycsports-sd.php', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
+    { name: 'TyC Sports', url: 'https://streamtpglobal.com/global1.php?stream=tycsports', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
+    { name: 'TyC Sports', url: 'https://tvlibreonline.org/html/fl/?get=VHlDU3BvcnQ', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
 ];
 
 const mergedChannels = new Map<string, Channel>();
