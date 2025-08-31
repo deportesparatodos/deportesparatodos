@@ -316,7 +316,6 @@ export function HomePageContent() {
   // Dialog/Popup states
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
-  const [dialogContext, setDialogContext] = useState<'main' | 'schedule'>('main');
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
@@ -692,12 +691,6 @@ export function HomePageContent() {
       fetchEvents();
     }
   }, [isInitialLoadDone, fetchEvents]);
-  
-  useEffect(() => {
-    if (addEventsDialogOpen && dialogContext === 'main') {
-      // Logic inside EventSelectionDialog now
-    }
-  }, [addEventsDialogOpen, dialogContext]);
 
   // Centralized state persistence
   useEffect(() => {
@@ -1083,33 +1076,29 @@ export function HomePageContent() {
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
     
-    // This function will now only handle the main selection, not the schedule selection.
-    // The ScheduleManager will have its own selection logic.
-    if (dialogContext === 'main') {
-        navigator.clipboard.writeText(optionUrl).then(() => {
-            toast({ title: '¡Enlace copiado!', description: 'El enlace de la transmisión se ha copiado al portapapeles.' });
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-        });
+    navigator.clipboard.writeText(optionUrl).then(() => {
+        toast({ title: '¡Enlace copiado!', description: 'El enlace de la transmisión se ha copiado al portapapeles.' });
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
 
-        const newSelectedEvents = [...selectedEvents];
-        let targetIndex = modificationIndex !== null ? modificationIndex : newSelectedEvents.findIndex(e => e === null);
-        
-        if (targetIndex !== -1) {
-            newSelectedEvents[targetIndex] = eventWithSelection;
-            setSelectedEvents(newSelectedEvents);
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Selección Completa',
-                description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
-            });
-        }
-        
-        setEventSelectionDialogOpen(false);
-        setAddEventsDialogOpen(false);
-        setModificationIndex(null);
+    const newSelectedEvents = [...selectedEvents];
+    let targetIndex = modificationIndex !== null ? modificationIndex : newSelectedEvents.findIndex(e => e === null);
+    
+    if (targetIndex !== -1) {
+        newSelectedEvents[targetIndex] = eventWithSelection;
+        setSelectedEvents(newSelectedEvents);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Selección Completa',
+            description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
+        });
     }
+    
+    setEventSelectionDialogOpen(false);
+    setAddEventsDialogOpen(false);
+    setModificationIndex(null);
   };
   
   const handleEventRemove = useCallback((indexToRemove: number) => {
@@ -1152,7 +1141,6 @@ export function HomePageContent() {
 
 
  const openDialogForEvent = async (event: Event) => {
-    setDialogContext('main');
     setEventSelectionDialogOpen(true);
 
     const selection = getEventSelection(event);
@@ -1248,7 +1236,6 @@ export function HomePageContent() {
     }
     
     setDialogEvent(channelAsEvent);
-    setDialogContext('main');
     setEventSelectionDialogOpen(true);
     setIsOptionsLoading(false);
   };
@@ -1259,7 +1246,6 @@ export function HomePageContent() {
     const eventWithSelection = { ...event, selectedOption: event.selectedOption };
     setDialogEvent(eventWithSelection);
     setModificationIndex(index);
-    setDialogContext('main');
     setEventSelectionDialogOpen(true);
   };
 
@@ -1445,7 +1431,6 @@ export function HomePageContent() {
             }}
             allEvents={events}
             allChannels={channelsData}
-            getEventSelection={getEventSelection}
             fetchEvents={fetchEvents}
         />
     );
@@ -1549,6 +1534,7 @@ export function HomePageContent() {
                 <DialogContent className="sm:max-w-md p-0" hideClose={true}>
                     <DialogHeader>
                         <DialogModalTitle className='sr-only'>Bienvenida</DialogModalTitle>
+                        <DialogDescription className="sr-only">¡Bienvenido a Deportes para Todos!</DialogDescription>
                     </DialogHeader>
                     <DialogModalClose asChild>
                     <Button variant="ghost" className="absolute right-0 top-0 rounded-bl-lg rounded-tr-lg p-2 bg-background/50 backdrop-blur-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10" onClick={() => setWelcomePopupOpen(false)}>
@@ -2059,6 +2045,7 @@ export function HomePageContent() {
                                          <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
                                             <SheetHeader className="sr-only">
                                                 <SheetTitle>Configuration Panel</SheetTitle>
+                                                <DialogDescription>A panel to configure the view layout and other settings.</DialogDescription>
                                             </SheetHeader>
                                             <LayoutConfigurator
                                                 order={viewOrder.filter(i => selectedEvents[i] !== null)}
@@ -2084,7 +2071,6 @@ export function HomePageContent() {
                                                 onIsErrorsOpenChange={setIsErrorsOpen}
                                                 isRemoteControlView={false}
                                                 onAddEvent={() => {
-                                                    setDialogContext('main');
                                                     setAddEventsDialogOpen(true);
                                                 }}
                                                 onSchedule={() => setScheduleManagerOpen(true)}
@@ -2120,7 +2106,7 @@ export function HomePageContent() {
 
       {/* Dialogs at top level */}
       <AddEventsDialog
-          open={addEventsDialogOpen && dialogContext === 'main'}
+          open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
           onEventSelect={openDialogForEvent}
           onChannelClick={handleChannelClick}
@@ -2143,7 +2129,7 @@ export function HomePageContent() {
       />
       {dialogEvent && (
           <EventSelectionDialog
-              isOpen={eventSelectionDialogOpen && dialogContext === 'main'}
+              isOpen={eventSelectionDialogOpen}
               onOpenChange={(isOpen) => {
                   if (!isOpen) setModificationIndex(null);
                   setEventSelectionDialogOpen(isOpen);
@@ -2229,7 +2215,6 @@ type ControllingViewProps = {
     onStopSession: () => void;
     allEvents: Event[];
     allChannels: Channel[];
-    getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number; };
     fetchEvents: (manual?: boolean, fromDialog?: boolean) => void;
 };
 
@@ -2240,7 +2225,6 @@ function ControllingView({
   onStopSession,
   allEvents,
   allChannels,
-  getEventSelection,
   fetchEvents,
 }: ControllingViewProps) {
   type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
@@ -2277,8 +2261,23 @@ function ControllingView({
     setLiveAppState({ selectedEvents: newSelectedEvents });
   }, [appState.selectedEvents, setLiveAppState]);
   
+  const getEventSelectionRemote = useCallback((event: Event): { isSelected: boolean; selectedOption: string | null; index: number; } => {
+    if (!appState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
+    const selectionIndex = appState.selectedEvents.findIndex(se => se?.id === event.id);
+
+    if (selectionIndex !== -1) {
+      const selectedEvent = appState.selectedEvents[selectionIndex];
+      return { 
+        isSelected: true, 
+        selectedOption: selectedEvent?.selectedOption || null, 
+        index: selectionIndex 
+      };
+    }
+    return { isSelected: false, selectedOption: null, index: -1 };
+  }, [appState]);
+
   const openDialogForEventRemote = async (event: Event) => {
-    const selection = getEventSelection(event);
+    const selection = getEventSelectionRemote(event);
     let eventForDialog = { ...event };
     if (selection.isSelected) {
       setModificationIndex(selection.index);
@@ -2359,12 +2358,12 @@ function ControllingView({
 
   if (view === 'addEvents') {
     return (
-        <div className="fixed inset-0 z-[100]">
+        <div className="fixed inset-0 z-[100] bg-background">
             <AddEventsDialogContent
-                onOpenChange={(isOpen) => !isOpen && setView('main')}
+                onOpenChange={() => setView('main')}
                 onEventSelect={openDialogForEventRemote}
                 onChannelClick={handleChannelClickRemote}
-                getEventSelection={getEventSelection}
+                getEventSelection={getEventSelectionRemote}
                 events={allSortedEvents}
                 channels={allChannels}
                 isLoading={false}
