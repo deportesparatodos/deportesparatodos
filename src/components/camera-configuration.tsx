@@ -22,7 +22,6 @@ interface CameraConfigurationProps {
   onAddEvent: () => void;
   onSchedule?: () => void;
   onNotificationManager: () => void;
-  onRemoteControl?: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
@@ -39,6 +38,9 @@ interface CameraConfigurationProps {
   isErrorsOpen: boolean;
   onIsErrorsOpenChange: (open: boolean) => void;
   showTopSeparator?: boolean;
+  remoteControlMode: 'inactive' | 'controlled' | 'controlling';
+  controlledSessionCode: string;
+  onActivateRemoteControl: () => void;
 }
 
 export function CameraConfigurationComponent(props: CameraConfigurationProps) {

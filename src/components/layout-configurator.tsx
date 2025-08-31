@@ -18,6 +18,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
+import { cn } from '@/lib/utils';
 
 export interface EventListManagementProps {
   order: number[];
@@ -30,7 +31,6 @@ export interface EventListManagementProps {
   onAddEvent?: () => void;
   onSchedule?: () => void;
   onNotificationManager?: () => void;
-  onRemoteControl?: () => void;
   onToggleFullscreen?: (index: number) => void;
   fullscreenIndex?: number | null;
   gridGap: number;
@@ -51,6 +51,9 @@ export interface EventListManagementProps {
   onStopSession?: () => void;
   isRemoteControlView?: boolean;
   onOpenChat?: () => void;
+  remoteControlMode?: 'inactive' | 'controlled' | 'controlling';
+  controlledSessionCode?: string;
+  onActivateRemoteControl?: () => void;
 }
 
 export function EventList({
@@ -63,19 +66,37 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
-}: Pick<EventListManagementProps, 'order' | 'onOrderChange' | 'eventDetails' | 'onReload' | 'onRemove' | 'onModify' | 'isViewPage' | 'onToggleFullscreen' | 'fullscreenIndex'>) {
+  remoteControlMode,
+  controlledSessionCode
+}: Pick<EventListManagementProps, 'order' | 'onOrderChange' | 'eventDetails' | 'onReload' | 'onRemove' | 'onModify' | 'isViewPage' | 'onToggleFullscreen' | 'fullscreenIndex' | 'remoteControlMode' | 'controlledSessionCode'>) {
     
   const validOrder = Array.isArray(order) ? order : [];
-  
-  const handleMove = (currentIndex: number, direction: 'up' | 'down') => {
-    const newOrder = [...validOrder];
-    const itemToMove = newOrder.splice(currentIndex, 1)[0];
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    newOrder.splice(newIndex, 0, itemToMove);
-    onOrderChange(newOrder);
-  };
+  const isSessionActive = remoteControlMode === 'controlled';
   
   const activeEventsCount = validOrder.length;
+
+  if (isSessionActive) {
+      return (
+          <div className="relative">
+              <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4 rounded-lg">
+                  <p className="font-semibold text-foreground">Sesión de control remoto activa.</p>
+                  <p className="text-sm text-muted-foreground mb-2">Realice las modificaciones desde el mando.</p>
+                  <p className="text-sm text-muted-foreground">Su código es: <span className="font-bold text-lg text-primary tracking-widest">{controlledSessionCode}</span></p>
+              </div>
+              <div className="space-y-4 opacity-20 pointer-events-none" aria-hidden="true">
+                  {activeEventsCount > 0 ? validOrder.map((originalIndex, currentIndex) => {
+                      const event = Array.isArray(eventDetails) && eventDetails[originalIndex] ? eventDetails[originalIndex] : null;
+                      if (!event) return <div key={originalIndex} className="h-[76px] bg-secondary/50 rounded-md"></div>;
+                      return (
+                          <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50 h-[76px]">
+                              {/* Placeholder content */}
+                          </div>
+                      )
+                  }) : <p className="text-muted-foreground text-center py-8">No hay eventos seleccionados.</p>}
+              </div>
+          </div>
+      );
+  }
 
   if (activeEventsCount === 0) {
       return <p className="text-muted-foreground text-center py-8">No hay eventos seleccionados.</p>
@@ -177,14 +198,16 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar,
-        onAddEvent, onSchedule, onRemoteControl,
+        onAddEvent, onSchedule,
         onStopSession,
         isRemoteControlView = false,
         onOpenChat,
-        isViewPage,
+        remoteControlMode,
+        onActivateRemoteControl,
     } = props;
         
     const order = props.order || [];
+    const isSessionActive = remoteControlMode === 'controlled';
 
     return (
       <div className="flex flex-col h-full bg-background text-foreground">
@@ -200,25 +223,30 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         <ScrollArea className="flex-grow h-0">
           <div className='p-4 space-y-4'>
               <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="item-events">
-                  <AccordionItem value="item-events" className="border rounded-lg px-4">
-                      <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
+                  <AccordionItem value="item-events" className="border rounded-lg px-4" disabled={isSessionActive}>
+                      <AccordionTrigger disabled={isSessionActive}>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
                       <AccordionContent className="pt-2 pb-4 space-y-4">
-                          <>
-                              <EventList {...props} />
-                               <div className="space-y-2 pt-2">
-                                  {onAddEvent && (
-                                    <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEvent}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Añadir Evento/Canal
-                                    </Button>
-                                  )}
-                                  {onSchedule && !isRemoteControlView && (
-                                    <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
-                                        <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                                    </Button>
-                                  )}
-                              </div>
-                          </>
+                          <div className="relative">
+                            <EventList {...props} />
+                          </div>
+                          <div className="space-y-2 pt-2">
+                            {onAddEvent && (
+                              <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEvent}>
+                                  <Plus className="mr-2 h-4 w-4" />
+                                  Añadir Evento/Canal
+                              </Button>
+                            )}
+                            {onSchedule && !isRemoteControlView && (
+                              <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
+                                  <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                              </Button>
+                            )}
+                            {!isSessionActive && onActivateRemoteControl && (
+                                <Button variant="outline" className="w-full justify-center" onClick={onActivateRemoteControl}>
+                                    <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
+                                </Button>
+                            )}
+                          </div>
                       </AccordionContent>
                   </AccordionItem>
 

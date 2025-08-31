@@ -261,10 +261,13 @@ export function HomePageContent() {
                     dateTime: s.dateTime ? new Date(s.dateTime) : new Date() // Re-hydrate Date objects
                 }));
             }
+            if (remoteControlMode === 'controlled' && channelRef.current) {
+                channelRef.current.publish('state-update', { appState: updatedState });
+            }
             return updatedState;
         });
     }
-}, [isControlling, controllerAppState]);
+}, [isControlling, controllerAppState, remoteControlMode]);
 
 
   const setSelectedEvents = (events: (Event | null)[]) => setLiveAppState({ selectedEvents: events });
@@ -703,13 +706,6 @@ export function HomePageContent() {
           }
       }
   }, [appState, isInitialLoadDone]);
-
-  // Proactive state sync for controlled device
-  useEffect(() => {
-    if (remoteControlMode === 'controlled' && channelRef.current) {
-        channelRef.current.publish('state-update', { appState });
-    }
-  }, [appState, remoteControlMode]);
   
   // URL reload effect
   useEffect(() => {
@@ -912,21 +908,6 @@ export function HomePageContent() {
         if (isNight && currentStatus === 'Próximo') {
             currentStatus = 'Desconocido';
         }
-
-        // Add MULTICAM button to F1 events
-        if (e.title.toLowerCase().includes('formula 1') || e.title.toLowerCase().includes('f1')) {
-          const multicamOption: StreamOption = {
-              url: 'https://p.alangulotv.blog/multi-f1.html',
-              label: 'MULTICAM',
-              hd: false,
-              language: ''
-          };
-          const hasMulticam = e.options.some(opt => opt.url === multicamOption.url);
-          if (!hasMulticam) {
-              e.options.unshift(multicamOption);
-          }
-        }
-
 
         return { ...e, status: currentStatus };
     });
@@ -1384,6 +1365,14 @@ export function HomePageContent() {
     }
   };
 
+  const handleActivateRemoteControl = async () => {
+      try {
+          await startControlledSession();
+      } catch (e: any) {
+          toast({ variant: 'destructive', title: 'Error de Control Remoto', description: e.message || 'No se pudo iniciar la sesión controlada.' });
+      }
+  };
+
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
@@ -1499,6 +1488,9 @@ export function HomePageContent() {
                 getEventSelection={(event) => getEventSelection(event)}
                 container={remoteControlContainerRef.current ?? undefined}
                 onAddEvent={() => setAddEventsDialogOpen(true)}
+                remoteControlMode={remoteControlMode}
+                controlledSessionCode={controlledSessionCode}
+                onActivateRemoteControl={handleActivateRemoteControl}
             />
             <NotificationManager
             open={notificationManagerOpen}
@@ -1684,6 +1676,9 @@ export function HomePageContent() {
                     onIsTutorialOpenChange={setIsTutorialOpen}
                     isErrorsOpen={isErrorsOpen}
                     onIsErrorsOpenChange={setIsErrorsOpen}
+                    remoteControlMode={remoteControlMode}
+                    controlledSessionCode={controlledSessionCode}
+                    onActivateRemoteControl={handleActivateRemoteControl}
                 />
 
                 {isChatEnabled && (
@@ -2059,6 +2054,9 @@ export function HomePageContent() {
                                                   setDialogContext('schedule');
                                                   setScheduleManagerOpen(true);
                                                 }}
+                                                remoteControlMode={remoteControlMode}
+                                                controlledSessionCode={controlledSessionCode}
+                                                onActivateRemoteControl={handleActivateRemoteControl}
                                             />
                                       </SheetContent>
                                       </Sheet>
@@ -2284,7 +2282,6 @@ function ControllingView({
   };
 
   const openDialogForEventRemote = async (event: Event) => {
-    // Always find the first empty slot when adding a new event
     const targetIndex = appState.selectedEvents.findIndex(e => e === null);
 
     if (targetIndex === -1) {
@@ -2423,7 +2420,7 @@ function ControllingView({
        <RemoteScheduleManager
             onBack={() => setView('main')}
             schedules={appState.schedules}
-            onSchedulesChange={(newSchedules) => setLiveAppState({ ...appState, schedules: newSchedules })}
+            onSchedulesChange={(newSchedules) => setLiveAppState({ schedules: newSchedules })}
             initialSelection={appState.selectedEvents}
             initialOrder={appState.viewOrder}
             allEvents={allEvents}
@@ -2463,7 +2460,6 @@ function ControllingView({
             onAddEvent={() => {
                 setView('addEvents');
             }}
-            onSchedule={() => setView('schedule')}
             gridGap={appState.gridGap}
             onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
             borderColor={appState.borderColor}
