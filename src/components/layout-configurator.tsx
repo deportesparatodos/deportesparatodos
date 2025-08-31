@@ -212,7 +212,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                         Añadir Evento/Canal
                                     </Button>
                                   )}
-                                  {onSchedule && (
+                                  {onSchedule && !isRemoteControlView && (
                                     <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                         <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                     </Button>
