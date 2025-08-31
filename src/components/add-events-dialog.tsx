@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogPortal,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,14 +90,14 @@ export function AddEventsDialogContent({
     
     return (
          <div className={cn("bg-background h-full flex flex-col")}>
-            <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0 border-b flex'>
+            <div className='flex flex-row items-center justify-between p-4 flex-shrink-0 border-b'>
                 <div className='flex items-center gap-2'>
                     {isRemote && onBack && (
                         <Button variant="ghost" size="icon" onClick={onBack} className='h-9 w-9'>
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                     )}
-                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
+                    <h2 className="text-lg font-semibold leading-none tracking-tight">Añadir Evento/Canal</h2>
                 </div>
                 <div className="flex items-center gap-2">
                     {!isRemote && (
@@ -110,7 +111,7 @@ export function AddEventsDialogContent({
                         </Button>
                      )}
                 </div>
-            </DialogHeader>
+            </div>
                 
             <div className="relative flex-grow flex flex-col min-h-0">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow p-4 min-h-0">
@@ -204,6 +205,10 @@ export function AddEventsDialog({
                         : "h-[90vh] sm:max-w-4xl"
                 )}
             >
+                <DialogHeader className='sr-only'>
+                    <DialogTitle>Add Events Dialog</DialogTitle>
+                    <DialogDescription>A dialog to add events and channels.</DialogDescription>
+                </DialogHeader>
                <AddEventsDialogContent {...props} onOpenChange={onOpenChange} />
             </DialogContent>
           </DialogPortal>
