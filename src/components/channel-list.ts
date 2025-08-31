@@ -130,6 +130,9 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'TELEMUNDO', url: 'https://tvlibreonline.org/html/fl/?get=VGVsZW11bmRvX0hE', logo: 'https://upload.wikimedia.org/wikipedia/commons/6/68/Telemundo_logo_2018.svg' },
     { name: 'Telemetria F1 (SI HAY F1)', url: 'https://alangulo-dashboard-f1.vercel.app', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/F1.svg/1280px-F1.svg.png' },
     { name: 'TyC Sports', url: 'https://streamtpglobal.com/global1.php?stream=tycsports', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
+    { name: 'TyC Sports', url: 'https://rereyano.ru/player/3/77', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
+    { name: 'TyC Sports', url: 'https://elcanaldeportivo.com/tycsports-sd.php', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
+    { name: 'TyC Sports', url: 'https://tvlibreonline.org/html/fl/?get=VHlDU3BvcnQ', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
     { name: 'TyC Sports Internacional', url: 'https://streamtpglobal.com/global1.php?stream=tycinternacional', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
     { name: 'USA Network', url: 'https://streamtpglobal.com/global1.php?stream=usa_network', logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/USA_Network_logo_%282016%29.svg' },
     { name: 'Universo USA', url: 'https://streamtpglobal.com/global1.php?stream=universo_usa', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Universo_2017.svg' },
@@ -155,10 +158,6 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'Wimbledon Open', url: 'https://streamtpglobal.com/global1.php?stream=eventos5', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/b/b9/Wimbledon.svg/1200px-Wimbledon.svg.png' },
     { name: 'MOTORPLAY', url: 'https://motorplay.tv/ar', logo: 'https://images.sftcdn.net/images/t_app-icon-s/p/4f3aa64f-acc9-4554-8cb9-682c6fa7ea47/2151507078/motorplay-logo.' },
     { name: 'DEPORTV', url: 'https://tvlibreonline.org/html/fl/?get=RGVwb3JUVkhE', logo: 'https://imgs.search.brave.com/HcBQTT6eqM33DDQLI1fZ2TfeIByiUGPVgYEPmD5m-vY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9ibG9n/Z2VyLmdvb2dsZXVz/ZXJjb250ZW50LmNv/bS9pbWcvYi9SMjl2/WjJ4bC9BVnZYc0Vn/M1JsSWtwcTdFdkFZ/Sl9zTHpIMHcwTWZt/c2Q2NFZtcU5PZVhO/NENNQWZ5S01PaGoz/RnloaHZtSkcwd0RY/Ml9PU25zdG0ybVBC/UmhoS1ZyQjdsN2JH/cVE3d1p1dXYxZ1RU/ZE9ndlhwTGlBRXZL/OG1rcjhfSmFaWVlQ/SUtlX0NCVDhqTlhU/QjJaZGEyMGcvczMy/MC9kZXBvcnR2LTIw/MjAucG5n' },
-    { name: 'TyC Sports', url: 'https://rereyano.ru/player/3/77', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
-    { name: 'TyC Sports', url: 'https://elcanaldeportivo.com/tycsports-sd.php', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
-    { name: 'TyC Sports', url: 'https://streamtpglobal.com/global1.php?stream=tycsports', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
-    { name: 'TyC Sports', url: 'https://tvlibreonline.org/html/fl/?get=VHlDU3BvcnQ', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/54/TyC_Sports_logo.svg' },
 ];
 
 const mergedChannels = new Map<string, Channel>();
@@ -186,3 +185,5 @@ filteredOriginalChannels.forEach(channel => {
 });
 
 export const channels: Channel[] = Array.from(mergedChannels.values());
+
+    
