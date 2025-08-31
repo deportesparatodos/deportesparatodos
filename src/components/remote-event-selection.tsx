@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { FC } from 'react';
@@ -16,6 +17,7 @@ import {
 import { Loader2, Trash2, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { DialogHeader, DialogTitle } from './ui/dialog';
 
 interface RemoteEventSelectionProps {
   event: Event;
@@ -57,12 +59,12 @@ export const RemoteEventSelection: FC<RemoteEventSelectionProps> = ({
 
   return (
     <div className="fixed inset-0 bg-background z-[100] flex flex-col">
-        <header className="p-4 border-b border-border flex-shrink-0 flex items-center gap-2">
+        <DialogHeader className="p-4 border-b flex-shrink-0 flex flex-row items-center gap-2">
             <Button variant="ghost" size="icon" onClick={onBack} className="h-9 w-9">
                 <ArrowLeft />
             </Button>
-            <h2 className="text-lg font-bold truncate">{event.title}</h2>
-        </header>
+            <DialogTitle className="text-lg font-bold truncate">{event.title}</DialogTitle>
+        </DialogHeader>
       
         <div className="flex-grow flex flex-col sm:flex-row gap-4 p-4 overflow-hidden">
             {/* Left/Top Panel */}

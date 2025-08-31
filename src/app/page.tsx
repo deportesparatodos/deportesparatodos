@@ -256,12 +256,9 @@ export function HomePageContent() {
 
 
   const setLiveAppState = useCallback((newState: Partial<AppState>) => {
+    const updatedState = { ...(isControlling ? controllerAppState : appState), ...newState };
     if (isControlling) {
-        // When controlling, we update the local state of the controller first,
-        // then publish the entire new state to the controlled device.
-        const updatedState = { ...(controllerAppState ?? appState), ...newState };
-        setControllerAppState(updatedState);
-        
+        setControllerAppState(updatedState as AppState);
         if (channelRef.current) {
             channelRef.current.publish('action', {
                 type: 'SET_APP_STATE',
@@ -269,7 +266,6 @@ export function HomePageContent() {
             });
         }
     } else {
-        // When not controlling, just update the normal app state.
         setAppState(prevState => {
             const validatedState: AppState = { ...prevState, ...newState };
             if (!Array.isArray(validatedState.selectedEvents) || validatedState.selectedEvents === null) {
@@ -320,6 +316,7 @@ export function HomePageContent() {
   // Dialog/Popup states
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
+  const [dialogContext, setDialogContext] = useState<'main' | 'schedule'>('main');
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
   const [scheduleManagerOpen, setScheduleManagerOpen] = useState(false);
   const [notificationManagerOpen, setNotificationManagerOpen] = useState(false);
@@ -697,10 +694,10 @@ export function HomePageContent() {
   }, [isInitialLoadDone, fetchEvents]);
   
   useEffect(() => {
-    if (addEventsDialogOpen) {
+    if (addEventsDialogOpen && dialogContext === 'main') {
       // Logic inside EventSelectionDialog now
     }
-  }, [addEventsDialogOpen]);
+  }, [addEventsDialogOpen, dialogContext]);
 
   // Centralized state persistence
   useEffect(() => {
@@ -1086,35 +1083,33 @@ export function HomePageContent() {
   const handleEventSelect = (event: Event, optionUrl: string) => {
     const eventWithSelection = { ...event, selectedOption: optionUrl };
     
-    navigator.clipboard.writeText(optionUrl).then(() => {
-        toast({ title: '¡Enlace copiado!', description: 'El enlace de la transmisión se ha copiado al portapapeles.' });
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-    });
-    
-    const newSelectedEvents = [...selectedEvents];
-    let targetIndex = -1;
-
-    if (modificationIndex !== null) {
-        targetIndex = modificationIndex;
-    } else {
-        targetIndex = newSelectedEvents.findIndex(e => e === null);
-    }
-    
-    if (targetIndex !== -1) {
-        newSelectedEvents[targetIndex] = eventWithSelection;
-        setSelectedEvents(newSelectedEvents);
-    } else {
-        toast({
-            variant: 'destructive',
-            title: 'Selección Completa',
-            description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
+    // This function will now only handle the main selection, not the schedule selection.
+    // The ScheduleManager will have its own selection logic.
+    if (dialogContext === 'main') {
+        navigator.clipboard.writeText(optionUrl).then(() => {
+            toast({ title: '¡Enlace copiado!', description: 'El enlace de la transmisión se ha copiado al portapapeles.' });
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
         });
+
+        const newSelectedEvents = [...selectedEvents];
+        let targetIndex = modificationIndex !== null ? modificationIndex : newSelectedEvents.findIndex(e => e === null);
+        
+        if (targetIndex !== -1) {
+            newSelectedEvents[targetIndex] = eventWithSelection;
+            setSelectedEvents(newSelectedEvents);
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Selección Completa',
+                description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.',
+            });
+        }
+        
+        setEventSelectionDialogOpen(false);
+        setAddEventsDialogOpen(false);
+        setModificationIndex(null);
     }
-    
-    setEventSelectionDialogOpen(false);
-    setAddEventsDialogOpen(false);
-    setModificationIndex(null);
   };
   
   const handleEventRemove = useCallback((indexToRemove: number) => {
@@ -1157,6 +1152,7 @@ export function HomePageContent() {
 
 
  const openDialogForEvent = async (event: Event) => {
+    setDialogContext('main');
     setEventSelectionDialogOpen(true);
 
     const selection = getEventSelection(event);
@@ -1252,6 +1248,7 @@ export function HomePageContent() {
     }
     
     setDialogEvent(channelAsEvent);
+    setDialogContext('main');
     setEventSelectionDialogOpen(true);
     setIsOptionsLoading(false);
   };
@@ -1262,6 +1259,7 @@ export function HomePageContent() {
     const eventWithSelection = { ...event, selectedOption: event.selectedOption };
     setDialogEvent(eventWithSelection);
     setModificationIndex(index);
+    setDialogContext('main');
     setEventSelectionDialogOpen(true);
   };
 
@@ -1549,8 +1547,8 @@ export function HomePageContent() {
             />
             <Dialog open={welcomePopupOpen} onOpenChange={setWelcomePopupOpen}>
                 <DialogContent className="sm:max-w-md p-0" hideClose={true}>
-                    <DialogHeader className="sr-only">
-                        <DialogModalTitle>Bienvenida</DialogModalTitle>
+                    <DialogHeader>
+                        <DialogModalTitle className='sr-only'>Bienvenida</DialogModalTitle>
                     </DialogHeader>
                     <DialogModalClose asChild>
                     <Button variant="ghost" className="absolute right-0 top-0 rounded-bl-lg rounded-tr-lg p-2 bg-background/50 backdrop-blur-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-10" onClick={() => setWelcomePopupOpen(false)}>
@@ -2080,7 +2078,10 @@ export function HomePageContent() {
                                                 onIsErrorsOpenChange={setIsErrorsOpen}
                                                 onRemoteControl={handleStartAndControl}
                                                 isRemoteControlView={false}
-                                                onAddEvent={() => setAddEventsDialogOpen(true)}
+                                                onAddEvent={() => {
+                                                    setDialogContext('main');
+                                                    setAddEventsDialogOpen(true);
+                                                }}
                                                 onSchedule={() => setScheduleManagerOpen(true)}
                                             />
                                       </SheetContent>
@@ -2114,7 +2115,7 @@ export function HomePageContent() {
 
       {/* Dialogs at top level */}
       <AddEventsDialog
-          open={addEventsDialogOpen}
+          open={addEventsDialogOpen && dialogContext === 'main'}
           onOpenChange={setAddEventsDialogOpen}
           onEventSelect={openDialogForEvent}
           onChannelClick={handleChannelClick}
@@ -2137,8 +2138,11 @@ export function HomePageContent() {
       />
       {dialogEvent && (
           <EventSelectionDialog
-              isOpen={eventSelectionDialogOpen}
-              onOpenChange={setEventSelectionDialogOpen}
+              isOpen={eventSelectionDialogOpen && dialogContext === 'main'}
+              onOpenChange={(isOpen) => {
+                  if (!isOpen) setModificationIndex(null);
+                  setEventSelectionDialogOpen(isOpen);
+              }}
               event={dialogEvent}
               onSelect={handleEventSelect}
               isModification={modificationIndex !== null && selectedEvents[modificationIndex] !== null}

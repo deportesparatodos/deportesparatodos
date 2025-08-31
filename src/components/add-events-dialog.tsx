@@ -97,14 +97,14 @@ export function AddEventsDialog({
     
     const Content = () => (
          <div className={cn("bg-background h-full flex flex-col", isRemote && "fixed inset-0 z-[100]")}>
-            <header className='flex-row items-center justify-between p-4 flex-shrink-0 border-b flex'>
+            <DialogHeader className='flex-row items-center justify-between p-4 flex-shrink-0 border-b flex'>
                 <div className='flex items-center gap-2'>
                     {isRemote && onBack && (
                         <Button variant="ghost" size="icon" onClick={onBack} className='h-9 w-9'>
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                     )}
-                    <h2 className="text-lg font-semibold">Añadir Evento/Canal</h2>
+                    <DialogTitle>Añadir Evento/Canal</DialogTitle>
                 </div>
                 <div className="flex items-center gap-2">
                     {!isRemote && (
@@ -118,7 +118,7 @@ export function AddEventsDialog({
                         </Button>
                      )}
                 </div>
-            </header>
+            </DialogHeader>
                 
             <div className="relative flex-grow flex flex-col min-h-0">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow p-4 min-h-0">

@@ -73,11 +73,11 @@ export function ScheduleManager({
   const [time, setTime] = useState<string>('12:00');
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // State for the selection being built/edited in the scheduler
+  // This state is now fully managed INSIDE the ScheduleManager
   const [futureSelection, setFutureSelection] = useState<(Event | null)[]>([]);
   const [futureOrder, setFutureOrder] = useState<number[]>([]);
 
-  // Dialog states managed locally
+  // Dialog states are also local to this component
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
   const [eventSelectionDialogOpen, setEventSelectionDialogOpen] = useState(false);
   const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
@@ -99,10 +99,10 @@ export function ScheduleManager({
   useEffect(() => {
     if (open) {
       resetToCurrentSelection();
-      setIsFullScreen(true); // Default to fullscreen when opened
+      setIsFullScreen(true); // Default to fullscreen
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, initialSelection, initialOrder]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -170,19 +170,17 @@ export function ScheduleManager({
     }
   };
 
+  // This function opens the selection dialog for an event to be added to the schedule.
   const openDialogForEventSchedule = async (event: Event) => {
-    // This logic opens the selection dialog for an event to be added to the schedule.
     const selectionIndex = futureSelection.findIndex(se => se?.id === event.id);
     let eventForDialog = { ...event };
     
     if (selectionIndex !== -1) {
-        // Event is already in the future selection, treat as modification
         setModificationIndex(selectionIndex);
         if (futureSelection[selectionIndex]?.selectedOption) {
             eventForDialog.selectedOption = futureSelection[selectionIndex]?.selectedOption;
         }
     } else {
-        // Event is new, find first empty slot
         const emptyIndex = futureSelection.findIndex(e => e === null);
         if (emptyIndex === -1) {
             toast({ variant: 'destructive', title: "Programación llena", description: "No puedes programar más de 9 eventos."});
@@ -192,11 +190,9 @@ export function ScheduleManager({
     }
 
     setDialogEvent(eventForDialog);
-    setEventSelectionDialogOpen(true);
+    setEventSelectionDialogOpen(true); // Open the selection dialog
 
-    if (event.source !== 'streamed.pk' || event.options.length > 0) {
-        return;
-    }
+    if (event.source !== 'streamed.pk' || event.options.length > 0) return;
     
     setIsOptionsLoading(true);
     try {
@@ -226,19 +222,18 @@ export function ScheduleManager({
       openDialogForEventSchedule(channelAsEvent);
   };
 
+  // This is the crucial part: this function ONLY modifies the schedule's state
+  // and does NOT close the AddEventsDialog.
   const handleFinalSelectionForSchedule = (event: Event, optionUrl: string) => {
       const newFutureSelection = [...futureSelection];
-      let targetIndex = modificationIndex;
-      
-      if (targetIndex !== null) {
-          newFutureSelection[targetIndex] = { ...event, selectedOption: optionUrl };
+      if (modificationIndex !== null) {
+          newFutureSelection[modificationIndex] = { ...event, selectedOption: optionUrl };
           setFutureSelection(newFutureSelection);
       }
-      setEventSelectionDialogOpen(false);
+      setEventSelectionDialogOpen(false); // Close only the inner dialog
       setModificationIndex(null);
-      // DO NOT close the addEventsDialogOpen here
   };
-
+  
   const activeFutureEventsCount = futureOrder?.filter(i => futureSelection[i] !== null).length ?? 0;
 
   return (
@@ -375,7 +370,7 @@ export function ScheduleManager({
         </DialogPortal>
       </Dialog>
       
-      {/* Dialogs managed LOCALLY by the Schedule Manager */}
+      {/* Dialogs are now managed locally and passed the correct functions */}
       <AddEventsDialog
         open={addEventsDialogOpen}
         onOpenChange={setAddEventsDialogOpen}
@@ -384,27 +379,22 @@ export function ScheduleManager({
         getEventSelection={(event) => {
           const selectionIndex = futureSelection.findIndex(se => se?.id === event.id);
           if (selectionIndex !== -1) {
-            const selectedEvent = futureSelection[selectionIndex];
-            return { isSelected: true, selectedOption: selectedEvent?.selectedOption || null, index: selectionIndex };
+            return { isSelected: true, selectedOption: futureSelection[selectionIndex]?.selectedOption || null, index: selectionIndex };
           }
           return { isSelected: false, selectedOption: null, index: -1 };
         }}
         events={allEvents}
         channels={allChannels}
         isLoading={isLoading}
-        onFetch={() => {}}
+        onFetch={() => {}} // No fetch needed here
         container={container}
-        isRemote={false}
-        onBack={() => {}}
       />
       
       {dialogEvent && (
         <EventSelectionDialog
           isOpen={eventSelectionDialogOpen}
           onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setModificationIndex(null);
-            }
+            if (!isOpen) setModificationIndex(null);
             setEventSelectionDialogOpen(isOpen)
           }}
           event={dialogEvent}
