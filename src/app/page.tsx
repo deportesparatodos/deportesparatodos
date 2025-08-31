@@ -312,6 +312,8 @@ export function HomePageContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [currentView, setCurrentView] = useState<string>('home');
+  const [dialogContext, setDialogContext] = useState<'main' | 'schedule'>('main');
+
   
   // Dialog/Popup states
   const [addEventsDialogOpen, setAddEventsDialogOpen] = useState(false);
@@ -1074,6 +1076,9 @@ export function HomePageContent() {
 
 
   const handleEventSelect = (event: Event, optionUrl: string) => {
+    if (dialogContext === 'schedule') {
+        return; 
+    }
     const eventWithSelection = { ...event, selectedOption: optionUrl };
     
     navigator.clipboard.writeText(optionUrl).then(() => {
@@ -1142,6 +1147,7 @@ export function HomePageContent() {
 
  const openDialogForEvent = async (event: Event) => {
     setEventSelectionDialogOpen(true);
+    setDialogContext('main');
 
     const selection = getEventSelection(event);
     let eventForDialog = { ...event };
@@ -1221,6 +1227,7 @@ export function HomePageContent() {
       status: 'En Vivo',
       image: channel.logo,
     };
+    setDialogContext('main');
 
     const selection = getEventSelection(channelAsEvent);
     
@@ -1247,6 +1254,7 @@ export function HomePageContent() {
     setDialogEvent(eventWithSelection);
     setModificationIndex(index);
     setEventSelectionDialogOpen(true);
+    setDialogContext('main');
   };
 
   const handleViewChange = (view: string) => {
@@ -1514,7 +1522,10 @@ export function HomePageContent() {
         <div className="flex h-screen w-screen bg-background text-foreground group">
             <ScheduleManager
                 open={scheduleManagerOpen}
-                onOpenChange={setScheduleManagerOpen}
+                onOpenChange={(isOpen) => {
+                    setDialogContext(isOpen ? 'schedule' : 'main');
+                    setScheduleManagerOpen(isOpen);
+                }}
                 schedules={schedules}
                 onSchedulesChange={setSchedules}
                 isLoading={isAddEventsLoading}
@@ -1685,8 +1696,14 @@ export function HomePageContent() {
                     onToggleFullscreen={handleToggleFullscreen}
                     fullscreenIndex={fullscreenIndex}
                     isViewPage={true}
-                    onAddEvent={() => setAddEventsDialogOpen(true)}
-                    onSchedule={() => setScheduleManagerOpen(true)}
+                    onAddEvent={() => {
+                        setDialogContext('main');
+                        setAddEventsDialogOpen(true);
+                    }}
+                    onSchedule={() => {
+                        setDialogContext('schedule');
+                        setScheduleManagerOpen(true);
+                    }}
                     onNotificationManager={() => setNotificationManagerOpen(true)}
                     gridGap={gridGap}
                     onGridGapChange={(v) => setLiveAppState({ gridGap: v })}
@@ -2071,9 +2088,13 @@ export function HomePageContent() {
                                                 onIsErrorsOpenChange={setIsErrorsOpen}
                                                 isRemoteControlView={false}
                                                 onAddEvent={() => {
+                                                    setDialogContext('main');
                                                     setAddEventsDialogOpen(true);
                                                 }}
-                                                onSchedule={() => setScheduleManagerOpen(true)}
+                                                onSchedule={() => {
+                                                  setDialogContext('schedule');
+                                                  setScheduleManagerOpen(true);
+                                                }}
                                             />
                                       </SheetContent>
                                       </Sheet>
@@ -2140,6 +2161,7 @@ export function HomePageContent() {
               modificationIndex={modificationIndex}
               onRemove={handleEventRemove}
               isLoading={isOptionsLoading}
+              dialogContext={dialogContext}
           />
       )}
       <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>

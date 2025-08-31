@@ -35,6 +35,7 @@ interface EventSelectionDialogProps {
   onRemove: (index: number) => void;
   isLoading: boolean;
   container?: HTMLElement;
+  dialogContext?: 'main' | 'schedule';
 }
 
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
@@ -50,6 +51,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
   onRemove,
   isLoading,
   container,
+  dialogContext = 'main',
 }) => {
 
   if (!event) return null;
@@ -65,6 +67,15 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
     if (modificationIndex !== null) {
       onRemove(modificationIndex);
       onOpenChange(false);
+    }
+  };
+  
+  const handleSelect = (optionUrl: string) => {
+    onSelect(event, optionUrl);
+    // Only close the dialog if it's the main context.
+    // In schedule context, it should remain open.
+    if (dialogContext === 'main') {
+        onOpenChange(false);
     }
   };
 
@@ -152,7 +163,7 @@ export const EventSelectionDialog: FC<EventSelectionDialogProps> = ({
                                                           "w-full border border-border hover:scale-105 transition-transform duration-200",
                                                           isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
                                                       )}
-                                                      onClick={() => onSelect(event, option.url)}
+                                                      onClick={() => handleSelect(option.url)}
                                                   >
                                                       <span className="truncate">{option.label}</span>
                                                   </Button>
