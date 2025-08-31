@@ -19,30 +19,20 @@ import { AddEventsDialogContent } from './add-events-dialog';
 import { RemoteEventSelection } from './remote-event-selection';
 import type { Channel } from './channel-list';
 import { useToast } from '@/hooks/use-toast';
-
-export interface Schedule {
-  id: string;
-  dateTime: Date;
-  events: (Event | null)[];
-  order: number[];
-}
+import type { AppState } from '@/app/page';
 
 interface RemoteScheduleManagerProps {
   onBack: () => void;
-  schedules: Schedule[];
-  onSchedulesChange: (schedules: Schedule[]) => void;
-  initialSelection: (Event | null)[];
-  initialOrder: number[];
+  appState: AppState;
+  setLiveAppState: (newState: Partial<AppState>) => void;
   allEvents: Event[];
   allChannels: Channel[];
 }
 
 export function RemoteScheduleManager({
   onBack,
-  schedules,
-  onSchedulesChange,
-  initialSelection,
-  initialOrder,
+  appState,
+  setLiveAppState,
   allEvents,
   allChannels,
 }: RemoteScheduleManagerProps) {
@@ -61,8 +51,8 @@ export function RemoteScheduleManager({
   const { toast } = useToast();
 
   const resetToCurrentSelection = () => {
-    setCurrentSelection([...initialSelection]);
-    const activeCurrentOrder = initialOrder.filter(i => initialSelection[i] !== null);
+    setCurrentSelection([...appState.selectedEvents]);
+    const activeCurrentOrder = appState.viewOrder.filter(i => appState.selectedEvents[i] !== null);
     const fullOrder = Array.from({ length: 9 }, (_, i) => i);
     const finalOrder = [...activeCurrentOrder, ...fullOrder.filter(i => !activeCurrentOrder.includes(i))];
     setCurrentOrder(finalOrder);
@@ -74,7 +64,7 @@ export function RemoteScheduleManager({
   useEffect(() => {
     resetToCurrentSelection();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSelection, initialOrder]);
+  }, [appState.selectedEvents, appState.viewOrder]);
 
   const handleSaveOrUpdateSchedule = () => {
     if (!date) return;
@@ -84,29 +74,29 @@ export function RemoteScheduleManager({
     combinedDateTime.setHours(hours, minutes, 0, 0);
 
     const activeOrder = currentOrder.filter(i => currentSelection[i] !== null);
-    let newSchedules: Schedule[];
+    let newSchedules;
 
     if (editingScheduleId) {
-      newSchedules = schedules.map(s => 
+      newSchedules = appState.schedules.map(s => 
         s.id === editingScheduleId 
           ? { ...s, dateTime: combinedDateTime, events: currentSelection, order: activeOrder }
           : s
       );
     } else {
-      const newSchedule: Schedule = {
+      const newSchedule = {
         id: new Date().toISOString(),
         dateTime: combinedDateTime,
         events: currentSelection,
         order: activeOrder,
       };
-      newSchedules = [...schedules, newSchedule];
+      newSchedules = [...appState.schedules, newSchedule];
     }
     
-    onSchedulesChange(newSchedules);
+    setLiveAppState({ schedules: newSchedules });
     resetToCurrentSelection();
   };
   
-  const handleEditSchedule = (schedule: Schedule) => {
+  const handleEditSchedule = (schedule: typeof appState.schedules[0]) => {
     setEditingScheduleId(schedule.id);
     setDate(new Date(schedule.dateTime));
     setTime(format(new Date(schedule.dateTime), 'HH:mm'));
@@ -118,8 +108,8 @@ export function RemoteScheduleManager({
   };
 
   const handleRemoveSchedule = (id: string) => {
-    const newSchedules = schedules.filter(s => s.id !== id);
-    onSchedulesChange(newSchedules);
+    const newSchedules = appState.schedules.filter(s => s.id !== id);
+    setLiveAppState({ schedules: newSchedules });
     if (editingScheduleId === id) {
        resetToCurrentSelection();
     }
@@ -263,15 +253,15 @@ export function RemoteScheduleManager({
                  <Separator className="w-full flex-shrink-0" />
                  <ScrollArea className="flex-grow h-0">
                     <div className="p-4 space-y-3">
-                    {schedules.length === 0 ? (
+                    {appState.schedules.length === 0 ? (
                         <p className="text-muted-foreground text-center p-4">No hay programaciones.</p>
                     ) : (
-                        schedules
-                            .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
+                        appState.schedules
+                            .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
                             .map((schedule) => (
                                 <div key={schedule.id} className="flex items-center justify-between p-3 rounded-md border bg-secondary">
                                 <div className="min-w-0">
-                                    <p className="font-bold truncate">{format(schedule.dateTime, 'EEE, d MMM, p')}</p>
+                                    <p className="font-bold truncate">{format(new Date(schedule.dateTime), 'EEE, d MMM, p')}</p>
                                     <p className="text-sm text-muted-foreground truncate">
                                         Eventos: {schedule.events.filter(Boolean).length}
                                     </p>
