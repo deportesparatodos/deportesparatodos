@@ -187,22 +187,6 @@ const channels247: Event[] = [
   }
 ];
 
-const formula1StaticEvent: Event = {
-  id: 'f1-multicam-static',
-  title: "Formula 1: MULTICAM",
-  time: "--:--",
-  status: "Desconocido",
-  options: [{ url: "https://p.alangulotv.blog/multi-f1.html", label: "MULTICAM", hd: false, language: "" }],
-  image: "https://i.ibb.co/dHPWxr8/depete.jpg",
-  sources: [],
-  buttons: [],
-  category: "Motor Sports",
-  language: "",
-  date: "",
-  source: "static",
-};
-
-
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 const normalizeCategory = (category: string): string => {
@@ -595,7 +579,7 @@ export function HomePageContent() {
           };
       });
       
-      const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaEvents, ...tcChaserEvents, formula1StaticEvent];
+      const combinedInitialEvents = [...initialEvents, ...streamTpEvents, ...agendaEvents, ...tcChaserEvents];
       
       setEvents(combinedInitialEvents);
 
@@ -697,7 +681,7 @@ export function HomePageContent() {
       }, 30000); 
   
       return () => clearInterval(interval);
-  }, [isViewMode, schedules, appState, remoteControlMode, setAppState]);
+  }, [isViewMode, schedules, appState, remoteControlMode]);
 
 
   useEffect(() => {
@@ -976,8 +960,6 @@ export function HomePageContent() {
     };
     
     const unknownSortLogic = (a: Event, b: Event): number => {
-        if (a.title === "Formula 1: MULTICAM") return 1;
-        if (b.title === "Formula 1: MULTICAM") return -1;
         return upcomingSortLogic(a, b);
     };
 
@@ -1151,7 +1133,11 @@ export function HomePageContent() {
       }
       
       const existingSelection = getEventSelection(event);
-      setModificationIndex(existingSelection.isSelected ? existingSelection.index : emptyIndex);
+      if (existingSelection.isSelected) {
+          setModificationIndex(existingSelection.index);
+      } else {
+          setModificationIndex(emptyIndex);
+      }
       
       setDialogEvent(event);
       setEventSelectionDialogOpen(true);
@@ -2437,7 +2423,7 @@ function ControllingView({
        <RemoteScheduleManager
             onBack={() => setView('main')}
             schedules={appState.schedules}
-            onSchedulesChange={(newSchedules) => setLiveAppState({schedules: newSchedules})}
+            onSchedulesChange={(newSchedules) => setLiveAppState({ ...appState, schedules: newSchedules })}
             initialSelection={appState.selectedEvents}
             initialOrder={appState.viewOrder}
             allEvents={allEvents}
