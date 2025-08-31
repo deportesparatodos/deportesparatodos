@@ -1089,21 +1089,23 @@ export function HomePageContent() {
   }, [selectedEvents]);
   
   const findTargetIndex = useCallback((event: Event | null, sourceEvents: (Event|null)[]): number => {
-    // If we are trying to add a new event (not modifying an existing one)
-    if (event && modificationIndex === null) {
-      const existingIndex = sourceEvents.findIndex(e => e?.id === event.id);
-      // If it already exists, we are modifying it.
-      if (existingIndex !== -1) {
-        return existingIndex;
-      }
-      // Otherwise, find the first empty slot for a new event.
-      return sourceEvents.findIndex(e => e === null);
-    }
-    // If we are explicitly modifying an event.
+    // If we are modifying an event, use its explicit index
     if (modificationIndex !== null) {
       return modificationIndex;
     }
-    // Fallback to find the first empty slot if no event is provided.
+    
+    // If an event is provided, and we are NOT modifying, find the first empty slot.
+    if (event) {
+        const existingIndex = sourceEvents.findIndex(e => e?.id === event.id);
+        // If it already exists, treat it as a modification.
+        if (existingIndex !== -1) {
+            return existingIndex;
+        }
+        // Otherwise, find the first empty slot for the new event.
+        return sourceEvents.findIndex(e => e === null);
+    }
+    
+    // Fallback: find the first empty slot if no event is provided.
     return sourceEvents.findIndex(e => e === null);
   }, [modificationIndex]);
 
@@ -1117,7 +1119,7 @@ export function HomePageContent() {
     });
 
     const newSelectedEvents = [...selectedEvents];
-    const targetIndex = modificationIndex !== null ? modificationIndex : findTargetIndex(event, newSelectedEvents);
+    const targetIndex = findTargetIndex(event, newSelectedEvents);
     
     if (targetIndex !== -1) {
         newSelectedEvents[targetIndex] = eventWithSelection;
@@ -1138,23 +1140,24 @@ export function HomePageContent() {
   }, [selectedEvents, setSelectedEvents]);
   
   const openDialogForEvent = async (event: Event) => {
-      // Always find the first empty slot when adding a new event.
-      // Do not use modificationIndex unless it's an explicit modification action.
+      // Logic to add a new event or modify an existing one.
       const existingSelection = getEventSelection(event);
       let targetIndex: number;
 
       if (existingSelection.isSelected) {
+          // If it's already selected, we are modifying it at its current index.
           targetIndex = existingSelection.index;
       } else {
+          // If it's a new event, find the first empty slot.
           targetIndex = selectedEvents.findIndex(e => e === null);
-      }
-      
-      if (targetIndex === -1) {
-           toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
-           return;
+          if (targetIndex === -1) {
+              toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
+              return;
+          }
       }
       
       setDialogContext('main');
+      // Set modificationIndex to prepare for the selection.
       setModificationIndex(targetIndex);
       setDialogEvent(event);
       setEventSelectionDialogOpen(true);
@@ -1218,6 +1221,7 @@ export function HomePageContent() {
   const openDialogForModification = (index: number) => {
     const event = selectedEvents[index];
     if (!event) return;
+    // Explicitly set the modification index for this event.
     setModificationIndex(index);
     openDialogForEvent(event);
   };
@@ -2276,46 +2280,53 @@ function ControllingView({
   };
 
   const openDialogForEventRemote = async (event: Event) => {
-    const existingIndex = appState.selectedEvents.findIndex(e => e?.id === event.id);
-    const targetIndex = (existingIndex !== -1) ? existingIndex : appState.selectedEvents.findIndex(e => e === null);
+      // Logic to add a new event or modify an existing one in the remote controller.
+      const existingSelection = getEventSelectionRemote(event);
+      let targetIndex: number;
 
-    if (targetIndex === -1 && existingIndex === -1) {
-        toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
-        return;
-    }
+      if (existingSelection.isSelected) {
+          // If it's already selected, we are modifying it at its current index.
+          targetIndex = existingSelection.index;
+      } else {
+          // If it's a new event, find the first empty slot.
+          targetIndex = appState.selectedEvents.findIndex(e => e === null);
+          if (targetIndex === -1) {
+              toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
+              return;
+          }
+      }
 
-    const finalIndex = existingIndex !== -1 ? existingIndex : targetIndex;
-    setModificationIndex(finalIndex);
-    setDialogEvent(event);
-    setView('eventSelection');
-    
-    if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
-        return;
-    }
+      setModificationIndex(targetIndex);
+      setDialogEvent(event);
+      setView('eventSelection');
+      
+      if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
+          return;
+      }
 
-    setIsOptionsLoading(true);
-    try {
-        const sourcePromises = event.sources.map(async (source) => {
-            const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-            if (response.ok) {
-                const streams: any[] = await response.json();
-                return streams.map((stream) => ({
-                    url: stream.embedUrl,
-                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                    hd: stream.hd,
-                    language: stream.language,
-                }));
-            }
-            return [];
-        });
-        const results = await Promise.all(sourcePromises);
-        const streamOptions: StreamOption[] = results.flat().filter(Boolean);
-        setDialogEvent({ ...event, options: streamOptions });
-    } finally {
-        setIsOptionsLoading(false);
-    }
+      setIsOptionsLoading(true);
+      try {
+          const sourcePromises = event.sources.map(async (source) => {
+              const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
+              if (response.ok) {
+                  const streams: any[] = await response.json();
+                  return streams.map((stream) => ({
+                      url: stream.embedUrl,
+                      label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
+                      hd: stream.hd,
+                      language: stream.language,
+                  }));
+              }
+              return [];
+          });
+          const results = await Promise.all(sourcePromises);
+          const streamOptions: StreamOption[] = results.flat().filter(Boolean);
+          setDialogEvent({ ...event, options: streamOptions });
+      } finally {
+          setIsOptionsLoading(false);
+      }
   };
-
+  
   const handleEventSelectRemote = (event: Event, optionUrl: string) => {
       if (modificationIndex === null) return;
       const newSelectedEvents = [...appState.selectedEvents];
@@ -2340,7 +2351,7 @@ function ControllingView({
             sources: [], buttons: [], time: 'AHORA', category: 'Canal',
             language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
         };
-
+        
         setModificationIndex(targetIndex);
         setDialogEvent(channelAsEvent);
         setView('eventSelection');
@@ -2359,7 +2370,7 @@ function ControllingView({
   if (view === 'addEvents') {
     return (
         <div className="fixed inset-0 z-[100] bg-background">
-            <AddEventsDialogContent
+             <AddEventsDialogContent
                 onOpenChange={() => setView('main')}
                 onEventSelect={openDialogForEventRemote}
                 onChannelClick={handleChannelClickRemote}
@@ -2368,7 +2379,10 @@ function ControllingView({
                 channels={allChannels}
                 isLoading={false}
                 isRemote={true}
-                onBack={() => setView('main')}
+                onBack={() => {
+                  ablyChannel?.publish('sync-request', {}); // Sync on return
+                  setView('main');
+                }}
             />
         </div>
     );
@@ -2380,10 +2394,10 @@ function ControllingView({
         event={dialogEvent}
         onBack={() => { setView('addEvents'); setDialogEvent(null); }}
         onSelect={dialogEvent.category === 'Canal' ? handleSelectChannelRemote : handleEventSelectRemote}
-        isModification={modificationIndex !== null && appState.selectedEvents[modificationIndex] !== null}
+        isModification={modificationIndex !== null && appState.selectedEvents[modificationIndex!] !== null}
         onRemove={() => {
           if (modificationIndex !== null) handleEventRemove(modificationIndex);
-          setView('main');
+          setView('addEvents');
           setDialogEvent(null);
         }}
         isLoading={isOptionsLoading}
@@ -2425,17 +2439,15 @@ function ControllingView({
             eventDetails={appState.selectedEvents}
             onRemove={handleEventRemove}
             onModify={(index: number) => {
-                ablyChannel?.publish('sync-request', {});
                 const event = appState.selectedEvents[index];
                 if (event) {
                     setModificationIndex(index);
-                    setDialogEvent(event);
-                    setView('eventSelection');
+                    openDialogForEventRemote(event);
                 }
             }}
             isViewPage={true}
             onAddEvent={() => {
-                ablyChannel?.publish('sync-request', {});
+                ablyChannel?.publish('sync-request', {}); // Sync state before adding
                 setView('addEvents');
             }}
             onSchedule={() => setView('schedule')}
@@ -2446,12 +2458,12 @@ function ControllingView({
             onRestoreGridSettings={() => setLiveAppState({ gridGap: 0, borderColor: '#000000' })}
             isChatEnabled={appState.isChatEnabled}
             onIsChatEnabledChange={(v: boolean) => setLiveAppState({ isChatEnabled: v })}
-            onStopSession={onStopSession}
             isRemoteControlView={true}
             onOpenChat={() => {
                 ablyChannel?.publish('action', { type: 'OPEN_CHAT' });
                 setView('chat')
             }}
+            onStopSession={onStopSession}
         />
     </div>
   );
