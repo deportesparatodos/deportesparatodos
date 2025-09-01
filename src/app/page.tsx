@@ -1143,29 +1143,33 @@ export function HomePageContent() {
   
   const openDialogForEvent = async (event: Event) => {
     setDialogContext('main');
-    const emptyIndex = selectedEvents.findIndex(e => e === null);
 
-    if (emptyIndex === -1 && !getEventSelection(event).isSelected) {
-        toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
-        return;
-    }
-
+    // This block handles both adding a new event and initiating a modification
     const existingSelection = getEventSelection(event);
+    let targetIndex: number;
     let eventForDialog = { ...event };
-    
+
     if (existingSelection.isSelected) {
-        setModificationIndex(existingSelection.index);
-        const selectedEventFromState = selectedEvents[existingSelection.index];
+        // This is a modification of an existing event
+        targetIndex = existingSelection.index;
+        const selectedEventFromState = selectedEvents[targetIndex];
         if (selectedEventFromState?.selectedOption) {
             eventForDialog.selectedOption = selectedEventFromState.selectedOption;
         }
     } else {
-        setModificationIndex(emptyIndex);
+        // This is a new event to be added
+        targetIndex = selectedEvents.findIndex(e => e === null);
+        if (targetIndex === -1) {
+            toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos. Elimina uno para añadir otro.' });
+            return;
+        }
     }
     
+    setModificationIndex(targetIndex);
     setDialogEvent(eventForDialog);
     setEventSelectionDialogOpen(true);
 
+    // Fetch options if they aren't available
     const mainEventInState = events.find(e => e.id === event.id);
     const optionsAvailable = mainEventInState && mainEventInState.options.length > 0;
 
@@ -1228,6 +1232,7 @@ export function HomePageContent() {
   const openDialogForModification = (index: number) => {
     const event = selectedEvents[index];
     if (!event) return;
+    // We explicitly set the modification index here and then call the main dialog function.
     setModificationIndex(index);
     openDialogForEvent(event);
   };
@@ -2520,16 +2525,35 @@ function ControllingView({
     return { isSelected: false, selectedOption: null, index: -1 };
   };
 
-  const openDialogForEventRemote = async (event: Event) => {
-    const targetIndex = appState.selectedEvents.findIndex(e => e === null);
-
-    if (targetIndex === -1) {
-      toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
-      return;
+  const openDialogForEventRemote = async (event: Event, indexToModify?: number) => {
+    let targetIndex: number;
+    let eventForDialog = { ...event };
+    
+    if (indexToModify !== undefined) {
+      targetIndex = indexToModify;
+      const selectedEventFromState = appState.selectedEvents[targetIndex];
+      if (selectedEventFromState?.selectedOption) {
+          eventForDialog.selectedOption = selectedEventFromState.selectedOption;
+      }
+    } else {
+        const selection = getEventSelectionRemote(event);
+        if (selection.isSelected) {
+            targetIndex = selection.index;
+            const selectedEventFromState = appState.selectedEvents[targetIndex];
+            if (selectedEventFromState?.selectedOption) {
+                eventForDialog.selectedOption = selectedEventFromState.selectedOption;
+            }
+        } else {
+            targetIndex = appState.selectedEvents.findIndex(e => e === null);
+            if (targetIndex === -1) {
+              toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
+              return;
+            }
+        }
     }
     
     setModificationIndex(targetIndex);
-    setDialogEvent(event);
+    setDialogEvent(eventForDialog);
     setView('eventSelection');
       
     if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
@@ -2553,7 +2577,7 @@ function ControllingView({
         });
         const results = await Promise.all(sourcePromises);
         const streamOptions: StreamOption[] = results.flat().filter(Boolean);
-        setDialogEvent({ ...event, options: streamOptions });
+        setDialogEvent({ ...eventForDialog, options: streamOptions });
     } finally {
         setIsOptionsLoading(false);
     }
@@ -2688,8 +2712,7 @@ function ControllingView({
             onModify={(index: number) => {
                 const event = appState.selectedEvents[index];
                 if (event) {
-                    setModificationIndex(index);
-                    openDialogForEventRemote(event);
+                    openDialogForEventRemote(event, index);
                 }
             }}
             isViewPage={true}
@@ -2714,5 +2737,6 @@ function ControllingView({
     </div>
   );
 }
+
 
 
