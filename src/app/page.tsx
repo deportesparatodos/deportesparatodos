@@ -2562,6 +2562,11 @@ function ControllingView({
         setDialogEvent(null);
         setModificationIndex(null);
     };
+    
+  const handleToggleFullscreen = (index: number) => {
+    const currentFullscreen = appState.fullscreenIndex;
+    setLiveAppState({ fullscreenIndex: currentFullscreen === index ? null : index });
+  };
 
   if (showScheduleFailureMessage) {
     return (
@@ -2674,6 +2679,8 @@ function ControllingView({
             onStopSession={onStopSession}
             onSchedule={() => setView('schedule')}
             onClearSelections={onClearSelections}
+            onToggleFullscreen={handleToggleFullscreen}
+            fullscreenIndex={appState.fullscreenIndex}
         />
     </div>
   );
