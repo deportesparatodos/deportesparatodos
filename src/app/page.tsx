@@ -2530,7 +2530,7 @@ function ControllingView({
 
   if (view === 'eventSelection' && dialogEvent) {
     return (
-      <RemoteEventSelection
+       <RemoteEventSelection
         event={dialogEvent}
         onBack={() => { setView('addEvents'); setDialogEvent(null); }}
         onSelect={dialogEvent.category === 'Canal' ? handleSelectChannelRemote : handleEventSelectRemote}
