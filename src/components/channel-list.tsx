@@ -1,3 +1,4 @@
+
 export interface Channel {
   name: string;
   urls: { url: string; label: string }[];
@@ -5,6 +6,7 @@ export interface Channel {
 }
 
 const originalChannels: { name: string; url: string; logo: string }[] = [
+    { name: "Enlace Propio", url: "clipboard", logo: "https://i.ibb.co/L5fD6hN/link-icon.png" },
     { name: 'A24', url: 'https://www.youtube-nocookie.com/embed/QGpHLgRnrx4', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
     { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/ATV_logo_2020.png' },
     { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Adult_Swim_2003_logo.svg/2560px-Adult_Swim_2003_logo.svg.png' },
