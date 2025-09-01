@@ -1711,22 +1711,22 @@ export function HomePageContent() {
         
         {/* Chat Sidebar for Desktop */}
         <div
-        className={cn(
+          className={cn(
             'w-80 flex-shrink-0 bg-background flex-col border-l border-border',
             isChatOpen && !isMobile ? 'flex' : 'hidden'
-        )}
+          )}
         >
-        <div className="p-2 border-b border-border flex justify-between items-center">
-            <h2 className="font-semibold">Chat en Vivo</h2>
-            <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="h-8 w-8">
-            <X className="h-4 w-4" />
-            </Button>
-        </div>
-        <iframe
-            src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
-            title="Chat en Vivo"
-            className="w-full flex-grow border-0"
-        />
+          <div className="p-2 border-b border-border flex justify-between items-center">
+              <h2 className="font-semibold">Chat en Vivo</h2>
+              <Button variant="ghost" size="icon" onClick={() => setIsChatOpen(false)} className="h-8 w-8">
+              <X className="h-4 w-4" />
+              </Button>
+          </div>
+          <iframe
+              src="https://organizations.minnit.chat/626811533994618/c/Main?embed"
+              title="Chat en Vivo"
+              className="w-full flex-grow border-0"
+          />
         </div>
 
         {/* Chat Dialog for Mobile */}
@@ -1746,7 +1746,7 @@ export function HomePageContent() {
         </Dialog>
         )}
       </div>
-    );
+    )
   };
 
   const renderHomeContent = () => {
@@ -1993,14 +1993,14 @@ export function HomePageContent() {
                                                 onRestoreGridSettings={handleRestoreGridSettings}
                                                 isChatEnabled={isChatEnabled}
                                                 onIsChatEnabledChange={(v) => setLiveAppState({ isChatEnabled: v })}
+                                                onClearSelections={handleClearSelections}
                                                 onOpenTutorial={() => setIsTutorialOpen(true)}
                                                 onOpenErrors={() => setIsErrorsOpen(true)}
+                                                onOpenContact={() => setContactOpen(true)}
+                                                onOpenLegalNotice={() => setLegalNoticeOpen(true)}
                                                 onOpenCalendar={() => setCalendarOpen(true)}
                                                 onOpenPresets={() => setPresetsDialogOpen(true)}
                                                 onNotificationManager={() => setNotificationManagerOpen(true)}
-                                                onOpenContact={() => setContactOpen(true)}
-                                                onOpenLegalNotice={() => setLegalNoticeOpen(true)}
-                                                onClearSelections={handleClearSelections}
                                                 isRemoteControlView={false}
                                                 onAddEvent={() => {
                                                     setDialogContext('main');

@@ -233,12 +233,17 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                       <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
                       <AccordionContent className="pt-2 pb-4 space-y-4">
                           <EventList {...props} />
-                          <div className="space-y-2 pt-2">
+                           <div className="space-y-2 pt-2">
                             {onAddEvent && (
                               <Button variant="outline" className="w-full flex-shrink-0" onClick={onAddEvent}>
                                   <Plus className="mr-2 h-4 w-4" />
                                   Añadir Evento/Canal
                               </Button>
+                            )}
+                            {onOpenPresets && !isRemoteControlView && (
+                                <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
+                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
+                                </Button>
                             )}
                             {onClearSelections && hasSelections && (
                                 <Button variant="destructive" className="w-full flex-shrink-0" onClick={onClearSelections}>
@@ -323,11 +328,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                           {onSchedule && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                     <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                                </Button>
-                            )}
-                          {onOpenPresets && !isRemoteControlView && (
-                                <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
-                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
                                 </Button>
                             )}
                       </AccordionContent>
