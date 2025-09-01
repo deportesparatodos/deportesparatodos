@@ -6,7 +6,7 @@ export interface Channel {
 }
 
 const originalChannels: { name: string; url: string; logo: string }[] = [
-    { name: "Enlace Propio", url: "clipboard", logo: "https://cdn.icon-icons.com/icons2/2348/PNG/512/paste_icon_143026.png" },
+    { name: "Enlace Propio", url: "clipboard", logo: "https://cdn-icons-png.flaticon.com/512/1168/1168706.png" },
     { name: 'A24', url: 'https://www.youtube-nocookie.com/embed/QGpHLgRnrx4', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
     { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/ATV_logo_2020.png' },
     { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Adult_Swim_2003_logo.svg/2560px-Adult_Swim_2003_logo.svg.png' },
@@ -194,5 +194,6 @@ filteredOriginalChannels.forEach(channel => {
 });
 
 export const channels: Channel[] = Array.from(mergedChannels.values());
+
 
 
