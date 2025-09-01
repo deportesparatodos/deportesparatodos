@@ -34,11 +34,8 @@ interface CameraConfigurationProps {
   onOpenErrors: () => void;
   onOpenCalendar: () => void;
   onOpenPresets: () => void;
-  isTutorialOpen: boolean;
-  onIsTutorialOpenChange: (open: boolean) => void;
-  isErrorsOpen: boolean;
-  onIsErrorsOpenChange: (open: boolean) => void;
-  showTopSeparator?: boolean;
+  onOpenContact: () => void;
+  onOpenLegalNotice: () => void;
   remoteControlMode: 'inactive' | 'controlled' | 'controlling';
   controlledSessionCode: string;
   onActivateRemoteControl: () => void;

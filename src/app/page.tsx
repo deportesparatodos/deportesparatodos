@@ -319,6 +319,8 @@ export function HomePageContent() {
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
   const [remoteControlOptionsOpen, setRemoteControlOptionsOpen] = useState(false);
   const [presetsDialogOpen, setPresetsDialogOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [legalNoticeOpen, setLegalNoticeOpen] = useState(false);
   
   const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
   const [controllerCode, setControllerCode] = useState('');
@@ -1616,102 +1618,12 @@ export function HomePageContent() {
                         </Alert>
                     </div>
                     <DialogFooter className="flex-row items-center justify-center gap-2 p-4 border-t bg-background">
-                        <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" className="gap-2">
-                                <BookOpen /> Tutorial
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                                <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
-                                <DialogDescription className="sr-only">
-                                Guía de uso de la aplicación
-                                </DialogDescription>
-                            </DialogHeader>
-                            <ScrollArea className="h-96 pr-6">
-                                <div className="text-sm text-muted-foreground space-y-4">
-                                    <p><strong>¡Bienvenido a Deportes para Todos!</strong> Aquí puedes ver múltiples eventos deportivos a la vez. Sigue estos simples pasos para empezar:</p>
-                                    
-                                    <h3 className="font-bold text-foreground mt-4">1. Elige tus Eventos</h3>
-                                    <p>En la pantalla principal, haz clic en las tarjetas de los partidos o canales que quieras ver. Se abrirá una ventana para que elijas una opción de transmisión.</p>
-                                    
-                                    <h3 className="font-bold text-foreground mt-4">2. Configura tu Vista</h3>
-                                    <p>Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) en la esquina superior derecha. Se abrirá un panel donde podrás ver tu selección, reordenar las ventanas o eliminarlas.</p>
-                                    
-                                    <h3 className="font-bold text-foreground mt-4">3. Inicia la Transmisión</h3>
-                                    <p>Once you are ready, press the "Play" button (<Play className="inline-block h-4 w-4" />). Your screen will split to show all the events you chose.</p>
-
-                                    <h3 className="font-bold text-foreground mt-4">4. Control Remoto y Programación</h3>
-                                    <p>Puedes controlar la vista desde otro dispositivo activando el <strong>Control Remoto</strong> en el menú de configuración. También puedes <strong>Programar</strong> una selección de eventos para que se active a una hora específica.</p>
-                                    
-                                    <p className="pt-2">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
-                                </div>
-                            </ScrollArea>
-                            <DialogFooter>
-                                <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
-                            </DialogFooter>
-                        </DialogContent>
-                        </Dialog>
-                        <Dialog open={isErrorsOpen} onOpenChange={setIsErrorsOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant="outline" className="gap-2">
-                                    <AlertCircle /> Solución de Errores
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                    <DialogModalTitle>Solución de Errores Comunes</DialogModalTitle>
-                                    <DialogDescription className="sr-only">
-                                     Guía para solucionar errores comunes.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <ScrollArea className="h-96 pr-6">
-                                    <div className="text-sm text-muted-foreground space-y-6">
-                                        <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
-                                        
-                                        <div>
-                                            <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
-                                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
-                                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (1.1.1.1) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
-                                        </div>
-
-                                        <div>
-                                            <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
-                                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
-                                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Instalar una extensión como "Reproductor MPD/M3U8/M3U/EPG" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
-                                        </div>
-
-                                        <div>
-                                            <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
-                                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
-                                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge.</p>
-                                        </div>
-
-                                        <div>
-                                            <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
-                                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
-                                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. Recarga la página después de desactivarlo.</p>
-                                        </div>
-                                        
-                                        <div>
-                                            <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
-                                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
-                                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora.</p>
-                                        </div>
-
-                                        <div>
-                                            <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
-                                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
-                                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> El clásico "apagar y volver a encender".</p>
-                                        </div>
-                                    </div>
-                                </ScrollArea>
-                                <DialogFooter>
-                                    <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                        <Button variant="outline" className="gap-2" onClick={() => setIsTutorialOpen(true)}>
+                            <BookOpen /> Tutorial
+                        </Button>
+                        <Button variant="outline" className="gap-2" onClick={() => setIsErrorsOpen(true)}>
+                            <AlertCircle /> Solución de Errores
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -1781,10 +1693,8 @@ export function HomePageContent() {
                     onOpenErrors={() => setIsErrorsOpen(true)}
                     onOpenCalendar={() => setCalendarOpen(true)}
                     onOpenPresets={() => setPresetsDialogOpen(true)}
-                    isTutorialOpen={isTutorialOpen}
-                    onIsTutorialOpenChange={setIsTutorialOpen}
-                    isErrorsOpen={isErrorsOpen}
-                    onIsErrorsOpenChange={setIsErrorsOpen}
+                    onOpenContact={() => setContactOpen(true)}
+                    onOpenLegalNotice={() => setLegalNoticeOpen(true)}
                     remoteControlMode={remoteControlMode}
                     controlledSessionCode={controlledSessionCode}
                     onActivateRemoteControl={handleActivateRemoteControl}
@@ -2152,10 +2062,8 @@ export function HomePageContent() {
                                                 onOpenCalendar={() => setCalendarOpen(true)}
                                                 onOpenPresets={() => setPresetsDialogOpen(true)}
                                                 onNotificationManager={() => setNotificationManagerOpen(true)}
-                                                isTutorialOpen={isTutorialOpen}
-                                                onIsTutorialOpenChange={setIsTutorialOpen}
-                                                isErrorsOpen={isErrorsOpen}
-                                                onIsErrorsOpenChange={setIsErrorsOpen}
+                                                onOpenContact={() => setContactOpen(true)}
+                                                onOpenLegalNotice={() => setLegalNoticeOpen(true)}
                                                 isRemoteControlView={false}
                                                 onAddEvent={() => {
                                                     setDialogContext('main');
@@ -2305,6 +2213,155 @@ export function HomePageContent() {
               </div>
           </DialogContent>
       </Dialog>
+       {/* Help and Info Dialogs */}
+        <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
+                    <DialogDescription className="sr-only">Guía de uso de la aplicación</DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-96 pr-6">
+                    <div className="text-sm text-muted-foreground space-y-4">
+                        <p><strong>¡Bienvenido a Deportes para Todos!</strong> Aquí puedes ver múltiples eventos deportivos a la vez. Sigue estos simples pasos para empezar:</p>
+                        <h3 className="font-bold text-foreground mt-4">1. Elige tus Eventos</h3>
+                        <p>En la pantalla principal, haz clic en las tarjetas de los partidos o canales que quieras ver. Se abrirá una ventana para que elijas una opción de transmisión.</p>
+                        <h3 className="font-bold text-foreground mt-4">2. Configura tu Vista</h3>
+                        <p>Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) en la esquina superior derecha. Se abrirá un panel donde podrás ver tu selección, reordenar las ventanas o eliminarlas.</p>
+                        <h3 className="font-bold text-foreground mt-4">3. Inicia la Transmisión</h3>
+                        <p>Once you are ready, press the "Play" button (<Play className="inline-block h-4 w-4" />). Your screen will split to show all the events you chose.</p>
+                        <h3 className="font-bold text-foreground mt-4">4. Control Remoto y Programación</h3>
+                        <p>Puedes controlar la vista desde otro dispositivo activando el <strong>Control Remoto</strong> en el menú de configuración. También puedes <strong>Programar</strong> una selección de eventos para que se active a una hora específica.</p>
+                        <p className="pt-2">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
+                    </div>
+                </ScrollArea>
+                <DialogFooter>
+                    <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog open={isErrorsOpen} onOpenChange={setIsErrorsOpen}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogModalTitle>Solución de Errores Comunes</DialogModalTitle>
+                    <DialogDescription className="sr-only">Guía para solucionar errores comunes.</DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-96 pr-6">
+                    <div className="text-sm text-muted-foreground space-y-6">
+                        <p>A continuación, te presentamos una guía detallada para resolver los problemas más frecuentes que podrías encontrar al intentar reproducir videos. Sigue estos pasos en orden para maximizar las chances de éxito.</p>
+                        
+                        <div>
+                            <h3 className="font-bold text-foreground">1. Configurar un DNS público (Cloudflare o Google)</h3>
+                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> Muchos proveedores de internet (ISP) bloquean el acceso a ciertos dominios o servidores de video a través de su DNS. Esto provoca que el video nunca cargue y veas una pantalla en negro o un error de conexión.</p>
+                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Cambiar el DNS de tu dispositivo o router a uno público como el de Cloudflare (1.1.1.1) o Google (8.8.8.8) puede saltarse estas restricciones. Estos servicios son gratuitos, rápidos y respetan tu privacidad. Este es el método más efectivo y soluciona la mayoría de los casos.</p>
+                        </div>
+
+                        <div>
+                            <h3 className="font-bold text-foreground">2. Instalar una Extensión de Reproductor de Video</h3>
+                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> Algunos streams de video utilizan formatos modernos como M3U8 o MPD que no todos los navegadores soportan de forma nativa. Si el navegador no sabe cómo "leer" el formato, el video no se reproducirá.</p>
+                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Instalar una extensión como "Reproductor MPD/M3U8/M3U/EPG" (para Chrome/Edge) le da a tu navegador las herramientas necesarias para decodificar y reproducir estos formatos.</p>
+                        </div>
+
+                        <div>
+                            <h3 className="font-bold text-foreground">3. Cambiar de Navegador</h3>
+                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> A veces, las configuraciones específicas de un navegador, una actualización reciente o una extensión conflictiva pueden impedir la reproducción.</p>
+                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Probar con un navegador diferente es una forma rápida de descartar problemas locales. Recomendamos usar las versiones más recientes de Google Chrome, Mozilla Firefox o Microsoft Edge.</p>
+                        </div>
+
+                        <div>
+                            <h3 className="font-bold text-foreground">4. Desactivar Bloqueadores de Anuncios (Adblockers)</h3>
+                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> Los bloqueadores de anuncios son muy útiles, pero a veces pueden ser demasiado agresivos. Pueden bloquear no solo los anuncios, sino también los scripts o reproductores de video necesarios para que la transmisión funcione.</p>
+                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Intenta desactivar tu Adblocker (como AdBlock, uBlock Origin, etc.) temporalmente para este sitio web. Recarga la página después de desactivarlo.</p>
+                        </div>
+                        
+                        <div>
+                            <h3 className="font-bold text-foreground">5. Optimizar para Escritorio</h3>
+                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> La aplicación está diseñada y optimizada para la experiencia en una computadora de escritorio o portátil. Los dispositivos móviles (celulares, tabletas) tienen limitaciones de hardware y software que pueden causar errores de reproducción o problemas de rendimiento.</p>
+                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> Para una experiencia más estable y fluida, recomendamos encarecidamente usar la plataforma en una computadora.</p>
+                        </div>
+
+                        <div>
+                            <h3 className="font-bold text-foreground">6. Reiniciar el Dispositivo y la Red</h3>
+                            <p className="mt-1"><strong className="text-foreground">El Problema:</strong> Problemas temporales de software, caché acumulada o fallos en la conexión de red pueden impedir que el contenido cargue correctamente.</p>
+                            <p className="mt-1"><strong className="text-foreground">La Solución:</strong> El clásico "apagar y volver a encender".</p>
+                        </div>
+                    </div>
+                </ScrollArea>
+                <DialogFooter>
+                    <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+        <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogModalTitle>Contacto</DialogModalTitle>
+                    <DialogDescription>
+                    ¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales a deportesparatodosvercel@gmail.com.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <DialogModalClose asChild>
+                        <Button>Cerrar</Button>
+                    </DialogModalClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+        <Dialog open={legalNoticeOpen} onOpenChange={setLegalNoticeOpen}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogModalTitle>Descargo de Responsabilidad – Derechos de Autor</DialogModalTitle>
+                </DialogHeader>
+                <ScrollArea className="h-96 pr-6">
+                    <div className="text-sm text-muted-foreground space-y-4">
+                        <p>Deportes para Todos es una plataforma que actúa únicamente como agregador de enlaces embebidos provenientes de terceros. No alojamos, retransmitimos ni manipulamos directamente ninguna señal de audio o video. Todos los contenidos audiovisuales visibles en este sitio están incrustrados mediante iframes públicos desde plataformas externas como streamtp3.com, la12hd.com, YouTube, Twitch, OK.ru, entre otras.</p>
+                        <p>No participamos en la creación, alteración ni distribución de dichas señales, y no somos responsables de la legalidad de los contenidos a los que se accede a través de estos terceros. Cualquier infracción potencial corresponde a dichos proveedores externos.</p>
+                        
+                        <h3 className="font-bold text-foreground mt-4">Sobre la legalidad y responsabilidad de terceros:</h3>
+                        <p>Existen antecedentes de sitios sancionados por alojar y retransmitir directamente contenido con derechos de autor. En contraste, Deportes para Todos no aloja señales ni transmite contenido, y se limita exclusivamente a insertar enlaces públicos de terceros mediante código iframe. No participamos en la obtención ni distribución del contenido audiovisual y no tenemos control sobre su disponibilidad o legalidad.</p>
+
+                        <h3 className="font-bold text-foreground mt-4">Uso de marcas y logos:</h3>
+                        <p>Todas las marcas, nombres comerciales, logotipos o imágenes presentes en el sitio son propiedad de sus respectivos dueños. En Deportes para Todos se utilizan exclusivamente con fines informativos o ilustrativos, respetando el derecho de cita previsto por el Artículo 32 de la Ley 11.723 de Propiedad Intelectual de Argentina.</p>
+
+                        <h3 className="font-bold text-foreground mt-4">Legislación aplicable:</h3>
+                        <p>Este sitio opera bajo las leyes de la República Argentina. El mero hecho de insertar un iframe público no configura, por sí solo, un delito conforme al derecho argentino, siempre que no se participe en la obtención o manipulación del contenido protegido.</p>
+
+                        <h3 className="font-bold text-foreground mt-4">Uso personal y responsabilidad del usuario:</h3>
+                        <p>El acceso a esta página se realiza bajo responsabilidad del usuario. Si en tu país este tipo de contenido se encuentra restringido, es tu obligación cumplir con las leyes locales. No nos responsabilizamos por el uso indebido o ilegal de los enlaces por parte de los visitantes.</p>
+                        
+                        <h3 className="font-bold text-foreground mt-4">Sobre el uso de subdominios:</h3>
+                        <p>Deportes para Todos utiliza subdominios como https://www.google.com/search?q=gh.deportesparatodos.com con fines exclusivamente organizativos y técnicos, para centralizar y facilitar el acceso a iframes de terceros. Estos subdominios no almacenan, manipulan ni retransmiten contenido audiovisual, sino que actúan como una ventana hacia los streams originales disponibles públicamente en sitios como streamtp3.com, la12hd.com y otros. En ningún caso se modifica la fuente original ni se interviene en el contenido emitido por dichos terceros.</p>
+
+                        <h3 className="font-bold text-foreground mt-4">Sobre la experiencia del usuario:</h3>
+                        <p>Deportes para Todos puede aplicar medidas para mejorar la experiencia de navegación, como la reducción de anuncios emergentes o contenido intrusivo de terceros. Estas medidas no interfieren con el contenido audiovisual transmitido dentro de los reproductores embebidos, ni modifican las señales originales. Cualquier bloqueo se limita a elementos externos ajenos a la emisión en sí.</p>
+
+                        <h3 className="font-bold text-foreground mt-4">Monetización, publicidad y patrocinadores</h3>
+                        <p>Deportes para Todos puede exhibir anuncios publicitarios proporcionados por plataformas de monetización de terceros (como Monetag) y/o incluir contenido patrocinado de empresas vinculadas al sector iGaming (casas de apuestas, juegos online y plataformas similares).</p>
+                        <p>Estos ingresos publicitarios permiten el mantenimiento del sitio, pero no están directamente vinculados al contenido embebido ni implican relación comercial con las plataformas desde las cuales se obtiene dicho contenido.</p>
+                        <p>Deportes para Todos no gestiona ni opera plataformas de apuestas, ni aloja contenido audiovisual, y no obtiene beneficios económicos derivados de la transmisión de señales protegidas. Toda la monetización se genera por el tráfico general del sitio, independientemente del contenido de terceros que se pueda visualizar mediante iframes.</p>
+                        <p>Los contenidos promocionados, ya sea por publicidad programática o acuerdos de patrocinio, se presentan conforme a la legislación vigente y no representan un respaldo o relación directa con los titulares de los derechos de las transmisiones que pudieran visualizarse mediante terceros.</p>
+                        <p>The Blogger Network, LLC) for the purposes of placing advertising on the Site, and Monumetric will collect and use certain data for advertising purposes. To learn more about Monumetric’s data usage, click here: Publisher Advertising Privacy</p>
+
+                        <h3 className="font-bold text-foreground mt-4">Notificaciones de derechos de autor:</h3>
+                        <p>Si usted es titular de derechos o su representante y considera que un contenido embebido desde una fuente externa infringe sus derechos, puede enviarnos una notificación formal mandando un mail a deportesparatodosvercel@gmail.com. Aunque no estamos sujetos a la legislación DMCA de EE.UU., colaboramos voluntariamente con cualquier requerimiento legítimo bajo dicho marco.</p>
+                        <p>Por favor incluya en su notificación:</p>
+                        <ul className="list-disc pl-6 space-y-1">
+                            <li>(a) Su firma (física o digital) como titular o representante autorizado.</li>
+                            <li>(b) Identificación clara del contenido presuntamente infringido.</li>
+                            <li>(c) Enlace directo al contenido incrustado en Deportes para Todos.</li>
+                            <li>(d) Datos de contacto válidos (correo electrónico).</li>
+                            <li>(e) Una declaración de buena fe indicando que el uso no está autorizado por usted, su agente o la ley.</li>
+                            <li>(f) Una declaración de veracidad de la información, bajo pena de perjurio.</li>
+                        </ul>
+                        <p>Una vez recibida y analizada la notificación, procederemos a desactivar el enlace correspondiente si así corresponde. También podremos notificar al proveedor del iframe, si fuera posible.</p>
+                        <p className="pt-2">Al utilizar este sitio web, usted declara haber leído, comprendido y aceptado este descargo de responsabilidad en su totalidad.</p>
+                    </div>
+                </ScrollArea>
+                <DialogFooter>
+                    <DialogModalClose asChild><Button>Cerrar</Button></DialogModalClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </>
   );
 }
