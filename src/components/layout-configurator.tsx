@@ -38,7 +38,6 @@ export interface EventListManagementProps {
   onRestoreGridSettings: () => void;
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
-  categories?: string[];
   onOpenTutorial?: () => void;
   onOpenErrors?: () => void;
   onOpenCalendar?: () => void;
@@ -51,6 +50,7 @@ export interface EventListManagementProps {
   remoteControlMode?: 'inactive' | 'controlled' | 'controlling';
   controlledSessionCode?: string;
   onActivateRemoteControl?: () => void;
+  onClearSelections?: () => void;
 }
 
 export function EventList({
@@ -194,7 +194,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onRestoreGridSettings,
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar, onOpenPresets, onOpenContact, onOpenLegalNotice,
-        onAddEvent, onSchedule,
+        onAddEvent, onSchedule, onClearSelections,
         isRemoteControlView = false,
         onOpenChat,
         remoteControlMode,
@@ -205,6 +205,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         
     const order = props.order || [];
     const isSessionActive = remoteControlMode === 'controlled';
+    const hasSelections = order.length > 0;
     
     return (
       <div className="flex flex-col h-full bg-background text-foreground relative">
@@ -239,21 +240,17 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   Añadir Evento/Canal
                               </Button>
                             )}
-                            {!isViewPage && onOpenPresets && !isRemoteControlView && (
-                                <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
-                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
-                                </Button>
-                            )}
-                            {isViewPage && onSchedule && !isRemoteControlView && (
-                                <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
-                                    <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                            {onClearSelections && hasSelections && (
+                                <Button variant="destructive" className="w-full flex-shrink-0" onClick={onClearSelections}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    ELIMINAR SELECCIONES
                                 </Button>
                             )}
                             {isViewPage && onActivateRemoteControl && !isRemoteControlView && remoteControlMode !== 'controlled' && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onActivateRemoteControl}>
                                     <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
                                 </Button>
-                             )}
+                            )}
                           </div>
                       </AccordionContent>
                   </AccordionItem>
@@ -308,26 +305,35 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                          {isViewPage && onOpenChat && (
+                          {isRemoteControlView && onOpenChat && (
                             <Button variant="outline" className="w-full justify-start" onClick={onOpenChat}>
                                 <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
                             </Button>
                           )}
-                           {!isRemoteControlView && (
-                            <>
-                                <Separator className="my-2"/>
+                          {!isRemoteControlView && (
+                             <>
                                 {onNotificationManager && (
-                                    <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
-                                        <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
-                                    </Button>
+                                <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
+                                    <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
+                                </Button>
                                 )}
                                 {onOpenCalendar && (
-                                    <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
-                                        <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
-                                    </Button>
+                                <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
+                                    <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
+                                </Button>
                                 )}
-                            </>
-                           )}
+                             </>
+                          )}
+                          {!isRemoteControlView && onSchedule && (
+                                <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
+                                    <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                                </Button>
+                            )}
+                          {!isRemoteControlView && onOpenPresets && (
+                                <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
+                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
+                                </Button>
+                            )}
                       </AccordionContent>
                   </AccordionItem>
                   

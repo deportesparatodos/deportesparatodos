@@ -21,7 +21,7 @@ interface CameraConfigurationProps {
   isViewPage: boolean;
   onAddEvent: () => void;
   onSchedule?: () => void;
-  onNotificationManager: () => void;
+  onNotificationManager?: () => void;
   gridGap: number;
   onGridGapChange: (value: number) => void;
   borderColor: string;
@@ -29,16 +29,16 @@ interface CameraConfigurationProps {
   onRestoreGridSettings: () => void;
   isChatEnabled: boolean;
   onIsChatEnabledChange: (value: boolean) => void;
-  categories: string[];
-  onOpenTutorial: () => void;
-  onOpenErrors: () => void;
-  onOpenCalendar: () => void;
-  onOpenPresets: () => void;
-  onOpenContact: () => void;
-  onOpenLegalNotice: () => void;
+  onOpenTutorial?: () => void;
+  onOpenErrors?: () => void;
+  onOpenCalendar?: () => void;
+  onOpenPresets?: () => void;
+  onOpenContact?: () => void;
+  onOpenLegalNotice?: () => void;
   remoteControlMode: 'inactive' | 'controlled' | 'controlling';
   controlledSessionCode: string;
   onActivateRemoteControl: () => void;
+  onClearSelections: () => void;
 }
 
 export function CameraConfigurationComponent(props: CameraConfigurationProps) {
