@@ -2214,31 +2214,82 @@ export function HomePageContent() {
           </DialogContent>
       </Dialog>
        {/* Help and Info Dialogs */}
-        <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
-            <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                    <DialogModalTitle>Tutorial de Uso</DialogModalTitle>
-                    <DialogDescription className="sr-only">Guía de uso de la aplicación</DialogDescription>
-                </DialogHeader>
-                <ScrollArea className="h-96 pr-6">
-                    <div className="text-sm text-muted-foreground space-y-4">
-                        <p><strong>¡Bienvenido a Deportes para Todos!</strong> Aquí puedes ver múltiples eventos deportivos a la vez. Sigue estos simples pasos para empezar:</p>
-                        <h3 className="font-bold text-foreground mt-4">1. Elige tus Eventos</h3>
-                        <p>En la pantalla principal, haz clic en las tarjetas de los partidos o canales que quieras ver. Se abrirá una ventana para que elijas una opción de transmisión.</p>
-                        <h3 className="font-bold text-foreground mt-4">2. Configura tu Vista</h3>
-                        <p>Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) en la esquina superior derecha. Se abrirá un panel donde podrás ver tu selección, reordenar las ventanas o eliminarlas.</p>
-                        <h3 className="font-bold text-foreground mt-4">3. Inicia la Transmisión</h3>
-                        <p>Once you are ready, press the "Play" button (<Play className="inline-block h-4 w-4" />). Your screen will split to show all the events you chose.</p>
-                        <h3 className="font-bold text-foreground mt-4">4. Control Remoto y Programación</h3>
-                        <p>Puedes controlar la vista desde otro dispositivo activando el <strong>Control Remoto</strong> en el menú de configuración. También puedes <strong>Programar</strong> una selección de eventos para que se active a una hora específica.</p>
-                        <p className="pt-2">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
+       <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogModalTitle>Tutorial Detallado de Uso</DialogModalTitle>
+                <DialogDescription className="sr-only">Guía de uso completa de la aplicación Deportes para Todos.</DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="h-[70vh] pr-6">
+                <div className="text-sm text-muted-foreground space-y-6">
+                    <div>
+                        <h3 className="font-bold text-base text-foreground mb-2">1. Introducción: Tu Centro de Deportes Personalizado</h3>
+                        <p>¡Bienvenido a <strong>Deportes para Todos</strong>! Esta plataforma está diseñada para que puedas ver múltiples eventos deportivos y canales de televisión simultáneamente, en una sola pantalla. Puedes combinar partidos en vivo, canales de noticias, y mucho más, creando una experiencia de visualización totalmente a tu medida.</p>
                     </div>
-                </ScrollArea>
-                <DialogFooter>
-                    <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+
+                    <div>
+                        <h3 className="font-bold text-base text-foreground mb-2">2. Explorando y Seleccionando Contenido</h3>
+                        <p className="mb-2">La página principal es tu punto de partida. Aquí encontrarás todo el contenido disponible organizado en carruseles por categorías:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li><strong>Canales:</strong> Cadenas de televisión que emiten 24/7.</li>
+                            <li><strong>En Vivo:</strong> Eventos que se están transmitiendo en este preciso momento.</li>
+                            <li><strong>Próximos:</strong> Eventos programados para empezar más tarde el mismo día.</li>
+                            <li><strong>Otras categorías:</strong> Contenido agrupado por deporte (Fútbol, Motor Sports, etc.).</li>
+                        </ul>
+                        <p className="mt-2">Para añadir un evento o canal a tu selección, simplemente haz clic en su tarjeta. Se abrirá un diálogo con las diferentes opciones de transmisión disponibles. Elige una y el canal se añadirá automáticamente a tu parrilla de visualización.</p>
+                    </div>
+
+                    <div>
+                        <h3 className="font-bold text-base text-foreground mb-2">3. El Panel de Configuración: Tu Centro de Mando</h3>
+                        <p className="mb-2">Haz clic en el icono de engranaje (<Settings className="inline-block h-4 w-4" />) en la esquina superior derecha para abrir el panel de configuración. Desde aquí, puedes gestionar toda tu experiencia:</p>
+                        
+                        <h4 className="font-semibold text-foreground mt-3 mb-1">Eventos/Canales Seleccionados</h4>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li><strong>Añadir:</strong> Usa el botón <strong className="text-primary"><Plus className="inline-block h-3 w-3" /> Añadir Evento/Canal</strong> para abrir el catálogo completo y seguir añadiendo contenido.</li>
+                            <li><strong>Reordenar:</strong> Utiliza las flechas (<ArrowUp className="inline-block h-3 w-3" /> <ArrowDown className="inline-block h-3 w-3" />) junto a cada evento para cambiar su posición en la cuadrícula.</li>
+                            <li><strong>Modificar:</strong> Haz clic en el lápiz (<Pencil className="inline-block h-3 w-3" />) para cambiar la fuente de transmisión de un evento ya seleccionado.</li>
+                            <li><strong>Eliminar:</strong> El icono de la papelera (<Trash2 className="inline-block h-3 w-3 text-destructive" />) quita el evento de tu selección.</li>
+                        </ul>
+
+                        <h4 className="font-semibold text-foreground mt-3 mb-1">Diseño de Cuadrícula</h4>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li><strong>Espaciado:</strong> Ajusta el control deslizante para aumentar o disminuir el espacio entre las ventanas de video.</li>
+                            <li><strong>Color de Borde:</strong> Personaliza el color del borde que rodea las ventanas.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 className="font-bold text-base text-foreground mb-2">4. Iniciar la Vista de Transmisión</h3>
+                        <p>Cuando tu selección esté lista, haz clic en el gran botón verde de <strong>Play</strong> (<Play className="inline-block h-4 w-4" />) en la esquina superior derecha. Esto te llevará a la pantalla de visualización, donde todos tus eventos y canales seleccionados se reproducirán simultáneamente en la cuadrícula que has configurado.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 className="font-bold text-base text-foreground mb-2">5. Funciones Avanzadas</h3>
+                        <p className="mb-2">Dentro del panel de configuración, en "Funciones Adicionales", encontrarás herramientas potentes:</p>
+                        
+                        <h4 className="font-semibold text-foreground mt-3 mb-1">Control Remoto (<Airplay className="inline-block h-4 w-4" />)</h4>
+                        <p>Esta increíble función te permite usar un dispositivo (como tu celular) para controlar lo que se ve en otro (como tu TV o monitor principal). Al iniciar la vista, puedes elegir "Ser Controlado" para generar un código. Introduce ese código en tu otro dispositivo para tomar el control total: cambia canales, reordena la vista, ajusta el diseño y mucho más, todo de forma remota.</p>
+
+                        <h4 className="font-semibold text-foreground mt-3 mb-1">Programar Selección (<CalendarDays className="inline-block h-4 w-4" />)</h4>
+                        <p>¿No quieres perderte un partido que empieza más tarde? Con el programador, puedes configurar una selección de eventos para que se cargue automáticamente a una fecha y hora específicas. Prepara tu vista con antelación y la plataforma la tendrá lista para ti justo a tiempo.</p>
+                    </div>
+
+                    <div>
+                        <h3 className="font-bold text-base text-foreground mb-2">6. Ayuda y Notificaciones</h3>
+                         <ul className="list-disc pl-5 space-y-1">
+                            <li><strong>Notificaciones por Correo:</strong> Suscríbete para recibir un email diario con los eventos más importantes del día.</li>
+                            <li><strong>Suscripción a Calendario:</strong> Sincroniza nuestro calendario de eventos con el tuyo (Google Calendar, Apple Calendar) para tener siempre a mano la programación.</li>
+                            <li><strong>Ayuda y Soporte:</strong> Aquí encontrarás este tutorial, una guía de solución de errores comunes, nuestro contacto y el aviso legal.</li>
+                        </ul>
+                    </div>
+                    <p className="pt-2 font-semibold text-foreground">¡Eso es todo! Explora, personaliza y disfruta del deporte como nunca antes.</p>
+                </div>
+            </ScrollArea>
+            <DialogFooter>
+                <DialogModalClose asChild><Button>Entendido</Button></DialogModalClose>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 
         <Dialog open={isErrorsOpen} onOpenChange={setIsErrorsOpen}>
             <DialogContent className="max-w-2xl">
@@ -2663,3 +2714,4 @@ function ControllingView({
     </div>
   );
 }
+
