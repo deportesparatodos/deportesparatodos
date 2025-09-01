@@ -310,26 +310,22 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                 <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
                             </Button>
                           )}
-                          {!isRemoteControlView && (
-                             <>
-                                {onNotificationManager && (
-                                <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
-                                    <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
-                                </Button>
-                                )}
-                                {onOpenCalendar && (
-                                <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
-                                    <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
-                                </Button>
-                                )}
-                             </>
+                          {!isRemoteControlView && onNotificationManager && (
+                            <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
+                                <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
+                            </Button>
                           )}
-                          {!isRemoteControlView && onSchedule && (
+                          {!isRemoteControlView && onOpenCalendar && (
+                            <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
+                                <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
+                            </Button>
+                          )}
+                          {onSchedule && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
                                     <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                 </Button>
                             )}
-                          {!isRemoteControlView && onOpenPresets && (
+                          {onOpenPresets && !isRemoteControlView && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
                                     <LayoutGrid className="mr-2 h-4 w-4" /> Presets
                                 </Button>

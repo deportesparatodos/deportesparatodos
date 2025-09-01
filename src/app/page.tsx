@@ -1235,10 +1235,11 @@ export function HomePageContent() {
   };
   
   const openDialogForModification = (index: number) => {
-    const event = selectedEvents[index];
-    if (!event) return;
     setModificationIndex(index);
-    openDialogForEvent(event);
+    const event = selectedEvents[index];
+    if (event) {
+        openDialogForEvent(event);
+    }
   };
 
   const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
@@ -1999,6 +2000,7 @@ export function HomePageContent() {
                                                 onNotificationManager={() => setNotificationManagerOpen(true)}
                                                 onOpenContact={() => setContactOpen(true)}
                                                 onOpenLegalNotice={() => setLegalNoticeOpen(true)}
+                                                onClearSelections={handleClearSelections}
                                                 isRemoteControlView={false}
                                                 onAddEvent={() => {
                                                     setDialogContext('main');
@@ -2011,7 +2013,6 @@ export function HomePageContent() {
                                                 remoteControlMode={remoteControlMode}
                                                 controlledSessionCode={controlledSessionCode}
                                                 onActivateRemoteControl={handleActivateRemoteControl}
-                                                onClearSelections={handleClearSelections}
                                             />
                                       </SheetContent>
                                       </Sheet>
