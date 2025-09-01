@@ -6,7 +6,7 @@ export interface Channel {
 }
 
 const originalChannels: { name: string; url: string; logo: string }[] = [
-    { name: "Enlace Propio", url: "clipboard", logo: "https://i.ibb.co/L5fD6hN/link-icon.png" },
+    { name: "Enlace Propio", url: "clipboard", logo: "https://cdn-icons-png.flaticon.com/512/1000/1000188.png" },
     { name: 'A24', url: 'https://www.youtube-nocookie.com/embed/QGpHLgRnrx4', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
     { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/ATV_logo_2020.png' },
     { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Adult_Swim_2003_logo.svg/2560px-Adult_Swim_2003_logo.svg.png' },
@@ -174,15 +174,24 @@ filteredOriginalChannels.forEach(channel => {
     if (existing) {
         // Avoid adding duplicate URLs
         if (!existing.urls.some(u => u.url === channel.url)) {
-            existing.urls.push({ url: channel.url, label: `Opción ${existing.urls.length + 1}` });
+            let label = `Opción ${existing.urls.length + 1}`;
+            if (channel.name === 'Enlace Propio') {
+                label = 'Pegar Enlace';
+            }
+            existing.urls.push({ url: channel.url, label });
         }
     } else {
+        let label = 'Opción 1';
+        if (channel.name === 'Enlace Propio') {
+            label = 'Pegar Enlace';
+        }
         mergedChannels.set(channel.name, {
             name: channel.name,
             logo: channel.logo,
-            urls: [{ url: channel.url, label: 'Opción 1' }],
+            urls: [{ url: channel.url, label }],
         });
     }
 });
 
 export const channels: Channel[] = Array.from(mergedChannels.values());
+

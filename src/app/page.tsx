@@ -1231,7 +1231,6 @@ export function HomePageContent() {
                 return;
             }
             
-            // Basic URL validation
             try {
                 new URL(text);
             } catch (_) {
@@ -1239,15 +1238,18 @@ export function HomePageContent() {
                 return;
             }
 
+            const pastedCount = selectedEvents.filter(e => e?.source === 'custom').length;
+            const newTitle = `Enlace propio (${pastedCount + 1})`;
+
             const newEvent: Event = {
                 id: `custom-${Date.now()}`,
-                title: text,
+                title: newTitle,
                 time: 'AHORA',
                 status: 'En Vivo',
                 category: 'Personalizado',
                 options: [{ url: text, label: 'Enlace Propio', hd: false, language: '' }],
                 selectedOption: text,
-                image: 'https://i.ibb.co/dHPWxr8/depete.jpg', // Generic image
+                image: 'https://i.ibb.co/dHPWxr8/depete.jpg',
                 sources: [],
                 buttons: [],
                 date: '',
@@ -1762,7 +1764,6 @@ export function HomePageContent() {
           })}
         </main>
         
-        {/* Chat Sidebar for Desktop */}
         <div
           className={cn(
             'w-80 flex-shrink-0 bg-background flex-col border-l border-border',
@@ -1782,7 +1783,6 @@ export function HomePageContent() {
           />
         </div>
 
-        {/* Chat Dialog for Mobile */}
         {isMobile && (
         <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
             <DialogContent className="p-0 border-0 w-[90vw] h-[80vh] flex flex-col">
@@ -2119,7 +2119,6 @@ export function HomePageContent() {
         </div>
       )}
 
-      {/* Dialogs at top level */}
       <Dialog open={presetsDialogOpen} onOpenChange={setPresetsDialogOpen}>
         <DialogPortal container={remoteControlContainerRef.current ?? undefined}>
           <PresetsDialog
@@ -2226,7 +2225,6 @@ export function HomePageContent() {
               </div>
           </DialogContent>
       </Dialog>
-       {/* Help and Info Dialogs */}
        <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
         <DialogContent className="max-w-2xl">
             <DialogHeader>
