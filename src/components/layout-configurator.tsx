@@ -15,10 +15,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 export interface EventListManagementProps {
   order: number[];
@@ -209,6 +211,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         
     const order = props.order || [];
     const isSessionActive = remoteControlMode === 'controlled';
+    const [contactOpen, setContactOpen] = useState(false);
 
     return (
       <div className="flex flex-col h-full bg-background text-foreground relative">
@@ -243,7 +246,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   Añadir Evento/Canal
                               </Button>
                             )}
-                             {onOpenPresets && !isRemoteControlView && (
+                            {!isViewPage && onOpenPresets && !isRemoteControlView && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
                                     <LayoutGrid className="mr-2 h-4 w-4" /> Presets
                                 </Button>
@@ -312,21 +315,25 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                          {onOpenChat && (
+                          {isViewPage && onOpenChat && (
                             <Button variant="outline" className="w-full justify-start" onClick={onOpenChat}>
                                 <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
                             </Button>
                           )}
-                           {!isRemoteControlView && (
-                                <>
-                                  <Separator className="my-2"/>
-                                  <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
-                                      <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
-                                  </Button>
-                                  <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
-                                    <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
-                                  </Button>
-                                </>
+                          {!isRemoteControlView && (
+                            <>
+                                <Separator className="my-2"/>
+                                {onNotificationManager && (
+                                    <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
+                                        <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
+                                    </Button>
+                                )}
+                                {onOpenCalendar && (
+                                    <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
+                                        <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
+                                    </Button>
+                                )}
+                            </>
                            )}
                       </AccordionContent>
                   </AccordionItem>
@@ -345,11 +352,26 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   <AlertCircle className="mr-2 h-4 w-4" /> Solución de Errores
                               </Button>
                               )}
-                              <a href="https://forms.gle/491b1iE9p63s11K39" target="_blank" rel="noopener noreferrer" className="w-full">
+                              <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+                                <DialogTrigger asChild>
                                   <Button variant="outline" className="w-full justify-start">
                                       <FileText className="mr-2 h-4 w-4" /> Contacto
                                   </Button>
-                              </a>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Contacto</DialogTitle>
+                                        <DialogDescription>
+                                        ¿Tienes alguna sugerencia o encontraste un error? ¡Tu opinión nos ayuda a mejorar! Comunícate con nosotros para reportar fallos, enlaces incorrectos o proponer nuevos canales a deportesparatodosvercel@gmail.com.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button>Cerrar</Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
                               <a href="https://www.terminos-y-condiciones.com/live/2357d1eb-6062-4235-a743-346779893d56" target="_blank" rel="noopener noreferrer" className="w-full">
                                   <Button variant="outline" className="w-full justify-start">
                                       <FileText className="mr-2 h-4 w-4" /> Aviso Legal
