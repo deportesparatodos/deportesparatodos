@@ -92,17 +92,9 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
             onChannelClick &&
             getEventSelection &&
             channels.map((channel, index) => {
-              const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
-              const selection = getEventSelection(channelAsEvent);
-              return (
-              <CarouselItem
-                key={`channel-${channel.name}-${index}`}
-                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
-              >
-                <Card
-                  className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
-                  onClick={() => onChannelClick(channel)}
-                >
+              const cardOnClick = () => onChannelClick(channel);
+              const cardContent = (
+                 <>
                   <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white h-[100px] flex-shrink-0">
                     <Image
                       src={channel.logo}
@@ -116,15 +108,36 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                         target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                       }}
                     />
-                    {selection.isSelected && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
-                      </div>
+                    {'id' in channel && getEventSelection && (
+                        <>
+                        {(() => {
+                            const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                            const selection = getEventSelection(channelAsEvent);
+                            return selection.isSelected && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
+                            </div>
+                            );
+                        })()}
+                        </>
                     )}
                   </div>
                   <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
                     <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
                   </div>
+                 </>
+              );
+
+              return (
+              <CarouselItem
+                key={`channel-${channel.name}-${index}`}
+                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
+              >
+                <Card
+                  className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border h-full w-full flex flex-col"
+                  onClick={cardOnClick}
+                >
+                  {cardContent}
                 </Card>
               </CarouselItem>
             )})}

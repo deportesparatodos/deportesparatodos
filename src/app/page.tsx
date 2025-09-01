@@ -1223,7 +1223,60 @@ export function HomePageContent() {
     }
 };
 
+    const handlePasteFromClipboard = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (!text) {
+                toast({ variant: 'destructive', title: 'Error', description: 'El portapapeles está vacío.' });
+                return;
+            }
+            
+            // Basic URL validation
+            try {
+                new URL(text);
+            } catch (_) {
+                toast({ variant: 'destructive', title: 'Enlace Inválido', description: 'El texto copiado no es un enlace válido.' });
+                return;
+            }
+
+            const newEvent: Event = {
+                id: `custom-${Date.now()}`,
+                title: text,
+                time: 'AHORA',
+                status: 'En Vivo',
+                category: 'Personalizado',
+                options: [{ url: text, label: 'Enlace Propio', hd: false, language: '' }],
+                selectedOption: text,
+                image: 'https://i.ibb.co/dHPWxr8/depete.jpg', // Generic image
+                sources: [],
+                buttons: [],
+                date: '',
+                source: 'custom'
+            };
+
+            const newSelectedEvents = [...selectedEvents];
+            const targetIndex = newSelectedEvents.findIndex(e => e === null);
+
+            if (targetIndex !== -1) {
+                newSelectedEvents[targetIndex] = newEvent;
+                setSelectedEvents(newSelectedEvents);
+                toast({ title: '¡Enlace añadido!', description: 'El enlace de tu portapapeles se ha añadido a tu selección.' });
+            } else {
+                toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
+            }
+
+        } catch (err) {
+            console.error('Failed to read clipboard contents: ', err);
+            toast({ variant: 'destructive', title: 'Error de Portapapeles', description: 'No se pudo leer el portapapeles. Asegúrate de haber concedido los permisos.' });
+        }
+    };
+
+
   const handleChannelClick = (channel: Channel) => {
+      if (channel.name === "Enlace Propio") {
+          handlePasteFromClipboard();
+          return;
+      }
       const channelAsEvent: Event = {
           id: `${channel.name}-channel-static`,
           title: channel.name,
@@ -1613,10 +1666,6 @@ export function HomePageContent() {
             onRestoreGridSettings={handleRestoreGridSettings}
             isChatEnabled={isChatEnabled}
             onIsChatEnabledChange={(v) => setLiveAppState({ isChatEnabled: v })}
-            remoteControlMode={remoteControlMode}
-            controlledSessionCode={controlledSessionCode}
-            onActivateRemoteControl={handleActivateRemoteControl}
-            onClearSelections={handleClearSelections}
             onOpenTutorial={() => setIsTutorialOpen(true)}
             onOpenErrors={() => setIsErrorsOpen(true)}
             onOpenContact={() => setContactOpen(true)}
@@ -1624,6 +1673,10 @@ export function HomePageContent() {
             onOpenCalendar={() => setCalendarOpen(true)}
             onOpenPresets={() => setPresetsDialogOpen(true)}
             onNotificationManager={() => setNotificationManagerOpen(true)}
+            remoteControlMode={remoteControlMode}
+            controlledSessionCode={controlledSessionCode}
+            onActivateRemoteControl={handleActivateRemoteControl}
+            onClearSelections={handleClearSelections}
           />
 
           {isChatEnabled && (
@@ -1841,18 +1894,41 @@ export function HomePageContent() {
           {itemsToDisplay.map((item, index) => {
               const isChannel = 'urls' in item;
               if (isChannel) {
-                const channelAsEvent: Event = { id: `${(item as Channel).name}-channel-static`, title: (item as Channel).name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: (item as Channel).logo };
+                const channel = item as Channel;
+                if (channel.name === 'Enlace Propio') {
+                    return (
+                        <Card 
+                            key={`custom-link-channel-${index}`}
+                            className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
+                            onClick={handlePasteFromClipboard}
+                        >
+                            <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
+                                <Image
+                                    src={channel.logo}
+                                    alt={`${channel.name} logo`}
+                                    width={120}
+                                    height={67.5}
+                                    className="object-contain max-h-full max-w-full"
+                                />
+                            </div>
+                            <div className="p-3 bg-card min-h-[52px] flex items-center justify-center">
+                                <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
+                            </div>
+                        </Card>
+                    );
+                }
+                const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                 const selection = getEventSelection(channelAsEvent);
                 return (
                     <Card 
                         key={`search-channel-${index}`}
                         className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
-                        onClick={() => handleChannelClick(item as Channel)}
+                        onClick={() => handleChannelClick(channel)}
                     >
                         <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
                             <Image
-                                src={(item as Channel).logo}
-                                alt={`${(item as Channel).name} logo`}
+                                src={channel.logo}
+                                alt={`${channel.name} logo`}
                                 width={120}
                                 height={67.5}
                                 className="object-contain max-h-full max-w-full"
@@ -1993,7 +2069,6 @@ export function HomePageContent() {
                                                 onRestoreGridSettings={handleRestoreGridSettings}
                                                 isChatEnabled={isChatEnabled}
                                                 onIsChatEnabledChange={(v) => setLiveAppState({ isChatEnabled: v })}
-                                                onClearSelections={handleClearSelections}
                                                 onOpenTutorial={() => setIsTutorialOpen(true)}
                                                 onOpenErrors={() => setIsErrorsOpen(true)}
                                                 onOpenContact={() => setContactOpen(true)}
@@ -2013,6 +2088,7 @@ export function HomePageContent() {
                                                 remoteControlMode={remoteControlMode}
                                                 controlledSessionCode={controlledSessionCode}
                                                 onActivateRemoteControl={handleActivateRemoteControl}
+                                                onClearSelections={handleClearSelections}
                                             />
                                       </SheetContent>
                                       </Sheet>
@@ -2677,7 +2753,6 @@ function ControllingView({
                 setView('chat')
             }}
             onStopSession={onStopSession}
-            onSchedule={() => setView('schedule')}
             onClearSelections={onClearSelections}
             onToggleFullscreen={handleToggleFullscreen}
             fullscreenIndex={appState.fullscreenIndex}
