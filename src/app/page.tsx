@@ -238,16 +238,24 @@ export function HomePageContent() {
   
   // State for the controlling view specifically
   const [isControlling, setIsControlling] = useState(false);
+  
+  // This state will hold a COPY of the main app state for the controller UI.
+  // It gets updated from Ably messages.
   const [controllerAppState, setControllerAppState] = useState<AppState | null>(null);
+
 
   // Presets State
   const [customPresets, setCustomPresets] = useState<Preset[]>([]);
 
 
+  // This function is for the controller to SEND updates.
   const setLiveAppState = useCallback((newState: Partial<AppState>) => {
     if (isControlling && controllerAppState) {
+        // Optimistically update the controller's local state
         const updatedState: AppState = { ...controllerAppState, ...newState };
         setControllerAppState(updatedState);
+        
+        // Publish the new state to the controlled device
         if (channelRef.current) {
             channelRef.current.publish('action', {
                 type: 'SET_APP_STATE',
@@ -255,17 +263,21 @@ export function HomePageContent() {
             });
         }
     } else {
+        // This is the normal state update for the main view
         setAppState(prevState => {
             const updatedState: AppState = { ...prevState, ...newState };
+            // Ensure selectedEvents is always an array
             if (!Array.isArray(updatedState.selectedEvents) || updatedState.selectedEvents === null) {
                 updatedState.selectedEvents = Array(9).fill(null);
             }
+             // Re-hydrate Date objects when setting schedules
             if (updatedState.schedules) {
                 updatedState.schedules = updatedState.schedules.map((s: any) => ({
                     ...s,
-                    dateTime: s.dateTime ? new Date(s.dateTime) : new Date() // Re-hydrate Date objects
+                    dateTime: s.dateTime ? new Date(s.dateTime) : new Date() 
                 }));
             }
+            // If this instance is being controlled, it should send its new state back to the controller.
             if (remoteControlMode === 'controlled' && channelRef.current) {
                 channelRef.current.publish('state-update', { appState: updatedState });
             }
@@ -1249,7 +1261,7 @@ export function HomePageContent() {
                 category: 'Personalizado',
                 options: [{ url: text, label: 'Enlace Propio', hd: false, language: '' }],
                 selectedOption: text,
-                image: 'https://i.ibb.co/dHPWxr8/depete.jpg',
+                image: 'https://cdn-icons-png.flaticon.com/512/1168/1168706.png',
                 sources: [],
                 buttons: [],
                 date: '',
@@ -1402,6 +1414,7 @@ export function HomePageContent() {
                 // Listen for actions from the controller
                 channel.subscribe('action', (message: AblyMessage) => {
                     if (message.data.type === 'SET_APP_STATE') {
+                       // The controlled device directly sets its state from the payload
                        setAppState(message.data.payload);
                     }
                     if (message.data.type === 'OPEN_CHAT') {
@@ -1426,16 +1439,20 @@ export function HomePageContent() {
             const channel = ably.channels.get(code);
             channelRef.current = channel;
 
+            // This client LISTENS for state updates
             channel.subscribe('state-update', (message: AblyMessage) => {
                 if (message.data.appState) {
                     setControllerAppState(message.data.appState);
                 }
             });
             
+            // This is a new listener for when a schedule is applied on the controlled device
             channel.subscribe('schedule-applied', () => {
+                // When a schedule is applied, the controller re-syncs its state
                 channel.publish('sync-request', {});
             });
 
+            // Initial sync request
             channel.publish('sync-request', {});
             setIsControlling(true);
             setRemoteControlMode('controlling');
@@ -1481,8 +1498,10 @@ export function HomePageContent() {
 
         let foundItem: Event | Channel | undefined;
         if (presetChannel.isEvent) {
+            // Search in all possible events, not just a filtered list
             foundItem = allSortedEvents.find(e => e.id === presetChannel.id);
         } else {
+            // Search in the main channels list
             foundItem = channels.find(c => c.name === presetChannel.name);
         }
         
@@ -1504,9 +1523,11 @@ export function HomePageContent() {
             count++;
         }
     }
-    setSelectedEvents(newSelectedEvents);
+    // Use the main state setter function
+    setLiveAppState({ selectedEvents: newSelectedEvents });
     setPresetsDialogOpen(false);
   };
+
 
   // --- Preset Management Functions ---
   const savePresets = (presets: Preset[]) => {
@@ -1533,7 +1554,7 @@ export function HomePageContent() {
   if (!isInitialLoadDone) {
     return <LoadingScreen />;
   }
-
+  
   if (isControlling && controllerAppState) {
     return (
         <ControllingView 
@@ -1551,6 +1572,14 @@ export function HomePageContent() {
             toast={toast}
             customPresets={customPresets}
             onClearSelections={handleClearSelections}
+            onPresetSelect={handlePresetSelect}
+            getEventSelection={(event) => {
+              const selectionIndex = controllerAppState.selectedEvents.findIndex(se => se?.id === event.id);
+              if (selectionIndex !== -1) {
+                  return { isSelected: true, selectedOption: controllerAppState.selectedEvents[selectionIndex]?.selectedOption || null, index: selectionIndex };
+              }
+              return { isSelected: false, selectedOption: null, index: -1 };
+            }}
         />
     );
   }
@@ -2119,22 +2148,19 @@ export function HomePageContent() {
         </div>
       )}
 
-      <Dialog open={presetsDialogOpen} onOpenChange={setPresetsDialogOpen}>
-        <DialogPortal container={remoteControlContainerRef.current ?? undefined}>
-          <PresetsDialog
-            open={presetsDialogOpen}
-            onOpenChange={setPresetsDialogOpen}
-            onSelectPreset={handlePresetSelect}
-            container={remoteControlContainerRef.current ?? undefined}
-            customPresets={customPresets}
-            onSavePreset={addPreset}
-            onUpdatePreset={updatePreset}
-            onDeletePreset={deletePreset}
-            allEvents={allSortedEvents}
-            allChannels={channelsData}
-          />
-        </DialogPortal>
-      </Dialog>
+      {/* Main App Dialogs - These are portal'd by default, so they should work fine */}
+      <PresetsDialog
+          open={presetsDialogOpen}
+          onOpenChange={setPresetsDialogOpen}
+          onSelectPreset={handlePresetSelect}
+          customPresets={customPresets}
+          onSavePreset={addPreset}
+          onUpdatePreset={updatePreset}
+          onDeletePreset={deletePreset}
+          allEvents={allSortedEvents}
+          allChannels={channelsData}
+          isRemote={false}
+      />
       <AddEventsDialog
           open={addEventsDialogOpen}
           onOpenChange={setAddEventsDialogOpen}
@@ -2145,9 +2171,23 @@ export function HomePageContent() {
           channels={channelsData}
           isLoading={isAddEventsLoading}
           onFetch={() => fetchEvents(true, true)}
-          container={remoteControlContainerRef.current ?? undefined}
           isRemote={false}
           onBack={() => {}}
+      />
+       <ScheduleManager
+          open={scheduleManagerOpen}
+          onOpenChange={setScheduleManagerOpen}
+          schedules={schedules}
+          onSchedulesChange={setSchedules}
+          isLoading={isAddEventsLoading}
+          initialSelection={selectedEvents}
+          initialOrder={viewOrder}
+          allEvents={allSortedEvents}
+          allChannels={channelsData}
+          getEventSelection={getEventSelection}
+          remoteControlMode={remoteControlMode}
+          controlledSessionCode={controlledSessionCode}
+          onActivateRemoteControl={handleActivateRemoteControl}
       />
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
           <CalendarDialogContent categories={categories} />
@@ -2448,6 +2488,8 @@ type ControllingViewProps = {
     toast: any;
     customPresets: Preset[];
     onClearSelections: () => void;
+    onPresetSelect: (preset: Preset) => void;
+    getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
 };
 
 
@@ -2459,16 +2501,19 @@ function ControllingView({
   allChannels,
   toast,
   customPresets,
-  onClearSelections
+  onClearSelections,
+  onPresetSelect,
+  getEventSelection,
 }: ControllingViewProps) {
-  type ControllingViewMode = 'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat';
-  const [view, setView] = useState<ControllingViewMode>('main');
-  
-  const [dialogEvent, setDialogEvent] = useState<Event | null>(null);
-  const [modificationIndex, setModificationIndex] = useState<number | null>(null);
-  const [isOptionsLoading, setIsOptionsLoading] = useState(false);
+  // Local state for the controller's dialogs
+  const [controllerView, setControllerView] = useState<'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat' | 'presets'>('main');
+  const [controllerDialogEvent, setControllerDialogEvent] = useState<Event | null>(null);
+  const [controllerModificationIndex, setControllerModificationIndex] = useState<number | null>(null);
+  const [isControllerOptionsLoading, setIsControllerOptionsLoading] = useState(false);
   const [showScheduleFailureMessage, setShowScheduleFailureMessage] = useState(false);
-  const remoteControlContainerRef = useRef<HTMLDivElement>(null);
+
+  // This ref is crucial for dialogs to have a container to mount into within the controller view
+  const controllerContainerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (!appState.schedules || appState.schedules.length === 0) {
@@ -2496,25 +2541,10 @@ function ControllingView({
     };
   }, [appState.schedules]);
 
-
   const { allSortedEvents } = useMemo(() => {
-    const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
-    const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
-    
-    allEvents.sort((a, b) => {
-        const statusA = statusOrder[a.status] ?? 5;
-        const statusB = statusOrder[b.status] ?? 5;
-        if (statusA !== statusB) return statusA - statusB;
-        if (a.status === 'En Vivo') {
-            const aHasCustomImage = a.image && a.image !== placeholderImage;
-            const bHasCustomImage = b.image && b.image !== placeholderImage;
-            if (aHasCustomImage && !bHasCustomImage) return -1;
-            if (!aHasCustomImage && bHasCustomImage) return 1;
-        }
-        return a.title.localeCompare(b.title);
-    });
-
-    return { allSortedEvents: allEvents };
+      // Assuming allEvents is already sorted or doesn't need sorting for the controller.
+      // If it does, sorting logic can be added here.
+      return { allSortedEvents: allEvents };
   }, [allEvents]);
   
   const handleEventRemove = useCallback((indexToRemove: number) => {
@@ -2523,16 +2553,6 @@ function ControllingView({
     setLiveAppState({ selectedEvents: newSelectedEvents });
   }, [appState.selectedEvents, setLiveAppState]);
   
-  const getEventSelectionRemote = (event: Event): { isSelected: boolean; selectedOption: string | null; index: number } => {
-    if (!appState?.selectedEvents) return { isSelected: false, selectedOption: null, index: -1 };
-    const selectionIndex = appState.selectedEvents.findIndex(se => se?.id === event.id);
-    if (selectionIndex !== -1) {
-      const selectedEvent = appState.selectedEvents[selectionIndex];
-      return { isSelected: true, selectedOption: selectedEvent?.selectedOption || null, index: selectionIndex };
-    }
-    return { isSelected: false, selectedOption: null, index: -1 };
-  };
-
   const openDialogForEventRemote = async (event: Event, indexToModify?: number) => {
     let targetIndex: number;
     let eventForDialog = { ...event };
@@ -2544,7 +2564,7 @@ function ControllingView({
           eventForDialog.selectedOption = selectedEventFromState.selectedOption;
       }
     } else {
-        const selection = getEventSelectionRemote(event);
+        const selection = getEventSelection(event);
         if (selection.isSelected) {
             targetIndex = selection.index;
             const selectedEventFromState = appState.selectedEvents[targetIndex];
@@ -2560,15 +2580,15 @@ function ControllingView({
         }
     }
     
-    setModificationIndex(targetIndex);
-    setDialogEvent(eventForDialog);
-    setView('eventSelection');
+    setControllerModificationIndex(targetIndex);
+    setControllerDialogEvent(eventForDialog);
+    setControllerView('eventSelection');
       
     if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
         return;
     }
 
-    setIsOptionsLoading(true);
+    setIsControllerOptionsLoading(true);
     try {
         const sourcePromises = event.sources.map(async (source) => {
             const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
@@ -2585,20 +2605,20 @@ function ControllingView({
         });
         const results = await Promise.all(sourcePromises);
         const streamOptions: StreamOption[] = results.flat().filter(Boolean);
-        setDialogEvent({ ...eventForDialog, options: streamOptions });
+        setControllerDialogEvent({ ...eventForDialog, options: streamOptions });
     } finally {
-        setIsOptionsLoading(false);
+        setIsControllerOptionsLoading(false);
     }
   };
   
   const handleEventSelectRemote = (event: Event, optionUrl: string) => {
-      if (modificationIndex === null) return;
+      if (controllerModificationIndex === null) return;
       const newSelectedEvents = [...appState.selectedEvents];
-      newSelectedEvents[modificationIndex] = { ...event, selectedOption: optionUrl };
+      newSelectedEvents[controllerModificationIndex] = { ...event, selectedOption: optionUrl };
       setLiveAppState({ selectedEvents: newSelectedEvents });
-      setView('addEvents');
-      setDialogEvent(null);
-      setModificationIndex(null);
+      setControllerView('addEvents');
+      setControllerDialogEvent(null);
+      setControllerModificationIndex(null);
   };
   
   const handleChannelClickRemote = (channel: Channel) => {
@@ -2626,16 +2646,6 @@ function ControllingView({
         
         openDialogForEventRemote(channelAsEvent, targetIndex);
     };
-
-    const handleSelectChannelRemote = (event: Event, optionUrl: string) => {
-        if (modificationIndex === null) return;
-        const newSelectedEvents = [...appState.selectedEvents];
-        newSelectedEvents[modificationIndex] = { ...event, selectedOption: optionUrl };
-        setLiveAppState({ selectedEvents: newSelectedEvents });
-        setView('addEvents');
-        setDialogEvent(null);
-        setModificationIndex(null);
-    };
     
   const handleToggleFullscreen = (index: number) => {
     const currentFullscreen = appState.fullscreenIndex;
@@ -2661,62 +2671,9 @@ function ControllingView({
     );
   }
 
-  if (view === 'addEvents') {
-    return (
-        <div className="fixed inset-0 z-[101] bg-background">
-             <AddEventsDialogContent
-                onOpenChange={() => setView('main')}
-                onEventSelect={(event) => openDialogForEventRemote(event)}
-                onChannelClick={handleChannelClickRemote}
-                getEventSelection={getEventSelectionRemote}
-                events={allSortedEvents}
-                channels={allChannels}
-                isLoading={false}
-                isRemote={true}
-                onBack={() => setView('main')}
-            />
-        </div>
-    );
-  }
-
-  if (view === 'eventSelection' && dialogEvent) {
-    return (
-       <RemoteEventSelection
-        event={dialogEvent}
-        onBack={() => { setView('addEvents'); setDialogEvent(null); }}
-        onSelect={dialogEvent.category === 'Canal' ? handleSelectChannelRemote : handleEventSelectRemote}
-        isModification={modificationIndex !== null && appState.selectedEvents[modificationIndex!] !== null}
-        onRemove={() => {
-          if (modificationIndex !== null) handleEventRemove(modificationIndex);
-          setView('addEvents');
-          setDialogEvent(null);
-        }}
-        isLoading={isOptionsLoading}
-      />
-    );
-  }
-
-  if (view === 'schedule') {
-    return (
-       <RemoteScheduleManager
-            onBack={() => setView('main')}
-            appState={appState}
-            setLiveAppState={setLiveAppState}
-            allEvents={allEvents}
-            allChannels={allChannels}
-        />
-    );
-  }
-
-  if (view === 'chat') {
-    return (
-      <RemoteChat onBack={() => setView('main')} />
-    );
-  }
-
-  // Main Remote Control UI
   return (
-    <div className="fixed inset-0 bg-background z-[100] flex flex-col">
+    // This container ref is crucial for portals
+    <div ref={controllerContainerRef} className="fixed inset-0 bg-background z-[100] flex flex-col">
         <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Control Remoto</h2>
             <Button variant="destructive" size="sm" onClick={onStopSession}>
@@ -2735,9 +2692,9 @@ function ControllingView({
                 }
             }}
             isViewPage={true}
-            onAddEvent={() => {
-                setView('addEvents');
-            }}
+            onAddEvent={() => setControllerView('addEvents')}
+            onSchedule={() => setControllerView('schedule')}
+            onOpenPresets={() => setControllerView('presets')}
             gridGap={appState.gridGap}
             onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
             borderColor={appState.borderColor}
@@ -2746,15 +2703,72 @@ function ControllingView({
             isChatEnabled={appState.isChatEnabled}
             onIsChatEnabledChange={(v: boolean) => setLiveAppState({ isChatEnabled: v })}
             isRemoteControlView={true}
-            onOpenChat={() => {
-                setLiveAppState({ isChatEnabled: true });
-                setView('chat')
-            }}
+            onOpenChat={() => setControllerView('chat')}
             onStopSession={onStopSession}
             onClearSelections={onClearSelections}
             onToggleFullscreen={handleToggleFullscreen}
             fullscreenIndex={appState.fullscreenIndex}
         />
+
+        {/* Dialogs are now rendered here, inside the controller view */}
+        <AddEventsDialog
+            open={controllerView === 'addEvents'}
+            onOpenChange={(isOpen) => !isOpen && setControllerView('main')}
+            onEventSelect={(event) => openDialogForEventRemote(event)}
+            onChannelClick={handleChannelClickRemote}
+            getEventSelection={getEventSelection}
+            events={allSortedEvents}
+            channels={allChannels}
+            isLoading={false}
+            onFetch={() => {}}
+            container={controllerContainerRef.current ?? undefined}
+            isRemote={true}
+            onBack={() => setControllerView('main')}
+        />
+
+        {controllerDialogEvent && (
+            <RemoteEventSelection
+                event={controllerDialogEvent}
+                onBack={() => { setControllerView('addEvents'); setControllerDialogEvent(null); }}
+                onSelect={(event, url) => {
+                  handleEventSelectRemote(event, url);
+                }}
+                isModification={controllerModificationIndex !== null && appState.selectedEvents[controllerModificationIndex!] !== null}
+                onRemove={() => {
+                  if (controllerModificationIndex !== null) handleEventRemove(controllerModificationIndex);
+                  setControllerView('addEvents');
+                  setControllerDialogEvent(null);
+                }}
+                isLoading={isControllerOptionsLoading}
+            />
+        )}
+        
+        <RemoteScheduleManager
+            open={controllerView === 'schedule'}
+            onBack={() => setControllerView('main')}
+            appState={appState}
+            setLiveAppState={setLiveAppState}
+            allEvents={allEvents}
+            allChannels={allChannels}
+        />
+        
+        <PresetsDialog
+            open={controllerView === 'presets'}
+            onOpenChange={(isOpen) => !isOpen && setControllerView('main')}
+            onSelectPreset={onPresetSelect}
+            container={controllerContainerRef.current ?? undefined}
+            customPresets={customPresets}
+            // Dummy functions as the controller doesn't edit presets
+            onSavePreset={() => {}}
+            onUpdatePreset={() => {}}
+            onDeletePreset={() => {}}
+            allEvents={allEvents}
+            allChannels={allChannels}
+            isRemote={true}
+        />
+
+        {controllerView === 'chat' && <RemoteChat onBack={() => setControllerView('main')} />}
     </div>
   );
 }
+
