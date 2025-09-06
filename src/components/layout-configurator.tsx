@@ -241,6 +241,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   Añadir Evento/Canal
                               </Button>
                             )}
+                             {onSchedule && (
+                               <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
+                                   <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                               </Button>
+                             )}
                             {onOpenPresets && !isRemoteControlView && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
                                     <LayoutGrid className="mr-2 h-4 w-4" /> Presets
