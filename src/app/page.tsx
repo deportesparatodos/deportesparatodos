@@ -66,11 +66,8 @@ import type { Subscription, Schedule } from '@/components/schedule-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Realtime } from 'ably';
-import { AddEventsDialog, AddEventsDialogContent } from '@/components/add-events-dialog';
-import { RemoteEventSelection } from '@/components/remote-event-selection';
+import { AddEventsDialog } from '@/components/add-events-dialog';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
-import { RemoteScheduleManager } from '@/components/remote-schedule-manager';
-import { RemoteChat } from '@/components/remote-chat';
 import { PresetsDialog } from '@/components/presets-dialog';
 import type { Preset } from '@/components/presets-dialog';
 
@@ -331,6 +328,9 @@ export function HomePageContent() {
   const [controllerCode, setControllerCode] = useState('');
   const [isControlledSessionDialog, setIsControlledSessionDialog] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Sheet state
+  const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -1443,10 +1443,8 @@ export function HomePageContent() {
 
         let foundItem: Event | Channel | undefined;
         if (presetChannel.isEvent) {
-            // Search in all possible events, not just a filtered list
             foundItem = allSortedEvents.find(e => e.id === presetChannel.id);
         } else {
-            // Search in the main channels list
             foundItem = channels.find(c => c.name === presetChannel.name);
         }
         
@@ -1468,7 +1466,6 @@ export function HomePageContent() {
             count++;
         }
     }
-    // Use the main state setter function
     setLiveAppState({ selectedEvents: newSelectedEvents });
     setPresetsDialogOpen(false);
   };
@@ -2018,7 +2015,7 @@ export function HomePageContent() {
                                       <Airplay />
                                     </Button>
 
-                                     <Sheet>
+                                     <Sheet open={isSettingsSheetOpen} onOpenChange={setIsSettingsSheetOpen}>
                                         <SheetTrigger asChild>
                                           <Button variant="ghost" size="icon">
                                             <Settings />
@@ -2063,6 +2060,7 @@ export function HomePageContent() {
                                                 controlledSessionCode={controlledSessionCode}
                                                 onActivateRemoteControl={handleActivateRemoteControl}
                                                 onClearSelections={handleClearSelections}
+                                                onClose={() => setIsSettingsSheetOpen(false)}
                                             />
                                       </SheetContent>
                                       </Sheet>
@@ -2117,7 +2115,6 @@ export function HomePageContent() {
           isLoading={isAddEventsLoading}
           onFetch={() => fetchEvents(true, true)}
           isRemote={false}
-          onBack={() => {}}
       />
        <ScheduleManager
           open={scheduleManagerOpen}
@@ -2654,8 +2651,6 @@ function ControllingView({
             onToggleFullscreen={handleToggleFullscreen}
             fullscreenIndex={appState.fullscreenIndex}
         />
-
-        {/* Dialogs are now rendered here, inside the controller view */}
         <AddEventsDialog
             open={controllerView === 'addEvents'}
             onOpenChange={(isOpen) => !isOpen && setControllerView('main')}
@@ -2668,33 +2663,46 @@ function ControllingView({
             onFetch={() => {}}
             container={controllerContainerRef.current ?? undefined}
             isRemote={true}
-            onBack={() => setControllerView('main')}
         />
 
         {controllerDialogEvent && (
-            <RemoteEventSelection
-                event={controllerDialogEvent}
-                onBack={() => { setControllerView('addEvents'); setControllerDialogEvent(null); }}
-                onSelect={(event, url) => {
-                  handleEventSelectRemote(event, url);
+            <EventSelectionDialog
+                isOpen={controllerView === 'eventSelection'}
+                onOpenChange={(isOpen) => {
+                  if (!isOpen) {
+                    setControllerView('addEvents');
+                    setControllerDialogEvent(null);
+                  }
                 }}
+                event={controllerDialogEvent}
+                onSelect={handleEventSelectRemote}
                 isModification={controllerModificationIndex !== null && appState.selectedEvents[controllerModificationIndex!] !== null}
+                modificationIndex={controllerModificationIndex}
                 onRemove={() => {
                   if (controllerModificationIndex !== null) handleEventRemove(controllerModificationIndex);
                   setControllerView('addEvents');
                   setControllerDialogEvent(null);
                 }}
                 isLoading={isControllerOptionsLoading}
+                container={controllerContainerRef.current ?? undefined}
             />
         )}
         
-        <RemoteScheduleManager
+        <ScheduleManager
             open={controllerView === 'schedule'}
-            onBack={() => setControllerView('main')}
-            appState={appState}
-            setLiveAppState={setLiveAppState}
+            onOpenChange={(isOpen) => !isOpen && setControllerView('main')}
+            schedules={appState.schedules}
+            onSchedulesChange={(s) => setLiveAppState({schedules: s})}
+            isLoading={false}
+            initialSelection={appState.selectedEvents}
+            initialOrder={appState.viewOrder}
             allEvents={allEvents}
             allChannels={allChannels}
+            getEventSelection={getEventSelection}
+            container={controllerContainerRef.current ?? undefined}
+            remoteControlMode="controlling"
+            controlledSessionCode=""
+            onActivateRemoteControl={() => {}}
         />
         
         <PresetsDialog
@@ -2711,8 +2719,6 @@ function ControllingView({
             allChannels={allChannels}
             isRemote={true}
         />
-
-        {controllerView === 'chat' && <RemoteChat onBack={() => setControllerView('main')} />}
     </div>
   );
 }

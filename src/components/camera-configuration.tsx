@@ -56,7 +56,7 @@ export function CameraConfigurationComponent(props: CameraConfigurationProps) {
           <SheetHeader className="sr-only">
               <SheetTitle>Configuration Panel</SheetTitle>
           </SheetHeader>
-          <LayoutConfigurator {...props} />
+          <LayoutConfigurator {...props} onClose={() => setSheetOpen(false)} />
         </SheetContent>
       </Sheet>
     </>
