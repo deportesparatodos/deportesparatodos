@@ -9,7 +9,6 @@ const API_ENDPOINTS: Record<string, string> = {
   'sports': 'https://streamed.pk/api/sports',
   'stream': 'https://streamed.pk/api/stream', 
   'streamtp': 'https://streamtpglobal.com/eventos.json',
-  'tc-chaser': 'https://tc-chaser.vercel.app/api/events',
   'agenda': 'https://agenda-dpt.vercel.app/api/events',
 };
 

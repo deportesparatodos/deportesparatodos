@@ -13,13 +13,6 @@ interface StreamedMatch {
   date: number; // Timestamp
 }
 
-interface TCChaserEvent {
-  event_time_and_day: string; // "2025-08-09T10:00:00.000Z"
-  event_title: string;
-  end_date: string;
-  cover_image: string;
-}
-
 const normalizeCategory = (category: string): string => {
     const lowerCategory = category.toLowerCase();
     if (lowerCategory === 'football' || lowerCategory === 'fútbol' || lowerCategory === 'fútbol_cup') {
@@ -36,17 +29,15 @@ async function getAllEvents(filterCategory?: string | null) {
     const timeZone = 'America/Argentina/Buenos_Aires';
 
     try {
-        const [liveResponse, todayResponse, sportsResponse, tcChaserResponse] = await Promise.all([
+        const [liveResponse, todayResponse, sportsResponse] = await Promise.all([
             fetch('https://streamed.pk/api/matches/live').then(res => res.ok ? res.json() : []).catch(() => []),
             fetch('https://streamed.pk/api/matches/all-today').then(res => res.ok ? res.json() : []).catch(() => []),
             fetch('https://streamed.pk/api/sports').then(res => res.ok ? res.json() : []).catch(() => []),
-            fetch('https://tc-chaser.vercel.app/api/events').then(res => res.ok ? res.json() : []).catch(() => []),
         ]);
 
         const liveData: StreamedMatch[] = Array.isArray(liveResponse) ? liveResponse : [];
         const todayData: StreamedMatch[] = Array.isArray(todayResponse) ? todayResponse : [];
         const sportsData: {id: string; name: string}[] = Array.isArray(sportsResponse) ? sportsResponse : [];
-        const tcChaserData: TCChaserEvent[] = Array.isArray(tcChaserResponse) ? tcChaserResponse : [];
 
         const categoryMap = sportsData.reduce<Record<string, string>>((acc, sport) => {
             acc[sport.id] = sport.name;
@@ -68,19 +59,6 @@ async function getAllEvents(filterCategory?: string | null) {
               endTime: addHours(zonedEventTime, 2),
             };
         });
-
-        const tcChaserEvents = tcChaserData.map(event => {
-            const startTime = toDate(event.event_time_and_day, { timeZone });
-            const endTime = toDate(event.end_date, { timeZone });
-            return {
-                title: event.event_title,
-                category: 'Motor Sports',
-                startTime: startTime,
-                endTime: endTime
-            };
-        });
-
-        allEvents.push(...tcChaserEvents);
 
         if (filterCategory) {
             const normalizedFilter = normalizeCategory(filterCategory);
