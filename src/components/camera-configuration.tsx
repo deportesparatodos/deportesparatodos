@@ -44,6 +44,8 @@ interface CameraConfigurationProps {
 export function CameraConfigurationComponent(props: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  const isSessionActive = props.remoteControlMode === 'controlled';
+
   return (
     <>
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -52,11 +54,11 @@ export function CameraConfigurationComponent(props: CameraConfigurationProps) {
             <Settings className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+        <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
           <SheetHeader className="sr-only">
               <SheetTitle>Configuration Panel</SheetTitle>
           </SheetHeader>
-          <LayoutConfigurator {...props} onClose={() => setSheetOpen(false)} />
+          <LayoutConfigurator {...props} onClose={() => setSheetOpen(false)} isSessionActive={isSessionActive} />
         </SheetContent>
       </Sheet>
     </>

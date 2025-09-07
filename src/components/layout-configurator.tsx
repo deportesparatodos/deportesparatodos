@@ -52,6 +52,7 @@ export interface EventListManagementProps {
   onActivateRemoteControl?: () => void;
   onClearSelections?: () => void;
   onClose?: () => void;
+  isSessionActive?: boolean;
 }
 
 export function EventList({
@@ -109,7 +110,7 @@ export function EventList({
                     </div>
                     
                     <div className="flex-grow flex flex-col items-center gap-2 min-w-0">
-                        <div className="w-full h-[40px] flex items-center justify-center text-center">
+                         <div className="w-full h-[40px] flex items-center justify-center text-center">
                             <p className="w-full text-sm font-semibold line-clamp-2 break-words">
                                 {event.title}
                             </p>
@@ -198,10 +199,10 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onActivateRemoteControl,
         isViewPage,
         onClose,
+        isSessionActive
     } = props;
         
     const order = props.order || [];
-    const isSessionActive = remoteControlMode === 'controlled';
     const hasSelections = order.length > 0;
     
     return (
@@ -210,7 +211,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
             <>
                 <div className="p-4 flex-shrink-0 flex items-center justify-between">
                     <h2 className="text-lg font-semibold">Configuración</h2>
-                     {onClose && (
+                     {!isSessionActive && onClose && (
                         <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
                             <X className="h-5 w-5" />
                         </Button>
@@ -222,6 +223,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
         {isSessionActive && !isRemoteControlView && (
              <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4">
+                {onClose && (
+                    <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2 h-8 w-8 text-foreground">
+                        <X className="h-5 w-5" />
+                    </Button>
+                )}
                 <p className="font-semibold text-foreground">Sesión de control remoto activa.</p>
                 <p className="text-sm text-muted-foreground mb-2">Realice las modificaciones desde ahí.</p>
                 <p className="text-sm text-muted-foreground">Su código de control remoto es: <span className="font-bold text-lg text-primary tracking-widest">{controlledSessionCode}</span></p>
