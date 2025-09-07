@@ -78,17 +78,9 @@ export function EventList({
       if (targetIndex >= 0 && targetIndex < activeEventsCount) {
           [newOrder[currentIndex], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[currentIndex]];
           
-          const finalOrder = Array.from({length: 9}, (_, i) => i);
-          let newOrderCursor = 0;
+          const fullOrder = Array.from({ length: 9 }, (_, i) => i);
           const usedIndexes = new Set(newOrder);
 
-          for(let i=0; i<9; i++) {
-            if(eventDetails[i] !== null) {
-              finalOrder[i] = newOrder[newOrderCursor++];
-            }
-          }
-
-          const fullOrder = Array.from({ length: 9 }, (_, i) => i);
           const finalFullOrder = [...newOrder, ...fullOrder.filter(i => !usedIndexes.has(i))]
 
           onOrderChange(finalFullOrder);
@@ -253,16 +245,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   Añadir Evento/Canal
                               </Button>
                             )}
-                             {onSchedule && (!isRemoteControlView || (isRemoteControlView && onSchedule)) && (
-                               <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
-                                   <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                               </Button>
-                             )}
-                            {onOpenPresets && (
-                                <Button variant="outline" className="w-full justify-center" onClick={onOpenPresets}>
-                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
-                                </Button>
-                            )}
                             {onClearSelections && hasSelections && (
                                 <Button variant="destructive" className="w-full flex-shrink-0" onClick={onClearSelections}>
                                     <Trash2 className="mr-2 h-4 w-4" />
@@ -274,6 +256,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                     <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
                                 </Button>
                             )}
+                            {onSchedule && (
+                               <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
+                                   <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                               </Button>
+                             )}
                           </div>
                       </AccordionContent>
                   </AccordionItem>
@@ -333,6 +320,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                 <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
                             </Button>
                           )}
+                          {onOpenPresets && (
+                                <Button variant="outline" className="w-full justify-start" onClick={onOpenPresets}>
+                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
+                                </Button>
+                            )}
                           {!isRemoteControlView && onNotificationManager && (
                             <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
                                 <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
