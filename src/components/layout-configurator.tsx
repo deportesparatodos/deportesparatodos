@@ -117,7 +117,7 @@ export function EventList({
                     </div>
                     
                     <div className="flex-grow flex flex-col gap-2 min-w-0">
-                        <p className="text-sm font-semibold truncate text-center min-w-0">
+                        <p className="text-sm font-semibold truncate text-center">
                             {event.title}
                         </p>
                          <div className="flex items-center justify-center gap-1 flex-wrap">
@@ -216,6 +216,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
             <>
                 <div className="p-4 flex-shrink-0 flex items-center justify-between">
                     <h2 className="text-lg font-semibold">Configuración</h2>
+                     {onClose && (
+                        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+                            <X className="h-5 w-5" />
+                        </Button>
+                     )}
                 </div>
                 <Separator />
             </>
@@ -371,6 +376,13 @@ export function LayoutConfigurator(props: EventListManagementProps) {
               </Accordion>
           </div>
         </ScrollArea>
+        {isRemoteControlView && (
+             <div className="p-4 mt-auto border-t">
+                <Button variant="destructive" className="w-full" onClick={onStopSession}>
+                    Detener Control
+                </Button>
+             </div>
+        )}
       </div>
     );
 }
