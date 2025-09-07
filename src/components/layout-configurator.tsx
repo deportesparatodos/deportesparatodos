@@ -101,15 +101,15 @@ export function EventList({
             const isFullscreen = fullscreenIndex === originalIndex;
 
             return (
-                <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
+                <div key={originalIndex} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50 min-w-0">
                     <div 
                         className="flex-shrink-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold"
                     >
                         {currentIndex + 1}
                     </div>
                     
-                    <div className="flex-grow flex flex-col gap-2 min-w-0">
-                        <p className="text-sm font-semibold truncate text-center">
+                    <div className="flex-grow flex flex-col items-center gap-2 min-w-0">
+                        <p className="w-full text-sm font-semibold truncate text-center">
                             {event.title}
                         </p>
                          <div className="flex items-center justify-center gap-1 flex-wrap">
@@ -245,6 +245,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   Añadir Evento/Canal
                               </Button>
                             )}
+                            {onSchedule && (
+                               <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
+                                   <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
+                               </Button>
+                             )}
                             {onClearSelections && hasSelections && (
                                 <Button variant="destructive" className="w-full flex-shrink-0" onClick={onClearSelections}>
                                     <Trash2 className="mr-2 h-4 w-4" />
@@ -256,11 +261,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                     <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
                                 </Button>
                             )}
-                            {onSchedule && (
-                               <Button variant="outline" className="w-full justify-center" onClick={onSchedule}>
-                                   <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
-                               </Button>
-                             )}
                           </div>
                       </AccordionContent>
                   </AccordionItem>
