@@ -109,9 +109,11 @@ export function EventList({
                     </div>
                     
                     <div className="flex-grow flex flex-col items-center gap-2 min-w-0">
-                        <p className="w-full text-sm font-semibold truncate text-center">
-                            {event.title}
-                        </p>
+                        <div className="w-full text-sm font-semibold text-center h-[40px] flex items-center justify-center">
+                            <p className="line-clamp-2 break-words">
+                                {event.title}
+                            </p>
+                        </div>
                          <div className="flex items-center justify-center gap-1 flex-wrap">
                             <Button 
                                 variant="ghost" 
