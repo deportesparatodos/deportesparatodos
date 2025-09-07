@@ -109,8 +109,8 @@ export function EventList({
                     </div>
                     
                     <div className="flex-grow flex flex-col items-center gap-2 min-w-0">
-                        <div className="w-full text-sm font-semibold text-center h-[40px] flex items-center justify-center">
-                            <p className="line-clamp-2 break-words">
+                        <div className="w-full h-[40px] flex items-center justify-center text-center">
+                            <p className="w-full text-sm font-semibold line-clamp-2 break-words">
                                 {event.title}
                             </p>
                         </div>
