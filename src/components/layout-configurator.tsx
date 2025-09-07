@@ -222,11 +222,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
 
         {isSessionActive && !isRemoteControlView && (
              <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4">
-                 {onClose && (
-                    <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2 text-foreground h-8 w-8 z-20">
-                        <X className="h-5 w-5" />
-                    </Button>
-                 )}
                 <p className="font-semibold text-foreground">Sesión de control remoto activa.</p>
                 <p className="text-sm text-muted-foreground mb-2">Realice las modificaciones desde ahí.</p>
                 <p className="text-sm text-muted-foreground">Su código de control remoto es: <span className="font-bold text-lg text-primary tracking-widest">{controlledSessionCode}</span></p>
