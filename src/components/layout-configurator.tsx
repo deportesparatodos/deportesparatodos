@@ -252,6 +252,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                    <CalendarDays className="mr-2 h-4 w-4" /> Programar Selección
                                </Button>
                              )}
+                            {onOpenPresets && (
+                                <Button variant="outline" className="w-full justify-start" onClick={onOpenPresets}>
+                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
+                                </Button>
+                            )}
                             {onClearSelections && hasSelections && (
                                 <Button variant="destructive" className="w-full flex-shrink-0" onClick={onClearSelections}>
                                     <Trash2 className="mr-2 h-4 w-4" />
@@ -322,11 +327,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                 <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
                             </Button>
                           )}
-                          {onOpenPresets && (
-                                <Button variant="outline" className="w-full justify-start" onClick={onOpenPresets}>
-                                    <LayoutGrid className="mr-2 h-4 w-4" /> Presets
-                                </Button>
-                            )}
                           {!isRemoteControlView && onNotificationManager && (
                             <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
                                 <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
