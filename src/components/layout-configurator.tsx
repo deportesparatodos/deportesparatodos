@@ -109,11 +109,11 @@ export function EventList({
                         {currentIndex + 1}
                     </div>
                     
-                    <div className="flex-grow flex flex-col items-center gap-2 min-w-0">
-                         <div className="w-full h-[40px] flex items-center justify-center text-center">
-                            <p className="w-full text-sm font-semibold line-clamp-2 break-words">
-                                {event.title}
-                            </p>
+                    <div className="flex-grow flex flex-col gap-2 min-w-0">
+                        <div className="h-[40px] flex items-center w-full">
+                          <p className="w-full text-sm font-semibold line-clamp-2 break-words">
+                              {event.title}
+                          </p>
                         </div>
                          <div className="flex items-center justify-center gap-1 flex-wrap">
                             <Button 
@@ -211,11 +211,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
             <>
                 <div className="p-4 flex-shrink-0 flex items-center justify-between">
                     <h2 className="text-lg font-semibold">Configuración</h2>
-                     {!isSessionActive && onClose && (
-                        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-                            <X className="h-5 w-5" />
-                        </Button>
-                     )}
                 </div>
                 <Separator />
             </>
