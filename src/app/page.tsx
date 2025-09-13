@@ -807,7 +807,16 @@ export function HomePageContent() {
   }, [isViewMode, isMobile]);
 
   const handleOrderChange = (newOrder: number[]) => {
-    setViewOrder(newOrder);
+    if(newOrder) {
+      const fullNewOrder = [...newOrder];
+      const presentIndexes = new Set(newOrder);
+      for(let i=0; i<9; i++) {
+        if(!presentIndexes.has(i)) {
+          fullNewOrder.push(i);
+        }
+      }
+      setViewOrder(fullNewOrder);
+    }
   };
   
   const handleRestoreGridSettings = () => {
@@ -1294,7 +1303,9 @@ export function HomePageContent() {
   const getItemClasses = (orderedIndex: number, count: number) => {
     if (isMobile) return '';
     if (count === 3) {
-      return orderedIndex === 0 ? 'col-span-2' : 'col-span-1';
+      if(orderedIndex === 0) return 'col-span-2';
+      if(orderedIndex === 1) return 'col-span-1';
+      if(orderedIndex === 2) return 'col-span-1';
     }
     if (count === 5) {
       return orderedIndex < 2 ? 'col-span-1' : 'col-span-1';
@@ -2021,7 +2032,7 @@ export function HomePageContent() {
                                             <Settings />
                                           </Button>
                                         </SheetTrigger>
-                                         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0">
+                                         <SheetContent side="left" className="w-full sm:max-w-md flex flex-col p-0" hideClose={true}>
                                             <SheetHeader className="sr-only">
                                                 <SheetTitle>Configuration Panel</SheetTitle>
                                                 <DialogDescription>A panel to configure the view layout and other settings.</DialogDescription>
