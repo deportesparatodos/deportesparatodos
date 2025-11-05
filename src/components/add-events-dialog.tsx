@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, X, Maximize, Minimize, Loader2, ArrowLeft } from 'lucide-react';
+import { Search, X, Maximize, Minimize, Loader2, ArrowLeft, Star } from 'lucide-react';
 import { EventCard } from './event-card';
 import type { Event } from './event-carousel';
 import { Card } from './ui/card';
@@ -163,6 +163,12 @@ export function AddEventsDialogContent({
                                                 </div>
                                                 <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
                                                     <h3 className="font-bold text-sm text-center">{channel.name}</h3>
+                                                    {channel.recommended && (
+                                                      <div className="flex items-center justify-center gap-1 mt-1">
+                                                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                                                        <span className="text-xs font-bold uppercase text-yellow-400">Recomendado</span>
+                                                      </div>
+                                                    )}
                                                 </div>
                                             </Card>
                                         )

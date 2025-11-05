@@ -1,3 +1,4 @@
+
 'use client';
 
 import { FC, useState, useEffect } from 'react';
@@ -15,6 +16,7 @@ import { Card } from './ui/card';
 import Image from 'next/image';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import { Star } from 'lucide-react';
 
 export interface StreamOption {
   url: string;
@@ -124,6 +126,12 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                   </div>
                   <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
                     <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
+                    {channel.recommended && (
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                        <span className="text-xs font-bold uppercase text-yellow-400">Recomendado</span>
+                      </div>
+                    )}
                   </div>
                  </>
               );

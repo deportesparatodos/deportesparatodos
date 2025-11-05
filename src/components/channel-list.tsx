@@ -3,6 +3,7 @@ export interface Channel {
   name: string;
   urls: { url: string; label: string }[];
   logo: string;
+  recommended?: boolean;
 }
 
 const originalChannels: { name: string; url: string; logo: string }[] = [
@@ -80,7 +81,7 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'HI! Sports MX', url: 'https://streamtpglobal.com/global1.php?stream=hisports', logo: 'https://yt3.googleusercontent.com/Fjgx6A157keMvkL44bXj2IATT2c8oBvP0UzL4KKKuZYtDB0tx0rUYxwyIjloNch-yzqJd3KhSw=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'History', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeUhE', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
     { name: 'History 2', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeV8y', logo: 'https://cdn.mitvstatic.com/channels/ar_h2_m.png' },
-    { name: 'LN+', url: 'https://www.youtube-nocookie.com/embed/YjKklDI5-Uk?si=E6HKT_lf-1DuOpHC', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/81/LN%2B.png' },
+    { name: 'LN+', url: 'https://www.youtube.com/embed/YjKklDI5-Uk?si=E6HKT_lf-1DuOpHC', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/81/LN%2B.png' },
     { name: 'LaLiga Hypermotion', url: 'https://streamtpglobal.com/global1.php?stream=laligahypermotion', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/LaLiga_TV_Hypermotion_2023_Logo.svg/1200px-LaLiga_TV_Hypermotion_2023_Logo.svg.png' },
     { name: 'Liga 1 MAX', url: 'https://streamtpglobal.com/global1.php?stream=liga1max', logo: 'https://play-lh.googleusercontent.com/utRBgwflE7hqjt4UvWeNO_AA1MHdP4l9dVD1V38DdRM9GGzxD5xK1iyXRPcnOXV9d6M' },
     { name: 'MTV', url: 'https://tvlibreonline.org/html/fl/?get=TVRWX0hE', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/MTV_2021_%28brand_version%29.svg/1200px-MTV_2021_%28brand_version%29.svg.png' },
@@ -163,16 +164,16 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
 
 const mergedChannels = new Map<string, Channel>();
 
-// 1. Filter out the unwanted domain from the source
+const recommendedChannelNames = ["Enlace Propio", "TN", "LN+", "C5N", "TyC Sports", "ESPN ARGENTINA"];
+
 const filteredOriginalChannels = originalChannels.filter(channel => 
     !channel.url.includes('embed.ksdjugfsddeports.fun')
 );
 
-// 2. Group the clean channels by name and merge their URLs
 filteredOriginalChannels.forEach(channel => {
     const existing = mergedChannels.get(channel.name);
+    const isRecommended = recommendedChannelNames.includes(channel.name);
     if (existing) {
-        // Avoid adding duplicate URLs
         if (!existing.urls.some(u => u.url === channel.url)) {
             let label = `Opción ${existing.urls.length + 1}`;
             if (channel.name === 'Enlace Propio') {
@@ -189,13 +190,19 @@ filteredOriginalChannels.forEach(channel => {
             name: channel.name,
             logo: channel.logo,
             urls: [{ url: channel.url, label }],
+            recommended: isRecommended,
         });
     }
 });
 
-export const channels: Channel[] = Array.from(mergedChannels.values());
+const allChannels = Array.from(mergedChannels.values());
 
+const recommendedChannels = recommendedChannelNames
+  .map(name => allChannels.find(ch => ch.name === name))
+  .filter((c): c is Channel => c !== undefined);
 
+const otherChannels = allChannels
+  .filter(ch => !recommendedChannelNames.includes(ch.name))
+  .sort((a, b) => a.name.localeCompare(b.name));
 
-
-
+export const channels: Channel[] = [...recommendedChannels, ...otherChannels];
