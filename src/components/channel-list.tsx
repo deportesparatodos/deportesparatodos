@@ -7,12 +7,12 @@ export interface Channel {
 
 const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: "Enlace Propio", url: "clipboard", logo: "https://cdn-icons-png.flaticon.com/512/1168/1168706.png" },
-    { name: 'A24', url: 'https://www.youtube-nocookie.com/embed/QGpHLgRnrx4', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
+    { name: 'A24', url: 'https://www.youtube-nocookie.com/embed/ArKbAx1K-2U?si=dva3TfB5wNsOERMl', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8yfXBuQmon9WVy3ETX9fuq0w4U8Hvq391YA&s' },
     { name: 'ATV', url: 'https://elcanaldeportivo.com/atv.php', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/ATV_logo_2020.png' },
     { name: 'Adult Swim', url: 'https://tvlibreonline.org/html/fl/?get=QWR1bHRfU3dpbQ==', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Adult_Swim_2003_logo.svg/2560px-Adult_Swim_2003_logo.svg.png' },
     { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg' },
     { name: 'Azteca Deportes', url: 'https://streamtpglobal.com/global1.php?stream=azteca_deportes', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aztecadeporteslogo.png/500px-Aztecadeporteslogo.png' },
-    { name: 'C5N', url: 'https://www.youtube-nocookie.com/embed/jTDk5CswBVk', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/C5N_Logo_2015.PNG/640px-C5N_Logo_2015.PNG' },
+    { name: 'C5N', url: 'https://www.youtube-nocookie.com/embed/Uo-ziJhrTvI?si=eZuKm4mlQhiHKAWN', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/C5N_Logo_2015.PNG/640px-C5N_Logo_2015.PNG' },
     { name: 'CRONICA', url: 'https://www.youtube-nocookie.com/embed/avly0uwZzOE', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Crónica_TV_logotipo_%282016%29.png' },
     { name: 'Caliente TV', url: 'https://streamtpglobal.com/global1.php?stream=calientetvmx', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Caliente_TV_Logo.png' },
     { name: 'Canal 11 PT', url: 'https://streamtpglobal.com/global1.php?stream=canal11_pt', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Logo_Canal_11_FPF.svg/1053px-Logo_Canal_11_FPF.svg.png' },
@@ -80,7 +80,7 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'HI! Sports MX', url: 'https://streamtpglobal.com/global1.php?stream=hisports', logo: 'https://yt3.googleusercontent.com/Fjgx6A157keMvkL44bXj2IATT2c8oBvP0UzL4KKKuZYtDB0tx0rUYxwyIjloNch-yzqJd3KhSw=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'History', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeUhE', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
     { name: 'History 2', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeV8y', logo: 'https://cdn.mitvstatic.com/channels/ar_h2_m.png' },
-    { name: 'LN+', url: 'https://www.youtube.com/embed/5f__Ls4_VYQ?si=FM4LD7VKjzS2hg0x', logo: 'https://resizer.glanacion.com/resizer/v2/logo-NXKF436PYFDRLJJB77LJU7JVQA.png?auth=488ab06bdc404368ff6d748c0a6349c1766ffb7e6650a305e2f3f8cc5043ac3d&width=161&quality=70&smart=false' },
+    { name: 'LN+', url: 'https://www.youtube-nocookie.com/embed/YjKklDI5-Uk?si=E6HKT_lf-1DuOpHC', logo: 'https://i.ibb.co/L8y3g3j/ln-logo-black.png' },
     { name: 'LaLiga Hypermotion', url: 'https://streamtpglobal.com/global1.php?stream=laligahypermotion', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/LaLiga_TV_Hypermotion_2023_Logo.svg/1200px-LaLiga_TV_Hypermotion_2023_Logo.svg.png' },
     { name: 'Liga 1 MAX', url: 'https://streamtpglobal.com/global1.php?stream=liga1max', logo: 'https://play-lh.googleusercontent.com/utRBgwflE7hqjt4UvWeNO_AA1MHdP4l9dVD1V38DdRM9GGzxD5xK1iyXRPcnOXV9d6M' },
     { name: 'MTV', url: 'https://tvlibreonline.org/html/fl/?get=TVRWX0hE', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/MTV_2021_%28brand_version%29.svg/1200px-MTV_2021_%28brand_version%29.svg.png' },
@@ -194,6 +194,7 @@ filteredOriginalChannels.forEach(channel => {
 });
 
 export const channels: Channel[] = Array.from(mergedChannels.values());
+
 
 
 
