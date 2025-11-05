@@ -80,7 +80,7 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'HI! Sports MX', url: 'https://streamtpglobal.com/global1.php?stream=hisports', logo: 'https://yt3.googleusercontent.com/Fjgx6A157keMvkL44bXj2IATT2c8oBvP0UzL4KKKuZYtDB0tx0rUYxwyIjloNch-yzqJd3KhSw=s900-c-k-c0x00ffffff-no-rj' },
     { name: 'History', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeUhE', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/The_History_Channel_logo.png/250px-The_History_Channel_logo.png' },
     { name: 'History 2', url: 'https://tvlibreonline.org/html/fl/?get=SGlzdG9yeV8y', logo: 'https://cdn.mitvstatic.com/channels/ar_h2_m.png' },
-    { name: 'LN+', url: 'https://www.youtube-nocookie.com/embed/YjKklDI5-Uk?si=E6HKT_lf-1DuOpHC', logo: 'https://i.ibb.co/L8y3g3j/ln-logo-black.png' },
+    { name: 'LN+', url: 'https://www.youtube-nocookie.com/embed/YjKklDI5-Uk?si=E6HKT_lf-1DuOpHC', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/81/LN%2B.png' },
     { name: 'LaLiga Hypermotion', url: 'https://streamtpglobal.com/global1.php?stream=laligahypermotion', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/LaLiga_TV_Hypermotion_2023_Logo.svg/1200px-LaLiga_TV_Hypermotion_2023_Logo.svg.png' },
     { name: 'Liga 1 MAX', url: 'https://streamtpglobal.com/global1.php?stream=liga1max', logo: 'https://play-lh.googleusercontent.com/utRBgwflE7hqjt4UvWeNO_AA1MHdP4l9dVD1V38DdRM9GGzxD5xK1iyXRPcnOXV9d6M' },
     { name: 'MTV', url: 'https://tvlibreonline.org/html/fl/?get=TVRWX0hE', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/MTV_2021_%28brand_version%29.svg/1200px-MTV_2021_%28brand_version%29.svg.png' },
