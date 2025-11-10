@@ -228,7 +228,7 @@ export function HomePageContent() {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
-  const [featuredMatches, setFeaturedMatches] = useState<Record<string, APIMatch>>({});
+  const [featuredMatches, setFeaturedMatches] = useState<APIMatch[]>([]);
 
   
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
@@ -351,15 +351,17 @@ export function HomePageContent() {
 
        // Fetch and process featured matches
       const featuredMatchesResults = await Promise.allSettled(featuredMatchesPromises);
-      const tempFeaturedMatches: Record<string, APIMatch> = {};
-      
-      featuredMatchesResults.forEach((result, index) => {
+      const tempFeaturedMatches: APIMatch[] = [];
+      const seenMatchIds = new Set<string>();
+
+      featuredMatchesResults.forEach(result => {
           if (result.status === 'fulfilled' && Array.isArray(result.value) && result.value.length > 0) {
-              const sport = mainSportCategories[index];
-              const upcomingPopular = result.value.find((match: APIMatch) => new Date(match.date).getTime() > Date.now());
-              if (upcomingPopular) {
-                  tempFeaturedMatches[sport] = upcomingPopular;
-              }
+              result.value.forEach((match: APIMatch) => {
+                  if (match.popular && new Date(match.date).getTime() > Date.now() && !seenMatchIds.has(match.id)) {
+                      tempFeaturedMatches.push(match);
+                      seenMatchIds.add(match.id);
+                  }
+              });
           }
       });
       setFeaturedMatches(tempFeaturedMatches);
@@ -1739,6 +1741,45 @@ export function HomePageContent() {
     } else if (currentView === 'home') {
        return (
         <>
+            {featuredMatches.length > 0 && (
+                 <div className="w-full space-y-4 pt-4 md:mb-8">
+                     <Carousel
+                        opts={{
+                            align: "start",
+                            loop: true,
+                        }}
+                        className="w-full"
+                    >
+                        <CarouselContent className="-ml-4">
+                        {featuredMatches.map((match) => (
+                            <CarouselItem key={match.id} className="basis-full md:basis-1/1 pl-4">
+                               <FeaturedMatchCard match={match} onClick={() => {
+                                      const event: Event = {
+                                          id: match.id,
+                                          title: match.title,
+                                          time: new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                          options: [],
+                                          sources: match.sources,
+                                          buttons: [],
+                                          category: match.category,
+                                          language: '',
+                                          date: new Date(match.date).toISOString().split('T')[0],
+                                          source: 'streamed.pk',
+                                          image: match.teams?.home?.badge && match.teams?.away?.badge
+                                              ? `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
+                                              : `https://i.ibb.co/dHPWxr8/depete.jpg`,
+                                          status: 'Próximo',
+                                      };
+                                      openDialogForEvent(event);
+                                }} />
+                            </CarouselItem>
+                        ))}
+                        </CarouselContent>
+                         <CarouselPrevious variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 left-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                         <CarouselNext variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                    </Carousel>
+                </div>
+            )}
             <div className="w-full space-y-4 pt-4 md:mb-8">
                  <Carousel
                     opts={{
@@ -1796,7 +1837,7 @@ export function HomePageContent() {
                         <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} featuredMatch={featuredMatches['football']} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
@@ -2690,5 +2731,3 @@ function ControllingView({
     </div>
   );
 }
-
-    

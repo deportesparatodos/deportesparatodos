@@ -50,11 +50,10 @@ interface EventCarouselProps {
   onCardClick?: (event: Event) => void;
   onChannelClick?: (channel: Channel) => void;
   getEventSelection?: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
-  featuredMatch?: APIMatch;
 }
 
-export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection, featuredMatch }) => {
-  const hasContent = (events && events.length > 0) || (channels && channels.length > 0) || featuredMatch;
+export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection }) => {
+  const hasContent = (events && events.length > 0) || (channels && channels.length > 0);
 
   if (!hasContent) {
     return null;
@@ -78,29 +77,6 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
           </div>
         </div>
         <CarouselContent className="-ml-4">
-         {featuredMatch && onCardClick && (
-            <CarouselItem className="basis-full sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/3 pl-4">
-              <FeaturedMatchCard match={featuredMatch} onClick={() => {
-                   const event: Event = {
-                        id: featuredMatch.id,
-                        title: featuredMatch.title,
-                        time: new Date(featuredMatch.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        options: [],
-                        sources: featuredMatch.sources,
-                        buttons: [],
-                        category: featuredMatch.category,
-                        language: '',
-                        date: new Date(featuredMatch.date).toISOString().split('T')[0],
-                        source: 'streamed.pk',
-                        image: featuredMatch.teams?.home?.badge && featuredMatch.teams?.away?.badge
-                            ? `https://streamed.pk/api/images/poster/${featuredMatch.teams.home.badge}/${featuredMatch.teams.away.badge}.webp`
-                            : `https://i.ibb.co/dHPWxr8/depete.jpg`,
-                        status: 'Próximo',
-                    };
-                    onCardClick(event);
-              }} />
-            </CarouselItem>
-          )}
           {events &&
             onCardClick &&
             getEventSelection &&
@@ -180,5 +156,3 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
-
-    
