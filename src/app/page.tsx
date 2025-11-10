@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -70,6 +69,8 @@ import { AddEventsDialog } from '@/components/add-events-dialog';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { PresetsDialog } from '@/components/presets-dialog';
 import type { Preset } from '@/components/presets-dialog';
+import type { APIMatch } from '@/components/featured-match-card';
+import { FeaturedMatchCard } from '@/components/featured-match-card';
 
 
 interface StreamedMatch {
@@ -227,6 +228,8 @@ export function HomePageContent() {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   const [lastFetchTimestamp, setLastFetchTimestamp] = useState<number | null>(null);
+  const [featuredMatches, setFeaturedMatches] = useState<Record<string, APIMatch>>({});
+
   
   const [isOptionsLoading, setIsOptionsLoading] = useState(false);
   const [modificationIndex, setModificationIndex] = useState<number | null>(null);
@@ -308,6 +311,12 @@ export function HomePageContent() {
         { name: 'agenda', url: '/api/streams?type=agenda' },
       ];
 
+      const mainSportCategories = ['football', 'basketball', 'tennis', 'mma', 'motorsports'];
+      const featuredMatchesPromises = mainSportCategories.map(sport =>
+        fetch(`/api/streams?type=${sport}/popular`).then(res => res.ok ? res.json() : [])
+      );
+
+
       // Fetch scraped endpoints with error handling
       const scrapedResults: Record<string, any> = {};
       try {
@@ -339,6 +348,21 @@ export function HomePageContent() {
           return Promise.reject(new Error(`Failed to fetch ${ep.url} with status ${res.status}`));
         }))
       );
+
+       // Fetch and process featured matches
+      const featuredMatchesResults = await Promise.allSettled(featuredMatchesPromises);
+      const tempFeaturedMatches: Record<string, APIMatch> = {};
+      
+      featuredMatchesResults.forEach((result, index) => {
+          if (result.status === 'fulfilled' && Array.isArray(result.value) && result.value.length > 0) {
+              const sport = mainSportCategories[index];
+              const upcomingPopular = result.value.find((match: APIMatch) => new Date(match.date).getTime() > Date.now());
+              if (upcomingPopular) {
+                  tempFeaturedMatches[sport] = upcomingPopular;
+              }
+          }
+      });
+      setFeaturedMatches(tempFeaturedMatches);
       
       const getOtherData = <T,>(name: string): T[] => {
         const result = otherResults.find((r, i) => otherEndpoints[i].name === name);
@@ -878,7 +902,7 @@ export function HomePageContent() {
         return upcomingSortLogic(a, b);
     };
 
-    const allLiveEvents = processedEvents.filter(e => e.status === 'En Vivo' && e.category !== '24/7');
+    const allLiveEvents = processedEvents.filter(e => e.status === 'En Vivo');
     const liveCustom = allLiveEvents.filter(e => e.image && e.image !== placeholderImage).sort(liveSortLogic);
     const liveDefault = allLiveEvents.filter(e => !e.image || e.image === placeholderImage).sort(liveSortLogic);
     const live = [...liveCustom, ...liveDefault];
@@ -1509,7 +1533,7 @@ export function HomePageContent() {
                   <CalendarLink>
                       Todos los Eventos
                   </CalendarLink>
-                  {categories.filter(c => c.toLowerCase() !== '24/7').map(category => (
+                  {categories.map(category => (
                       <CalendarLink key={category} category={category}>
                           {category}
                       </CalendarLink>
@@ -1772,7 +1796,7 @@ export function HomePageContent() {
                         <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                     <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
+                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} featuredMatch={featuredMatches['football']} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
@@ -2666,3 +2690,5 @@ function ControllingView({
     </div>
   );
 }
+
+    
