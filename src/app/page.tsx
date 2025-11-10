@@ -106,79 +106,6 @@ interface AgendaEvent {
   status: string;
 }
 
-const channels247: Event[] = [
-  {
-    id: 'south-park-247-static',
-    title: "24/7 South Park",
-    time: "AHORA",
-    status: "En Vivo",
-    options: [{ url: "https://veplay.top/stream/3b146825-9e54-4e17-b96e-c172ced342ad", label: "UNICA OPCION", hd: false, language: '' }],
-    image: "https://thumbs.poocloud.in/southpark/preview.jpg",
-    sources: [],
-    buttons: [],
-    category: "24/7",
-    language: "",
-    date: "",
-    source: "",
-  },
-  {
-    id: 'cows-247-static',
-    title: "24/7 COWS",
-    time: "AHORA",
-    status: "En Vivo",
-    options: [{ url: "https://veplay.top/stream/3027c92d-93ca-4d07-8917-f285dd9c5f9c", label: "UNICA OPCION", hd: false, language: '' }],
-    image: "https://extension.usu.edu/drought/images/drought-mitigation-cows-thumbnail.png",
-    sources: [],
-    buttons: [],
-    category: "24/7",
-    language: "",
-    date: "",
-    source: "",
-  },
-  {
-    id: 'family-guy-247-static',
-    title: "24/7 Family Guy",
-    time: "AHORA",
-    status: "En Vivo",
-    options: [{ url: "https://veplay.top/stream/d2b4b104-853f-4e4e-9edd-425a1275e90a", label: "UNICA OPCION", hd: false, language: '' }],
-    image: "https://thumbs.poocloud.in/familyguy/preview.jpg",
-    sources: [],
-    buttons: [],
-    category: "24/7",
-    language: "",
-    date: "",
-    source: "",
-  },
-  {
-    id: 'simpsons-247-static',
-    title: "24/7 The Simpsons",
-    time: "AHORA",
-    status: "En Vivo",
-    options: [{ url: "https://veplay.top/stream/8b48e26f-e89d-47ab-abf5-04b4119273d0", label: "UNICA OPCION", hd: false, language: '' }],
-    image: "https://thumbs.poocloud.in/thesimpsons/preview.jpg",
-    sources: [],
-    buttons: [],
-    category: "24/7",
-    language: "",
-    date: "",
-    source: "",
-  },
-  {
-    id: 'korean-tv-247-static',
-    title: "(North) Korean Central Television",
-    time: "AHORA",
-    status: "En Vivo",
-    options: [{ url: "https://veplay.top/stream/4a68d34f-7052-4a60-ac79-728320fa0531", label: "UNICA OPCION", hd: false, language: '' }],
-    image: "https://i.imgur.com/CnphStu.png",
-    sources: [],
-    buttons: [],
-    category: "24/7",
-    language: "",
-    date: "",
-    source: "",
-  }
-];
-
 const isValidTimeFormat = (time: string) => /^\d{2}:\d{2}$/.test(time);
 
 const normalizeCategory = (category: string): string => {
@@ -827,7 +754,7 @@ export function HomePageContent() {
     setLiveAppState({ selectedEvents: Array(9).fill(null) });
   };
 
-  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, channels247Events, mobileSortedEvents } = useMemo(() => {
+  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
     const excludedFromFinished = new Set([
@@ -842,7 +769,7 @@ export function HomePageContent() {
         return title.replace(prefixes, '').trim().toLowerCase();
     };
     
-    const combinedEvents = [...events, ...channels247];
+    const combinedEvents = [...events];
     
     const eventMap = new Map<string, Event>();
 
@@ -966,8 +893,6 @@ export function HomePageContent() {
         .filter(e => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
         .sort((a,b) => b.time.localeCompare(a.time));
     
-    const channels247FromEvents = processedEvents.filter(e => e.category === '24/7' && e.status === 'En Vivo');
-    
     const allSorted = [...live, ...upcoming, ...unknown, ...finished];
     
     const mobileLiveCustom = allLiveEvents.filter(e => e.image && e.image !== placeholderImage).sort(liveSortLogic);
@@ -975,7 +900,7 @@ export function HomePageContent() {
     const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
     const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(unknownSortLogic);
     const mobileFinished = finished;
-    const mobileSorted = [...mobileLiveCustom, ...mobileLiveDefault, ...channels247FromEvents, ...mobileUpcoming, ...mobileUnknown, ...mobileFinished];
+    const mobileSorted = [...mobileLiveCustom, ...mobileLiveDefault, ...mobileUpcoming, ...mobileUnknown, ...mobileFinished];
 
 
     let searchResults: (Event | Channel)[] = [];
@@ -1026,14 +951,13 @@ export function HomePageContent() {
         allSortedEvents: allSorted,
         mobileSortedEvents: mobileSorted,
         categoryFilteredEvents,
-        channels247Events: channels247FromEvents,
     };
   }, [events, searchTerm, currentView, channelsData]);
 
 
   const categories = useMemo(() => {
     const categorySet = new Set<string>();
-    [...events, ...channels247].forEach(event => {
+    [...events].forEach(event => {
         if (event.category) {
             const category = event.category.toLowerCase() === 'other' ? 'Otros' : event.category;
             categorySet.add(category);
@@ -1846,9 +1770,6 @@ export function HomePageContent() {
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
-                    </div>
-                     <div className="mb-8">
-                        <EventCarousel title="Canales 24/7" events={channels247Events} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
                     </div>
                     <div className="mb-8">
                         <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
