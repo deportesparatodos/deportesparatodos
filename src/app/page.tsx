@@ -313,7 +313,7 @@ export function HomePageContent() {
 
       const mainSportCategories = ['football', 'basketball', 'tennis', 'mma', 'motorsports'];
       const featuredMatchesPromises = mainSportCategories.map(sport =>
-        fetch(`/api/streams?type=${sport}/popular`).then(res => res.ok ? res.json() : [])
+        fetch(`https://streamed.pk/api/matches/${sport}/popular`).then(res => res.ok ? res.json() : [])
       );
 
 
@@ -2688,7 +2688,7 @@ function ControllingView({
                 isModification={controllerModificationIndex !== null && appState.selectedEvents[controllerModificationIndex!] !== null}
                 modificationIndex={controllerModificationIndex}
                 onRemove={() => {
-                  if (controllerModificationIndex !== null) handleEventRemove(controllerModificationIndex);
+                  if (controllerModificationIndex !== null) handleRemoveEventFromFuture(controllerModificationIndex);
                   setControllerView('addEvents');
                   setControllerDialogEvent(null);
                 }}
@@ -2731,3 +2731,4 @@ function ControllingView({
     </div>
   );
 }
+

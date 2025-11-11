@@ -130,5 +130,3 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
         </div>
     );
 };
-
-    

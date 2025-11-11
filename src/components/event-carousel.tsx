@@ -112,19 +112,15 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                         target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                       }}
                     />
-                    {'id' in channel && getEventSelection && (
-                        <>
-                        {(() => {
-                            const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
-                            const selection = getEventSelection(channelAsEvent);
-                            return selection.isSelected && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
-                            </div>
-                            );
-                        })()}
-                        </>
-                    )}
+                    {(() => {
+                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                        const selection = getEventSelection(channelAsEvent);
+                        return selection.isSelected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
+                        </div>
+                        );
+                    })()}
                   </div>
                   <div className="p-3 bg-card flex-grow flex flex-col justify-center min-h-[52px]">
                     <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
