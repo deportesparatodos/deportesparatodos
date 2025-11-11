@@ -1838,8 +1838,8 @@ export function HomePageContent() {
                                     </CarouselItem>
                                 ))}
                             </CarouselContent>
-                            <CarouselPrevious variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 left-2 top-1/2 -translate-y-1/2 hidden md:inline-flex text-primary-foreground" />
-                            <CarouselNext variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                            <CarouselPrevious variant="ghost" className="hidden md:inline-flex" />
+                            <CarouselNext variant="ghost" className="hidden md:inline-flex" />
                         </Carousel>
                     </div>
                 )}
@@ -1938,8 +1938,8 @@ export function HomePageContent() {
                             </CarouselItem>
                         ))}
                     </CarouselContent>
-                    <CarouselPrevious variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 left-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
-                    <CarouselNext variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                    <CarouselPrevious variant="ghost" className="hidden md:inline-flex" />
+                    <CarouselNext variant="ghost" className="hidden md:inline-flex" />
                 </Carousel>
             </div>
         )}
@@ -2818,6 +2818,8 @@ function ControllingView({
   );
 }
 
+
+    
 
     
 

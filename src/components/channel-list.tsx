@@ -14,7 +14,7 @@ const originalChannels: { name: string; url: string; logo: string }[] = [
     { name: 'Animal Planet', url: 'https://tvlibreonline.org/html/fl/?get=QW5pbWFsUGxhbmV0', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg' },
     { name: 'Azteca Deportes', url: 'https://streamtpglobal.com/global1.php?stream=azteca_deportes', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Aztecadeporteslogo.png/500px-Aztecadeporteslogo.png' },
     { name: 'C5N', url: 'https://www.youtube-nocookie.com/embed/Uo-ziJhrTvI?si=eZuKm4mlQhiHKAWN', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/C5N_Logo_2015.PNG/640px-C5N_Logo_2015.PNG' },
-    { name: 'CRONICA', url: 'https://www.youtube-nocookie.com/embed/avly0uwZzOE', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Crónica_TV_logotipo_%282016%29.png' },
+    { name: 'CRONICA', url: 'https://www.youtube.com/embed/avly0uwZzOE', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Crónica_TV_logotipo_%282016%29.png' },
     { name: 'Caliente TV', url: 'https://streamtpglobal.com/global1.php?stream=calientetvmx', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Caliente_TV_Logo.png' },
     { name: 'Canal 11 PT', url: 'https://streamtpglobal.com/global1.php?stream=canal11_pt', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Logo_Canal_11_FPF.svg/1053px-Logo_Canal_11_FPF.svg.png' },
     { name: 'Canal 5', url: 'https://streamtpglobal.com/global1.php?stream=canal5mx', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Canal_5_Mexico_logo_2014.svg' },
@@ -206,3 +206,5 @@ const otherChannels = allChannels
   .sort((a, b) => a.name.localeCompare(b.name));
 
 export const channels: Channel[] = [...recommendedChannels, ...otherChannels];
+
+    

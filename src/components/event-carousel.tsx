@@ -156,3 +156,5 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
+
+    
