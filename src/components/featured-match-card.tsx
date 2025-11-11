@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns-tz';
+import { es } from 'date-fns/locale';
 
 export interface APIMatch {
     id: string;
@@ -62,14 +63,36 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
     );
     
     return (
-        <div className="grid grid-cols-2 gap-1 text-center w-full max-w-xs mx-auto">
-            <div className="col-span-1 grid grid-cols-2 gap-1 text-primary-foreground">
-                {renderTimeUnit(timeLeft.days, 'Días')}
-                {renderTimeUnit(timeLeft.hours, 'Horas')}
+        <div className="relative w-full max-w-xs mx-auto">
+            <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
+                <div className="w-[200%] grid grid-cols-2 gap-1 text-center text-primary-foreground">
+                    <div className="col-span-1 grid grid-cols-2 gap-1">
+                        {renderTimeUnit(timeLeft.days, 'Días')}
+                        {renderTimeUnit(timeLeft.hours, 'Horas')}
+                    </div>
+                </div>
             </div>
-            <div className="col-span-1 grid grid-cols-2 gap-1 text-secondary-foreground">
-                {renderTimeUnit(timeLeft.minutes, 'Minutos')}
-                {renderTimeUnit(timeLeft.seconds, 'Segundos')}
+            <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
+                 <div className="w-[200%] grid grid-cols-2 gap-1 text-center text-secondary-foreground -ml-[100%]">
+                    <div className="col-span-1 grid grid-cols-2 gap-1">
+                        {/* Empty div for spacing */}
+                    </div>
+                    <div className="col-span-1 grid grid-cols-2 gap-1">
+                        {renderTimeUnit(timeLeft.minutes, 'Minutos')}
+                        {renderTimeUnit(timeLeft.seconds, 'Segundos')}
+                    </div>
+                </div>
+            </div>
+            {/* Invisible content for sizing */}
+            <div className="opacity-0 grid grid-cols-2 gap-1">
+                <div className="col-span-1 grid grid-cols-2 gap-1">
+                    {renderTimeUnit(timeLeft.days, 'Días')}
+                    {renderTimeUnit(timeLeft.hours, 'Horas')}
+                </div>
+                <div className="col-span-1 grid grid-cols-2 gap-1">
+                    {renderTimeUnit(timeLeft.minutes, 'Minutos')}
+                    {renderTimeUnit(timeLeft.seconds, 'Segundos')}
+                </div>
             </div>
         </div>
     );
@@ -97,7 +120,7 @@ const SplitColorText = ({ text, className }: { text: string; className?: string 
 export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick: () => void }) => {
     const timeZone = 'America/Argentina/Buenos_Aires';
     const matchDate = new Date(match.date);
-    const formattedDate = format(matchDate, 'EEEE, d MMM \'a las\' p', { timeZone });
+    const formattedDate = format(matchDate, "EEEE, d 'de' MMMM 'a las' HH:mm'hs'", { locale: es, timeZone });
     
     const backgroundStyle = { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' };
 
@@ -129,9 +152,14 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                         <span className="text-center text-primary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
                     </div>
 
-                    <div className="p-3 text-2xl font-black flex">
-                        <span className="text-primary-foreground">V</span>
-                        <span className="text-secondary-foreground">S</span>
+                    <div className="p-3 text-2xl font-black flex relative">
+                         <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
+                            <p className="w-[200%] text-center text-primary-foreground">VS</p>
+                        </div>
+                        <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
+                            <p className="w-[200%] text-center text-secondary-foreground -ml-[100%]">VS</p>
+                        </div>
+                        <p className="opacity-0">VS</p>
                     </div>
 
 
