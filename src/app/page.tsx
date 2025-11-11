@@ -1904,21 +1904,42 @@ export function HomePageContent() {
     }
     
     // Category View
-    const categoryCarouselEvents = categoryFilteredEvents.length > 0 ? categoryFilteredEvents : [];
+    const categoryFeaturedMatches = featuredMatches.filter(match => match.category.toLowerCase() === currentView.toLowerCase());
 
     return (
       <>
-        { (currentView !== 'home' && currentView !== 'channels') && categoryCarouselEvents.length > 0 && (
-          <div className="mb-8 pt-4">
-              <EventCarousel 
-                  title={`Eventos de ${currentView}`}
-                  events={categoryCarouselEvents}
-                  channels={[]}
-                  onCardClick={openDialogForEvent} 
-                  onChannelClick={handleChannelClick}
-                  getEventSelection={(e) => getEventSelection(e)} 
-              />
-          </div>
+        {categoryFeaturedMatches.length > 0 && (
+            <div className="w-full space-y-4 pt-4 md:mb-8">
+                <Carousel opts={{ align: "start", loop: false }} className="w-full">
+                    <CarouselContent className="-ml-4">
+                        {categoryFeaturedMatches.map((match) => (
+                            <CarouselItem key={match.id} className="basis-full md:basis-1/1 pl-4">
+                            <FeaturedMatchCard match={match} onClick={() => {
+                                const event: Event = {
+                                    id: match.id,
+                                    title: match.title,
+                                    time: new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                    options: [],
+                                    sources: match.sources,
+                                    buttons: [],
+                                    category: match.category,
+                                    language: '',
+                                    date: new Date(match.date).toISOString().split('T')[0],
+                                    source: 'streamed.pk',
+                                    image: match.teams?.home?.badge && match.teams?.away?.badge
+                                        ? `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
+                                        : `https://i.ibb.co/dHPWxr8/depete.jpg`,
+                                    status: 'Próximo',
+                                };
+                                openDialogForEvent(event);
+                            }} />
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 left-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                    <CarouselNext variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                </Carousel>
+            </div>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
           {(currentView === 'channels' ? channelsData : categoryFilteredEvents).map((item, index) => {
@@ -2795,3 +2816,5 @@ function ControllingView({
   );
 }
 
+
+    
