@@ -90,6 +90,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     const dateParts = rawFormattedDate.split(' ');
     const formattedDate = dateParts.map(part => {
         const lowerPart = part.toLowerCase();
+        // The comma is important for days of the week
         if (['lunes,', 'martes,', 'miércoles,', 'jueves,', 'viernes,', 'sábado,', 'domingo,'].includes(lowerPart)) {
             return capitalize(part);
         }
@@ -118,9 +119,9 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                 </div>
                 
                 {hasTeams ? (
-                     <div className="relative flex-grow grid grid-cols-2 grid-rows-2 items-center justify-items-center text-lg font-bold text-black">
-                        {/* Top-left area for home team */}
-                        <div className="col-start-1 row-start-1 flex flex-col items-center justify-center gap-1 text-center">
+                    <div className="relative flex-grow flex flex-col items-center justify-center text-lg font-bold text-black gap-2">
+                        {/* Home Team */}
+                        <div className="flex flex-col items-center justify-center gap-1 text-center">
                              {match.teams?.home?.badge && (
                                <Image
                                     className="w-16 h-16 object-contain"
@@ -128,19 +129,18 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                                     alt={match.teams.home.name || 'Escudo Local'}
                                     width={64}
                                     height={64}
-                                    style={{filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'}}
                                 />
                             )}
                             <span className="text-center text-black">{match.teams?.home?.name || 'Equipo Local'}</span>
                         </div>
 
-                        {/* Centered VS */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-4xl font-black text-black">
+                        {/* VS */}
+                        <div className="text-4xl font-black text-black">
                             VS
                         </div>
                         
-                        {/* Bottom-right area for away team */}
-                        <div className="col-start-2 row-start-2 flex flex-col items-center justify-center gap-1 text-center">
+                        {/* Away Team */}
+                        <div className="flex flex-col items-center justify-center gap-1 text-center">
                             {match.teams?.away?.badge && (
                                 <Image
                                     className="w-16 h-16 object-contain"
@@ -148,7 +148,6 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                                     alt={match.teams.away.name || 'Escudo Visitante'}
                                     width={64}
                                     height={64}
-                                    style={{filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'}}
                                 />
                             )}
                             <span className="text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
@@ -161,7 +160,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                 )}
                 
                 <div className="relative z-10 text-center mt-3">
-                     <CountdownTimer targetDate={match.date} className="text-black" isMobile={isMobile} />
+                     <CountdownTimer targetDate={match.date} isMobile={isMobile} />
                      <p className="text-center text-sm mt-2 text-black">{formattedDate}</p>
                 </div>
             </div>
@@ -175,7 +174,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
           onClick={onClick}
         >
             <div className="relative z-10 flex flex-col h-full">
-                <div className="text-center mb-2 space-y-1">
+                <div className="text-center mb-2 space-y-1 absolute top-0 left-1/2 -translate-x-1/2 w-full">
                     <p className="font-semibold capitalize text-black">{capitalize(match.category)}</p>
                     <p className="text-xs text-black">Evento Destacado</p>
                 </div>
@@ -190,13 +189,12 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                                     alt={match.teams.home.name || 'Escudo Local'}
                                     width={96}
                                     height={96}
-                                    style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
                                 />
                             )}
                             <span className="text-center text-black">{match.teams?.home?.name || 'Equipo Local'}</span>
                         </div>
 
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-5xl font-black text-black">
+                        <div className="text-5xl font-black text-black">
                            VS
                         </div>
 
@@ -208,7 +206,6 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                                     alt={match.teams.away.name || 'Escudo Visitante'}
                                     width={96}
                                     height={96}
-                                    style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
                                 />
                             )}
                             <span className="text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
@@ -220,12 +217,13 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                     </div>
                 )}
 
-                <div className="text-center mb-3">
-                     <CountdownTimer targetDate={match.date} className="text-black" isMobile={isMobile} />
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full text-center space-y-2">
+                     <CountdownTimer targetDate={match.date} isMobile={isMobile} />
+                     <p className="text-center text-sm text-black">{formattedDate}</p>
                 </div>
-                
-                 <p className="text-center text-sm text-black">{formattedDate}</p>
             </div>
         </div>
     );
 };
+
+    
