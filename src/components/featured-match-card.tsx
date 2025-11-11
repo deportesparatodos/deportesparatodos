@@ -123,11 +123,11 @@ const SplitVSText = ({ className }: { className?: string }) => {
         <div className={`relative flex justify-center items-center ${className}`}>
             {/* Left side, black text, clipped */}
             <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
-                <p className="w-[200%] text-center text-primary-foreground font-black">VS</p>
+                <p className="w-[200%] text-center text-primary-foreground font-black">V</p>
             </div>
             {/* Right side, white text, clipped */}
             <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
-                <p className="w-[200%] text-center text-secondary-foreground font-black -ml-[100%]">VS</p>
+                <p className="w-[200%] text-center text-secondary-foreground font-black -ml-[100%]">S</p>
             </div>
             {/* Invisible text to set the height and width */}
             <p className="opacity-0 font-black">VS</p>
@@ -143,13 +143,11 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
     const rawFormattedDate = format(matchDate, "EEEE, d 'de' MMMM 'a las' HH:mm'hs'", { locale: es, timeZone });
-    const dateParts = rawFormattedDate.split(' de ');
-    const dayPart = dateParts[0];
-    const monthPart = dateParts.length > 1 ? dateParts[1] : '';
-
-    const formattedDate = `${capitalize(dayPart)} de ${capitalize(monthPart)}`;
+    const dateParts = rawFormattedDate.split(' ');
+    const formattedDate = dateParts.map(capitalize).join(' ');
 
     const backgroundStyle = { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' };
+    const hasTeams = match.teams?.home && match.teams?.away;
 
     return (
         <div 
@@ -158,45 +156,51 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
           style={backgroundStyle}
         >
             <div className="relative z-10 flex flex-col h-full">
-                 <div className="text-center mb-4 space-y-1">
+                <div className="text-center mb-2 space-y-1">
                     <SplitColorText text={match.category} className="font-semibold capitalize" />
                     <SplitColorText text="Partido Destacado" className="text-xs" />
                 </div>
+                
+                {hasTeams ? (
+                    <div className="flex flex-col sm:flex-row items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
+                        <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
+                             {match.teams?.home?.badge && (
+                               <Image
+                                    className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+                                    src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
+                                    alt={match.teams.home.name || 'Escudo Local'}
+                                    width={96}
+                                    height={96}
+                                    style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
+                                />
+                            )}
+                            <span className="text-center text-primary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
+                        </div>
 
+                        <div className="p-3 text-2xl">
+                           <SplitVSText />
+                        </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
-                    <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
-                         {match.teams?.home?.badge && (
-                           <Image
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
-                                src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
-                                alt={match.teams.home.name || 'Escudo Local'}
-                                width={96}
-                                height={96}
-                                style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
-                            />
-                        )}
-                        <span className="text-center text-primary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
+                        <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
+                            {match.teams?.away?.badge && (
+                                <Image
+                                    className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+                                    src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
+                                    alt={match.teams.away.name || 'Escudo Visitante'}
+                                    width={96}
+                                    height={96}
+                                    style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
+                                />
+                            )}
+                            <span className="text-center text-secondary-foreground">{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                        </div>
                     </div>
-
-                    <div className="p-3 text-2xl">
-                       <SplitVSText />
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
+                        <SplitColorText text={match.title} className="text-2xl font-bold text-center px-4" />
                     </div>
+                )}
 
-                    <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
-                        {match.teams?.away?.badge && (
-                            <Image
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
-                                src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
-                                alt={match.teams.away.name || 'Escudo Visitante'}
-                                width={96}
-                                height={96}
-                                style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
-                            />
-                        )}
-                        <span className="text-center text-secondary-foreground">{match.teams?.away?.name || 'Equipo Visitante'}</span>
-                    </div>
-                </div>
 
                 <div className="text-center mb-3">
                     <CountdownTimer targetDate={match.date} />
