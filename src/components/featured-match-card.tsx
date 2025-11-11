@@ -55,7 +55,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
     }, [targetDate]);
     
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-center w-full max-w-sm mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-center w-full max-w-sm mx-auto text-primary-foreground">
             <div>
                 <div className="text-xl sm:text-3xl font-bold">{timeLeft.days}</div>
                 <div className="text-xs text-muted-foreground">Días</div>
@@ -83,12 +83,10 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     
     const hasTeams = match.teams?.home?.badge && match.teams?.away?.badge;
 
-    const backgroundStyle = hasTeams 
-      ? { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' }
-      : { background: 'hsl(var(--card))' };
+    const backgroundStyle = { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' };
       
-    const homeTeamNameColor = hasTeams ? 'text-primary-foreground' : 'text-foreground';
-    const awayTeamNameColor = hasTeams ? 'text-secondary-foreground' : 'text-foreground';
+    const homeTeamNameColor = 'text-primary-foreground';
+    const awayTeamNameColor = 'text-secondary-foreground';
 
 
     return (
@@ -99,10 +97,10 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
         >
             <div className="relative z-10 flex flex-col h-full">
                 <div className="text-center mb-4">
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground capitalize">
+                    <div className="flex items-center justify-center gap-2 text-primary-foreground capitalize">
                         <span className="font-semibold">{match.category}</span>
                     </div>
-                    <Badge variant="outline" className="border-border/50 bg-background/20 backdrop-blur-sm">Partido Destacado</Badge>
+                    <Badge variant="outline" className="border-border/50 bg-background/20 backdrop-blur-sm text-primary-foreground">Partido Destacado</Badge>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
@@ -114,12 +112,13 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                                 alt={match.teams.home.name || 'Escudo Local'}
                                 width={96}
                                 height={96}
+                                style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
                             />
                         )}
                         <span className={`text-center ${homeTeamNameColor}`}>{match.teams?.home?.name || 'Equipo Local'}</span>
                     </div>
 
-                    <div className="p-3 text-lg text-muted-foreground font-black">VS</div>
+                    <div className="p-3 text-lg text-primary-foreground font-black">VS</div>
 
                     <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                         {match.teams?.away?.badge && (
@@ -129,6 +128,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                                 alt={match.teams.away.name || 'Escudo Visitante'}
                                 width={96}
                                 height={96}
+                                style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
                             />
                         )}
                         <span className={`text-center ${awayTeamNameColor}`}>{match.teams?.away?.name || 'Equipo Visitante'}</span>
@@ -139,7 +139,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                     <CountdownTimer targetDate={match.date} />
                 </div>
                 
-                <div className="text-center text-muted-foreground text-sm">
+                <div className="text-center text-primary-foreground text-sm">
                     <span>{formattedDate}</span>
                 </div>
             </div>
