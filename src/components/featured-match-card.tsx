@@ -115,48 +115,50 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                     <p className="text-xs text-black">Evento Destacado</p>
                 </div>
                 
-                {hasTeams ? (
-                    <div className="relative flex-grow flex flex-col items-center justify-center text-lg font-bold text-black gap-2">
-                        {/* Home Team */}
-                        <div className="flex flex-col items-center justify-center gap-1 text-center">
-                             {match.teams?.home?.badge && (
-                               <Image
-                                    className="w-16 h-16 object-contain drop-shadow-2xl"
-                                    src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
-                                    alt={match.teams.home.name || 'Escudo Local'}
-                                    width={64}
-                                    height={64}
-                                />
-                            )}
-                            <span className="text-center text-black">{match.teams?.home?.name || 'Equipo Local'}</span>
-                        </div>
-
-                        {/* VS */}
-                        <div className="text-4xl font-black text-black">
-                            VS
-                        </div>
-                        
-                        {/* Away Team */}
-                        <div className="flex flex-col items-center justify-center gap-1 text-center">
-                            {match.teams?.away?.badge && (
+                <div className="relative flex-grow flex flex-col items-center justify-center text-lg font-bold text-black gap-2 min-h-[200px]">
+                    {hasTeams ? (
+                        <>
+                            {/* Home Team */}
+                            <div className="flex flex-col items-center justify-center gap-1 text-center">
+                                {match.teams?.home?.badge && (
                                 <Image
-                                    className="w-16 h-16 object-contain drop-shadow-2xl"
-                                    src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
-                                    alt={match.teams.away.name || 'Escudo Visitante'}
-                                    width={64}
-                                    height={64}
-                                />
-                            )}
-                            <span className="text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                                        className="w-16 h-16 object-contain drop-shadow-2xl"
+                                        src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
+                                        alt={match.teams.home.name || 'Escudo Local'}
+                                        width={64}
+                                        height={64}
+                                    />
+                                )}
+                                <span className="text-center text-black">{match.teams?.home?.name || 'Equipo Local'}</span>
+                            </div>
+
+                            {/* VS */}
+                            <div className="text-4xl font-black text-black">
+                                VS
+                            </div>
+                            
+                            {/* Away Team */}
+                            <div className="flex flex-col items-center justify-center gap-1 text-center">
+                                {match.teams?.away?.badge && (
+                                    <Image
+                                        className="w-16 h-16 object-contain drop-shadow-2xl"
+                                        src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
+                                        alt={match.teams.away.name || 'Escudo Visitante'}
+                                        width={64}
+                                        height={64}
+                                    />
+                                )}
+                                <span className="text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex items-center justify-center">
+                            <p className="text-2xl font-bold text-center text-black">{match.title}</p>
                         </div>
-                    </div>
-                ) : (
-                    <div className="flex-grow flex items-center justify-center">
-                         <p className="text-2xl font-bold text-center text-black">{match.title}</p>
-                    </div>
-                )}
+                    )}
+                </div>
                 
-                <div className="relative z-10 text-center mt-3">
+                <div className="relative z-10 text-center mt-auto">
                      <CountdownTimer targetDate={match.date} className="text-black" isMobile={isMobile}/>
                      <p className="text-center text-sm mt-2 text-black">{formattedDate}</p>
                 </div>
