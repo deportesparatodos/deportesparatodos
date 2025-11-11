@@ -31,7 +31,7 @@ interface Countdown {
     seconds: number;
 }
 
-const CountdownTimer = ({ targetDate, className }: { targetDate: number, className?: string }) => {
+const CountdownTimer = ({ targetDate, className, isMobile }: { targetDate: number, className?: string, isMobile: boolean }) => {
     const [timeLeft, setTimeLeft] = useState<Countdown>({
         days: 0, hours: 0, minutes: 0, seconds: 0
     });
@@ -110,8 +110,8 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     if (isMobile) {
         return (
             <div 
-              className="bg-card rounded-lg p-4 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden text-black"
-              style={{ background: `linear-gradient(to top right, white 50%, ${color} 50%)` }}
+              className="bg-card rounded-lg p-4 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden"
+              style={{ background: `linear-gradient(to top right, ${color} 50%, white 50.5%)` }}
               onClick={onClick}
             >
                 <div className="relative z-10 text-center -mt-1">
@@ -125,7 +125,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                         <div className="flex flex-col items-center justify-center gap-1 text-center">
                              {match.teams?.home?.badge && (
                                <Image
-                                    className="w-16 h-16 object-contain"
+                                    className="w-16 h-16 object-contain drop-shadow-2xl"
                                     src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
                                     alt={match.teams.home.name || 'Escudo Local'}
                                     width={64}
@@ -144,7 +144,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                         <div className="flex flex-col items-center justify-center gap-1 text-center">
                             {match.teams?.away?.badge && (
                                 <Image
-                                    className="w-16 h-16 object-contain"
+                                    className="w-16 h-16 object-contain drop-shadow-2xl"
                                     src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
                                     alt={match.teams.away.name || 'Escudo Visitante'}
                                     width={64}
@@ -161,7 +161,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                 )}
                 
                 <div className="relative z-10 text-center mt-3">
-                     <CountdownTimer targetDate={match.date} className="text-black"/>
+                     <CountdownTimer targetDate={match.date} className="text-black" isMobile={isMobile}/>
                      <p className="text-center text-sm mt-2 text-black">{formattedDate}</p>
                 </div>
             </div>
@@ -170,7 +170,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     
     return (
         <div 
-          className="bg-card rounded-lg p-4 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden text-black"
+          className="bg-card rounded-lg p-4 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden"
           style={{ background: `linear-gradient(to top right, white 50%, ${color} 50%)` }}
           onClick={onClick}
         >
@@ -186,7 +186,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                     <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                          {match.teams?.home?.badge && (
                            <Image
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
                                 src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
                                 alt={match.teams.home.name || 'Escudo Local'}
                                 width={96}
@@ -205,7 +205,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                     <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                         {match.teams?.away?.badge && (
                             <Image
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-2xl"
                                 src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
                                 alt={match.teams.away.name || 'Escudo Visitante'}
                                 width={96}
@@ -222,7 +222,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
             )}
             
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full z-10 text-center space-y-1">
-                 <CountdownTimer targetDate={match.date} className="text-black"/>
+                 <CountdownTimer targetDate={match.date} className="text-black" isMobile={isMobile}/>
                  <p className="text-center text-sm text-black">{formattedDate}</p>
             </div>
         </div>
