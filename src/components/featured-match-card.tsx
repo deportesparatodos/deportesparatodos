@@ -55,22 +55,22 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
     }, [targetDate]);
     
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-center w-full max-w-sm mx-auto text-primary-foreground">
+        <div className="grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto text-primary-foreground">
             <div>
-                <div className="text-xl sm:text-3xl font-bold">{timeLeft.days}</div>
-                <div className="text-xs text-muted-foreground">Días</div>
+                <div className="text-2xl sm:text-3xl font-bold">{String(timeLeft.days).padStart(2, '0')}</div>
+                <div className="text-xs">Días</div>
             </div>
             <div>
-                <div className="text-xl sm:text-3xl font-bold">{timeLeft.hours}</div>
-                <div className="text-xs text-muted-foreground">Horas</div>
+                <div className="text-2xl sm:text-3xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</div>
+                <div className="text-xs">Horas</div>
             </div>
             <div>
-                <div className="text-xl sm:text-3xl font-bold">{timeLeft.minutes}</div>
-                <div className="text-xs text-muted-foreground">Minutos</div>
+                <div className="text-2xl sm:text-3xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                <div className="text-xs">Minutos</div>
             </div>
             <div>
-                <div className="text-xl sm:text-3xl font-bold">{timeLeft.seconds}</div>
-                <div className="text-xs text-muted-foreground">Segundos</div>
+                <div className="text-2xl sm:text-3xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                <div className="text-xs">Segundos</div>
             </div>
         </div>
     );
@@ -81,13 +81,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     const matchDate = new Date(match.date);
     const formattedDate = format(matchDate, 'EEEE, d MMM \'a las\' p', { timeZone });
     
-    const hasTeams = match.teams?.home?.badge && match.teams?.away?.badge;
-
     const backgroundStyle = { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' };
-      
-    const homeTeamNameColor = 'text-primary-foreground';
-    const awayTeamNameColor = 'text-secondary-foreground';
-
 
     return (
         <div 
@@ -107,7 +101,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                     <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                          {match.teams?.home?.badge && (
                            <Image
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
                                 src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
                                 alt={match.teams.home.name || 'Escudo Local'}
                                 width={96}
@@ -115,7 +109,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                                 style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
                             />
                         )}
-                        <span className={`text-center ${homeTeamNameColor}`}>{match.teams?.home?.name || 'Equipo Local'}</span>
+                        <span className="text-center text-primary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
                     </div>
 
                     <div className="p-3 text-lg text-primary-foreground font-black">VS</div>
@@ -123,7 +117,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                     <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                         {match.teams?.away?.badge && (
                             <Image
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
                                 src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
                                 alt={match.teams.away.name || 'Escudo Visitante'}
                                 width={96}
@@ -131,7 +125,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                                 style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
                             />
                         )}
-                        <span className={`text-center ${awayTeamNameColor}`}>{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                        <span className="text-center text-secondary-foreground">{match.teams?.away?.name || 'Equipo Visitante'}</span>
                     </div>
                 </div>
 
