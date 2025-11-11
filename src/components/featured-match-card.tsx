@@ -30,7 +30,7 @@ interface Countdown {
     seconds: number;
 }
 
-const CountdownTimer = ({ targetDate, className }: { targetDate: number, className?: string }) => {
+const CountdownTimer = ({ targetDate, className, isMobile }: { targetDate: number, className?: string, isMobile: boolean }) => {
     const [timeLeft, setTimeLeft] = useState<Countdown>({
         days: 0, hours: 0, minutes: 0, seconds: 0
     });
@@ -112,14 +112,15 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
               style={backgroundStyle}
               onClick={onClick}
             >
-                <div className="relative z-10 text-center mb-2 -mt-1">
+                <div className="relative z-10 text-center -mt-1">
                     <p className="font-semibold capitalize text-black">{capitalize(match.category)}</p>
                     <p className="text-xs text-black">Evento Destacado</p>
                 </div>
                 
                 {hasTeams ? (
-                     <div className="relative flex-grow flex flex-col items-center justify-around text-lg font-bold text-black">
-                        <div className="w-full flex flex-col items-center justify-center gap-1 text-center">
+                     <div className="relative flex-grow grid grid-cols-2 grid-rows-2 items-center justify-items-center text-lg font-bold text-black">
+                        {/* Top-left area for home team */}
+                        <div className="col-start-1 row-start-1 flex flex-col items-center justify-center gap-1 text-center">
                              {match.teams?.home?.badge && (
                                <Image
                                     className="w-16 h-16 object-contain"
@@ -133,9 +134,13 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                             <span className="text-center text-black">{match.teams?.home?.name || 'Equipo Local'}</span>
                         </div>
 
-                        <div className="text-4xl font-black text-black">VS</div>
-
-                        <div className="w-full flex flex-col items-center justify-center gap-1 text-center">
+                        {/* Centered VS */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-4xl font-black text-black">
+                            VS
+                        </div>
+                        
+                        {/* Bottom-right area for away team */}
+                        <div className="col-start-2 row-start-2 flex flex-col items-center justify-center gap-1 text-center">
                             {match.teams?.away?.badge && (
                                 <Image
                                     className="w-16 h-16 object-contain"
@@ -156,7 +161,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                 )}
                 
                 <div className="relative z-10 text-center mt-3">
-                     <CountdownTimer targetDate={match.date} className="text-black" />
+                     <CountdownTimer targetDate={match.date} className="text-black" isMobile={isMobile} />
                      <p className="text-center text-sm mt-2 text-black">{formattedDate}</p>
                 </div>
             </div>
@@ -216,7 +221,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                 )}
 
                 <div className="text-center mb-3">
-                     <CountdownTimer targetDate={match.date} className="text-black"/>
+                     <CountdownTimer targetDate={match.date} className="text-black" isMobile={isMobile} />
                 </div>
                 
                  <p className="text-center text-sm text-black">{formattedDate}</p>
