@@ -53,24 +53,25 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
 
         return () => clearInterval(interval);
     }, [targetDate]);
+
+    const renderTimeUnit = (value: number, label: string) => (
+        <div>
+            <div className="text-2xl sm:text-3xl font-bold">{String(value).padStart(2, '0')}</div>
+            <div className="text-xs">{label}</div>
+        </div>
+    );
     
     return (
-        <div className="grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto text-primary-foreground">
-            <div>
-                <div className="text-2xl sm:text-3xl font-bold">{String(timeLeft.days).padStart(2, '0')}</div>
-                <div className="text-xs">Días</div>
+        <div className="grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto">
+            {/* Left side (on primary bg) */}
+            <div className="col-span-2 grid grid-cols-2 gap-1 text-primary-foreground">
+                {renderTimeUnit(timeLeft.days, 'Días')}
+                {renderTimeUnit(timeLeft.hours, 'Horas')}
             </div>
-            <div>
-                <div className="text-2xl sm:text-3xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</div>
-                <div className="text-xs">Horas</div>
-            </div>
-            <div>
-                <div className="text-2xl sm:text-3xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</div>
-                <div className="text-xs">Minutos</div>
-            </div>
-            <div>
-                <div className="text-2xl sm:text-3xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</div>
-                <div className="text-xs">Segundos</div>
+            {/* Right side (on secondary bg) */}
+            <div className="col-span-2 grid grid-cols-2 gap-1 text-secondary-foreground">
+                {renderTimeUnit(timeLeft.minutes, 'Minutos')}
+                {renderTimeUnit(timeLeft.seconds, 'Segundos')}
             </div>
         </div>
     );
@@ -91,8 +92,8 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
         >
             <div className="relative z-10 flex flex-col h-full">
                 <div className="text-center mb-4">
-                    <div className="flex items-center justify-center gap-2 text-primary-foreground capitalize">
-                        <span className="font-semibold">{match.category}</span>
+                    <div className="flex items-center justify-center gap-2 capitalize">
+                        <span className="font-semibold text-primary-foreground">{match.category}</span>
                     </div>
                     <Badge variant="outline" className="border-border/50 bg-background/20 backdrop-blur-sm text-primary-foreground">Partido Destacado</Badge>
                 </div>
@@ -133,8 +134,15 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                     <CountdownTimer targetDate={match.date} />
                 </div>
                 
-                <div className="text-center text-primary-foreground text-sm">
-                    <span>{formattedDate}</span>
+                <div className="text-center text-sm relative">
+                    <div className="absolute left-0 top-0 w-1/2 h-full flex items-center justify-center text-primary-foreground">
+                        <span className="w-full truncate">{formattedDate.split(' a las ')[0]} a las</span>
+                    </div>
+                     <div className="absolute right-0 top-0 w-1/2 h-full flex items-center justify-center text-secondary-foreground">
+                        <span className="w-full truncate">{formattedDate.split(' a las ')[1]}</span>
+                    </div>
+                    {/* This is for layout spacing, it will be invisible */}
+                    <span className="opacity-0">{formattedDate}</span>
                 </div>
             </div>
         </div>
