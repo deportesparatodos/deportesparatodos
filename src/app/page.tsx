@@ -1843,7 +1843,7 @@ export function HomePageContent() {
                         </Carousel>
                     </div>
                 )}
-                <div className="w-full mt-[35px]">
+                <div className="w-full mt-[3px]">
                     <Carousel opts={{ align: "start", dragFree: true, }} className="w-full" >
                         <div className="flex items-center justify-between mb-2">
                             <h2 className="text-2xl font-bold">Categorías</h2>
@@ -2818,6 +2818,8 @@ function ControllingView({
   );
 }
 
+
+    
 
     
 
