@@ -30,7 +30,7 @@ interface Countdown {
     seconds: number;
 }
 
-const CountdownTimer = ({ targetDate, className }: { targetDate: number, className?: string }) => {
+const CountdownTimer = ({ targetDate, className, isMobile }: { targetDate: number, className?: string, isMobile: boolean }) => {
     const [timeLeft, setTimeLeft] = useState<Countdown>({
         days: 0, hours: 0, minutes: 0, seconds: 0
     });
@@ -160,7 +160,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                     ) : null}
                     
                     <div className="text-center mb-3">
-                        <CountdownTimer targetDate={match.date} className="text-white" />
+                        <CountdownTimer targetDate={match.date} className="text-white" isMobile={isMobile} />
                     </div>
                     
                     <p className="text-center text-sm text-white">{formattedDate}</p>
@@ -222,7 +222,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                 )}
 
                 <div className="text-center mb-3">
-                     <CountdownTimer targetDate={match.date} />
+                     <CountdownTimer targetDate={match.date} isMobile={isMobile} />
                 </div>
                 
                  <p className="text-center text-sm">{formattedDate}</p>
