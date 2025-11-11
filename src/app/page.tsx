@@ -1822,6 +1822,7 @@ export function HomePageContent() {
         return (
             <>
                 {featuredMatches.length > 0 && (
+                  <div className="w-full pt-4">
                     <div className="w-full relative">
                         <Carousel opts={{ align: "start", loop: true, }} className="w-full" >
                             <CarouselContent className="-ml-4">
@@ -1857,6 +1858,7 @@ export function HomePageContent() {
                             <CarouselNext variant="ghost" className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-black border-none" />
                         </Carousel>
                     </div>
+                  </div>
                 )}
                 <div className="w-full mt-2">
                     <Carousel opts={{ align: "start", dragFree: true, }} className="w-full" >
