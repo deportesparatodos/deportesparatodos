@@ -64,6 +64,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
     
     return (
         <div className="relative w-full max-w-xs mx-auto">
+            {/* Left side, black text, clipped */}
             <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
                 <div className="w-[200%] grid grid-cols-2 gap-1 text-center text-primary-foreground">
                     <div className="col-span-1 grid grid-cols-2 gap-1">
@@ -72,6 +73,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
                     </div>
                 </div>
             </div>
+            {/* Right side, white text, clipped */}
             <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
                  <div className="w-[200%] grid grid-cols-2 gap-1 text-center text-secondary-foreground -ml-[100%]">
                     <div className="col-span-1 grid grid-cols-2 gap-1">
@@ -116,12 +118,37 @@ const SplitColorText = ({ text, className }: { text: string; className?: string 
     );
 };
 
+const SplitVSText = ({ className }: { className?: string }) => {
+    return (
+        <div className={`relative flex justify-center items-center ${className}`}>
+            {/* Left side, black text, clipped */}
+            <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
+                <p className="w-[200%] text-center text-primary-foreground font-black">VS</p>
+            </div>
+            {/* Right side, white text, clipped */}
+            <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
+                <p className="w-[200%] text-center text-secondary-foreground font-black -ml-[100%]">VS</p>
+            </div>
+            {/* Invisible text to set the height and width */}
+            <p className="opacity-0 font-black">VS</p>
+        </div>
+    );
+};
+
 
 export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick: () => void }) => {
     const timeZone = 'America/Argentina/Buenos_Aires';
     const matchDate = new Date(match.date);
-    const formattedDate = format(matchDate, "EEEE, d 'de' MMMM 'a las' HH:mm'hs'", { locale: es, timeZone });
     
+    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+    const rawFormattedDate = format(matchDate, "EEEE, d 'de' MMMM 'a las' HH:mm'hs'", { locale: es, timeZone });
+    const dateParts = rawFormattedDate.split(' de ');
+    const dayPart = dateParts[0];
+    const monthPart = dateParts.length > 1 ? dateParts[1] : '';
+
+    const formattedDate = `${capitalize(dayPart)} de ${capitalize(monthPart)}`;
+
     const backgroundStyle = { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' };
 
     return (
@@ -152,16 +179,9 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                         <span className="text-center text-primary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
                     </div>
 
-                    <div className="p-3 text-2xl font-black flex relative">
-                         <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
-                            <p className="w-[200%] text-center text-primary-foreground">VS</p>
-                        </div>
-                        <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
-                            <p className="w-[200%] text-center text-secondary-foreground -ml-[100%]">VS</p>
-                        </div>
-                        <p className="opacity-0">VS</p>
+                    <div className="p-3 text-2xl">
+                       <SplitVSText />
                     </div>
-
 
                     <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                         {match.teams?.away?.badge && (
