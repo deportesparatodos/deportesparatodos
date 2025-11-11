@@ -139,6 +139,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                             
                             {/* Away Team */}
                             <div className="flex flex-col items-center justify-center gap-1 text-center">
+                                <span className="text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
                                 <Image
                                     className="w-16 h-16 object-contain drop-shadow-2xl"
                                     src={match.teams?.away?.badge ? `https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp` : transparentPixel}
@@ -146,11 +147,10 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                                     width={64}
                                     height={64}
                                 />
-                                <span className="text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
                             </div>
                         </>
                     ) : (
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center justify-center h-36">
                             <p className="text-2xl font-bold text-center text-black">{match.title}</p>
                         </div>
                     )}
