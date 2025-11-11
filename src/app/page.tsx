@@ -781,7 +781,7 @@ export function HomePageContent() {
     setLiveAppState({ selectedEvents: Array(9).fill(null) });
   };
 
-  const { searchResults, allSortedEvents, categoryFilteredEvents, mobileSortedEvents } = useMemo(() => {
+  const { searchResults, allSortedEvents, liveEvents, upcomingEvents, unknownEvents, finishedEvents, categoryFilteredEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
     const excludedFromFinished = new Set([
@@ -905,30 +905,13 @@ export function HomePageContent() {
         return upcomingSortLogic(a, b);
     };
 
-    const allLiveEvents = processedEvents.filter(e => e.status === 'En Vivo');
-    const liveCustom = allLiveEvents.filter(e => e.image && e.image !== placeholderImage).sort(liveSortLogic);
-    const liveDefault = allLiveEvents.filter(e => !e.image || e.image === placeholderImage).sort(liveSortLogic);
-    const live = [...liveCustom, ...liveDefault];
-
+    const allLiveEvents = processedEvents.filter(e => e.status === 'En Vivo').sort(liveSortLogic);
     const upcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
+    const unknown = processedEvents.filter(e => e.status === 'Desconocido').sort(unknownSortLogic);
+    const finished = processedEvents.filter(e => e.status === 'Finalizado' && !excludedFromFinished.has(e.title)).sort((a,b) => b.time.localeCompare(a.time));
     
-    const unknown = processedEvents
-      .filter(e => e.status === 'Desconocido')
-      .sort(unknownSortLogic);
-
-    const finished = processedEvents
-        .filter(e => e.status === 'Finalizado' && !excludedFromFinished.has(e.title))
-        .sort((a,b) => b.time.localeCompare(a.time));
+    const allSorted = [...allLiveEvents, ...upcoming, ...unknown, ...finished];
     
-    const allSorted = [...live, ...upcoming, ...unknown, ...finished];
-    
-    const mobileLiveCustom = allLiveEvents.filter(e => e.image && e.image !== placeholderImage).sort(liveSortLogic);
-    const mobileLiveDefault = allLiveEvents.filter(e => !e.image || e.image === placeholderImage).sort(liveSortLogic);
-    const mobileUpcoming = processedEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
-    const mobileUnknown = processedEvents.filter(e => e.status === 'Desconocido').sort(unknownSortLogic);
-    const mobileFinished = finished;
-    const mobileSorted = [...mobileLiveCustom, ...mobileLiveDefault, ...mobileUpcoming, ...mobileUnknown, ...mobileFinished];
-
 
     let searchResults: (Event | Channel)[] = [];
     if (searchTerm) {
@@ -960,19 +943,21 @@ export function HomePageContent() {
         const categoryEvents = allCategoryEvents
             .filter(event => event.category.toLowerCase() === currentView.toLowerCase());
         
-        const liveCatCustom = categoryEvents.filter(e => e.status === 'En Vivo' && (e.image && e.image !== placeholderImage)).sort(liveSortLogic);
-        const liveCatDefault = categoryEvents.filter(e => e.status === 'En Vivo' && (!e.image || e.image === placeholderImage)).sort(liveSortLogic);
+        const liveCat = categoryEvents.filter(e => e.status === 'En Vivo').sort(liveSortLogic);
         const upcomingCat = categoryEvents.filter(e => e.status === 'Próximo').sort(upcomingSortLogic);
         const unknownCat = categoryEvents.filter(e => e.status === 'Desconocido').sort(unknownSortLogic);
         const finishedCat = categoryEvents.filter(e => e.status === 'Finalizado').sort((a,b) => b.time.localeCompare(a.time));
 
-        categoryFilteredEvents = [...liveCatCustom, ...liveCatDefault, ...upcomingCat, ...unknownCat, ...finishedCat];
+        categoryFilteredEvents = [...liveCat, ...upcomingCat, ...unknownCat, ...finishedCat];
     }
 
     return { 
         searchResults,
         allSortedEvents: allSorted,
-        mobileSortedEvents: mobileSorted,
+        liveEvents: allLiveEvents,
+        upcomingEvents: upcoming,
+        unknownEvents: unknown,
+        finishedEvents: finished,
         categoryFilteredEvents,
     };
   }, [events, searchTerm, currentView, channelsData]);
@@ -1732,109 +1717,194 @@ export function HomePageContent() {
   };
 
   const renderHomeContent = () => {
-    let itemsToDisplay: (Event|Channel)[] = [];
     if (searchTerm) {
-      itemsToDisplay = searchResults;
-    } else if (currentView === 'home') {
-       return (
-        <>
-            {featuredMatches.length > 0 && (
-                 <div className="w-full space-y-4 pt-4 md:mb-8">
-                     <Carousel
-                        opts={{
-                            align: "start",
-                            loop: true,
-                        }}
-                        className="w-full"
-                    >
-                        <CarouselContent className="-ml-4">
-                        {featuredMatches.map((match) => (
-                            <CarouselItem key={match.id} className="basis-full md:basis-1/1 pl-4">
-                               <FeaturedMatchCard match={match} onClick={() => {
-                                      const event: Event = {
-                                          id: match.id,
-                                          title: match.title,
-                                          time: new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                          options: [],
-                                          sources: match.sources,
-                                          buttons: [],
-                                          category: match.category,
-                                          language: '',
-                                          date: new Date(match.date).toISOString().split('T')[0],
-                                          source: 'streamed.pk',
-                                          image: match.teams?.home?.badge && match.teams?.away?.badge
-                                              ? `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
-                                              : `https://i.ibb.co/dHPWxr8/depete.jpg`,
-                                          status: 'Próximo',
-                                      };
-                                      openDialogForEvent(event);
-                                }} />
-                            </CarouselItem>
-                        ))}
-                        </CarouselContent>
-                         <CarouselPrevious variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 left-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
-                         <CarouselNext variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
-                    </Carousel>
-                </div>
-            )}
-            <div className="w-full space-y-4 pt-4 md:mb-8">
-                 <Carousel
-                    opts={{
-                        align: "start",
-                        dragFree: true,
-                    }}
-                    className="w-full"
-                >
-                    <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-2xl font-bold">Categorías</h2>
-                        <div className="flex items-center gap-2">
-                            <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
-                            <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
-                        </div>
-                    </div>
-                    <CarouselContent className="-ml-4">
-                        <CarouselItem className="basis-auto pl-4">
-                            <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => handleViewChange('live')}>
-                                En Vivo
-                            </Button>
-                        </CarouselItem>
-                         <CarouselItem className="basis-auto pl-4">
-                            <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => handleViewChange('channels')}>
-                                Canales
-                            </Button>
-                        </CarouselItem>
-                    {categories.map(category => (
-                        <CarouselItem key={category} className="basis-auto pl-4">
-                            <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => handleViewChange(category)}>
-                                {category}
-                            </Button>
-                        </CarouselItem>
-                    ))}
-                    </CarouselContent>
-                </Carousel>
+        return (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
+                {searchResults.map((item, index) => {
+                    const isChannel = 'urls' in item;
+                    if (isChannel) {
+                        const channel = item as Channel;
+                         if (channel.name === 'Enlace Propio') {
+                            return (
+                                <Card 
+                                    key={`custom-link-channel-${index}`}
+                                    className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
+                                    onClick={handlePasteFromClipboard}
+                                >
+                                    <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
+                                        <Image
+                                            src={channel.logo}
+                                            alt={`${channel.name} logo`}
+                                            width={120}
+                                            height={67.5}
+                                            className="object-contain max-h-full max-w-full"
+                                        />
+                                    </div>
+                                    <div className="p-3 bg-card min-h-[52px] flex items-center justify-center flex-col">
+                                        <h3 className="font-bold text-sm text-center line-clamp-2">{channel.name}</h3>
+                                        {channel.recommended && (
+                                        <div className="flex items-center justify-center gap-1 mt-1">
+                                            <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                                            <span className="text-xs font-bold uppercase text-yellow-400">Recomendado</span>
+                                        </div>
+                                        )}
+                                    </div>
+                                </Card>
+                            );
+                        }
+                        const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, time: 'AHORA', category: 'Canal', options: [], sources: [], buttons: [], language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
+                        const selection = getEventSelection(channelAsEvent);
+                        return (
+                            <Card 
+                                key={`search-channel-${index}`}
+                                className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
+                                onClick={() => handleChannelClick(channel)}
+                            >
+                                <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
+                                    <Image
+                                        src={channel.logo}
+                                        alt={`${channel.name} logo`}
+                                        width={120}
+                                        height={67.5}
+                                        className="object-contain max-h-full max-w-full"
+                                        onError={e => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.onerror = null; 
+                                            target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
+                                        }}
+                                    />
+                                    {selection.isSelected && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="hsl(142.1 76.2% 44.9%)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-check drop-shadow-lg"><path d="M20 6 9 17l-5-5"/></svg>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="p-3 bg-card min-h-[52px] flex items-center justify-center flex-col">
+                                    <h3 className="font-bold text-sm text-center line-clamp-2">{item.name}</h3>
+                                     {channel.recommended && (
+                                      <div className="flex items-center justify-center gap-1 mt-1">
+                                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                                        <span className="text-xs font-bold uppercase text-yellow-400">Recomendado</span>
+                                      </div>
+                                    )}
+                                </div>
+                            </Card>
+                        );
+                    } else {
+                        return (
+                            <EventCard
+                            key={`search-event-${(item as Event).id}-${index}`}
+                            event={item as Event}
+                            selection={getEventSelection(item as Event)}
+                            onClick={() => openDialogForEvent(item as Event)}
+                            />
+                        );
+                    }
+                })}
             </div>
-            
-            <div className="mb-8">
-                <EventCarousel 
-                    title="Todos los Eventos" 
-                    events={allSortedEvents}
-                    channels={channelsData}
-                    onCardClick={openDialogForEvent} 
-                    onChannelClick={handleChannelClick}
-                    getEventSelection={(e) => getEventSelection(e)} 
-                />
-            </div>
-        </>
-       );
-    } else if (currentView === 'live') {
-        itemsToDisplay = allSortedEvents.filter(e => e.status === 'En Vivo');
-    } else if (currentView === 'channels') {
-      itemsToDisplay = channelsData;
-    } else {
-      itemsToDisplay = categoryFilteredEvents;
+        );
     }
 
-    const categoryCarouselEvents = categoryFilteredEvents.length > 0 ? categoryFilteredEvents : (currentView === 'live' ? allSortedEvents.filter(e => e.status === 'En Vivo') : []);
+    if (currentView === 'home') {
+        return (
+            <>
+                {featuredMatches.length > 0 && (
+                    <div className="w-full space-y-4 pt-4 md:mb-8">
+                        <Carousel opts={{ align: "start", loop: true, }} className="w-full" >
+                            <CarouselContent className="-ml-4">
+                                {featuredMatches.map((match) => (
+                                    <CarouselItem key={match.id} className="basis-full md:basis-1/1 pl-4">
+                                    <FeaturedMatchCard match={match} onClick={() => {
+                                        const event: Event = {
+                                            id: match.id,
+                                            title: match.title,
+                                            time: new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                            options: [],
+                                            sources: match.sources,
+                                            buttons: [],
+                                            category: match.category,
+                                            language: '',
+                                            date: new Date(match.date).toISOString().split('T')[0],
+                                            source: 'streamed.pk',
+                                            image: match.teams?.home?.badge && match.teams?.away?.badge
+                                                ? `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
+                                                : `https://i.ibb.co/dHPWxr8/depete.jpg`,
+                                            status: 'Próximo',
+                                        };
+                                        openDialogForEvent(event);
+                                    }} />
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            <CarouselPrevious variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 left-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                            <CarouselNext variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                        </Carousel>
+                    </div>
+                )}
+                <div className="w-full space-y-4 pt-4 md:mb-8">
+                    <Carousel opts={{ align: "start", dragFree: true, }} className="w-full" >
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-2xl font-bold">Categorías</h2>
+                            <div className="flex items-center gap-2">
+                                <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
+                                <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
+                            </div>
+                        </div>
+                        <CarouselContent className="-ml-4">
+                            <CarouselItem className="basis-auto pl-4">
+                                <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => handleViewChange('channels')}>
+                                    Canales
+                                </Button>
+                            </CarouselItem>
+                            {categories.map(category => (
+                                <CarouselItem key={category} className="basis-auto pl-4">
+                                    <Button variant="secondary" className="h-12 px-6 text-lg" onClick={() => handleViewChange(category)}>
+                                        {category}
+                                    </Button>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                    </Carousel>
+                </div>
+                
+                <div className="space-y-8 mb-8">
+                     <EventCarousel 
+                        title="Canales" 
+                        channels={channelsData}
+                        onChannelClick={handleChannelClick}
+                        getEventSelection={(e) => getEventSelection(e)} 
+                    />
+                    <EventCarousel 
+                        title="En Vivo" 
+                        events={liveEvents}
+                        onCardClick={openDialogForEvent} 
+                        getEventSelection={(e) => getEventSelection(e)} 
+                    />
+                    <EventCarousel 
+                        title="Próximos" 
+                        events={upcomingEvents}
+                        onCardClick={openDialogForEvent} 
+                        getEventSelection={(e) => getEventSelection(e)} 
+                    />
+                    <EventCarousel 
+                        title="Estado Desconocido" 
+                        events={unknownEvents}
+                        onCardClick={openDialogForEvent} 
+                        getEventSelection={(e) => getEventSelection(e)} 
+                    />
+                    <EventCarousel 
+                        title="Finalizados" 
+                        events={finishedEvents}
+                        onCardClick={openDialogForEvent} 
+                        getEventSelection={(e) => getEventSelection(e)} 
+                    />
+                </div>
+            </>
+        );
+    }
+    
+    // Category View
+    const categoryCarouselEvents = categoryFilteredEvents.length > 0 ? categoryFilteredEvents : [];
 
     return (
       <>
@@ -1851,7 +1921,7 @@ export function HomePageContent() {
           </div>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
-          {itemsToDisplay.map((item, index) => {
+          {(currentView === 'channels' ? channelsData : categoryFilteredEvents).map((item, index) => {
               const isChannel = 'urls' in item;
               if (isChannel) {
                 const channel = item as Channel;
@@ -2725,7 +2795,3 @@ function ControllingView({
   );
 }
 
-
-    
-
-    

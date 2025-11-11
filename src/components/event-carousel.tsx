@@ -74,7 +74,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
       >
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold">{title}</h2>
-          <div className="flex items-center gap-2 mt-[10px]">
+          <div className="flex items-center gap-2">
             <CarouselPrevious variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
             <CarouselNext variant="outline" className="static -translate-x-0 -translate-y-0 rounded-md" />
           </div>
@@ -88,13 +88,12 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
               const cardOnClick = () => onChannelClick && onChannelClick(channel);
               const cardContent = (
                  <>
-                  <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white h-[100px] flex-shrink-0">
+                  <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white flex-shrink-0">
                     <Image
                       src={channel.logo}
                       alt={`${channel.name} logo`}
-                      width={120}
-                      height={67.5}
-                      className="object-contain max-h-full max-w-full"
+                      fill
+                      className="object-contain"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.onerror = null;
@@ -157,5 +156,3 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
-
-    
