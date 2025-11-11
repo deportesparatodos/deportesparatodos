@@ -1811,7 +1811,7 @@ export function HomePageContent() {
         return (
             <>
                 {featuredMatches.length > 0 && (
-                    <div className="w-full space-y-4 pt-4 md:mb-8">
+                    <div className="w-full space-y-4 pt-4">
                         <Carousel opts={{ align: "start", loop: true, }} className="w-full" >
                             <CarouselContent className="-ml-4">
                                 {featuredMatches.map((match) => (
@@ -1838,12 +1838,12 @@ export function HomePageContent() {
                                     </CarouselItem>
                                 ))}
                             </CarouselContent>
-                            <CarouselPrevious variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 left-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
+                            <CarouselPrevious variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 left-2 top-1/2 -translate-y-1/2 hidden md:inline-flex text-primary-foreground" />
                             <CarouselNext variant="ghost" className="static md:absolute -translate-x-0 -translate-y-0 right-2 top-1/2 -translate-y-1/2 hidden md:inline-flex" />
                         </Carousel>
                     </div>
                 )}
-                <div className="w-full space-y-4 pt-4 md:mb-8">
+                <div className="w-full mt-[35px]">
                     <Carousel opts={{ align: "start", dragFree: true, }} className="w-full" >
                         <div className="flex items-center justify-between mb-2">
                             <h2 className="text-2xl font-bold">Categorías</h2>
@@ -1869,7 +1869,7 @@ export function HomePageContent() {
                     </Carousel>
                 </div>
                 
-                <div className="space-y-8 mb-8">
+                <div className="space-y-[35px] mt-[35px] mb-8">
                      <EventCarousel 
                         title="Canales" 
                         channels={channelsData}
@@ -1911,7 +1911,7 @@ export function HomePageContent() {
     return (
       <>
         {categoryFeaturedMatches.length > 0 && (
-            <div className="w-full space-y-4 pt-4 md:mb-8">
+            <div className="w-full space-y-4 pt-4">
                 <Carousel opts={{ align: "start", loop: false }} className="w-full">
                     <CarouselContent className="-ml-4">
                         {categoryFeaturedMatches.map((match) => (
@@ -2818,5 +2818,7 @@ function ControllingView({
   );
 }
 
+
+    
 
     
