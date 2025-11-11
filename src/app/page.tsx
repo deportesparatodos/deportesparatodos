@@ -352,7 +352,7 @@ export function HomePageContent() {
 
        // Fetch and process featured matches
       const featuredMatchesResults = await Promise.allSettled(featuredMatchesPromises);
-      const tempFeaturedMatches: APIMatch[] = [];
+      let tempFeaturedMatches: APIMatch[] = [];
       const seenMatchIds = new Set<string>();
 
       featuredMatchesResults.forEach(result => {
@@ -365,6 +365,8 @@ export function HomePageContent() {
               });
           }
       });
+      // Sort all featured matches chronologically
+      tempFeaturedMatches.sort((a, b) => a.date - b.date);
       setFeaturedMatches(tempFeaturedMatches);
       
       const getOtherData = <T,>(name: string): T[] => {

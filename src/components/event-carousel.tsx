@@ -88,7 +88,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
               const cardOnClick = () => onChannelClick && onChannelClick(channel);
               const cardContent = (
                  <>
-                  <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white flex-shrink-0">
+                  <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-white flex-shrink-0">
                     <Image
                       src={channel.logo}
                       alt={`${channel.name} logo`}
