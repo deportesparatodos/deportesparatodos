@@ -54,6 +54,7 @@ import { Badge } from '@/components/ui/badge';
 import { LayoutConfigurator } from '@/components/layout-configurator';
 import { toZonedTime, format } from 'date-fns-tz';
 import { addHours, isBefore, isAfter, parse, differenceInMinutes, isValid, isPast, isFuture, differenceInDays } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { LoadingScreen } from '@/components/loading-screen';
 import { CameraConfigurationComponent } from '@/components/camera-configuration';
 import { Progress } from '@/components/ui/progress';
@@ -780,7 +781,7 @@ export function HomePageContent() {
     setLiveAppState({ selectedEvents: Array(9).fill(null) });
   };
 
-  const { liveEvents, upcomingEvents, unknownEvents, finishedEvents, searchResults, allSortedEvents, categoryFilteredEvents, mobileSortedEvents } = useMemo(() => {
+  const { searchResults, allSortedEvents, categoryFilteredEvents, mobileSortedEvents } = useMemo(() => {
     const statusOrder: Record<string, number> = { 'En Vivo': 1, 'Próximo': 2, 'Desconocido': 3, 'Finalizado': 4 };
     const placeholderImage = 'https://i.ibb.co/dHPWxr8/depete.jpg';
     const excludedFromFinished = new Set([
@@ -969,10 +970,6 @@ export function HomePageContent() {
     }
 
     return { 
-        liveEvents: live, 
-        upcomingEvents: upcoming, 
-        unknownEvents: unknown, 
-        finishedEvents: finished,
         searchResults,
         allSortedEvents: allSorted,
         mobileSortedEvents: mobileSorted,
@@ -1817,40 +1814,21 @@ export function HomePageContent() {
                 </Carousel>
             </div>
             
-            {isMobile ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 pt-4">
-                    {mobileSortedEvents.map((event, index) => (
-                        <EventCard
-                            key={`mobile-event-${event.id}-${index}`}
-                            event={event}
-                            selection={getEventSelection(event)}
-                            onClick={() => openDialogForEvent(event)}
-                        />
-                    ))}
-                </div>
-            ) : (
-                <>
-                    <div className="mb-8">
-                        <EventCarousel title="Canales" channels={channelsData} onChannelClick={handleChannelClick} getEventSelection={(e) => getEventSelection(e)} />
-                    </div>
-                    <div className="mb-8">
-                        <EventCarousel title="En Vivo" events={liveEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
-                    </div>
-                    <div className="mb-8">
-                        <EventCarousel title="Próximos" events={upcomingEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
-                    </div>
-                    <div className="mb-8">
-                        <EventCarousel title="Estado Desconocido" events={unknownEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
-                    </div>
-                    <div className="mb-8">
-                        <EventCarousel title="Finalizados" events={finishedEvents} onCardClick={openDialogForEvent} getEventSelection={(e) => getEventSelection(e)} />
-                    </div>
-                </>
-            )}
+            <div className="mb-8">
+                <EventCarousel 
+                    title="Todos los Eventos" 
+                    events={allSortedEvents}
+                    channels={channelsData}
+                    onCardClick={openDialogForEvent} 
+                    onChannelClick={handleChannelClick}
+                    getEventSelection={(e) => getEventSelection(e)} 
+                />
+            </div>
         </>
        );
     } else if (currentView === 'live') {
-      itemsToDisplay = liveEvents;
+        const liveEvents = allSortedEvents.filter(e => e.status === 'En Vivo');
+        itemsToDisplay = liveEvents;
     } else if (currentView === 'channels') {
       itemsToDisplay = channelsData;
     } else {
@@ -2732,3 +2710,5 @@ function ControllingView({
   );
 }
 
+
+    

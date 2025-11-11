@@ -53,9 +53,12 @@ interface EventCarouselProps {
 }
 
 export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels, onCardClick, onChannelClick, getEventSelection }) => {
-  const hasContent = (events && events.length > 0) || (channels && channels.length > 0);
+  const allItems = [
+    ...(channels || []),
+    ...(events || [])
+  ];
 
-  if (!hasContent) {
+  if (!allItems.length) {
     return null;
   }
 
@@ -77,26 +80,12 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
           </div>
         </div>
         <CarouselContent className="-ml-4">
-          {events &&
-            onCardClick &&
-            getEventSelection &&
-            events.map((event, index) => (
-              <CarouselItem
-                key={`${event.id}-${index}`}
-                className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
-              >
-                <EventCard
-                  event={event}
-                  selection={getEventSelection(event)}
-                  onClick={() => onCardClick(event)}
-                />
-              </CarouselItem>
-            ))}
-          {channels &&
-            onChannelClick &&
-            getEventSelection &&
-            channels.map((channel, index) => {
-              const cardOnClick = () => onChannelClick(channel);
+          {allItems.map((item, index) => {
+            const isChannel = 'urls' in item;
+            
+            if (isChannel) {
+              const channel = item as Channel;
+              const cardOnClick = () => onChannelClick && onChannelClick(channel);
               const cardContent = (
                  <>
                   <div className="relative w-full aspect-video flex items-center justify-center p-2 bg-white h-[100px] flex-shrink-0">
@@ -112,7 +101,7 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                         target.src = 'https://i.ibb.co/dHPWxr8/depete.jpg';
                       }}
                     />
-                    {(() => {
+                    {getEventSelection && (() => {
                         const channelAsEvent: Event = { id: `${channel.name}-channel-static`, title: channel.name, options: channel.urls.map(u => ({...u, hd: false, language: ''})), sources: [], buttons: [], time: 'AHORA', category: 'Canal', language: '', date: '', source: '', status: 'En Vivo', image: channel.logo };
                         const selection = getEventSelection(channelAsEvent);
                         return selection.isSelected && (
@@ -146,9 +135,27 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
                   {cardContent}
                 </Card>
               </CarouselItem>
-            )})}
+            )
+            } else {
+              const event = item as Event;
+               return (
+                <CarouselItem
+                  key={`${event.id}-${index}`}
+                  className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6 2xl:basis-1/7 pl-4"
+                >
+                  <EventCard
+                    event={event}
+                    selection={getEventSelection ? getEventSelection(event) : { isSelected: false, selectedOption: null, index: -1 }}
+                    onClick={() => onCardClick && onCardClick(event)}
+                  />
+                </CarouselItem>
+              );
+            }
+          })}
         </CarouselContent>
       </Carousel>
     </div>
   );
 };
+
+    
