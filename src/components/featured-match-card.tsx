@@ -62,20 +62,37 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
     );
     
     return (
-        <div className="grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto">
-            {/* Left side (on primary bg) */}
-            <div className="col-span-2 grid grid-cols-2 gap-1 text-primary-foreground">
+        <div className="grid grid-cols-2 gap-1 text-center w-full max-w-xs mx-auto">
+            <div className="col-span-1 grid grid-cols-2 gap-1 text-primary-foreground">
                 {renderTimeUnit(timeLeft.days, 'Días')}
                 {renderTimeUnit(timeLeft.hours, 'Horas')}
             </div>
-            {/* Right side (on secondary bg) */}
-            <div className="col-span-2 grid grid-cols-2 gap-1 text-secondary-foreground">
+            <div className="col-span-1 grid grid-cols-2 gap-1 text-secondary-foreground">
                 {renderTimeUnit(timeLeft.minutes, 'Minutos')}
                 {renderTimeUnit(timeLeft.seconds, 'Segundos')}
             </div>
         </div>
     );
 };
+
+// Helper for split-color text
+const SplitColorText = ({ text, className }: { text: string; className?: string }) => {
+    return (
+        <div className={`relative flex justify-center items-center ${className}`}>
+            {/* Left side, black text, clipped */}
+            <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
+                <p className="w-[200%] text-center text-primary-foreground">{text}</p>
+            </div>
+            {/* Right side, white text, clipped */}
+            <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
+                <p className="w-[200%] text-center text-secondary-foreground -ml-[100%]">{text}</p>
+            </div>
+            {/* Invisible text to set the height and width */}
+            <p className="opacity-0">{text}</p>
+        </div>
+    );
+};
+
 
 export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick: () => void }) => {
     const timeZone = 'America/Argentina/Buenos_Aires';
@@ -91,12 +108,11 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
           style={backgroundStyle}
         >
             <div className="relative z-10 flex flex-col h-full">
-                <div className="text-center mb-4">
-                    <div className="flex items-center justify-center gap-2 capitalize">
-                        <span className="font-semibold text-primary-foreground">{match.category}</span>
-                    </div>
-                    <Badge variant="outline" className="border-border/50 bg-background/20 backdrop-blur-sm text-primary-foreground">Partido Destacado</Badge>
+                 <div className="text-center mb-4 space-y-1">
+                    <SplitColorText text={match.category} className="font-semibold capitalize" />
+                    <SplitColorText text="Partido Destacado" className="text-xs" />
                 </div>
+
 
                 <div className="flex flex-col sm:flex-row items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
                     <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
@@ -113,7 +129,11 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                         <span className="text-center text-primary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
                     </div>
 
-                    <div className="p-3 text-lg text-primary-foreground font-black">VS</div>
+                    <div className="p-3 text-2xl font-black flex">
+                        <span className="text-primary-foreground">V</span>
+                        <span className="text-secondary-foreground">S</span>
+                    </div>
+
 
                     <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                         {match.teams?.away?.badge && (
@@ -134,16 +154,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                     <CountdownTimer targetDate={match.date} />
                 </div>
                 
-                <div className="text-center text-sm relative">
-                    <div className="absolute left-0 top-0 w-1/2 h-full flex items-center justify-center text-primary-foreground">
-                        <span className="w-full truncate">{formattedDate.split(' a las ')[0]} a las</span>
-                    </div>
-                     <div className="absolute right-0 top-0 w-1/2 h-full flex items-center justify-center text-secondary-foreground">
-                        <span className="w-full truncate">{formattedDate.split(' a las ')[1]}</span>
-                    </div>
-                    {/* This is for layout spacing, it will be invisible */}
-                    <span className="opacity-0">{formattedDate}</span>
-                </div>
+                 <SplitColorText text={formattedDate} className="text-sm" />
             </div>
         </div>
     );
