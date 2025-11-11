@@ -102,6 +102,8 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     }).join(' ');
 
     const hasTeams = match.teams?.home && match.teams?.away;
+    const transparentPixel = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 
     if (isMobile) {
         return (
@@ -120,15 +122,13 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                         <>
                             {/* Home Team */}
                             <div className="flex flex-col items-center justify-center gap-1 text-center">
-                                {match.teams?.home?.badge && (
                                 <Image
-                                        className="w-16 h-16 object-contain drop-shadow-2xl"
-                                        src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
-                                        alt={match.teams.home.name || 'Escudo Local'}
-                                        width={64}
-                                        height={64}
-                                    />
-                                )}
+                                    className="w-16 h-16 object-contain drop-shadow-2xl"
+                                    src={match.teams?.home?.badge ? `https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp` : transparentPixel}
+                                    alt={match.teams?.home?.name || 'Escudo Local'}
+                                    width={64}
+                                    height={64}
+                                />
                                 <span className="text-center text-black">{match.teams?.home?.name || 'Equipo Local'}</span>
                             </div>
 
@@ -139,15 +139,13 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                             
                             {/* Away Team */}
                             <div className="flex flex-col items-center justify-center gap-1 text-center">
-                                {match.teams?.away?.badge && (
-                                    <Image
-                                        className="w-16 h-16 object-contain drop-shadow-2xl"
-                                        src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
-                                        alt={match.teams.away.name || 'Escudo Visitante'}
-                                        width={64}
-                                        height={64}
-                                    />
-                                )}
+                                <Image
+                                    className="w-16 h-16 object-contain drop-shadow-2xl"
+                                    src={match.teams?.away?.badge ? `https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp` : transparentPixel}
+                                    alt={match.teams?.away?.name || 'Escudo Visitante'}
+                                    width={64}
+                                    height={64}
+                                />
                                 <span className="text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
                             </div>
                         </>
