@@ -30,7 +30,7 @@ interface Countdown {
     seconds: number;
 }
 
-const CountdownTimer = ({ targetDate, className, isMobile }: { targetDate: number, className?: string, isMobile: boolean }) => {
+const CountdownTimer = ({ targetDate, className }: { targetDate: number, className?: string }) => {
     const [timeLeft, setTimeLeft] = useState<Countdown>({
         days: 0, hours: 0, minutes: 0, seconds: 0
     });
@@ -58,23 +58,12 @@ const CountdownTimer = ({ targetDate, className, isMobile }: { targetDate: numbe
     }, [targetDate]);
 
     const renderTimeUnit = (value: number, label: string) => (
-        <div className="text-black">
+        <div>
             <div className="text-2xl sm:text-3xl font-bold">{String(value).padStart(2, '0')}</div>
             <div className="text-xs">{label}</div>
         </div>
     );
     
-    if (isMobile) {
-        return (
-            <div className={cn("grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto", className)}>
-                {renderTimeUnit(timeLeft.days, 'Días')}
-                {renderTimeUnit(timeLeft.hours, 'Horas')}
-                {renderTimeUnit(timeLeft.minutes, 'Minutos')}
-                {renderTimeUnit(timeLeft.seconds, 'Segundos')}
-            </div>
-        )
-    }
-
     return (
         <div className={cn("grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto text-black", className)}>
             {renderTimeUnit(timeLeft.days, 'Días')}
@@ -109,61 +98,62 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     const hasTeams = match.teams?.home && match.teams?.away;
     
     const backgroundStyle = {
-      background: `linear-gradient(135deg, white 50%, ${color} 50%)`,
+      background: `linear-gradient(to top right, white 50%, ${color} 50%)`,
     };
 
     if (isMobile) {
         return (
             <div 
-              className="bg-card text-foreground rounded-lg p-3 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden"
-              style={{ background: `linear-gradient(to bottom, white 50%, ${color} 50%)` }}
+              className="bg-card text-foreground rounded-lg p-4 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden text-black"
+              style={backgroundStyle}
               onClick={onClick}
             >
-                {/* Top Section (White) */}
-                <div className="relative z-10 h-1/2 flex flex-col justify-start items-center pt-2 text-black">
-                    <div className="text-center space-y-1">
-                        <p className="font-semibold capitalize text-black">{capitalize(match.category)}</p>
-                        <p className="text-xs text-black">Evento Destacado</p>
-                    </div>
-
-                    {hasTeams && match.teams?.home?.badge ? (
-                        <div className="flex-grow flex flex-col items-center justify-center gap-2 text-center w-full">
-                            <Image
-                                className="w-16 h-16 object-contain"
-                                src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
-                                alt={match.teams.home.name || 'Escudo Local'}
-                                width={64}
-                                height={64}
-                            />
-                            <span className="text-lg font-bold text-black">{match.teams.home.name || 'Equipo Local'}</span>
-                        </div>
-                    ) : (
-                        <div className="flex-grow flex items-center justify-center">
-                            <p className="text-2xl font-bold text-center text-black">{match.title}</p>
-                        </div>
-                    )}
+                <div className="relative z-10 text-center mb-2">
+                    <p className="font-semibold capitalize">{capitalize(match.category)}</p>
+                    <p className="text-xs">Evento Destacado</p>
                 </div>
-
-                 {/* Bottom Section (Color) */}
-                <div className="relative z-10 h-1/2 flex flex-col justify-end items-center pb-2 text-white">
-                     {hasTeams && match.teams?.away?.badge ? (
-                        <div className="flex-grow flex flex-col items-center justify-center gap-2 text-center w-full">
-                             <Image
-                                className="w-16 h-16 object-contain"
-                                src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
-                                alt={match.teams.away.name || 'Escudo Visitante'}
-                                width={64}
-                                height={64}
-                            />
-                            <span className="text-lg font-bold">{match.teams.away.name || 'Equipo Visitante'}</span>
+                
+                {hasTeams ? (
+                     <div className="relative flex-grow flex flex-col items-center justify-around text-lg font-bold">
+                        <div className="w-full flex flex-col items-center justify-center gap-1 text-center">
+                             {match.teams?.home?.badge && (
+                               <Image
+                                    className="w-16 h-16 object-contain"
+                                    src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
+                                    alt={match.teams.home.name || 'Escudo Local'}
+                                    width={64}
+                                    height={64}
+                                    style={{filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'}}
+                                />
+                            )}
+                            <span className="text-center">{match.teams?.home?.name || 'Equipo Local'}</span>
                         </div>
-                    ) : null}
-                    
-                    <div className="text-center mb-3">
-                        <CountdownTimer targetDate={match.date} className="text-white" isMobile={isMobile} />
+
+                        <div className="text-4xl font-black">VS</div>
+
+                        <div className="w-full flex flex-col items-center justify-center gap-1 text-center">
+                            {match.teams?.away?.badge && (
+                                <Image
+                                    className="w-16 h-16 object-contain"
+                                    src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
+                                    alt={match.teams.away.name || 'Escudo Visitante'}
+                                    width={64}
+                                    height={64}
+                                    style={{filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'}}
+                                />
+                            )}
+                            <span className="text-center">{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                        </div>
                     </div>
-                    
-                    <p className="text-center text-sm text-white">{formattedDate}</p>
+                ) : (
+                    <div className="flex-grow flex items-center justify-center">
+                         <p className="text-2xl font-bold text-center">{match.title}</p>
+                    </div>
+                )}
+                
+                <div className="relative z-10 text-center mt-3">
+                     <CountdownTimer targetDate={match.date} />
+                     <p className="text-center text-sm mt-2">{formattedDate}</p>
                 </div>
             </div>
         );
@@ -171,11 +161,11 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     
     return (
         <div 
-          className="bg-card rounded-lg p-3 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden"
+          className="bg-card rounded-lg p-4 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden text-black"
           style={backgroundStyle}
           onClick={onClick}
         >
-            <div className="relative z-10 flex flex-col h-full text-black">
+            <div className="relative z-10 flex flex-col h-full">
                 <div className="text-center mb-2 space-y-1">
                     <p className="font-semibold capitalize">{capitalize(match.category)}</p>
                     <p className="text-xs">Evento Destacado</p>
@@ -197,7 +187,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                             <span className="text-center">{match.teams?.home?.name || 'Equipo Local'}</span>
                         </div>
 
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-5xl font-black text-black">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-5xl font-black">
                            VS
                         </div>
 
@@ -216,13 +206,13 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
+                    <div className="flex-grow flex items-center justify-center">
                         <p className="text-2xl font-bold text-center">{match.title}</p>
                     </div>
                 )}
 
                 <div className="text-center mb-3">
-                     <CountdownTimer targetDate={match.date} isMobile={isMobile} />
+                     <CountdownTimer targetDate={match.date} />
                 </div>
                 
                  <p className="text-center text-sm">{formattedDate}</p>
