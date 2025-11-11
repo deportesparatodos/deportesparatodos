@@ -102,16 +102,12 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     }).join(' ');
 
     const hasTeams = match.teams?.home && match.teams?.away;
-    
-    const backgroundStyle = {
-      background: `linear-gradient(to top right, white 50%, ${color} 50%)`,
-    };
 
     if (isMobile) {
         return (
             <div 
               className="bg-card rounded-lg p-4 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden"
-              style={{ background: `linear-gradient(to top right, ${color} 50%, white 50.5%)` }}
+              style={{ background: `linear-gradient(to bottom right, ${color} 50%, #f0f0f0 50.5%)` }}
               onClick={onClick}
             >
                 <div className="relative z-10 text-center -mt-1">
@@ -171,7 +167,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     return (
         <div 
           className="bg-card rounded-lg p-4 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden"
-          style={{ background: `linear-gradient(to top right, white 50%, ${color} 50%)` }}
+          style={{ background: `linear-gradient(to bottom right, ${color} 50%, #f0f0f0 50%)` }}
           onClick={onClick}
         >
             {/* Top titles */}
