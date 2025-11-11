@@ -143,8 +143,15 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
     const rawFormattedDate = format(matchDate, "EEEE, d 'de' MMMM 'a las' HH:mm'hs'", { locale: es, timeZone });
+    
     const dateParts = rawFormattedDate.split(' ');
-    const formattedDate = dateParts.map(capitalize).join(' ');
+    const formattedDate = dateParts.map(part => {
+        // Capitalize day of the week and month
+        if (['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].includes(part) || dateParts.includes('de') && dateParts.indexOf(part) === dateParts.indexOf('de') + 1) {
+            return capitalize(part);
+        }
+        return part;
+    }).join(' ');
 
     const backgroundStyle = { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' };
     const hasTeams = match.teams?.home && match.teams?.away;
@@ -158,7 +165,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
             <div className="relative z-10 flex flex-col h-full">
                 <div className="text-center mb-2 space-y-1">
                     <SplitColorText text={match.category} className="font-semibold capitalize" />
-                    <SplitColorText text="Partido Destacado" className="text-xs" />
+                    <SplitColorText text="Evento Destacado" className="text-xs" />
                 </div>
                 
                 {hasTeams ? (
