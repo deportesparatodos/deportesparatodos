@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { FC, useState, useEffect } from 'react';
@@ -156,5 +157,3 @@ export const EventCarousel: FC<EventCarouselProps> = ({ title, events, channels,
     </div>
   );
 };
-
-    

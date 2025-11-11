@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -58,7 +59,7 @@ const CountdownTimer = ({ targetDate, className }: { targetDate: number, classNa
     }, [targetDate]);
 
     const renderTimeUnit = (value: number, label: string) => (
-        <div>
+        <div className="text-white">
             <div className="text-2xl sm:text-3xl font-bold">{String(value).padStart(2, '0')}</div>
             <div className="text-xs">{label}</div>
         </div>
@@ -74,21 +75,25 @@ const CountdownTimer = ({ targetDate, className }: { targetDate: number, classNa
     );
 };
 
-const SplitVSText = ({ className }: { className?: string }) => {
-    return (
-        <div className={`relative flex justify-center items-center ${className}`}>
-            <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
-                <p className="w-[200%] text-center text-primary-foreground font-black">V</p>
-            </div>
-            <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
-                <p className="w-[200%] text-center text-secondary-foreground font-black -ml-[100%]">S</p>
-            </div>
-            <p className="opacity-0 font-black">VS</p>
-        </div>
-    );
+const SplitVSText = ({ color, className }: { color: string, className?: string }) => {
+  return (
+    <div className={cn("relative flex justify-center items-center text-5xl font-black", className)}>
+      <p className="opacity-0">VS</p>
+      <div
+        className="absolute inset-0 flex items-center justify-center"
+        style={{
+          clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
+        }}
+      >
+        <span style={{ color: color }} className="block transform -translate-x-1/2">V</span>
+        <span className="block text-white transform translate-x-1/2">S</span>
+      </div>
+    </div>
+  );
 };
 
-export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick: () => void }) => {
+
+export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match: APIMatch, onClick: () => void, color: string }) => {
     const isMobile = useIsMobile();
     const timeZone = 'America/Argentina/Buenos_Aires';
     const matchDate = new Date(match.date);
@@ -99,69 +104,72 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     
     const dateParts = rawFormattedDate.split(' ');
     const formattedDate = dateParts.map(part => {
-        if (['lunes,', 'martes,', 'miércoles,', 'jueves,', 'viernes,', 'sábado,', 'domingo,', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'].includes(part.toLowerCase())) {
+        const lowerPart = part.toLowerCase();
+        if (['lunes,', 'martes,', 'miércoles,', 'jueves,', 'viernes,', 'sábado,', 'domingo,'].includes(lowerPart)) {
             return capitalize(part);
+        }
+        if (['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'].includes(lowerPart)) {
+             return capitalize(part);
         }
         return part;
     }).join(' ');
 
     const hasTeams = match.teams?.home && match.teams?.away;
+    
+    const backgroundStyle = {
+      background: `linear-gradient(135deg, white 50%, ${color} 50%)`,
+    };
 
     if (isMobile) {
         return (
             <div 
-              className="bg-card text-foreground rounded-lg p-3 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden bg-gradient-to-b from-primary from-50% to-secondary to-50%"
+              className="bg-card text-foreground rounded-lg p-3 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden"
+              style={{ background: `linear-gradient(to bottom, white 50%, ${color} 50%)` }}
               onClick={onClick}
             >
-                {/* Top Section (White Background) */}
-                <div className="relative z-10 h-1/2 flex flex-col justify-start items-center pt-2">
+                <div className="relative z-10 h-1/2 flex flex-col justify-start items-center pt-2 text-black">
                     <div className="text-center space-y-1">
-                        <p className="font-semibold capitalize text-secondary-foreground">{capitalize(match.category)}</p>
-                        <p className="text-xs text-secondary-foreground">Evento Destacado</p>
+                        <p className="font-semibold capitalize">{capitalize(match.category)}</p>
+                        <p className="text-xs">Evento Destacado</p>
                     </div>
 
-                    {hasTeams ? (
+                    {hasTeams && match.teams?.home?.badge ? (
                         <div className="flex-grow flex flex-col items-center justify-center gap-2 text-center w-full">
-                            {match.teams?.home?.badge && (
-                                <Image
-                                    className="w-16 h-16 object-contain"
-                                    src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
-                                    alt={match.teams.home.name || 'Escudo Local'}
-                                    width={64}
-                                    height={64}
-                                />
-                            )}
-                            <span className="text-lg font-bold text-secondary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
+                            <Image
+                                className="w-16 h-16 object-contain"
+                                src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
+                                alt={match.teams.home.name || 'Escudo Local'}
+                                width={64}
+                                height={64}
+                            />
+                            <span className="text-lg font-bold">{match.teams.home.name || 'Equipo Local'}</span>
                         </div>
                     ) : (
                         <div className="flex-grow flex items-center justify-center">
-                            <p className="text-2xl font-bold text-center text-secondary-foreground">{match.title}</p>
+                            <p className="text-2xl font-bold text-center text-black">{match.title}</p>
                         </div>
                     )}
                 </div>
 
-                {/* Bottom Section (Black Background) */}
-                <div className="relative z-10 h-1/2 flex flex-col justify-end items-center pb-2">
-                    {hasTeams ? (
+                <div className="relative z-10 h-1/2 flex flex-col justify-end items-center pb-2 text-white">
+                    {hasTeams && match.teams?.away?.badge ? (
                         <div className="flex-grow flex flex-col items-center justify-center gap-2 text-center w-full">
-                            {match.teams?.away?.badge && (
-                                <Image
-                                    className="w-16 h-16 object-contain"
-                                    src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
-                                    alt={match.teams.away.name || 'Escudo Visitante'}
-                                    width={64}
-                                    height={64}
-                                />
-                            )}
-                            <span className="text-lg font-bold text-primary-foreground">{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                            <Image
+                                className="w-16 h-16 object-contain"
+                                src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
+                                alt={match.teams.away.name || 'Escudo Visitante'}
+                                width={64}
+                                height={64}
+                            />
+                            <span className="text-lg font-bold">{match.teams.away.name || 'Equipo Visitante'}</span>
                         </div>
                     ) : null}
                     
                     <div className="text-center mb-3">
-                        <CountdownTimer targetDate={match.date} className="text-primary-foreground" />
+                        <CountdownTimer targetDate={match.date} />
                     </div>
                     
-                    <p className="text-center text-sm text-primary-foreground">{formattedDate}</p>
+                    <p className="text-center text-sm">{formattedDate}</p>
                 </div>
             </div>
         );
@@ -169,13 +177,14 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     
     return (
         <div 
-          className="bg-card text-foreground rounded-lg p-3 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden bg-gradient-to-r from-primary from-50% to-secondary to-50%"
+          className="bg-card rounded-lg p-3 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden"
+          style={backgroundStyle}
           onClick={onClick}
         >
-            <div className="relative z-10 flex flex-col h-full">
+            <div className="relative z-10 flex flex-col h-full text-white">
                 <div className="text-center mb-2 space-y-1">
-                    <p className="font-semibold capitalize text-secondary-foreground">{capitalize(match.category)}</p>
-                    <p className="text-xs text-secondary-foreground">Evento Destacado</p>
+                    <p className="font-semibold capitalize">{capitalize(match.category)}</p>
+                    <p className="text-xs">Evento Destacado</p>
                 </div>
                 
                 {hasTeams ? (
@@ -191,11 +200,11 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                                     style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
                                 />
                             )}
-                            <span className="text-center text-secondary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
+                            <span className="text-center">{match.teams?.home?.name || 'Equipo Local'}</span>
                         </div>
 
                         <div className="p-3 text-2xl hidden sm:block">
-                           <SplitVSText />
+                           <SplitVSText color={color} />
                         </div>
 
                         <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
@@ -209,23 +218,21 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                                     style={{filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'}}
                                 />
                             )}
-                            <span className="text-center text-primary-foreground">{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                            <span className="text-center">{match.teams?.away?.name || 'Equipo Visitante'}</span>
                         </div>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
-                        <p className="text-2xl font-bold text-center text-primary-foreground">{match.title}</p>
+                        <p className="text-2xl font-bold text-center text-white">{match.title}</p>
                     </div>
                 )}
 
                 <div className="text-center mb-3">
-                     <CountdownTimer targetDate={match.date} className="text-primary-foreground" />
+                     <CountdownTimer targetDate={match.date} />
                 </div>
                 
-                 <p className="text-center text-sm text-primary-foreground">{formattedDate}</p>
+                 <p className="text-center text-sm">{formattedDate}</p>
             </div>
         </div>
     );
 };
-
-    

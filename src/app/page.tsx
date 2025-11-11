@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
@@ -1717,6 +1718,16 @@ export function HomePageContent() {
       </div>
     )
   };
+  
+  const rainbowColors = [
+    '#ff0000', // red
+    '#ff7f00', // orange
+    '#ffff00', // yellow
+    '#00ff00', // green
+    '#0000ff', // blue
+    '#8b00ff'  // violet
+  ];
+
 
   const renderHomeContent = () => {
     if (searchTerm) {
@@ -1811,35 +1822,39 @@ export function HomePageContent() {
         return (
             <>
                 {featuredMatches.length > 0 && (
-                    <div className="w-full space-y-4 pt-4">
+                    <div className="w-full space-y-4 pt-4 relative">
                         <Carousel opts={{ align: "start", loop: true, }} className="w-full" >
                             <CarouselContent className="-ml-4">
-                                {featuredMatches.map((match) => (
+                                {featuredMatches.map((match, index) => (
                                     <CarouselItem key={match.id} className="basis-full md:basis-1/1 pl-4">
-                                    <FeaturedMatchCard match={match} onClick={() => {
-                                        const event: Event = {
-                                            id: match.id,
-                                            title: match.title,
-                                            time: new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                            options: [],
-                                            sources: match.sources,
-                                            buttons: [],
-                                            category: match.category,
-                                            language: '',
-                                            date: new Date(match.date).toISOString().split('T')[0],
-                                            source: 'streamed.pk',
-                                            image: match.teams?.home?.badge && match.teams?.away?.badge
-                                                ? `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
-                                                : `https://i.ibb.co/dHPWxr8/depete.jpg`,
-                                            status: 'Próximo',
-                                        };
-                                        openDialogForEvent(event);
-                                    }} />
+                                        <FeaturedMatchCard 
+                                            match={match} 
+                                            color={rainbowColors[index % rainbowColors.length]}
+                                            onClick={() => {
+                                                const event: Event = {
+                                                    id: match.id,
+                                                    title: match.title,
+                                                    time: new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                                    options: [],
+                                                    sources: match.sources,
+                                                    buttons: [],
+                                                    category: match.category,
+                                                    language: '',
+                                                    date: new Date(match.date).toISOString().split('T')[0],
+                                                    source: 'streamed.pk',
+                                                    image: match.teams?.home?.badge && match.teams?.away?.badge
+                                                        ? `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
+                                                        : `https://i.ibb.co/dHPWxr8/depete.jpg`,
+                                                    status: 'Próximo',
+                                                };
+                                                openDialogForEvent(event);
+                                            }} 
+                                        />
                                     </CarouselItem>
                                 ))}
                             </CarouselContent>
-                            <CarouselPrevious variant="ghost" className="hidden md:inline-flex" />
-                            <CarouselNext variant="ghost" className="hidden md:inline-flex" />
+                            <CarouselPrevious className="absolute left-2 top-2 z-10 bg-gray-500/50 text-white border-none hover:bg-gray-500/80" />
+                            <CarouselNext className="absolute right-2 top-2 z-10 bg-gray-500/50 text-white border-none hover:bg-gray-500/80" />
                         </Carousel>
                     </div>
                 )}
@@ -1911,35 +1926,39 @@ export function HomePageContent() {
     return (
       <>
         {categoryFeaturedMatches.length > 0 && (
-            <div className="w-full space-y-4 pt-4">
+            <div className="w-full space-y-4 pt-4 relative">
                 <Carousel opts={{ align: "start", loop: false }} className="w-full">
                     <CarouselContent className="-ml-4">
-                        {categoryFeaturedMatches.map((match) => (
+                        {categoryFeaturedMatches.map((match, index) => (
                             <CarouselItem key={match.id} className="basis-full md:basis-1/1 pl-4">
-                            <FeaturedMatchCard match={match} onClick={() => {
-                                const event: Event = {
-                                    id: match.id,
-                                    title: match.title,
-                                    time: new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                                    options: [],
-                                    sources: match.sources,
-                                    buttons: [],
-                                    category: match.category,
-                                    language: '',
-                                    date: new Date(match.date).toISOString().split('T')[0],
-                                    source: 'streamed.pk',
-                                    image: match.teams?.home?.badge && match.teams?.away?.badge
-                                        ? `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
-                                        : `https://i.ibb.co/dHPWxr8/depete.jpg`,
-                                    status: 'Próximo',
-                                };
-                                openDialogForEvent(event);
-                            }} />
+                                <FeaturedMatchCard 
+                                    match={match} 
+                                    color={rainbowColors[index % rainbowColors.length]}
+                                    onClick={() => {
+                                        const event: Event = {
+                                            id: match.id,
+                                            title: match.title,
+                                            time: new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                            options: [],
+                                            sources: match.sources,
+                                            buttons: [],
+                                            category: match.category,
+                                            language: '',
+                                            date: new Date(match.date).toISOString().split('T')[0],
+                                            source: 'streamed.pk',
+                                            image: match.teams?.home?.badge && match.teams?.away?.badge
+                                                ? `https://streamed.pk/api/images/poster/${match.teams.home.badge}/${match.teams.away.badge}.webp`
+                                                : `https://i.ibb.co/dHPWxr8/depete.jpg`,
+                                            status: 'Próximo',
+                                        };
+                                        openDialogForEvent(event);
+                                    }} 
+                                />
                             </CarouselItem>
                         ))}
                     </CarouselContent>
-                    <CarouselPrevious variant="ghost" className="hidden md:inline-flex" />
-                    <CarouselNext variant="ghost" className="hidden md:inline-flex" />
+                    <CarouselPrevious className="absolute left-2 top-2 z-10 bg-gray-500/50 text-white border-none hover:bg-gray-500/80" />
+                    <CarouselNext className="absolute right-2 top-2 z-10 bg-gray-500/50 text-white border-none hover:bg-gray-500/80" />
                 </Carousel>
             </div>
         )}
