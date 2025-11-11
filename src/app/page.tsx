@@ -1827,15 +1827,29 @@ export function HomePageContent() {
         </>
        );
     } else if (currentView === 'live') {
-        const liveEvents = allSortedEvents.filter(e => e.status === 'En Vivo');
-        itemsToDisplay = liveEvents;
+        itemsToDisplay = allSortedEvents.filter(e => e.status === 'En Vivo');
     } else if (currentView === 'channels') {
       itemsToDisplay = channelsData;
     } else {
       itemsToDisplay = categoryFilteredEvents;
     }
 
+    const categoryCarouselEvents = categoryFilteredEvents.length > 0 ? categoryFilteredEvents : (currentView === 'live' ? allSortedEvents.filter(e => e.status === 'En Vivo') : []);
+
     return (
+      <>
+        { (currentView !== 'home' && currentView !== 'channels') && categoryCarouselEvents.length > 0 && (
+          <div className="mb-8 pt-4">
+              <EventCarousel 
+                  title={`Eventos de ${currentView}`}
+                  events={categoryCarouselEvents}
+                  channels={[]}
+                  onCardClick={openDialogForEvent} 
+                  onChannelClick={handleChannelClick}
+                  getEventSelection={(e) => getEventSelection(e)} 
+              />
+          </div>
+        )}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 md:gap-6 pt-4">
           {itemsToDisplay.map((item, index) => {
               const isChannel = 'urls' in item;
@@ -1919,6 +1933,7 @@ export function HomePageContent() {
               }
           })}
       </div>
+      </>
     );
   };
   
@@ -2710,5 +2725,7 @@ function ControllingView({
   );
 }
 
+
+    
 
     
