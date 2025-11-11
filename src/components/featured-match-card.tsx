@@ -63,39 +63,11 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
     );
     
     return (
-        <div className="relative w-full max-w-xs mx-auto">
-            {/* Left side, black text, clipped */}
-            <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
-                <div className="w-[200%] grid grid-cols-2 gap-1 text-center text-primary-foreground">
-                    <div className="col-span-1 grid grid-cols-2 gap-1">
-                        {renderTimeUnit(timeLeft.days, 'Días')}
-                        {renderTimeUnit(timeLeft.hours, 'Horas')}
-                    </div>
-                </div>
-            </div>
-            {/* Right side, white text, clipped */}
-            <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
-                 <div className="w-[200%] grid grid-cols-2 gap-1 text-center text-secondary-foreground -ml-[100%]">
-                    <div className="col-span-1 grid grid-cols-2 gap-1">
-                        {/* Empty div for spacing */}
-                    </div>
-                    <div className="col-span-1 grid grid-cols-2 gap-1">
-                        {renderTimeUnit(timeLeft.minutes, 'Minutos')}
-                        {renderTimeUnit(timeLeft.seconds, 'Segundos')}
-                    </div>
-                </div>
-            </div>
-            {/* Invisible content for sizing */}
-            <div className="opacity-0 grid grid-cols-2 gap-1">
-                <div className="col-span-1 grid grid-cols-2 gap-1">
-                    {renderTimeUnit(timeLeft.days, 'Días')}
-                    {renderTimeUnit(timeLeft.hours, 'Horas')}
-                </div>
-                <div className="col-span-1 grid grid-cols-2 gap-1">
-                    {renderTimeUnit(timeLeft.minutes, 'Minutos')}
-                    {renderTimeUnit(timeLeft.seconds, 'Segundos')}
-                </div>
-            </div>
+        <div className="grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto text-primary-foreground">
+            {renderTimeUnit(timeLeft.days, 'Días')}
+            {renderTimeUnit(timeLeft.hours, 'Horas')}
+            {renderTimeUnit(timeLeft.minutes, 'Minutos')}
+            {renderTimeUnit(timeLeft.seconds, 'Segundos')}
         </div>
     );
 };
@@ -104,13 +76,13 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
 const SplitColorText = ({ text, className }: { text: string; className?: string }) => {
     return (
         <div className={`relative flex justify-center items-center ${className}`}>
-            {/* Left side, black text, clipped */}
-            <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
-                <p className="w-[200%] text-center text-primary-foreground">{text}</p>
+            {/* Left/Top side */}
+            <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden sm:w-1/2 sm:h-full">
+                <p className="w-[200%] sm:w-[200%] text-center text-primary-foreground">{text}</p>
             </div>
-            {/* Right side, white text, clipped */}
-            <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
-                <p className="w-[200%] text-center text-secondary-foreground -ml-[100%]">{text}</p>
+            {/* Right/Bottom side */}
+            <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden sm:right-0 sm:top-0 sm:w-1/2 sm:h-full">
+                <p className="w-[200%] sm:w-[200%] text-center text-secondary-foreground -ml-[100%] sm:-ml-[100%]">{text}</p>
             </div>
             {/* Invisible text to set the height and width */}
             <p className="opacity-0">{text}</p>
@@ -121,15 +93,12 @@ const SplitColorText = ({ text, className }: { text: string; className?: string 
 const SplitVSText = ({ className }: { className?: string }) => {
     return (
         <div className={`relative flex justify-center items-center ${className}`}>
-            {/* Left side, black text, clipped */}
             <div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
                 <p className="w-[200%] text-center text-primary-foreground font-black">V</p>
             </div>
-            {/* Right side, white text, clipped */}
             <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
                 <p className="w-[200%] text-center text-secondary-foreground font-black -ml-[100%]">S</p>
             </div>
-            {/* Invisible text to set the height and width */}
             <p className="opacity-0 font-black">VS</p>
         </div>
     );
@@ -146,26 +115,23 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     
     const dateParts = rawFormattedDate.split(' ');
     const formattedDate = dateParts.map(part => {
-        // Capitalize day of the week and month
-        if (['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].includes(part) || dateParts.includes('de') && dateParts.indexOf(part) === dateParts.indexOf('de') + 1) {
+        if (['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'].includes(part.toLowerCase())) {
             return capitalize(part);
         }
         return part;
     }).join(' ');
 
-    const backgroundStyle = { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' };
     const hasTeams = match.teams?.home && match.teams?.away;
 
     return (
         <div 
-          className="bg-card text-foreground rounded-lg p-3 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden"
+          className="bg-card text-foreground rounded-lg p-3 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden bg-gradient-to-b from-primary from-50% to-secondary to-50% sm:bg-gradient-to-r"
           onClick={onClick}
-          style={backgroundStyle}
         >
             <div className="relative z-10 flex flex-col h-full">
                 <div className="text-center mb-2 space-y-1">
-                    <SplitColorText text={match.category} className="font-semibold capitalize" />
-                    <SplitColorText text="Evento Destacado" className="text-xs" />
+                    <p className="font-semibold capitalize text-primary-foreground">{match.category}</p>
+                    <p className="text-xs text-primary-foreground">Evento Destacado</p>
                 </div>
                 
                 {hasTeams ? (
@@ -184,7 +150,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                             <span className="text-center text-primary-foreground">{match.teams?.home?.name || 'Equipo Local'}</span>
                         </div>
 
-                        <div className="p-3 text-2xl">
+                        <div className="p-3 text-2xl hidden sm:block">
                            <SplitVSText />
                         </div>
 
@@ -208,12 +174,11 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                     </div>
                 )}
 
-
                 <div className="text-center mb-3">
                     <CountdownTimer targetDate={match.date} />
                 </div>
                 
-                 <SplitColorText text={formattedDate} className="text-sm" />
+                <p className="text-center text-sm text-primary-foreground">{formattedDate}</p>
             </div>
         </div>
     );

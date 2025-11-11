@@ -1733,7 +1733,7 @@ export function HomePageContent() {
                                     className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
                                     onClick={handlePasteFromClipboard}
                                 >
-                                    <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
+                                    <div className={cn("relative w-full flex-grow flex items-center justify-center p-4 bg-white aspect-video")}>
                                         <Image
                                             src={channel.logo}
                                             alt={`${channel.name} logo`}
@@ -1762,7 +1762,7 @@ export function HomePageContent() {
                                 className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
                                 onClick={() => handleChannelClick(channel)}
                             >
-                                <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
+                                <div className={cn("relative w-full flex-grow flex items-center justify-center p-4 bg-white aspect-video")}>
                                     <Image
                                         src={channel.logo}
                                         alt={`${channel.name} logo`}
@@ -1955,7 +1955,7 @@ export function HomePageContent() {
                             className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
                             onClick={handlePasteFromClipboard}
                         >
-                            <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
+                            <div className={cn("relative w-full flex-grow flex items-center justify-center p-4 bg-white aspect-video")}>
                                 <Image
                                     src={channel.logo}
                                     alt={`${channel.name} logo`}
@@ -1984,7 +1984,7 @@ export function HomePageContent() {
                         className="group cursor-pointer rounded-lg bg-card text-card-foreground overflow-hidden transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg border-border flex flex-col h-full"
                         onClick={() => handleChannelClick(channel)}
                     >
-                        <div className={cn("relative w-full flex-grow flex items-center justify-center p-2 bg-white aspect-video")}>
+                        <div className={cn("relative w-full flex-grow flex items-center justify-center p-4 bg-white aspect-video")}>
                             <Image
                                 src={channel.logo}
                                 alt={`${channel.name} logo`}
