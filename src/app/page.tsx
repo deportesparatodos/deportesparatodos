@@ -1853,8 +1853,8 @@ export function HomePageContent() {
                                     </CarouselItem>
                                 ))}
                             </CarouselContent>
-                            <CarouselPrevious className="absolute left-2 top-2 z-10 bg-gray-500/50 text-white border-none hover:bg-gray-500/80" />
-                            <CarouselNext className="absolute right-2 top-2 z-10 bg-gray-500/50 text-white border-none hover:bg-gray-500/80" />
+                            <CarouselPrevious variant="ghost" className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-black border-none" />
+                            <CarouselNext variant="ghost" className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-black border-none" />
                         </Carousel>
                     </div>
                 )}
@@ -1957,8 +1957,8 @@ export function HomePageContent() {
                             </CarouselItem>
                         ))}
                     </CarouselContent>
-                    <CarouselPrevious className="absolute left-2 top-2 z-10 bg-gray-500/50 text-white border-none hover:bg-gray-500/80" />
-                    <CarouselNext className="absolute right-2 top-2 z-10 bg-gray-500/50 text-white border-none hover:bg-gray-500/80" />
+                    <CarouselPrevious variant="ghost" className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-black border-none" />
+                    <CarouselNext variant="ghost" className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-black border-none" />
                 </Carousel>
             </div>
         )}

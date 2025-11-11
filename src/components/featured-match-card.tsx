@@ -64,8 +64,19 @@ const CountdownTimer = ({ targetDate, className }: { targetDate: number, classNa
         </div>
     );
     
+    if (isMobile) {
+        return (
+            <div className={cn("grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto", className)}>
+                {renderTimeUnit(timeLeft.days, 'Días')}
+                {renderTimeUnit(timeLeft.hours, 'Horas')}
+                {renderTimeUnit(timeLeft.minutes, 'Minutos')}
+                {renderTimeUnit(timeLeft.seconds, 'Segundos')}
+            </div>
+        )
+    }
+
     return (
-        <div className={cn("grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto", className)}>
+        <div className={cn("grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto text-black", className)}>
             {renderTimeUnit(timeLeft.days, 'Días')}
             {renderTimeUnit(timeLeft.hours, 'Horas')}
             {renderTimeUnit(timeLeft.minutes, 'Minutos')}
@@ -108,6 +119,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
               style={{ background: `linear-gradient(to bottom, white 50%, ${color} 50%)` }}
               onClick={onClick}
             >
+                {/* Top Section (White) */}
                 <div className="relative z-10 h-1/2 flex flex-col justify-start items-center pt-2 text-black">
                     <div className="text-center space-y-1">
                         <p className="font-semibold capitalize text-black">{capitalize(match.category)}</p>
@@ -132,25 +144,26 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                     )}
                 </div>
 
-                <div className="relative z-10 h-1/2 flex flex-col justify-end items-center pb-2 text-black">
-                    {hasTeams && match.teams?.away?.badge ? (
+                 {/* Bottom Section (Color) */}
+                <div className="relative z-10 h-1/2 flex flex-col justify-end items-center pb-2 text-white">
+                     {hasTeams && match.teams?.away?.badge ? (
                         <div className="flex-grow flex flex-col items-center justify-center gap-2 text-center w-full">
-                            <Image
+                             <Image
                                 className="w-16 h-16 object-contain"
                                 src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
                                 alt={match.teams.away.name || 'Escudo Visitante'}
                                 width={64}
                                 height={64}
                             />
-                            <span className="text-lg font-bold text-black">{match.teams.away.name || 'Equipo Visitante'}</span>
+                            <span className="text-lg font-bold">{match.teams.away.name || 'Equipo Visitante'}</span>
                         </div>
                     ) : null}
                     
                     <div className="text-center mb-3">
-                        <CountdownTimer targetDate={match.date} />
+                        <CountdownTimer targetDate={match.date} className="text-white" />
                     </div>
                     
-                    <p className="text-center text-sm text-black">{formattedDate}</p>
+                    <p className="text-center text-sm text-white">{formattedDate}</p>
                 </div>
             </div>
         );
