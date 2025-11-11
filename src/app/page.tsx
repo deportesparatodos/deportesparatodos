@@ -1724,7 +1724,7 @@ export function HomePageContent() {
     '#ff7f00', // orange
     '#ffff00', // yellow
     '#00ff00', // green
-    '#0000ff', // blue
+    '#38bdf8', // celeste
     '#8b00ff'  // violet
   ];
 
@@ -1822,11 +1822,11 @@ export function HomePageContent() {
         return (
             <>
                 {featuredMatches.length > 0 && (
-                    <div className="w-full space-y-4 pt-4 relative">
+                    <div className="w-full relative">
                         <Carousel opts={{ align: "start", loop: true, }} className="w-full" >
                             <CarouselContent className="-ml-4">
                                 {featuredMatches.map((match, index) => (
-                                    <CarouselItem key={match.id} className="basis-full md:basis-1/1 pl-4">
+                                    <CarouselItem key={match.id} className="basis-full pl-4">
                                         <FeaturedMatchCard 
                                             match={match} 
                                             color={rainbowColors[index % rainbowColors.length]}
@@ -1884,7 +1884,7 @@ export function HomePageContent() {
                     </Carousel>
                 </div>
                 
-                <div className="space-y-[25px] mt-[35px] mb-8">
+                <div className="space-y-[25px] mt-[25px] mb-8">
                      <EventCarousel 
                         title="Canales" 
                         channels={channelsData}

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,7 +31,7 @@ interface Countdown {
     seconds: number;
 }
 
-const CountdownTimer = ({ targetDate, className, isMobile }: { targetDate: number, className?: string, isMobile: boolean }) => {
+const CountdownTimer = ({ targetDate, className }: { targetDate: number, className?: string }) => {
     const [timeLeft, setTimeLeft] = useState<Countdown>({
         days: 0, hours: 0, minutes: 0, seconds: 0
     });
@@ -69,7 +70,7 @@ const CountdownTimer = ({ targetDate, className, isMobile }: { targetDate: numbe
     );
     
     return (
-        <div className={cn("grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto text-black", className)}>
+        <div className={cn("grid grid-cols-4 gap-1 text-center w-full max-w-xs mx-auto", className)}>
             {renderTimeUnit(timeLeft.days, 'Días')}
             {renderTimeUnit(timeLeft.hours, 'Horas')}
             {renderTimeUnit(timeLeft.minutes, 'Minutos')}
@@ -109,8 +110,8 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     if (isMobile) {
         return (
             <div 
-              className="bg-card text-black rounded-lg p-4 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden"
-              style={backgroundStyle}
+              className="bg-card rounded-lg p-4 relative font-sans min-h-[350px] flex flex-col justify-between border border-secondary cursor-pointer overflow-hidden text-black"
+              style={{ background: `linear-gradient(to top right, white 50%, ${color} 50%)` }}
               onClick={onClick}
             >
                 <div className="relative z-10 text-center -mt-1">
@@ -160,7 +161,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                 )}
                 
                 <div className="relative z-10 text-center mt-3">
-                     <CountdownTimer targetDate={match.date} isMobile={isMobile} />
+                     <CountdownTimer targetDate={match.date} className="text-black"/>
                      <p className="text-center text-sm mt-2 text-black">{formattedDate}</p>
                 </div>
             </div>
@@ -220,13 +221,8 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                 </div>
             )}
             
-            {/* Countdown timer positioned below VS */}
-            <div className="absolute top-[calc(50%+40px)] left-1/2 -translate-x-1/2 -translate-y-1/2 w-full z-10">
-                 <CountdownTimer targetDate={match.date} isMobile={isMobile} className="text-black"/>
-            </div>
-
-            {/* Bottom date */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full text-center z-10">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full z-10 text-center space-y-1">
+                 <CountdownTimer targetDate={match.date} className="text-black"/>
                  <p className="text-center text-sm text-black">{formattedDate}</p>
             </div>
         </div>
