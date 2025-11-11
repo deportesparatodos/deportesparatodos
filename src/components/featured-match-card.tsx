@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -59,7 +58,7 @@ const CountdownTimer = ({ targetDate, className }: { targetDate: number, classNa
     }, [targetDate]);
 
     const renderTimeUnit = (value: number, label: string) => (
-        <div className="text-white">
+        <div className="text-black">
             <div className="text-2xl sm:text-3xl font-bold">{String(value).padStart(2, '0')}</div>
             <div className="text-xs">{label}</div>
         </div>
@@ -74,24 +73,6 @@ const CountdownTimer = ({ targetDate, className }: { targetDate: number, classNa
         </div>
     );
 };
-
-const SplitVSText = ({ color, className }: { color: string, className?: string }) => {
-  return (
-    <div className={cn("relative flex justify-center items-center text-5xl font-black", className)}>
-      <p className="opacity-0">VS</p>
-      <div
-        className="absolute inset-0 flex items-center justify-center"
-        style={{
-          clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
-        }}
-      >
-        <span style={{ color: color }} className="block transform -translate-x-1/2">V</span>
-        <span className="block text-white transform translate-x-1/2">S</span>
-      </div>
-    </div>
-  );
-};
-
 
 export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match: APIMatch, onClick: () => void, color: string }) => {
     const isMobile = useIsMobile();
@@ -129,8 +110,8 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
             >
                 <div className="relative z-10 h-1/2 flex flex-col justify-start items-center pt-2 text-black">
                     <div className="text-center space-y-1">
-                        <p className="font-semibold capitalize">{capitalize(match.category)}</p>
-                        <p className="text-xs">Evento Destacado</p>
+                        <p className="font-semibold capitalize text-black">{capitalize(match.category)}</p>
+                        <p className="text-xs text-black">Evento Destacado</p>
                     </div>
 
                     {hasTeams && match.teams?.home?.badge ? (
@@ -142,7 +123,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                                 width={64}
                                 height={64}
                             />
-                            <span className="text-lg font-bold">{match.teams.home.name || 'Equipo Local'}</span>
+                            <span className="text-lg font-bold text-black">{match.teams.home.name || 'Equipo Local'}</span>
                         </div>
                     ) : (
                         <div className="flex-grow flex items-center justify-center">
@@ -151,7 +132,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                     )}
                 </div>
 
-                <div className="relative z-10 h-1/2 flex flex-col justify-end items-center pb-2 text-white">
+                <div className="relative z-10 h-1/2 flex flex-col justify-end items-center pb-2 text-black">
                     {hasTeams && match.teams?.away?.badge ? (
                         <div className="flex-grow flex flex-col items-center justify-center gap-2 text-center w-full">
                             <Image
@@ -161,7 +142,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                                 width={64}
                                 height={64}
                             />
-                            <span className="text-lg font-bold">{match.teams.away.name || 'Equipo Visitante'}</span>
+                            <span className="text-lg font-bold text-black">{match.teams.away.name || 'Equipo Visitante'}</span>
                         </div>
                     ) : null}
                     
@@ -169,7 +150,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                         <CountdownTimer targetDate={match.date} />
                     </div>
                     
-                    <p className="text-center text-sm">{formattedDate}</p>
+                    <p className="text-center text-sm text-black">{formattedDate}</p>
                 </div>
             </div>
         );
@@ -181,14 +162,14 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
           style={backgroundStyle}
           onClick={onClick}
         >
-            <div className="relative z-10 flex flex-col h-full text-white">
+            <div className="relative z-10 flex flex-col h-full text-black">
                 <div className="text-center mb-2 space-y-1">
                     <p className="font-semibold capitalize">{capitalize(match.category)}</p>
                     <p className="text-xs">Evento Destacado</p>
                 </div>
                 
                 {hasTeams ? (
-                     <div className="flex items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
+                     <div className="relative flex items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
                         <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                              {match.teams?.home?.badge && (
                                <Image
@@ -203,8 +184,8 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                             <span className="text-center">{match.teams?.home?.name || 'Equipo Local'}</span>
                         </div>
 
-                        <div className="p-3 text-2xl hidden sm:block">
-                           <SplitVSText color={color} />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-5xl font-black text-black">
+                           VS
                         </div>
 
                         <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
@@ -223,7 +204,7 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
-                        <p className="text-2xl font-bold text-center text-white">{match.title}</p>
+                        <p className="text-2xl font-bold text-center">{match.title}</p>
                     </div>
                 )}
 
