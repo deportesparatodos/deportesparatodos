@@ -1858,7 +1858,7 @@ export function HomePageContent() {
                         </Carousel>
                     </div>
                 )}
-                <div className="w-full mt-[3px]">
+                <div className="w-full mt-2">
                     <Carousel opts={{ align: "start", dragFree: true, }} className="w-full" >
                         <div className="flex items-center justify-between mb-2">
                             <h2 className="text-2xl font-bold">Categorías</h2>
@@ -1884,7 +1884,7 @@ export function HomePageContent() {
                     </Carousel>
                 </div>
                 
-                <div className="space-y-[35px] mt-[35px] mb-8">
+                <div className="space-y-[25px] mt-[35px] mb-8">
                      <EventCarousel 
                         title="Canales" 
                         channels={channelsData}
@@ -2793,7 +2793,7 @@ function ControllingView({
                 isModification={controllerModificationIndex !== null && appState.selectedEvents[controllerModificationIndex!] !== null}
                 modificationIndex={controllerModificationIndex}
                 onRemove={() => {
-                  if (controllerModificationIndex !== null) handleRemoveEventFromFuture(controllerModificationIndex);
+                  if (controllerModificationIndex !== null) handleEventRemove(controllerModificationIndex);
                   setControllerView('addEvents');
                   setControllerDialogEvent(null);
                 }}
@@ -2836,12 +2836,3 @@ function ControllingView({
     </div>
   );
 }
-
-
-    
-
-    
-
-    
-
-    
