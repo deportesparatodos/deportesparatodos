@@ -170,60 +170,65 @@ export const FeaturedMatchCard = ({ match, onClick, color = '#000000' }: { match
     return (
         <div 
           className="bg-card rounded-lg p-4 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden text-black"
-          style={backgroundStyle}
+          style={{ background: `linear-gradient(to top right, white 50%, ${color} 50%)` }}
           onClick={onClick}
         >
-            <div className="relative z-10 flex flex-col h-full">
-                <div className="text-center mb-2 space-y-1 absolute top-0 left-1/2 -translate-x-1/2 w-full">
-                    <p className="font-semibold capitalize text-black">{capitalize(match.category)}</p>
-                    <p className="text-xs text-black">Evento Destacado</p>
-                </div>
-                
-                {hasTeams ? (
-                     <div className="relative flex items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow text-black">
-                        <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
-                             {match.teams?.home?.badge && (
-                               <Image
-                                    className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
-                                    src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
-                                    alt={match.teams.home.name || 'Escudo Local'}
-                                    width={96}
-                                    height={96}
-                                />
-                            )}
-                            <span className="text-center text-black">{match.teams?.home?.name || 'Equipo Local'}</span>
-                        </div>
+            {/* Top titles */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full text-center z-10">
+                <p className="font-semibold capitalize text-black">{capitalize(match.category)}</p>
+                <p className="text-xs text-black">Evento Destacado</p>
+            </div>
 
-                        <div className="text-5xl font-black text-black">
-                           VS
-                        </div>
-
-                        <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
-                            {match.teams?.away?.badge && (
-                                <Image
-                                    className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
-                                    src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
-                                    alt={match.teams.away.name || 'Escudo Visitante'}
-                                    width={96}
-                                    height={96}
-                                />
-                            )}
-                            <span className="text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
-                        </div>
+            {hasTeams ? (
+                <div className="relative flex items-center justify-center flex-grow text-black">
+                    {/* Home Team */}
+                    <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
+                         {match.teams?.home?.badge && (
+                           <Image
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+                                src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
+                                alt={match.teams.home.name || 'Escudo Local'}
+                                width={96}
+                                height={96}
+                            />
+                        )}
+                        <span className="text-lg sm:text-2xl font-bold text-center text-black">{match.teams?.home?.name || 'Equipo Local'}</span>
                     </div>
-                ) : (
-                    <div className="flex-grow flex items-center justify-center">
-                        <p className="text-2xl font-bold text-center text-black">{match.title}</p>
-                    </div>
-                )}
 
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full text-center space-y-2">
-                     <CountdownTimer targetDate={match.date} isMobile={isMobile} />
-                     <p className="text-center text-sm text-black">{formattedDate}</p>
+                    {/* VS centered */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-black z-20">
+                       VS
+                    </div>
+
+                    {/* Away Team */}
+                    <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
+                        {match.teams?.away?.badge && (
+                            <Image
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+                                src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
+                                alt={match.teams.away.name || 'Escudo Visitante'}
+                                width={96}
+                                height={96}
+                            />
+                        )}
+                        <span className="text-lg sm:text-2xl font-bold text-center text-black">{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                    </div>
                 </div>
+            ) : (
+                <div className="flex-grow flex items-center justify-center">
+                    <p className="text-2xl font-bold text-center text-black">{match.title}</p>
+                </div>
+            )}
+            
+            {/* Countdown timer positioned below VS */}
+            <div className="absolute top-[calc(50%+40px)] left-1/2 -translate-x-1/2 -translate-y-1/2 w-full z-10">
+                 <CountdownTimer targetDate={match.date} isMobile={isMobile} className="text-black"/>
+            </div>
+
+            {/* Bottom date */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full text-center z-10">
+                 <p className="text-center text-sm text-black">{formattedDate}</p>
             </div>
         </div>
     );
 };
-
-    
