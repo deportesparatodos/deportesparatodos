@@ -55,7 +55,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: number }) => {
     }, [targetDate]);
     
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-center w-full max-w-sm mx-auto">
             <div>
                 <div className="text-xl sm:text-3xl font-bold">{timeLeft.days}</div>
                 <div className="text-xs text-muted-foreground">Días</div>
@@ -80,52 +80,68 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     const timeZone = 'America/Argentina/Buenos_Aires';
     const matchDate = new Date(match.date);
     const formattedDate = format(matchDate, 'EEEE, d MMM \'a las\' p', { timeZone });
+    
+    const hasTeams = match.teams?.home?.badge && match.teams?.away?.badge;
+
+    const backgroundStyle = hasTeams 
+      ? { background: 'linear-gradient(to right, hsl(var(--primary)) 50%, hsl(var(--secondary)) 50%)' }
+      : { background: 'hsl(var(--card))' };
+      
+    const homeTeamNameColor = hasTeams ? 'text-primary-foreground' : 'text-foreground';
+    const awayTeamNameColor = hasTeams ? 'text-secondary-foreground' : 'text-foreground';
+
 
     return (
         <div 
-          className="bg-card text-foreground rounded-lg p-2 sm:p-3 relative font-sans min-h-[300px] sm:min-h-[380px] flex flex-col justify-center border border-secondary cursor-pointer"
+          className="bg-card text-foreground rounded-lg p-3 relative font-sans min-h-[320px] sm:min-h-[350px] flex flex-col justify-center border border-secondary cursor-pointer overflow-hidden"
           onClick={onClick}
+          style={backgroundStyle}
         >
-            <Badge className="absolute top-3 right-3">Partido Destacado</Badge>
-            <div className="text-center mb-3">
-                <div className="flex items-center justify-center gap-2 text-muted-foreground capitalize">
-                    <span>{match.category}</span>
-                </div>
-                <CountdownTimer targetDate={match.date} />
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center text-lg sm:text-2xl font-bold my-3">
-                <div className="w-full sm:flex-1 flex items-center justify-end gap-4 bg-primary p-3 rounded-md sm:rounded-l-md text-primary-foreground">
-                    <span className="text-right">{match.teams?.home?.name || 'Equipo Local'}</span>
-                    {match.teams?.home?.badge && (
-                       <Image
-                            className="w-16 h-16 object-contain"
-                            src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
-                            alt={match.teams.home.name || 'Escudo Local'}
-                            width={64}
-                            height={64}
-                        />
-                    )}
+            <div className="relative z-10 flex flex-col h-full">
+                <div className="text-center mb-4">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground capitalize">
+                        <span className="font-semibold">{match.category}</span>
+                    </div>
+                    <Badge variant="outline" className="border-border/50 bg-background/20 backdrop-blur-sm">Partido Destacado</Badge>
                 </div>
 
-                <div className="bg-muted/50 p-3 text-lg text-muted-foreground">VS</div>
+                <div className="flex flex-col sm:flex-row items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
+                    <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
+                         {match.teams?.home?.badge && (
+                           <Image
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
+                                src={`https://streamed.pk/api/images/badge/${match.teams.home.badge}.webp`}
+                                alt={match.teams.home.name || 'Escudo Local'}
+                                width={96}
+                                height={96}
+                            />
+                        )}
+                        <span className={`text-center ${homeTeamNameColor}`}>{match.teams?.home?.name || 'Equipo Local'}</span>
+                    </div>
 
-                <div className="w-full sm:flex-1 flex items-center gap-4 bg-secondary p-3 rounded-md sm:rounded-r-md text-secondary-foreground">
-                    {match.teams?.away?.badge && (
-                        <Image
-                            className="w-16 h-16 object-contain"
-                            src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
-                            alt={match.teams.away.name || 'Escudo Visitante'}
-                            width={64}
-                            height={64}
-                        />
-                    )}
-                    <span>{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                    <div className="p-3 text-lg text-muted-foreground font-black">VS</div>
+
+                    <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
+                        {match.teams?.away?.badge && (
+                            <Image
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
+                                src={`https://streamed.pk/api/images/badge/${match.teams.away.badge}.webp`}
+                                alt={match.teams.away.name || 'Escudo Visitante'}
+                                width={96}
+                                height={96}
+                            />
+                        )}
+                        <span className={`text-center ${awayTeamNameColor}`}>{match.teams?.away?.name || 'Equipo Visitante'}</span>
+                    </div>
                 </div>
-            </div>
 
-            <div className="text-center text-muted-foreground mb-4">
-                <span>{formattedDate}</span>
+                <div className="text-center mb-3">
+                    <CountdownTimer targetDate={match.date} />
+                </div>
+                
+                <div className="text-center text-muted-foreground text-sm">
+                    <span>{formattedDate}</span>
+                </div>
             </div>
         </div>
     );
