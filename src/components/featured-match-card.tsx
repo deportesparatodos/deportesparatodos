@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 
@@ -104,7 +103,6 @@ const SplitVSText = ({ className }: { className?: string }) => {
     );
 };
 
-
 export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick: () => void }) => {
     const timeZone = 'America/Argentina/Buenos_Aires';
     const matchDate = new Date(match.date);
@@ -115,7 +113,8 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
     
     const dateParts = rawFormattedDate.split(' ');
     const formattedDate = dateParts.map(part => {
-        if (['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'].includes(part.toLowerCase())) {
+        // Capitalize days and months
+        if (['lunes,', 'martes,', 'miércoles,', 'jueves,', 'viernes,', 'sábado,', 'domingo,', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'].includes(part.toLowerCase())) {
             return capitalize(part);
         }
         return part;
@@ -130,12 +129,12 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
         >
             <div className="relative z-10 flex flex-col h-full">
                 <div className="text-center mb-2 space-y-1">
-                    <p className="font-semibold capitalize text-primary-foreground">{match.category}</p>
-                    <p className="text-xs text-primary-foreground">Evento Destacado</p>
+                    <SplitColorText text={capitalize(match.category)} className="font-semibold capitalize" />
+                    <SplitColorText text="Evento Destacado" className="text-xs" />
                 </div>
                 
                 {hasTeams ? (
-                    <div className="flex flex-col sm:flex-row items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
+                     <div className="flex flex-col sm:flex-row items-center justify-center text-lg sm:text-2xl font-bold my-4 flex-grow">
                         <div className="w-full sm:flex-1 flex flex-col items-center justify-center gap-2 p-3">
                              {match.teams?.home?.badge && (
                                <Image
@@ -178,7 +177,7 @@ export const FeaturedMatchCard = ({ match, onClick }: { match: APIMatch, onClick
                     <CountdownTimer targetDate={match.date} />
                 </div>
                 
-                <p className="text-center text-sm text-primary-foreground">{formattedDate}</p>
+                <SplitColorText text={formattedDate} className="text-center text-sm" />
             </div>
         </div>
     );
