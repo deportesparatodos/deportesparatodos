@@ -64,7 +64,8 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription, Schedule } from '@/components/schedule-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Realtime } from 'ably';
+import { supabase } from '@/lib/supabase';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { AddEventsDialog } from '@/components/add-events-dialog';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { PresetsDialog } from '@/components/presets-dialog';
@@ -127,10 +128,7 @@ export type AppState = {
   fullscreenIndex: number | null;
 };
 
-type AblyMessage = {
-    name: string;
-    data: any;
-};
+
 
 export function HomePageContent() {
   const isMobile = useIsMobile();
@@ -148,9 +146,8 @@ export function HomePageContent() {
   
   const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = appState;
   
-  // Ably and Remote Control state
-  const ablyClientRef = useRef<Realtime | null>(null);
-  const channelRef = useRef<any>(null);
+  // Supabase Realtime and Remote Control state
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlled' | 'controlling'>('inactive');
   const [controlledSessionCode, setControlledSessionCode] = useState('');
   
@@ -173,11 +170,15 @@ export function HomePageContent() {
         const updatedState: AppState = { ...controllerAppState, ...newState };
         setControllerAppState(updatedState);
         
-        // Publish the new state to the controlled device
+        // Publish the new state to the controlled device via Supabase
         if (channelRef.current) {
-            channelRef.current.publish('action', {
-                type: 'SET_APP_STATE',
-                payload: updatedState,
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'action',
+                payload: {
+                    type: 'SET_APP_STATE',
+                    data: updatedState,
+                },
             });
         }
     } else {
@@ -197,7 +198,11 @@ export function HomePageContent() {
             }
             // If this instance is being controlled, it should send its new state back to the controller.
             if (remoteControlMode === 'controlled' && channelRef.current) {
-                channelRef.current.publish('state-update', { appState: updatedState });
+                channelRef.current.send({
+                    type: 'broadcast',
+                    event: 'state-update',
+                    payload: { appState: updatedState },
+                });
             }
             return updatedState;
         });
@@ -528,18 +533,9 @@ export function HomePageContent() {
 
   const cleanupAbly = useCallback(() => {
     if (channelRef.current) {
-        try { channelRef.current.detach(); } catch (e) { console.error("Error detaching from Ably channel:", e); }
-    }
-    if (ablyClientRef.current) {
-        try {
-            const state = ablyClientRef.current.connection.state;
-            if (state === 'connecting' || state === 'connected' || state === 'suspended') {
-                ablyClientRef.current.close();
-            }
-        } catch (e) { console.error("Error closing Ably connection:", e); }
+        try { supabase.removeChannel(channelRef.current); } catch (e) { console.error("Error removing Supabase channel:", e); }
     }
     channelRef.current = null;
-    ablyClientRef.current = null;
   }, []);
 
   const handleStopView = useCallback(() => {
@@ -1263,61 +1259,38 @@ export function HomePageContent() {
     return () => { cleanupAbly(); };
   }, [cleanupAbly]);
 
-  const initializeAbly = (clientId: string): Promise<Realtime> => {
-    return new Promise(async (resolve, reject) => {
-      try {
-          const response = await fetch('/api/ably');
-          if (!response.ok) {
-              const errData = await response.json();
-              throw new Error(errData.error || 'Failed to fetch Ably API key.');
-          }
-          const { apiKey } = await response.json();
-          if (!apiKey) throw new Error("La clave de API de Ably no está configurada.");
-
-          const client = new Realtime({ key: apiKey, clientId: clientId, echoMessages: false });
-          ablyClientRef.current = client;
-          
-          // Wait for the connection to be established before resolving
-          if (client.connection.state === 'connected') {
-              resolve(client);
-          } else {
-              client.connection.once('connected', () => resolve(client));
-              client.connection.once('failed', (err) => reject(new Error(err.reason?.message || "No se pudo conectar al servicio en tiempo real.")));
-          }
-      } catch (e: any) {
-          toast({ variant: 'destructive', title: 'Error de Conexión', description: e.message || "No se pudo conectar al servicio en tiempo real." });
-          reject(e);
-      }
-    });
-  };
-
   const startControlledSession = async (): Promise<string> => {
-    if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
+    cleanupAbly();
     try {
         const newSessionId = `dpt-${Math.random().toString(36).substring(2, 6)}`;
-        const ably = await initializeAbly(`controlled-${newSessionId}`);
         
-        // Connection is guaranteed to be ready here
-        setControlledSessionCode(newSessionId);
-        setRemoteControlMode('controlled');
-        sessionStorage.setItem('isControlledSession', 'true');
-        
-        const channel = ably.channels.get(newSessionId);
+        const channel = supabase.channel(newSessionId, {
+            config: { broadcast: { self: false } },
+        });
         channelRef.current = channel;
 
-        channel.subscribe('sync-request', () => {
-            channel.publish('state-update', { appState });
+        channel.on('broadcast', { event: 'sync-request' }, () => {
+            channel.send({
+                type: 'broadcast',
+                event: 'state-update',
+                payload: { appState },
+            });
         });
         
-        // Listen for actions from the controller
-        channel.subscribe('action', (message: AblyMessage) => {
-            if (message.data.type === 'SET_APP_STATE') {
-               setAppState(message.data.payload);
+        channel.on('broadcast', { event: 'action' }, (msg) => {
+            if (msg.payload.type === 'SET_APP_STATE') {
+               setAppState(msg.payload.data);
             }
-            if (message.data.type === 'OPEN_CHAT') {
+            if (msg.payload.type === 'OPEN_CHAT') {
                 setIsChatOpen(true);
             }
         });
+
+        await channel.subscribe();
+        
+        setControlledSessionCode(newSessionId);
+        setRemoteControlMode('controlled');
+        sessionStorage.setItem('isControlledSession', 'true');
         
         return newSessionId;
     } catch (e: any) {
@@ -1326,33 +1299,32 @@ export function HomePageContent() {
   };
   
   const startControllingSession = async (code: string) => {
-    if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
+    cleanupAbly();
     if (!code) { toast({ variant: 'destructive', title: "Error", description: "Por favor, introduce un código de sesión." }); return; }
     
     try {
-        const ably = await initializeAbly(`controller-${code}`);
-        
-        // Connection is guaranteed to be ready here
-        const channel = ably.channels.get(code);
+        const channel = supabase.channel(code, {
+            config: { broadcast: { self: false } },
+        });
         channelRef.current = channel;
 
-        // This client LISTENS for state updates
-        channel.subscribe('state-update', (message: AblyMessage) => {
-            if (message.data.appState) {
-                setControllerAppState(message.data.appState);
+        channel.on('broadcast', { event: 'state-update' }, (msg) => {
+            if (msg.payload.appState) {
+                setControllerAppState(msg.payload.appState);
             }
         });
         
-        // This is a new listener for when a schedule is applied on the controlled device
-        channel.subscribe('schedule-applied', () => {
-            channel.publish('sync-request', {});
+        channel.on('broadcast', { event: 'schedule-applied' }, () => {
+            channel.send({ type: 'broadcast', event: 'sync-request', payload: {} });
         });
 
-        // Initial sync request
-        channel.publish('sync-request', {});
+        await channel.subscribe();
+
+        channel.send({ type: 'broadcast', event: 'sync-request', payload: {} });
         setIsControlling(true);
         setRemoteControlMode('controlling');
         setControlledSessionCode(code);
+        setIsSettingsSheetOpen(true); // Automatically open the config menu for the controller
         toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${code}.` });
     } catch (e: any) {
         toast({ variant: 'destructive', title: "Error", description: e.message || "Ocurrió un error inesperado." });
