@@ -1267,13 +1267,23 @@ export function HomePageContent() {
     return new Promise(async (resolve, reject) => {
       try {
           const response = await fetch('/api/ably');
-          if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch Ably API key.');
+          if (!response.ok) {
+              const errData = await response.json();
+              throw new Error(errData.error || 'Failed to fetch Ably API key.');
+          }
           const { apiKey } = await response.json();
           if (!apiKey) throw new Error("La clave de API de Ably no está configurada.");
 
           const client = new Realtime({ key: apiKey, clientId: clientId, echoMessages: false });
           ablyClientRef.current = client;
-          resolve(client);
+          
+          // Wait for the connection to be established before resolving
+          if (client.connection.state === 'connected') {
+              resolve(client);
+          } else {
+              client.connection.once('connected', () => resolve(client));
+              client.connection.once('failed', (err) => reject(new Error(err.reason?.message || "No se pudo conectar al servicio en tiempo real.")));
+          }
       } catch (e: any) {
           toast({ variant: 'destructive', title: 'Error de Conexión', description: e.message || "No se pudo conectar al servicio en tiempo real." });
           reject(e);
@@ -1281,41 +1291,38 @@ export function HomePageContent() {
     });
   };
 
-  const startControlledSession = (): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-        if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
-        try {
-            const newSessionId = `dpt-${Math.random().toString(36).substring(2, 6)}`;
-            const ably = await initializeAbly(`controlled-${newSessionId}`);
-            
-            ably.connection.once('connected', () => {
-                setControlledSessionCode(newSessionId);
-                setRemoteControlMode('controlled');
-                sessionStorage.setItem('isControlledSession', 'true');
-                
-                const channel = ably.channels.get(newSessionId);
-                channelRef.current = channel;
+  const startControlledSession = async (): Promise<string> => {
+    if (ablyClientRef.current?.connection.state === 'connected') cleanupAbly();
+    try {
+        const newSessionId = `dpt-${Math.random().toString(36).substring(2, 6)}`;
+        const ably = await initializeAbly(`controlled-${newSessionId}`);
+        
+        // Connection is guaranteed to be ready here
+        setControlledSessionCode(newSessionId);
+        setRemoteControlMode('controlled');
+        sessionStorage.setItem('isControlledSession', 'true');
+        
+        const channel = ably.channels.get(newSessionId);
+        channelRef.current = channel;
 
-                channel.subscribe('sync-request', () => {
-                    channel.publish('state-update', { appState });
-                });
-                
-                // Listen for actions from the controller
-                channel.subscribe('action', (message: AblyMessage) => {
-                    if (message.data.type === 'SET_APP_STATE') {
-                       // The controlled device directly sets its state from the payload
-                       setAppState(message.data.payload);
-                    }
-                    if (message.data.type === 'OPEN_CHAT') {
-                        setIsChatOpen(true);
-                    }
-                });
-                
-                resolve(newSessionId); 
-            });
-            ably.connection.once('failed', (err) => reject(new Error(err.reason.message || "No se pudo activar el control remoto.")));
-        } catch (e) { reject(e); }
-    });
+        channel.subscribe('sync-request', () => {
+            channel.publish('state-update', { appState });
+        });
+        
+        // Listen for actions from the controller
+        channel.subscribe('action', (message: AblyMessage) => {
+            if (message.data.type === 'SET_APP_STATE') {
+               setAppState(message.data.payload);
+            }
+            if (message.data.type === 'OPEN_CHAT') {
+                setIsChatOpen(true);
+            }
+        });
+        
+        return newSessionId;
+    } catch (e: any) {
+        throw e;
+    }
   };
   
   const startControllingSession = async (code: string) => {
@@ -1324,31 +1331,29 @@ export function HomePageContent() {
     
     try {
         const ably = await initializeAbly(`controller-${code}`);
-        ably.connection.once('connected', () => {
-            const channel = ably.channels.get(code);
-            channelRef.current = channel;
+        
+        // Connection is guaranteed to be ready here
+        const channel = ably.channels.get(code);
+        channelRef.current = channel;
 
-            // This client LISTENS for state updates
-            channel.subscribe('state-update', (message: AblyMessage) => {
-                if (message.data.appState) {
-                    setControllerAppState(message.data.appState);
-                }
-            });
-            
-            // This is a new listener for when a schedule is applied on the controlled device
-            channel.subscribe('schedule-applied', () => {
-                // When a schedule is applied, the controller re-syncs its state
-                channel.publish('sync-request', {});
-            });
-
-            // Initial sync request
-            channel.publish('sync-request', {});
-            setIsControlling(true);
-            setRemoteControlMode('controlling');
-            setControlledSessionCode(code);
-            toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${code}.` });
+        // This client LISTENS for state updates
+        channel.subscribe('state-update', (message: AblyMessage) => {
+            if (message.data.appState) {
+                setControllerAppState(message.data.appState);
+            }
         });
-        ably.connection.once('failed', (err) => toast({ variant: 'destructive', title: "Error de Conexión", description: err.reason.message || "No se pudo conectar. Verifica el código." }));
+        
+        // This is a new listener for when a schedule is applied on the controlled device
+        channel.subscribe('schedule-applied', () => {
+            channel.publish('sync-request', {});
+        });
+
+        // Initial sync request
+        channel.publish('sync-request', {});
+        setIsControlling(true);
+        setRemoteControlMode('controlling');
+        setControlledSessionCode(code);
+        toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${code}.` });
     } catch (e: any) {
         toast({ variant: 'destructive', title: "Error", description: e.message || "Ocurrió un error inesperado." });
     }
