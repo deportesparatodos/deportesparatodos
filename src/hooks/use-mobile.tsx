@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays, Copy, Check, LayoutGrid, ArrowUp, ArrowDown, Star } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays, Copy, Check, LayoutGrid, ArrowUp, ArrowDown, Star, Share2 } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -66,6 +66,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { encodeLayout, decodeLayout } from '@/lib/layout-share';
 import { AddEventsDialog } from '@/components/add-events-dialog';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
 import { PresetsDialog } from '@/components/presets-dialog';
@@ -1338,7 +1339,39 @@ export function HomePageContent() {
         setTimeout(() => startControllingSession(remoteCode), 500);
         window.history.replaceState({}, document.title, window.location.pathname);
     }
+    const layoutCode = params.get('layout');
+    if (layoutCode) {
+        const decoded = decodeLayout(layoutCode);
+        if (decoded) {
+            setAppState(prev => ({
+                ...prev,
+                selectedEvents: decoded.events,
+                viewOrder: decoded.viewOrder,
+                gridGap: decoded.gridGap,
+                borderColor: decoded.borderColor,
+                isChatEnabled: decoded.isChatEnabled
+            }));
+            toast({ title: "Plantilla Cargada", description: "Se ha cargado la vista compartida exitosamente." });
+        } else {
+            toast({ variant: 'destructive', title: "Error", description: "No se pudo cargar la vista compartida." });
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
+  
+  const handleShareLayout = () => {
+      const encoded = encodeLayout({
+          events: selectedEvents,
+          viewOrder,
+          gridGap,
+          borderColor,
+          isChatEnabled
+      });
+      const url = `${window.location.origin}/?layout=${encoded}`;
+      navigator.clipboard.writeText(url).then(() => {
+          toast({ title: "Enlace Copiado", description: "El enlace de la vista actual se ha copiado al portapapeles." });
+      });
+  };
   
   const handleStartAndControl = async () => {
     if (selectedEventsCount === 0) {
@@ -2114,6 +2147,10 @@ export function HomePageContent() {
                                       <Airplay />
                                     </Button>
 
+                                    <Button variant="ghost" size="icon" onClick={handleShareLayout}>
+                                      <Share2 />
+                                    </Button>
+
                                      <Sheet open={isSettingsSheetOpen} onOpenChange={setIsSettingsSheetOpen}>
                                         <SheetTrigger asChild>
                                           <Button variant="ghost" size="icon">
@@ -2151,6 +2188,7 @@ export function HomePageContent() {
                                                     setDialogContext('main');
                                                     setAddEventsDialogOpen(true);
                                                 }}
+                                                onShareLayout={handleShareLayout}
                                                 onSchedule={() => {
                                                   setDialogContext('schedule');
                                                   setScheduleManagerOpen(true);
@@ -2749,6 +2787,7 @@ function ControllingView({
             onClearSelections={onClearSelections}
             onToggleFullscreen={handleToggleFullscreen}
             fullscreenIndex={appState.fullscreenIndex}
+            onShareLayout={handleShareLayout}
         />
         <AddEventsDialog
             open={controllerView === 'addEvents'}

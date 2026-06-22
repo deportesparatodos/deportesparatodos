@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, MessageSquare, LayoutGrid } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, MessageSquare, LayoutGrid, Share2 } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -53,6 +53,7 @@ export interface EventListManagementProps {
   onClearSelections?: () => void;
   onClose?: () => void;
   isSessionActive?: boolean;
+  onShareLayout?: () => void;
 }
 
 export function EventList({
@@ -270,6 +271,11 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                             {isViewPage && onActivateRemoteControl && !isRemoteControlView && remoteControlMode !== 'controlled' && (
                                 <Button variant="outline" className="w-full justify-center" onClick={onActivateRemoteControl}>
                                     <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
+                                </Button>
+                            )}
+                            {props.onShareLayout && (
+                                <Button variant="outline" className="w-full justify-center text-primary border-primary hover:bg-primary hover:text-primary-foreground" onClick={props.onShareLayout}>
+                                    <Share2 className="mr-2 h-4 w-4" /> Copiar Link de esta Vista
                                 </Button>
                             )}
                           </div>
