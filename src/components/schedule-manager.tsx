@@ -55,6 +55,7 @@ interface ScheduleManagerProps {
   container?: HTMLElement;
   remoteControlMode: 'inactive' | 'controlled' | 'controlling';
   controlledSessionCode: string;
+  localIp?: string | null;
   onActivateRemoteControl: () => void;
 }
 
@@ -72,6 +73,7 @@ export function ScheduleManager({
   container,
   remoteControlMode,
   controlledSessionCode,
+  localIp,
   onActivateRemoteControl
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
@@ -362,6 +364,8 @@ export function ScheduleManager({
                                 isViewPage={true}
                                 remoteControlMode={remoteControlMode}
                                 controlledSessionCode={controlledSessionCode}
+                                localIp={localIp}
+                                onActivateRemoteControl={onActivateRemoteControl}
                             />
                         </div>
                     </ScrollArea>
