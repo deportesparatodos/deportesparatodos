@@ -145,7 +145,10 @@ export function HomePageContent() {
     fullscreenIndex: null,
   });
   
-  const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = appState;
+  const appStateRef = useRef<AppState>(appState);
+  useEffect(() => {
+      appStateRef.current = appState;
+  }, [appState]);
   
   // Supabase Realtime and Remote Control state
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -156,9 +159,11 @@ export function HomePageContent() {
   const [isControlling, setIsControlling] = useState(false);
   
   // This state will hold a COPY of the main app state for the controller UI.
-  // It gets updated from Ably messages.
+  // It gets updated from Supabase messages.
   const [controllerAppState, setControllerAppState] = useState<AppState | null>(null);
 
+  const activeAppState = isControlling && controllerAppState ? controllerAppState : appState;
+  const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = activeAppState;
 
   // Presets State
   const [customPresets, setCustomPresets] = useState<Preset[]>([]);
@@ -166,9 +171,10 @@ export function HomePageContent() {
 
   // This function is for the controller to SEND updates.
   const setLiveAppState = useCallback((newState: Partial<AppState>) => {
-    if (isControlling && controllerAppState) {
+    if (isControlling) {
         // Optimistically update the controller's local state
-        const updatedState: AppState = { ...controllerAppState, ...newState };
+        const currentState = controllerAppState || { ...appState };
+        const updatedState: AppState = { ...currentState, ...newState };
         setControllerAppState(updatedState);
         
         // Publish the new state to the controlled device via Supabase
@@ -1274,7 +1280,7 @@ export function HomePageContent() {
             channel.send({
                 type: 'broadcast',
                 event: 'state-update',
-                payload: { appState },
+                payload: { appState: appStateRef.current },
             });
         });
         
@@ -1287,7 +1293,13 @@ export function HomePageContent() {
             }
         });
 
-        await channel.subscribe();
+        await new Promise<void>((resolve, reject) => {
+            channel.subscribe((status, err) => {
+                if (status === 'SUBSCRIBED') resolve();
+                if (status === 'CHANNEL_ERROR') reject(err || new Error("Error conectando al control remoto"));
+                if (status === 'TIMED_OUT') reject(new Error("Timeout conectando"));
+            });
+        });
         
         setControlledSessionCode(newSessionId);
         setRemoteControlMode('controlled');
@@ -1319,7 +1331,13 @@ export function HomePageContent() {
             channel.send({ type: 'broadcast', event: 'sync-request', payload: {} });
         });
 
-        await channel.subscribe();
+        await new Promise<void>((resolve, reject) => {
+            channel.subscribe((status, err) => {
+                if (status === 'SUBSCRIBED') resolve();
+                if (status === 'CHANNEL_ERROR') reject(err || new Error("Error conectando al control remoto"));
+                if (status === 'TIMED_OUT') reject(new Error("Timeout conectando"));
+            });
+        });
 
         channel.send({ type: 'broadcast', event: 'sync-request', payload: {} });
         setIsControlling(true);
@@ -2602,7 +2620,7 @@ function ControllingView({
     const now = new Date().getTime();
     const timeouts: NodeJS.Timeout[] = [];
   
-    appState.schedules.forEach(schedule => {
+    activeAppState.schedules.forEach(schedule => {
       const scheduleTime = new Date(schedule.dateTime).getTime();
       const delay = scheduleTime - now;
   
@@ -2618,7 +2636,7 @@ function ControllingView({
     return () => {
       timeouts.forEach(clearTimeout);
     };
-  }, [appState.schedules]);
+  }, [activeAppState.schedules]);
 
   const { allSortedEvents } = useMemo(() => {
       // Assuming allEvents is already sorted or doesn't need sorting for the controller.
@@ -2627,10 +2645,10 @@ function ControllingView({
   }, [allEvents]);
   
   const handleEventRemove = useCallback((indexToRemove: number) => {
-    const newSelectedEvents = [...appState.selectedEvents];
+    const newSelectedEvents = [...activeAppState.selectedEvents];
     newSelectedEvents[indexToRemove] = null;
     setLiveAppState({ selectedEvents: newSelectedEvents });
-  }, [appState.selectedEvents, setLiveAppState]);
+  }, [activeAppState.selectedEvents, setLiveAppState]);
   
   const openDialogForEventRemote = async (event: Event, indexToModify?: number) => {
     let targetIndex: number;
@@ -2638,7 +2656,7 @@ function ControllingView({
     
     if (indexToModify !== undefined) {
       targetIndex = indexToModify;
-      const selectedEventFromState = appState.selectedEvents[targetIndex];
+      const selectedEventFromState = activeAppState.selectedEvents[targetIndex];
       if (selectedEventFromState?.selectedOption) {
           eventForDialog.selectedOption = selectedEventFromState.selectedOption;
       }
@@ -2646,12 +2664,12 @@ function ControllingView({
         const selection = getEventSelection(event);
         if (selection.isSelected) {
             targetIndex = selection.index;
-            const selectedEventFromState = appState.selectedEvents[targetIndex];
+            const selectedEventFromState = activeAppState.selectedEvents[targetIndex];
             if (selectedEventFromState?.selectedOption) {
                 eventForDialog.selectedOption = selectedEventFromState.selectedOption;
             }
         } else {
-            targetIndex = appState.selectedEvents.findIndex(e => e === null);
+            targetIndex = activeAppState.selectedEvents.findIndex(e => e === null);
             if (targetIndex === -1) {
               toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
               return;
@@ -2692,7 +2710,7 @@ function ControllingView({
   
   const handleEventSelectRemote = (event: Event, optionUrl: string) => {
       if (controllerModificationIndex === null) return;
-      const newSelectedEvents = [...appState.selectedEvents];
+      const newSelectedEvents = [...activeAppState.selectedEvents];
       newSelectedEvents[controllerModificationIndex] = { ...event, selectedOption: optionUrl };
       setLiveAppState({ selectedEvents: newSelectedEvents });
       setControllerView('addEvents');
@@ -2702,12 +2720,12 @@ function ControllingView({
   
   const handleChannelClickRemote = (channel: Channel) => {
         let targetIndex;
-        const existingIndex = appState.selectedEvents.findIndex(e => e?.id === `${channel.name}-channel-static`);
+        const existingIndex = activeAppState.selectedEvents.findIndex(e => e?.id === `${channel.name}-channel-static`);
 
         if (existingIndex !== -1) {
           targetIndex = existingIndex;
         } else {
-          targetIndex = appState.selectedEvents.findIndex(e => e === null);
+          targetIndex = activeAppState.selectedEvents.findIndex(e => e === null);
         }
 
         if(targetIndex === -1) {
@@ -2727,7 +2745,7 @@ function ControllingView({
     };
     
   const handleToggleFullscreen = (index: number) => {
-    const currentFullscreen = appState.fullscreenIndex;
+    const currentFullscreen = activeAppState.fullscreenIndex;
     setLiveAppState({ fullscreenIndex: currentFullscreen === index ? null : index });
   };
 
@@ -2760,12 +2778,12 @@ function ControllingView({
             </Button>
         </header>
         <LayoutConfigurator
-            order={appState.viewOrder.filter((i) => appState.selectedEvents[i] !== null)}
+            order={activeAppState.viewOrder.filter((i) => activeAppState.selectedEvents[i] !== null)}
             onOrderChange={(order: number[]) => setLiveAppState({ viewOrder: order })}
-            eventDetails={appState.selectedEvents}
+            eventDetails={activeAppState.selectedEvents}
             onRemove={handleEventRemove}
             onModify={(index: number) => {
-                const event = appState.selectedEvents[index];
+                const event = activeAppState.selectedEvents[index];
                 if (event) {
                     openDialogForEventRemote(event, index);
                 }
@@ -2774,19 +2792,19 @@ function ControllingView({
             onAddEvent={() => setControllerView('addEvents')}
             onSchedule={() => setControllerView('schedule')}
             onOpenPresets={() => setControllerView('presets')}
-            gridGap={appState.gridGap}
+            gridGap={activeAppState.gridGap}
             onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
-            borderColor={appState.borderColor}
+            borderColor={activeAppState.borderColor}
             onBorderColorChange={(c: string) => setLiveAppState({ borderColor: c })}
             onRestoreGridSettings={() => setLiveAppState({ gridGap: 0, borderColor: '#000000' })}
-            isChatEnabled={appState.isChatEnabled}
+            isChatEnabled={activeAppState.isChatEnabled}
             onIsChatEnabledChange={(v: boolean) => setLiveAppState({ isChatEnabled: v })}
             isRemoteControlView={true}
             onOpenChat={() => setControllerView('chat')}
             onStopSession={onStopSession}
             onClearSelections={onClearSelections}
             onToggleFullscreen={handleToggleFullscreen}
-            fullscreenIndex={appState.fullscreenIndex}
+            fullscreenIndex={activeAppState.fullscreenIndex}
             onShareLayout={handleShareLayout}
         />
         <AddEventsDialog
@@ -2814,7 +2832,7 @@ function ControllingView({
                 }}
                 event={controllerDialogEvent}
                 onSelect={handleEventSelectRemote}
-                isModification={controllerModificationIndex !== null && appState.selectedEvents[controllerModificationIndex!] !== null}
+                isModification={controllerModificationIndex !== null && activeAppState.selectedEvents[controllerModificationIndex!] !== null}
                 modificationIndex={controllerModificationIndex}
                 onRemove={() => {
                   if (controllerModificationIndex !== null) handleRemoveEventFromFuture(controllerModificationIndex);
@@ -2829,11 +2847,11 @@ function ControllingView({
         <ScheduleManager
             open={controllerView === 'schedule'}
             onOpenChange={(isOpen) => !isOpen && setControllerView('main')}
-            schedules={appState.schedules}
+            schedules={activeAppState.schedules}
             onSchedulesChange={(s) => setLiveAppState({schedules: s})}
             isLoading={false}
-            initialSelection={appState.selectedEvents}
-            initialOrder={appState.viewOrder}
+            initialSelection={activeAppState.selectedEvents}
+            initialOrder={activeAppState.viewOrder}
             allEvents={allEvents}
             allChannels={allChannels}
             getEventSelection={getEventSelection}
