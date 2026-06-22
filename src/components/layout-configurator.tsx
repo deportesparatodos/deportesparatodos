@@ -49,7 +49,6 @@ export interface EventListManagementProps {
   onOpenChat?: () => void;
   remoteControlMode?: 'inactive' | 'controlled' | 'controlling';
   controlledSessionCode?: string;
-  localIp?: string | null;
   onActivateRemoteControl?: () => void;
   onClearSelections?: () => void;
   onClose?: () => void;
@@ -197,7 +196,6 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         onOpenChat,
         remoteControlMode,
         controlledSessionCode,
-        localIp,
         onActivateRemoteControl,
         isViewPage,
         onClose,
@@ -234,7 +232,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                 <p className="text-sm text-muted-foreground mb-2">Realice las modificaciones desde ahí.</p>
                 <p className="text-sm text-muted-foreground">Abra este link en su teléfono:</p>
                 <div className="flex gap-2">
-                    <Input readOnly value={`http://${localIp || window.location.hostname}:3000/?remote=${controlledSessionCode}`} />
+                    <Input readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/?remote=${controlledSessionCode}`} />
                 </div>
              </div>
         )}
