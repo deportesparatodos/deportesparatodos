@@ -1943,7 +1943,7 @@ export function HomePageContent() {
                                     </Button>
                                     
                                     <Button variant="ghost" size="icon" onClick={() => setRemoteControlOptionsOpen(true)}>
-                                      <Airplay />
+
                                     </Button>
 
                                     <Button variant="ghost" size="icon" onClick={handleShareLayout}>
@@ -2196,7 +2196,7 @@ export function HomePageContent() {
                         <h3 className="font-bold text-base text-foreground mb-2">5. Funciones Avanzadas</h3>
                         <p className="mb-2">Dentro del panel de configuración, en "Funciones Adicionales", encontrarás herramientas potentes:</p>
                         
-                        <h4 className="font-semibold text-foreground mt-3 mb-1">Control Remoto (<Airplay className="inline-block h-4 w-4" />)</h4>
+                        <h4 className="font-semibold text-foreground mt-3 mb-1">Control Remoto</h4>
                         <p>Esta increíble función te permite usar un dispositivo (como tu celular) para controlar lo que se ve en otro (como tu TV o monitor principal). Al iniciar la vista, puedes elegir "Ser Controlado" para generar un código. Introduce ese código en tu otro dispositivo para tomar el control total: cambia canales, reordena la vista, ajusta el diseño y mucho más, todo de forma remota.</p>
 
                         <h4 className="font-semibold text-foreground mt-3 mb-1">Programar Selección (<CalendarDays className="inline-block h-4 w-4" />)</h4>
