@@ -1868,7 +1868,7 @@ export function HomePageContent() {
   
   return (
     <>
-      <div ref={remoteControlContainerRef} />
+
       {isViewMode ? renderViewContent() : (
         <div className="flex h-screen w-screen flex-col bg-background text-foreground">
            {isDataLoading && !isInitialLoadDone && (
