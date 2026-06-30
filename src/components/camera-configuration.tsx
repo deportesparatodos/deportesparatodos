@@ -35,16 +35,13 @@ interface CameraConfigurationProps {
   onOpenPresets?: () => void;
   onOpenContact?: () => void;
   onOpenLegalNotice?: () => void;
-  remoteControlMode: 'inactive' | 'controlled' | 'controlling';
-  controlledSessionCode: string;
-  onActivateRemoteControl: () => void;
   onClearSelections: () => void;
 }
 
 export function CameraConfigurationComponent(props: CameraConfigurationProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const isSessionActive = props.remoteControlMode === 'controlled';
+
 
   return (
     <>
@@ -58,7 +55,7 @@ export function CameraConfigurationComponent(props: CameraConfigurationProps) {
           <SheetHeader className="sr-only">
               <SheetTitle>Configuration Panel</SheetTitle>
           </SheetHeader>
-          <LayoutConfigurator {...props} onClose={() => setSheetOpen(false)} isSessionActive={isSessionActive} />
+          <LayoutConfigurator {...props} onClose={() => setSheetOpen(false)} />
         </SheetContent>
       </Sheet>
     </>

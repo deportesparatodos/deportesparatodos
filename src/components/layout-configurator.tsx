@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Airplay, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, MessageSquare, LayoutGrid, Share2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, RotateCw, Trash2, Plus, Pencil, Maximize, Minimize, Settings, AlertCircle, CalendarDays, BookOpen, Mail, FileText, X, MessageSquare, LayoutGrid, Share2 } from 'lucide-react';
 import type { Event } from '@/components/event-carousel';
 import {
   Accordion,
@@ -45,14 +45,9 @@ export interface EventListManagementProps {
   onOpenContact?: () => void;
   onOpenLegalNotice?: () => void;
   onStopSession?: () => void;
-  isRemoteControlView?: boolean;
   onOpenChat?: () => void;
-  remoteControlMode?: 'inactive' | 'controlled' | 'controlling';
-  controlledSessionCode?: string;
-  onActivateRemoteControl?: () => void;
   onClearSelections?: () => void;
   onClose?: () => void;
-  isSessionActive?: boolean;
   onShareLayout?: () => void;
 }
 
@@ -66,8 +61,7 @@ export function EventList({
   isViewPage,
   onToggleFullscreen,
   fullscreenIndex,
-  isRemoteControlView,
-}: Pick<EventListManagementProps, 'order' | 'onOrderChange' | 'eventDetails' | 'onReload' | 'onRemove' | 'onModify' | 'isViewPage' | 'onToggleFullscreen' | 'fullscreenIndex' | 'isRemoteControlView'>) {
+}: Pick<EventListManagementProps, 'order' | 'onOrderChange' | 'eventDetails' | 'onReload' | 'onRemove' | 'onModify' | 'isViewPage' | 'onToggleFullscreen' | 'fullscreenIndex'>) {
     
   const validOrder = Array.isArray(order) ? order : [];
   
@@ -136,7 +130,7 @@ export function EventList({
                                 <ArrowDown className="h-4 w-4" />
                             </Button>
 
-                            {(isViewPage || isRemoteControlView) && onToggleFullscreen && (
+                            {isViewPage && onToggleFullscreen && (
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -193,14 +187,9 @@ export function LayoutConfigurator(props: EventListManagementProps) {
         isChatEnabled, onIsChatEnabledChange,
         onOpenTutorial, onOpenErrors, onNotificationManager, onOpenCalendar, onOpenPresets, onOpenContact, onOpenLegalNotice,
         onAddEvent, onSchedule, onClearSelections,
-        isRemoteControlView = false,
         onOpenChat,
-        remoteControlMode,
-        controlledSessionCode,
-        onActivateRemoteControl,
         isViewPage,
         onClose,
-        isSessionActive
     } = props;
         
     const order = props.order || [];
@@ -208,38 +197,20 @@ export function LayoutConfigurator(props: EventListManagementProps) {
     
     return (
       <div className="flex flex-col h-full bg-background text-foreground relative">
-        {!isRemoteControlView && (
-            <>
-                <div className="p-4 flex-shrink-0 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold">Configuración</h2>
-                     {onClose && (
-                        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-foreground">
-                            <X className="h-5 w-5" />
-                        </Button>
-                     )}
-                </div>
-                <Separator />
-            </>
-        )}
+        <div className="p-4 flex-shrink-0 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Configuración</h2>
+             {onClose && (
+                <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-foreground">
+                    <X className="h-5 w-5" />
+                </Button>
+             )}
+        </div>
+        <Separator />
 
-        {isSessionActive && !isRemoteControlView && (
-             <div className="absolute inset-0 bg-secondary/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-4">
-                {onClose && (
-                    <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2 h-8 w-8 text-foreground">
-                        <X className="h-5 w-5" />
-                    </Button>
-                )}
-                <p className="font-semibold text-foreground">Sesión de control remoto activa.</p>
-                <p className="text-sm text-muted-foreground mb-2">Realice las modificaciones desde ahí.</p>
-                <p className="text-sm text-muted-foreground">Abra este link en su teléfono:</p>
-                <div className="flex gap-2">
-                    <Input readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/?remote=${controlledSessionCode}`} />
-                </div>
-             </div>
-        )}
+
 
         <ScrollArea className="flex-grow h-0">
-          <div className='p-4 space-y-4' style={{ opacity: isSessionActive && !isRemoteControlView ? 0.2 : 1, pointerEvents: isSessionActive && !isRemoteControlView ? 'none' : 'auto' }}>
+          <div className='p-4 space-y-4'>
               <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="item-events">
                   <AccordionItem value="item-events" className="border rounded-lg px-4">
                       <AccordionTrigger>Eventos/Canales Seleccionados ({order.length})</AccordionTrigger>
@@ -268,11 +239,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                     ELIMINAR SELECCIONES
                                 </Button>
                             )}
-                            {isViewPage && onActivateRemoteControl && !isRemoteControlView && remoteControlMode !== 'controlled' && (
-                                <Button variant="outline" className="w-full justify-center" onClick={onActivateRemoteControl}>
-                                    <Airplay className="mr-2 h-4 w-4" /> Activar Control Remoto
-                                </Button>
-                            )}
+
                             {props.onShareLayout && (
                                 <Button variant="outline" className="w-full justify-center text-primary border-primary hover:bg-primary hover:text-primary-foreground" onClick={props.onShareLayout}>
                                     <Share2 className="mr-2 h-4 w-4" /> Copiar Link de esta Vista
@@ -332,17 +299,13 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                                   onCheckedChange={onIsChatEnabledChange}
                               />
                           </div>
-                          {isRemoteControlView && onOpenChat && (
-                            <Button variant="outline" className="w-full justify-start" onClick={onOpenChat}>
-                                <MessageSquare className="mr-2 h-4 w-4" /> Abrir Chat en Vista
-                            </Button>
-                          )}
-                          {!isRemoteControlView && onNotificationManager && (
+
+                          {onNotificationManager && (
                             <Button variant="outline" className="w-full justify-start" onClick={onNotificationManager}>
                                 <Mail className="mr-2 h-4 w-4" /> Notificaciones por Correo
                             </Button>
                           )}
-                          {!isRemoteControlView && onOpenCalendar && (
+                          {onOpenCalendar && (
                             <Button variant="outline" className="w-full justify-start" onClick={onOpenCalendar}>
                                 <CalendarDays className="mr-2 h-4 w-4" /> Suscripción a Calendario
                             </Button>
@@ -350,7 +313,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
                       </AccordionContent>
                   </AccordionItem>
                   
-                  {!isRemoteControlView && (
+                  {(
                     <AccordionItem value="item-help" className="border rounded-lg px-4">
                           <AccordionTrigger>Ayuda y Soporte</AccordionTrigger>
                           <AccordionContent className="pt-4 pb-4 space-y-2">
@@ -380,13 +343,7 @@ export function LayoutConfigurator(props: EventListManagementProps) {
               </Accordion>
           </div>
         </ScrollArea>
-        {isRemoteControlView && (
-             <div className="p-4 mt-auto border-t">
-                <Button variant="destructive" className="w-full" onClick={onStopSession}>
-                    Detener Control
-                </Button>
-             </div>
-        )}
+
       </div>
     );
 }

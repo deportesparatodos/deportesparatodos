@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Trash2, Plus, Pencil, Maximize, Minimize, X, Airplay } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2, Plus, Pencil, Maximize, Minimize, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -53,9 +53,7 @@ interface ScheduleManagerProps {
   allChannels: Channel[];
   getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
   container?: HTMLElement;
-  remoteControlMode: 'inactive' | 'controlled' | 'controlling';
-  controlledSessionCode: string;
-  onActivateRemoteControl: () => void;
+
 }
 
 export function ScheduleManager({
@@ -70,9 +68,7 @@ export function ScheduleManager({
   allChannels,
   getEventSelection,
   container,
-  remoteControlMode,
-  controlledSessionCode,
-  onActivateRemoteControl
+
 }: ScheduleManagerProps) {
   const [editingScheduleId, setEditingScheduleId] = useState<string | null>(null);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -241,7 +237,7 @@ export function ScheduleManager({
   };
   
   const activeFutureEventsCount = futureOrder?.filter(i => futureSelection[i] !== null).length ?? 0;
-  const isSessionActive = remoteControlMode === 'controlled';
+
 
   return (
     <>
@@ -360,8 +356,7 @@ export function ScheduleManager({
                                   }
                                 }}
                                 isViewPage={true}
-                                remoteControlMode={remoteControlMode}
-                                controlledSessionCode={controlledSessionCode}
+
                             />
                         </div>
                     </ScrollArea>

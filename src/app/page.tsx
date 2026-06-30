@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'rea
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, Airplay, CalendarDays, Copy, Check, LayoutGrid, ArrowUp, ArrowDown, Star, Share2 } from 'lucide-react';
+import { Loader2, Tv, X, Search, RotateCw, FileText, AlertCircle, Mail, BookOpen, Play, Settings, Menu, ArrowLeft, Pencil, Trash2, MessageSquare, Maximize, Minimize, AlertTriangle, Plus, BellRing, CalendarDays, Copy, Check, LayoutGrid, ArrowUp, ArrowDown, Star, Share2 } from 'lucide-react';
 import type { Event, StreamOption } from '@/components/event-carousel'; 
 import { EventCarousel } from '@/components/event-carousel';
 import {
@@ -66,8 +66,7 @@ import { NotificationManager } from '@/components/notification-manager';
 import type { Subscription, Schedule } from '@/components/schedule-manager';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/lib/supabase';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+
 import { encodeLayout, decodeLayout } from '@/lib/layout-share';
 import { AddEventsDialog } from '@/components/add-events-dialog';
 import { EventSelectionDialog } from '@/components/event-selection-dialog';
@@ -135,7 +134,6 @@ export type AppState = {
 
 export function HomePageContent() {
   const isMobile = useIsMobile();
-  const remoteControlContainerRef = useRef<HTMLDivElement>(null);
   
   const [appState, setAppState] = useState<AppState>({
     selectedEvents: Array(9).fill(null),
@@ -146,77 +144,28 @@ export function HomePageContent() {
     schedules: [],
     fullscreenIndex: null,
   });
-  
-  const appStateRef = useRef<AppState>(appState);
-  useEffect(() => {
-      appStateRef.current = appState;
-  }, [appState]);
-  
-  // Supabase Realtime and Remote Control state
-  const channelRef = useRef<RealtimeChannel | null>(null);
-  const [remoteControlMode, setRemoteControlMode] = useState<'inactive' | 'controlled' | 'controlling'>('inactive');
-  const [controlledSessionCode, setControlledSessionCode] = useState('');
-  
-  // State for the controlling view specifically
-  const [isControlling, setIsControlling] = useState(false);
-  
-  // This state will hold a COPY of the main app state for the controller UI.
-  // It gets updated from Supabase messages.
-  const [controllerAppState, setControllerAppState] = useState<AppState | null>(null);
 
-  const activeAppState = isControlling && controllerAppState ? controllerAppState : appState;
-  const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = activeAppState;
+  const { selectedEvents, viewOrder, gridGap, borderColor, isChatEnabled, schedules, fullscreenIndex } = appState;
 
   // Presets State
   const [customPresets, setCustomPresets] = useState<Preset[]>([]);
 
 
-  // This function is for the controller to SEND updates.
   const setLiveAppState = useCallback((newState: Partial<AppState>) => {
-    if (isControlling) {
-        // Optimistically update the controller's local state
-        const currentState = controllerAppState || { ...appState };
-        const updatedState: AppState = { ...currentState, ...newState };
-        setControllerAppState(updatedState);
-        
-        // Publish the new state to the controlled device via Supabase
-        if (channelRef.current) {
-            channelRef.current.send({
-                type: 'broadcast',
-                event: 'action',
-                payload: {
-                    type: 'SET_APP_STATE',
-                    data: updatedState,
-                },
-            });
+    setAppState(prevState => {
+        const updatedState: AppState = { ...prevState, ...newState };
+        if (!Array.isArray(updatedState.selectedEvents) || updatedState.selectedEvents === null) {
+            updatedState.selectedEvents = Array(9).fill(null);
         }
-    } else {
-        // This is the normal state update for the main view
-        setAppState(prevState => {
-            const updatedState: AppState = { ...prevState, ...newState };
-            // Ensure selectedEvents is always an array
-            if (!Array.isArray(updatedState.selectedEvents) || updatedState.selectedEvents === null) {
-                updatedState.selectedEvents = Array(9).fill(null);
-            }
-             // Re-hydrate Date objects when setting schedules
-            if (updatedState.schedules) {
-                updatedState.schedules = updatedState.schedules.map((s: any) => ({
-                    ...s,
-                    dateTime: s.dateTime ? new Date(s.dateTime) : new Date() 
-                }));
-            }
-            // If this instance is being controlled, it should send its new state back to the controller.
-            if (remoteControlMode === 'controlled' && channelRef.current) {
-                channelRef.current.send({
-                    type: 'broadcast',
-                    event: 'state-update',
-                    payload: { appState: updatedState },
-                });
-            }
-            return updatedState;
-        });
-    }
-}, [isControlling, controllerAppState, remoteControlMode]);
+        if (updatedState.schedules) {
+            updatedState.schedules = updatedState.schedules.map((s: any) => ({
+                ...s,
+                dateTime: s.dateTime ? new Date(s.dateTime) : new Date() 
+            }));
+        }
+        return updatedState;
+    });
+  }, []);
 
 
   const setSelectedEvents = (events: (Event | null)[]) => setLiveAppState({ selectedEvents: events });
@@ -263,15 +212,12 @@ export function HomePageContent() {
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
-  const [remoteControlOptionsOpen, setRemoteControlOptionsOpen] = useState(false);
+  const [remoteControlOptionsOpen, setRemoteControlOptionsOpen] = useState(false); // kept temporarily
   const [presetsDialogOpen, setPresetsDialogOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [legalNoticeOpen, setLegalNoticeOpen] = useState(false);
   
-  const [isControllerPromptOpen, setIsControllerPromptOpen] = useState(false);
-  const [controllerCode, setControllerCode] = useState('');
-  const [isControlledSessionDialog, setIsControlledSessionDialog] = useState(false);
-  const [copied, setCopied] = useState(false);
+
 
   // Sheet state
   const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
@@ -540,23 +486,12 @@ export function HomePageContent() {
     }
   }, [isInitialLoadDone, lastFetchTimestamp]);
 
-  const cleanupAbly = useCallback(() => {
-    if (channelRef.current) {
-        try { supabase.removeChannel(channelRef.current); } catch (e) { console.error("Error removing Supabase channel:", e); }
-    }
-    channelRef.current = null;
-  }, []);
+
 
   const handleStopView = useCallback(() => {
     setIsViewMode(false);
     setLiveAppState({ fullscreenIndex: null });
-    // Fully reset remote control state when exiting view
-    cleanupAbly();
-    setRemoteControlMode('inactive');
-    setControlledSessionCode('');
-    sessionStorage.removeItem('isControlledSession');
-    sessionStorage.removeItem('isControlledStart');
-  }, [setLiveAppState, cleanupAbly]);
+  }, [setLiveAppState]);
 
 
   // Load state from localStorage on initial mount
@@ -606,7 +541,7 @@ export function HomePageContent() {
 
   // Popup logic
   useEffect(() => {
-    if (isViewMode && !sessionStorage.getItem('isControlledStart')) {
+    if (isViewMode) {
       const hasVisited = sessionStorage.getItem('hasVisitedViewPage');
       if (!hasVisited) {
         setWelcomePopupOpen(true);
@@ -634,16 +569,11 @@ export function HomePageContent() {
             };
 
             setLiveAppState(newAppState);
-
-            if (remoteControlMode === 'controlled' && channelRef.current) {
-                // This message now notifies the controller that an auto-update happened.
-                channelRef.current.publish('state-update', { appState: { ...appState, ...newAppState } });
-            }
         }
     }, 30000); 
   
     return () => clearInterval(interval);
-  }, [isViewMode, schedules, appState, remoteControlMode, setLiveAppState]);
+  }, [isViewMode, schedules, appState, setLiveAppState]);
 
 
   useEffect(() => {
@@ -654,8 +584,7 @@ export function HomePageContent() {
 
   // Centralized state persistence
   useEffect(() => {
-      // Only persist state if not in a controlled session
-      if (isInitialLoadDone && !sessionStorage.getItem('isControlledSession')) {
+      if (isInitialLoadDone) {
           try {
              if (appState && Array.isArray(appState.selectedEvents)) {
                 localStorage.setItem('appState', JSON.stringify(appState));
@@ -1203,15 +1132,8 @@ export function HomePageContent() {
 
   const selectedEventsCount = Array.isArray(selectedEvents) ? selectedEvents.filter(Boolean).length : 0;
   
-  // --- Remote Control Logic ---
-  const handleStartView = (isControlledStart = false) => {
+  const handleStartView = () => {
     if (selectedEventsCount === 0) return;
-    if (isControlledStart) {
-      sessionStorage.setItem('isControlledStart', 'true');
-    } else {
-      // If it's a normal view start, ensure any previous session is cleaned up.
-      handleStopView();
-    }
     setIsViewMode(true);
   };
   
@@ -1258,111 +1180,12 @@ export function HomePageContent() {
  };
  
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(controlledSessionCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // no-op, remote control removed
   };
-  
 
-  useEffect(() => {
-    return () => { cleanupAbly(); };
-  }, [cleanupAbly]);
-
-  const startControlledSession = async (): Promise<string> => {
-    cleanupAbly();
-    try {
-        const newSessionId = `dpt-${Math.random().toString(36).substring(2, 6)}`;
-        
-        const channel = supabase.channel(newSessionId, {
-            config: { broadcast: { self: false } },
-        });
-        channelRef.current = channel;
-
-        channel.on('broadcast', { event: 'sync-request' }, () => {
-            channel.send({
-                type: 'broadcast',
-                event: 'state-update',
-                payload: { appState: appStateRef.current },
-            });
-        });
-        
-        // Listen for actions from the controller
-        channel.on('broadcast', { event: 'action' }, (msg) => {
-            if (msg.payload.type === 'SET_APP_STATE') {
-               setAppState(msg.payload.data);
-            }
-            if (msg.payload.type === 'OPEN_CHAT') {
-                setIsChatOpen(true);
-            }
-        });
-
-        await new Promise<void>((resolve, reject) => {
-            channel.subscribe((status, err) => {
-                if (status === 'SUBSCRIBED') resolve();
-                if (status === 'CHANNEL_ERROR') reject(err || new Error("Error conectando al control remoto"));
-                if (status === 'TIMED_OUT') reject(new Error("Timeout conectando"));
-            });
-        });
-        
-        setControlledSessionCode(newSessionId);
-        setRemoteControlMode('controlled');
-        sessionStorage.setItem('isControlledSession', 'true');
-        
-        return newSessionId;
-    } catch (e: any) {
-        throw e;
-    }
-  };
-  
-  const startControllingSession = async (code: string) => {
-    cleanupAbly();
-    if (!code) { toast({ variant: 'destructive', title: "Error", description: "Por favor, introduce un código de sesión." }); return; }
-    
-    try {
-        const channel = supabase.channel(code, {
-            config: { broadcast: { self: false } },
-        });
-        channelRef.current = channel;
-
-        // This client LISTENS for state updates
-        channel.on('broadcast', { event: 'state-update' }, (msg) => {
-            if (msg.payload.appState) {
-                setControllerAppState(msg.payload.appState);
-            }
-        });
-        
-        // Listen for schedule-applied events
-        channel.on('broadcast', { event: 'schedule-applied' }, () => {
-            channel.send({ type: 'broadcast', event: 'sync-request', payload: {} });
-        });
-
-        await new Promise<void>((resolve, reject) => {
-            channel.subscribe((status, err) => {
-                if (status === 'SUBSCRIBED') resolve();
-                if (status === 'CHANNEL_ERROR') reject(err || new Error("Error conectando al control remoto"));
-                if (status === 'TIMED_OUT') reject(new Error("Timeout conectando"));
-            });
-        });
-
-        // Initial sync request
-        channel.send({ type: 'broadcast', event: 'sync-request', payload: {} });
-        setIsControlling(true);
-        setRemoteControlMode('controlling');
-        setControlledSessionCode(code);
-        setIsSettingsSheetOpen(true); // Automatically open the config menu for the controller
-        toast({ title: "Control Remoto Conectado", description: `Controlando la sesión ${code}.` });
-    } catch (e: any) {
-        toast({ variant: 'destructive', title: "Error", description: e.message || "Ocurrió un error inesperado." });
-    }
-  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const remoteCode = params.get('remote');
-    if (remoteCode) {
-        setTimeout(() => startControllingSession(remoteCode), 500);
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
     const layoutCode = params.get('layout');
     if (layoutCode) {
         const decoded = decodeLayout(layoutCode);
@@ -1397,30 +1220,6 @@ export function HomePageContent() {
       });
   };
   
-  const handleStartAndControl = async () => {
-    if (selectedEventsCount === 0) {
-        toast({ variant: 'destructive', title: 'No hay eventos seleccionados', description: 'Selecciona al menos un evento.' });
-        return;
-    }
-    handleStartView(true);
-    try {
-        const code = await startControlledSession();
-        if (code) {
-            setControlledSessionCode(code);
-            setIsControlledSessionDialog(true);
-        }
-    } catch(e: any) {
-        toast({ variant: 'destructive', title: 'Error de Control Remoto', description: e.message || 'No se pudo iniciar la sesión controlada.' });
-    }
-  };
-
-  const handleActivateRemoteControl = async () => {
-      try {
-          await startControlledSession();
-      } catch (e: any) {
-          toast({ variant: 'destructive', title: 'Error de Control Remoto', description: e.message || 'No se pudo iniciar la sesión controlada.' });
-      }
-  };
 
   const handlePresetSelect = (preset: Preset) => {
     const newSelectedEvents: (Event | null)[] = Array(9).fill(null);
@@ -1485,35 +1284,7 @@ export function HomePageContent() {
     return <LoadingScreen />;
   }
   
-  if (isControlling && controllerAppState) {
-    return (
-        <ControllingView 
-            appState={controllerAppState}
-            setLiveAppState={setLiveAppState}
-            onStopSession={() => {
-                cleanupAbly();
-                setIsControlling(false);
-                setRemoteControlMode('inactive');
-                setControllerAppState(null);
-                toast({ title: "Control Remoto Desconectado" });
-            }}
-            allEvents={events}
-            allChannels={channelsData}
-            toast={toast}
-            customPresets={customPresets}
-            onClearSelections={handleClearSelections}
-            onPresetSelect={handlePresetSelect}
-            getEventSelection={(event) => {
-              const selectionIndex = controllerAppState.selectedEvents.findIndex(se => se?.id === event.id);
-              if (selectionIndex !== -1) {
-                  return { isSelected: true, selectedOption: controllerAppState.selectedEvents[selectionIndex]?.selectedOption || null, index: selectionIndex };
-              }
-              return { isSelected: false, selectedOption: null, index: -1 };
-            }}
-        />
-    );
-  }
-  
+
   // --- Client-side component to build the webcal:// link ---
   const CalendarLink = ({ category, children }: { category?: string; children: React.ReactNode }) => {
     const [href, setHref] = useState('');
@@ -1716,6 +1487,8 @@ export function HomePageContent() {
                     loading="eager"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                     allowFullScreen
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
+                    referrerPolicy="no-referrer"
                   />
                 )}
               </div>
@@ -2580,309 +2353,5 @@ export default function Page() {
     <Suspense fallback={<LoadingScreen />}>
       <HomePageContent />
     </Suspense>
-  );
-}
-
-// Controller View Component
-type ControllingViewProps = {
-    appState: AppState;
-    setLiveAppState: (newState: Partial<AppState>) => void;
-    onStopSession: () => void;
-    allEvents: Event[];
-    allChannels: Channel[];
-    toast: any;
-    customPresets: Preset[];
-    onClearSelections: () => void;
-    onPresetSelect: (preset: Preset) => void;
-    getEventSelection: (event: Event) => { isSelected: boolean; selectedOption: string | null; index: number };
-};
-
-
-function ControllingView({
-  appState,
-  setLiveAppState,
-  onStopSession,
-  allEvents,
-  allChannels,
-  toast,
-  customPresets,
-  onClearSelections,
-  onPresetSelect,
-  getEventSelection,
-}: ControllingViewProps) {
-  // Local state for the controller's dialogs
-  const [controllerView, setControllerView] = useState<'main' | 'addEvents' | 'eventSelection' | 'schedule' | 'chat' | 'presets'>('main');
-  const [controllerDialogEvent, setControllerDialogEvent] = useState<Event | null>(null);
-  const [controllerModificationIndex, setControllerModificationIndex] = useState<number | null>(null);
-  const [isControllerOptionsLoading, setIsControllerOptionsLoading] = useState(false);
-  const [showScheduleFailureMessage, setShowScheduleFailureMessage] = useState(false);
-
-  // This ref is crucial for dialogs to have a container to mount into within the controller view
-  const controllerContainerRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    if (!activeAppState.schedules || activeAppState.schedules.length === 0) {
-      return;
-    }
-  
-    const now = new Date().getTime();
-    const timeouts: NodeJS.Timeout[] = [];
-  
-    activeAppState.schedules.forEach(schedule => {
-      const scheduleTime = new Date(schedule.dateTime).getTime();
-      const delay = scheduleTime - now;
-  
-      if (delay > 0) {
-        const timeoutId = setTimeout(() => {
-          setShowScheduleFailureMessage(true);
-        }, delay);
-        timeouts.push(timeoutId);
-      }
-    });
-  
-    // Cleanup timers on component unmount or when schedules change
-    return () => {
-      timeouts.forEach(clearTimeout);
-    };
-  }, [activeAppState.schedules]);
-
-  const { allSortedEvents } = useMemo(() => {
-      // Assuming allEvents is already sorted or doesn't need sorting for the controller.
-      // If it does, sorting logic can be added here.
-      return { allSortedEvents: allEvents };
-  }, [allEvents]);
-  
-  const handleEventRemove = useCallback((indexToRemove: number) => {
-    const newSelectedEvents = [...activeAppState.selectedEvents];
-    newSelectedEvents[indexToRemove] = null;
-    setLiveAppState({ selectedEvents: newSelectedEvents });
-  }, [activeAppState.selectedEvents, setLiveAppState]);
-  
-  const openDialogForEventRemote = async (event: Event, indexToModify?: number) => {
-    let targetIndex: number;
-    let eventForDialog = { ...event };
-    
-    if (indexToModify !== undefined) {
-      targetIndex = indexToModify;
-      const selectedEventFromState = activeAppState.selectedEvents[targetIndex];
-      if (selectedEventFromState?.selectedOption) {
-          eventForDialog.selectedOption = selectedEventFromState.selectedOption;
-      }
-    } else {
-        const selection = getEventSelection(event);
-        if (selection.isSelected) {
-            targetIndex = selection.index;
-            const selectedEventFromState = activeAppState.selectedEvents[targetIndex];
-            if (selectedEventFromState?.selectedOption) {
-                eventForDialog.selectedOption = selectedEventFromState.selectedOption;
-            }
-        } else {
-            targetIndex = activeAppState.selectedEvents.findIndex(e => e === null);
-            if (targetIndex === -1) {
-              toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 eventos.' });
-              return;
-            }
-        }
-    }
-    
-    setControllerModificationIndex(targetIndex);
-    setControllerDialogEvent(eventForDialog);
-    setControllerView('eventSelection');
-      
-    if (event.source !== 'streamed.pk' || (event.options && event.options.length > 0)) {
-        return;
-    }
-
-    setIsControllerOptionsLoading(true);
-    try {
-        const sourcePromises = event.sources.map(async (source) => {
-            const response = await fetch(`/api/streams?type=stream&source=${source.source}&id=${source.id}`);
-            if (response.ok) {
-                const streams: any[] = await response.json();
-                return streams.map((stream) => ({
-                    url: stream.embedUrl,
-                    label: `${stream.language}${stream.hd ? ' HD' : ''} (${stream.source})`,
-                    hd: stream.hd,
-                    language: stream.language,
-                }));
-            }
-            return [];
-        });
-        const results = await Promise.all(sourcePromises);
-        const streamOptions: StreamOption[] = results.flat().filter(Boolean);
-        setControllerDialogEvent({ ...eventForDialog, options: streamOptions });
-    } finally {
-        setIsControllerOptionsLoading(false);
-    }
-  };
-  
-  const handleEventSelectRemote = (event: Event, optionUrl: string) => {
-      if (controllerModificationIndex === null) return;
-      const newSelectedEvents = [...activeAppState.selectedEvents];
-      newSelectedEvents[controllerModificationIndex] = { ...event, selectedOption: optionUrl };
-      setLiveAppState({ selectedEvents: newSelectedEvents });
-      setControllerView('addEvents');
-      setControllerDialogEvent(null);
-      setControllerModificationIndex(null);
-  };
-  
-  const handleChannelClickRemote = (channel: Channel) => {
-        let targetIndex;
-        const existingIndex = activeAppState.selectedEvents.findIndex(e => e?.id === `${channel.name}-channel-static`);
-
-        if (existingIndex !== -1) {
-          targetIndex = existingIndex;
-        } else {
-          targetIndex = activeAppState.selectedEvents.findIndex(e => e === null);
-        }
-
-        if(targetIndex === -1) {
-            toast({ variant: 'destructive', title: 'Selección Completa', description: 'No puedes añadir más de 9 canales.' });
-            return;
-        }
-
-        const channelAsEvent: Event = {
-            id: `${channel.name}-channel-static`,
-            title: channel.name,
-            options: channel.urls.map(u => ({ ...u, hd: false, language: '' })),
-            sources: [], buttons: [], time: 'AHORA', category: 'Canal',
-            language: '', date: '', source: '', status: 'En Vivo', image: channel.logo
-        };
-        
-        openDialogForEventRemote(channelAsEvent, targetIndex);
-    };
-    
-  const handleToggleFullscreen = (index: number) => {
-    const currentFullscreen = activeAppState.fullscreenIndex;
-    setLiveAppState({ fullscreenIndex: currentFullscreen === index ? null : index });
-  };
-
-  if (showScheduleFailureMessage) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-destructive text-destructive-foreground flex flex-col items-center justify-center text-center p-4">
-        <AlertCircle className="h-16 w-16 mb-4" />
-        <h2 className="text-2xl font-bold mb-2">La sesión falló inesperadamente</h2>
-        <p className="max-w-md">
-            Por favor, cierre el control remoto y vuelva a iniciar una sesión desde el dispositivo controlado para volver a controlar su dispositivo.
-        </p>
-        <Button 
-            variant="secondary" 
-            className="mt-6"
-            onClick={onStopSession}
-        >
-            Cerrar Control Remoto
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    // This container ref is crucial for portals
-    <div ref={controllerContainerRef} className="fixed inset-0 bg-background z-[100] flex flex-col">
-        <header className="p-4 border-b border-border flex-shrink-0 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Control Remoto</h2>
-            <Button variant="destructive" size="sm" onClick={onStopSession}>
-            <X className="mr-2 h-4 w-4" /> Detener Control
-            </Button>
-        </header>
-        <LayoutConfigurator
-            order={activeAppState.viewOrder.filter((i) => activeAppState.selectedEvents[i] !== null)}
-            onOrderChange={(order: number[]) => setLiveAppState({ viewOrder: order })}
-            eventDetails={activeAppState.selectedEvents}
-            onRemove={handleEventRemove}
-            onModify={(index: number) => {
-                const event = activeAppState.selectedEvents[index];
-                if (event) {
-                    openDialogForEventRemote(event, index);
-                }
-            }}
-            isViewPage={true}
-            onAddEvent={() => setControllerView('addEvents')}
-            onSchedule={() => setControllerView('schedule')}
-            onOpenPresets={() => setControllerView('presets')}
-            gridGap={activeAppState.gridGap}
-            onGridGapChange={(v: number) => setLiveAppState({ gridGap: v })}
-            borderColor={activeAppState.borderColor}
-            onBorderColorChange={(c: string) => setLiveAppState({ borderColor: c })}
-            onRestoreGridSettings={() => setLiveAppState({ gridGap: 0, borderColor: '#000000' })}
-            isChatEnabled={activeAppState.isChatEnabled}
-            onIsChatEnabledChange={(v: boolean) => setLiveAppState({ isChatEnabled: v })}
-            isRemoteControlView={true}
-            onOpenChat={() => setControllerView('chat')}
-            onStopSession={onStopSession}
-            onClearSelections={onClearSelections}
-            onToggleFullscreen={handleToggleFullscreen}
-            fullscreenIndex={activeAppState.fullscreenIndex}
-            onShareLayout={handleShareLayout}
-        />
-        <AddEventsDialog
-            open={controllerView === 'addEvents'}
-            onOpenChange={(isOpen) => !isOpen && setControllerView('main')}
-            onEventSelect={(event) => openDialogForEventRemote(event)}
-            onChannelClick={handleChannelClickRemote}
-            getEventSelection={getEventSelection}
-            events={allSortedEvents}
-            channels={allChannels}
-            isLoading={false}
-            onFetch={() => {}}
-            container={controllerContainerRef.current ?? undefined}
-            isRemote={true}
-        />
-
-        {controllerDialogEvent && (
-            <EventSelectionDialog
-                isOpen={controllerView === 'eventSelection'}
-                onOpenChange={(isOpen) => {
-                  if (!isOpen) {
-                    setControllerView('addEvents');
-                    setControllerDialogEvent(null);
-                  }
-                }}
-                event={controllerDialogEvent}
-                onSelect={handleEventSelectRemote}
-                isModification={controllerModificationIndex !== null && activeAppState.selectedEvents[controllerModificationIndex!] !== null}
-                modificationIndex={controllerModificationIndex}
-                onRemove={() => {
-                  if (controllerModificationIndex !== null) handleEventRemove(controllerModificationIndex);
-                  setControllerView('addEvents');
-                  setControllerDialogEvent(null);
-                }}
-                isLoading={isControllerOptionsLoading}
-                container={controllerContainerRef.current ?? undefined}
-            />
-        )}
-        
-        <ScheduleManager
-            open={controllerView === 'schedule'}
-            onOpenChange={(isOpen) => !isOpen && setControllerView('main')}
-            schedules={activeAppState.schedules}
-            onSchedulesChange={(s) => setLiveAppState({schedules: s})}
-            isLoading={false}
-            initialSelection={activeAppState.selectedEvents}
-            initialOrder={activeAppState.viewOrder}
-            allEvents={allEvents}
-            allChannels={allChannels}
-            getEventSelection={getEventSelection}
-            container={controllerContainerRef.current ?? undefined}
-            remoteControlMode="controlling"
-            controlledSessionCode=""
-            onActivateRemoteControl={() => {}}
-        />
-        
-        <PresetsDialog
-            open={controllerView === 'presets'}
-            onOpenChange={(isOpen) => !isOpen && setControllerView('main')}
-            onSelectPreset={onPresetSelect}
-            container={controllerContainerRef.current ?? undefined}
-            customPresets={customPresets}
-            // Dummy functions as the controller doesn't edit presets
-            onSavePreset={() => {}}
-            onUpdatePreset={() => {}}
-            onDeletePreset={() => {}}
-            allEvents={allEvents}
-            allChannels={allChannels}
-            isRemote={true}
-        />
-    </div>
   );
 }
