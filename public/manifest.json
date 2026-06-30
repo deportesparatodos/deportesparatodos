@@ -2,40 +2,77 @@
   "name": "Deportes Para Todos",
   "short_name": "DeportesPT",
   "description": "Visualiza múltiples transmisiones deportivas simultáneamente.",
+  "id": "/",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "tabbed", "standalone", "minimal-ui"],
   "background_color": "#0a0a0a",
   "theme_color": "#1a1a2e",
   "orientation": "any",
   "scope": "/",
   "lang": "es",
-  "categories": ["sports", "entertainment"],
+  "dir": "ltr",
+  "categories": ["sports", "entertainment", "lifestyle"],
+  "iarc_rating_id": "",
+  "prefer_related_applications": false,
+  "related_applications": [],
   "icons": [
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
-  "shortcuts": []
+  "screenshots": [
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Abrir Visualizador",
+      "short_name": "Visualizador",
+      "description": "Abrir el panel de transmisiones.",
+      "url": "/?layout=default",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "file_handlers": [],
+  "protocol_handlers": [],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "launch_handler": {
+    "client_mode": "auto"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "note_taking": {
+    "new_note_url": "/"
+  },
+  "widgets": [],
+  "scope_extensions": []
 }
