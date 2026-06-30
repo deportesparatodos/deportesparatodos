@@ -1405,9 +1405,9 @@ export function HomePageContent() {
             onOpenCalendar={() => setCalendarOpen(true)}
             onOpenPresets={() => setPresetsDialogOpen(true)}
             onNotificationManager={() => setNotificationManagerOpen(true)}
-            remoteControlMode={remoteControlMode}
-            controlledSessionCode={controlledSessionCode}
-            onActivateRemoteControl={handleActivateRemoteControl}
+
+
+
             onClearSelections={handleClearSelections}
           />
 
@@ -1992,9 +1992,9 @@ export function HomePageContent() {
                                                   setDialogContext('schedule');
                                                   setScheduleManagerOpen(true);
                                                 }}
-                                                remoteControlMode={remoteControlMode}
-                                                controlledSessionCode={controlledSessionCode}
-                                                onActivateRemoteControl={handleActivateRemoteControl}
+                                    
+                                    
+                                    
                                                 onClearSelections={handleClearSelections}
                                                 onClose={() => setIsSettingsSheetOpen(false)}
                                             />
@@ -2063,9 +2063,9 @@ export function HomePageContent() {
           allEvents={allSortedEvents}
           allChannels={channelsData}
           getEventSelection={getEventSelection}
-          remoteControlMode={remoteControlMode}
-          controlledSessionCode={controlledSessionCode}
-          onActivateRemoteControl={handleActivateRemoteControl}
+
+
+
       />
       <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
           <CalendarDialogContent categories={categories} />
