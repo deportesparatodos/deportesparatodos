@@ -1487,7 +1487,6 @@ export function HomePageContent() {
                     loading="eager"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                     allowFullScreen
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
                     referrerPolicy="no-referrer"
                   />
                 )}
