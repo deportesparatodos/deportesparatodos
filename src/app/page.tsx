@@ -212,7 +212,7 @@ export function HomePageContent() {
   const [isAddEventsLoading, setIsAddEventsLoading] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isErrorsOpen, setIsErrorsOpen] = useState(false);
-  const [remoteControlOptionsOpen, setRemoteControlOptionsOpen] = useState(false); // kept temporarily
+
   const [presetsDialogOpen, setPresetsDialogOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [legalNoticeOpen, setLegalNoticeOpen] = useState(false);
@@ -1942,10 +1942,6 @@ export function HomePageContent() {
                                       <RotateCw className={cn(isDataLoading && "animate-spin")} />
                                     </Button>
                                     
-                                    <Button variant="ghost" size="icon" onClick={() => setRemoteControlOptionsOpen(true)}>
-
-                                    </Button>
-
                                     <Button variant="ghost" size="icon" onClick={handleShareLayout}>
                                       <Share2 />
                                     </Button>
@@ -2091,58 +2087,6 @@ export function HomePageContent() {
               dialogContext={dialogContext}
           />
       )}
-      <Dialog open={isControllerPromptOpen} onOpenChange={setIsControllerPromptOpen}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogModalTitle>Controlar Dispositivo</DialogModalTitle>
-                  <DialogDescription>Introduce el código del dispositivo que quieres controlar.</DialogDescription>
-              </DialogHeader>
-              <div className="flex gap-2 py-4">
-                  <Input
-                      placeholder="Código de sesión..."
-                      value={controllerCode}
-                      onChange={(e) => setControllerCode(e.target.value)}
-                  />
-              </div>
-              <DialogFooter>
-                  <DialogModalClose asChild>
-                    <Button variant="secondary">Cancelar</Button>
-                  </DialogModalClose>
-                  <Button onClick={() => {
-                      startControllingSession(controllerCode);
-                      setIsControllerPromptOpen(false);
-                  }}>Conectar</Button>
-              </DialogFooter>
-          </DialogContent>
-      </Dialog>
-      <Dialog open={remoteControlOptionsOpen} onOpenChange={setRemoteControlOptionsOpen}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogModalTitle>Opciones de Control Remoto</DialogModalTitle>
-                  <DialogDescription>Elige cómo quieres usar el control remoto.</DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-1 gap-4 py-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                          setRemoteControlOptionsOpen(false);
-                          handleStartAndControl();
-                      }}
-                  >
-                      Ser Controlado
-                  </Button>
-                  <Button
-                      variant="outline"
-                      onClick={() => {
-                          setRemoteControlOptionsOpen(false);
-                          setIsControllerPromptOpen(true);
-                      }}
-                  >
-                      Controlar un Dispositivo
-                  </Button>
-              </div>
-          </DialogContent>
-      </Dialog>
        <Dialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen}>
         <DialogContent className="max-w-2xl">
             <DialogHeader>
